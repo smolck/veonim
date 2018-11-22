@@ -1,5 +1,6 @@
 import { CursorShape, setCursorColor, setCursorShape } from '../core/cursor'
 import { getBackground } from '../render/highlight-attributes'
+import { notify, NotifyKind } from '../ui/notifications'
 import * as dispatch from '../messaging/dispatch'
 import { VimMode } from '../neovim/types'
 import nvim from '../core/neovim'
@@ -82,12 +83,23 @@ const cursorShapeType = (shape?: string) => {
   else return CursorShape.block
 }
 
+const messageNotifyKindMappings = new Map([
+  ['echo', NotifyKind.Info],
+  ['emsg', NotifyKind.Error],
+])
+
+// TODO: handle multi-line messages
 type MessageEvent = [number, string]
 export const msg_show = ([ , [ kind, msgs, flag ] ]: [any, [string, MessageEvent[], boolean]]) => {
+  // TODO: map message kind to err/warn/info/etc
+  // TODO: what is flag?
   console.log('MSG OF:', kind, flag)
-  msgs.forEach(([ hlid, text ]) => console.log(hlid, text))
+  const notifyKind = messageNotifyKindMappings.get(kind)
+  // TODO: do something with hlid or ignore?
+  msgs.forEach(([ /*hlid*/, text ]) => notify(text, notifyKind))
 }
 
+// TODO: wat do here lol - macro msg and shit?
 export const msg_showmode = ([, [ msgs ]]: any) => {
   msgs.forEach((m: [number, string]) => console.log('MSG_SHOWMODE:', m[0], m[1]))
 }
