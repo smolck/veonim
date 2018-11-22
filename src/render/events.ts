@@ -94,9 +94,10 @@ export const msg_show = ([ , [ kind, msgs, flag ] ]: [any, [string, MessageEvent
   // TODO: map message kind to err/warn/info/etc
   // TODO: what is flag?
   console.log('MSG OF:', kind, flag)
-  const notifyKind = messageNotifyKindMappings.get(kind)
+  const notifyKind = messageNotifyKindMappings.get(sillyString(kind))
+  if (!notifyKind) console.warn('PLS MAP msg kind:', sillyString(kind))
   // TODO: do something with hlid or ignore?
-  msgs.forEach(([ /*hlid*/, text ]) => notify(text, notifyKind))
+  msgs.forEach(([ /*hlid*/, text ]) => notify(sillyString(text), notifyKind))
 }
 
 // TODO: wat do here lol - macro msg and shit?
