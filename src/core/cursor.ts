@@ -107,7 +107,7 @@ const updateCursorChar = (gridId: number, row: number, col: number) => {
     return
   }
 
-  const char = windows.get(gridId).getCharAt(row, col)
+  const char = windows.get(gridId).editor.getChar(row, col)
   cursorChar.innerText = char
   cursorChar.style.display = ''
 }
