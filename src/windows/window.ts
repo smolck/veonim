@@ -5,6 +5,7 @@ import { specs as titleSpecs } from '../core/title'
 import { cell } from '../core/canvas-container'
 import { WebGLView } from '../render/webgl'
 import { makel } from '../ui/vanilla'
+import nvim from '../core/neovim'
 
 export interface WindowInfo {
   id: number
@@ -36,20 +37,31 @@ export interface WindowOverlay {
   move(row: number, col: number): void
 }
 
+interface PosOpts {
+  within: boolean
+}
+
+export interface Editor {
+  getChar(row: number, col: number): string
+  getLine(row: number): string
+  getAllLines(): string[]
+  positionToEditorPixels(editorLine: number, editorColumn: number, opts?: PosOpts): Position
+}
+
 export interface Window {
   webgl: WebGLView
   element: HTMLElement
+  editor: Editor
   getWindowInfo(): WindowInfo
   setWindowInfo(info: WindowInfo): void
   applyGridStyle(gridStyle: GridStyle): void
   refreshLayout(): void
   hide(): void
   redrawFromGridBuffer(): void
-  getCharAt(row: number, col: number): string
   updateNameplate(data: NameplateState): void
   addOverlayElement(element: HTMLElement): WindowOverlay
   removeOverlayElement(element: HTMLElement): void
-  gridToPixelPosition(row: number, col: number): Position
+  positionToWorkspacePixels(row: number, col: number, opts?: PosOpts): Position
   getWindowSize(): Size
   resizeWindow(width: number, height: number): void
 }
@@ -121,12 +133,13 @@ export default () => {
 
   api.getWindowInfo = () => ({ ...wininfo })
 
-  api.gridToPixelPosition = (row, col) => {
+  api.positionToWorkspacePixels = (row, col, fuckTypescript) => {
+    const { within = false } = fuckTypescript || {} as PosOpts
     const winX = Math.floor(col * cell.width)
     const winY = Math.floor(row * cell.height)
     return {
-      x: layout.x + winX,
-      y: layout.y + winY,
+      x: (within ? 0 : layout.x) + winX,
+      y: (within ? 0 : layout.y) + winY,
     }
   }
 
@@ -166,7 +179,6 @@ export default () => {
     }, edgeDetection(container))
   }
 
-  // TODO: add api to control row/col position of this overlay element?
   api.addOverlayElement = element => {
     overlay.appendChild(element)
     return {
@@ -180,12 +192,40 @@ export default () => {
 
   api.redrawFromGridBuffer = () => webgl.renderGridBuffer()
 
-  api.getCharAt = (row, col) => {
-    const buf = webgl.getGridCell(row, col)
-    return getCharFromIndex(buf[3] || 0)
-  }
-
   api.updateNameplate = data => nameplate.update(data)
+
+  api.editor = {
+    getChar: (row, col) => {
+      const buf = webgl.getGridCell(row, col)
+      return getCharFromIndex(buf[3] || 0)
+    },
+    getLine: row => {
+      const buf = webgl.getGridLine(row)
+      let line = ''
+      for (let ix = 0; ix < buf.length; ix+=4) {
+        const charIndex = buf[ix + 3]
+        line += getCharFromIndex(charIndex)
+      }
+      return line
+    },
+    getAllLines: () => {
+      const lines = []
+      for (let row = 0; row < wininfo.height; row++) {
+        lines.push(api.editor.getLine(row))
+      }
+      return lines
+    },
+    positionToEditorPixels: (line, col, fuckTypescript) => {
+      const { within = false } = fuckTypescript || {} as PosOpts
+      const row = line - nvim.state.editorTopLine
+      const winX = Math.floor(col * cell.width)
+      const winY = Math.floor(row * cell.height)
+      return {
+        x: (within ? 0 : layout.x) + winX,
+        y: (within ? 0 : layout.y) + winY,
+      }
+    },
+  }
 
   return api
 }

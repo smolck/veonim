@@ -147,7 +147,7 @@ export const hide = (gridIds: number[][]) => gridIds.forEach(([gridId]) => get(g
 
 export const pixelPosition = (row: number, col: number) => {
   const win = windows.get(activeGrid.id)
-  if (win) return win.gridToPixelPosition(row, col)
+  if (win) return win.positionToWorkspacePixels(row, col)
   console.warn('no active window grid... hmmm *twisty effect*')
   return { x: 0, y: 0 }
 }

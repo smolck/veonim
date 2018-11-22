@@ -119,8 +119,8 @@ export const moveCursor = (gridId: number, row: number, col: number) => {
   // once the cursor elements are re-activated, the position updated while
   // hidden must be accurate. (e.g. using jumpTo() in grep/references/etc)
   const win = windows.get(gridId)
-  const cursorPos = win.gridToPixelPosition(row, col)
-  const linePos = win.gridToPixelPosition(row, 0)
+  const cursorPos = win.positionToWorkspacePixels(row, col)
+  const linePos = win.positionToWorkspacePixels(row, 0)
   const { width } = win.getWindowSize()
 
   cursorEl.style.transform = translate(cursorPos.x, cursorPos.y)

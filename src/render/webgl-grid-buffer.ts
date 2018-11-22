@@ -67,6 +67,12 @@ const finetti = () => {
     return buffer.slice(ix, ix + 4)
   }
 
+  const getLine = (row: number) => {
+    const start = width * row * 4
+    const end = (width * 4) + width * row * 4
+    return buffer.slice(start, end)
+  }
+
   const moveRegionUp = (lines: number, top: number, bottom: number) => {
     const startIndex = width * (top + 1) * 4
     const offset = lines * width * 4
@@ -102,6 +108,7 @@ const finetti = () => {
     clear,
     resize,
     getCell,
+    getLine,
     moveRegionUp,
     moveRegionDown,
     getBuffer: () => buffer,
