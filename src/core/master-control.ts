@@ -111,11 +111,6 @@ export const create = async ({ dir } = {} as { dir?: string }): Promise<NewVimRe
   // usually vimrc parsing errors
   if (errors.length) notifyUI(errors.join('\n'), NotifyKind.Error)
 
-  api.command(postStartupCommands)
-
-  // used when we create a new vim session with a predefined cwd
-  dir && api.command(`cd ${dir}`)
-
   // v:servername used to connect other clients to nvim via TCP
   //
   // by default we use the nvim process stdout/stdin to do core operations.
@@ -133,6 +128,20 @@ export const create = async ({ dir } = {} as { dir?: string }): Promise<NewVimRe
   // bridge. there is no good reason why we should bridge the nvim api over
   // web worker postMessages - just have the web worker talk directly to nvim
   const path = await req.eval('v:servername')
+
+  // uhh this fixes a situation where the post startup commands are overwritten
+  // somehow by the startup commands. i have no fucking idea why this happens
+  // as the startup cmds are sent as process arguments, so api event timing
+  // has nothing to do with this. msgpack also has nothing to do with this -
+  // i tested the original msgpack lib and the same thing happened.
+  //
+  // i am deeply unsettled by this fix, but it seems to work. PLS EXPLAIN Y
+  setImmediate(() => {
+    api.command(postStartupCommands)
+    // used when we create a new vim session with a predefined cwd
+    dir && api.command(`cd ${dir}`)
+  })
+
   vimInstances.get(id)!.path = path
   return { id, path }
 }
