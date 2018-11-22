@@ -28,7 +28,7 @@ const KEY = {
   START: 'veonim-dev-recording-startup',
 }
 
-const targetEl = document.getElementById('canvas-container') as HTMLElement
+const targetEl = document.getElementById('workspace') as HTMLElement
 const recEl = makel({
   position: 'absolute',
   color: '#fff',

@@ -27,7 +27,7 @@ export interface Pad {
 }
 
 const watchers = new Watchers()
-const container = document.getElementById('canvas-container') as HTMLElement
+const container = document.getElementById('workspace') as HTMLElement
 const sandboxCanvas = document.createElement('canvas')
 const canvas = sandboxCanvas.getContext('2d', { alpha: false }) as CanvasRenderingContext2D
 

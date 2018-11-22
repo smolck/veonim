@@ -126,7 +126,7 @@ export default () => {
     const winY = Math.floor(row * cell.height)
     return {
       x: layout.x + winX,
-      y: layout.y + winY + titleSpecs.height,
+      y: layout.y + winY,
     }
   }
 
