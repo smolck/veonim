@@ -1,9 +1,10 @@
-// import { cursor, hideCursor, showCursor } from '../core/cursor'
-// import * as windows from '../windows/window-manager'
-// import { genList, merge } from '../support/utils'
-// import { stealInput } from '../core/input'
-// import { makel } from '../ui/vanilla'
-// import { paddingV } from '../ui/css'
+import { cursor, hideCursor, showCursor } from '../core/cursor'
+import * as windows from '../windows/window-manager'
+import { cell } from '../core/canvas-container'
+import { genList } from '../support/utils'
+import { stealInput } from '../core/input'
+import { makel } from '../ui/vanilla'
+import { paddingV } from '../ui/css'
 // import * as grid from '../core/grid'
 import nvim from '../core/neovim'
 
@@ -24,131 +25,125 @@ import nvim from '../core/neovim'
 // }
 
 // hand crafted for maximum ergonomic comfort
-// const labels = {
-//   single: ['A', 'S', 'D', 'F', 'J', 'K', 'L', 'G', 'H', 'W', 'E', 'R', 'I', 'O', 'Q', 'T', 'U', 'P', 'N', 'M', 'V', 'B', 'C'],
-//   double: [
-//     'AJ', 'AK', 'AL', 'AH', 'AN', 'AI', 'AO', 'AU', 'AP', 'AM', 'AS', 'AD', 'AF', 'AG', 'AE', 'AR', 'AW', 'AT', 'AV',
-//     'SJ', 'SK', 'SL', 'SH', 'SN', 'SI', 'SO', 'SU', 'SP', 'SM', 'SA', 'SD', 'SF', 'SG', 'SE', 'SR',
-//     'DJ', 'DK', 'DL', 'DH', 'DN', 'DI', 'DO', 'DU', 'DP', 'DM', 'DA', 'DS', 'DF', 'DG', 'DW', 'DQ', 'DE', 'DV',
-//     'FJ', 'FK', 'FL', 'FH', 'FN', 'FI', 'FO', 'FU', 'FP', 'FM', 'FA', 'FS', 'FD', 'FE', 'FW', 'FQ',
-//     'EJ', 'EK', 'EL', 'EH', 'EN', 'EI', 'EO', 'EU', 'EP', 'EM', 'EF', 'EG', 'ER', 'ET', 'EW', 'EQ', 'EA', 'ES', 'EV',
-//     'RJ', 'RK', 'RL', 'RH', 'RN', 'RI', 'RO', 'RU', 'RP', 'RM', 'RA', 'RS', 'RE', 'RW', 'RQ', 'RG',
-//     'WJ', 'WK', 'WL', 'WH', 'WN', 'WI', 'WO', 'WU', 'WP', 'WM', 'WA', 'WD', 'WF', 'WE', 'WR', 'WT', 'WG', 'WV',
-//     'QJ', 'QK', 'QL', 'QH', 'QN', 'QI', 'QO', 'QU', 'QP', 'QM', 'QD', 'QF', 'QW', 'QE', 'QR', 'QT', 'QG',
-//     'GJ', 'GK', 'GL', 'GH', 'GN', 'GI', 'GO', 'GU', 'GP', 'GM', 'GD', 'GS', 'GA', 'GE', 'GW', 'GQ',
-//     'JA', 'JS', 'JD', 'JF', 'JG', 'JE', 'JR', 'JW', 'JQ', 'JK', 'JL', 'JI', 'JO', 'JP', 'JV',
-//     'KA', 'KS', 'KD', 'KF', 'KG', 'KE', 'KR', 'KW', 'KQ', 'KJ', 'KL', 'KN', 'KO', 'KP', 'KV',
-//     'LA', 'LS', 'LD', 'LF', 'LG', 'LE', 'LR', 'LW', 'LQ', 'LJ', 'LK', 'LN', 'LI', 'LU', 'LV',
-//     'HA', 'HS', 'HD', 'HF', 'HG', 'HE', 'HR', 'HW', 'HQ', 'HJ', 'HL', 'HI', 'HO', 'HP', 'HV',
-//     'NA', 'NS', 'ND', 'NF', 'NG', 'NE', 'NR', 'NW', 'NQ', 'NK', 'NL', 'NI', 'NO', 'NP', 'NV',
-//     'IA', 'IS', 'ID', 'IF', 'IG', 'IE', 'IR', 'IW', 'IQ', 'IJ', 'IL', 'IN', 'IH', 'IO', 'IP', 'IV',
-//     'OA', 'OS', 'OD', 'OF', 'OG', 'OE', 'OR', 'OW', 'OQ', 'OJ', 'OK', 'OH', 'OI', 'ON', 'OP', 'OV',
-//     'PA', 'PS', 'PD', 'PF', 'PG', 'PE', 'PR', 'PW', 'PQ', 'PJ', 'PK', 'PH', 'PI', 'PN', 'PO', 'PV',
-//     'MA', 'MS', 'MD', 'MF', 'MG', 'ME', 'MR', 'MW', 'MQ', 'MK', 'ML', 'MI', 'MO', 'MP', 'MV',
-//     'VJ', 'VK', 'VL', 'VH', 'VN', 'VI', 'VO', 'VP', 'VU', 'VM', 'VA', 'VS', 'VD', 'VE', 'VR', 'VW', 'VQ',
-//     'UA', 'US', 'UD', 'UF', 'UG', 'UE', 'UR', 'UW', 'UQ', 'UH', 'UL', 'UI', 'UP', 'UN', 'UV',
-//     'TJ', 'TK', 'TL', 'TH', 'TN', 'TI', 'TO', 'TP', 'TU', 'TM', 'TA', 'TE', 'TW', 'TQ', 'TR',
-//   ],
-// }
+const labels = {
+  single: ['A', 'S', 'D', 'F', 'J', 'K', 'L', 'G', 'H', 'W', 'E', 'R', 'I', 'O', 'Q', 'T', 'U', 'P', 'N', 'M', 'V', 'B', 'C'],
+  double: [
+    'AJ', 'AK', 'AL', 'AH', 'AN', 'AI', 'AO', 'AU', 'AP', 'AM', 'AS', 'AD', 'AF', 'AG', 'AE', 'AR', 'AW', 'AT', 'AV',
+    'SJ', 'SK', 'SL', 'SH', 'SN', 'SI', 'SO', 'SU', 'SP', 'SM', 'SA', 'SD', 'SF', 'SG', 'SE', 'SR',
+    'DJ', 'DK', 'DL', 'DH', 'DN', 'DI', 'DO', 'DU', 'DP', 'DM', 'DA', 'DS', 'DF', 'DG', 'DW', 'DQ', 'DE', 'DV',
+    'FJ', 'FK', 'FL', 'FH', 'FN', 'FI', 'FO', 'FU', 'FP', 'FM', 'FA', 'FS', 'FD', 'FE', 'FW', 'FQ',
+    'EJ', 'EK', 'EL', 'EH', 'EN', 'EI', 'EO', 'EU', 'EP', 'EM', 'EF', 'EG', 'ER', 'ET', 'EW', 'EQ', 'EA', 'ES', 'EV',
+    'RJ', 'RK', 'RL', 'RH', 'RN', 'RI', 'RO', 'RU', 'RP', 'RM', 'RA', 'RS', 'RE', 'RW', 'RQ', 'RG',
+    'WJ', 'WK', 'WL', 'WH', 'WN', 'WI', 'WO', 'WU', 'WP', 'WM', 'WA', 'WD', 'WF', 'WE', 'WR', 'WT', 'WG', 'WV',
+    'QJ', 'QK', 'QL', 'QH', 'QN', 'QI', 'QO', 'QU', 'QP', 'QM', 'QD', 'QF', 'QW', 'QE', 'QR', 'QT', 'QG',
+    'GJ', 'GK', 'GL', 'GH', 'GN', 'GI', 'GO', 'GU', 'GP', 'GM', 'GD', 'GS', 'GA', 'GE', 'GW', 'GQ',
+    'JA', 'JS', 'JD', 'JF', 'JG', 'JE', 'JR', 'JW', 'JQ', 'JK', 'JL', 'JI', 'JO', 'JP', 'JV',
+    'KA', 'KS', 'KD', 'KF', 'KG', 'KE', 'KR', 'KW', 'KQ', 'KJ', 'KL', 'KN', 'KO', 'KP', 'KV',
+    'LA', 'LS', 'LD', 'LF', 'LG', 'LE', 'LR', 'LW', 'LQ', 'LJ', 'LK', 'LN', 'LI', 'LU', 'LV',
+    'HA', 'HS', 'HD', 'HF', 'HG', 'HE', 'HR', 'HW', 'HQ', 'HJ', 'HL', 'HI', 'HO', 'HP', 'HV',
+    'NA', 'NS', 'ND', 'NF', 'NG', 'NE', 'NR', 'NW', 'NQ', 'NK', 'NL', 'NI', 'NO', 'NP', 'NV',
+    'IA', 'IS', 'ID', 'IF', 'IG', 'IE', 'IR', 'IW', 'IQ', 'IJ', 'IL', 'IN', 'IH', 'IO', 'IP', 'IV',
+    'OA', 'OS', 'OD', 'OF', 'OG', 'OE', 'OR', 'OW', 'OQ', 'OJ', 'OK', 'OH', 'OI', 'ON', 'OP', 'OV',
+    'PA', 'PS', 'PD', 'PF', 'PG', 'PE', 'PR', 'PW', 'PQ', 'PJ', 'PK', 'PH', 'PI', 'PN', 'PO', 'PV',
+    'MA', 'MS', 'MD', 'MF', 'MG', 'ME', 'MR', 'MW', 'MQ', 'MK', 'ML', 'MI', 'MO', 'MP', 'MV',
+    'VJ', 'VK', 'VL', 'VH', 'VN', 'VI', 'VO', 'VP', 'VU', 'VM', 'VA', 'VS', 'VD', 'VE', 'VR', 'VW', 'VQ',
+    'UA', 'US', 'UD', 'UF', 'UG', 'UE', 'UR', 'UW', 'UQ', 'UH', 'UL', 'UI', 'UP', 'UN', 'UV',
+    'TJ', 'TK', 'TL', 'TH', 'TN', 'TI', 'TO', 'TP', 'TU', 'TM', 'TA', 'TE', 'TW', 'TQ', 'TR',
+  ],
+}
 
-// const singleLabelLimit = labels.single.length
+const singleLabelLimit = labels.single.length
 
-// const getLabels = (itemCount: number) => {
-//   const doubleSize = itemCount > singleLabelLimit
-//   return {
-//     labelSize: doubleSize ? 2 : 1,
-//     getLabel: (index: number) => doubleSize
-//       ? labels.double[index]
-//       : labels.single[index],
-//     // TODO: would it be faster to use a map? only lookup instead of find
-//     indexOfLabel: (label: string) => doubleSize
-//       ? labels.double.indexOf(label)
-//       : labels.single.indexOf(label),
-//   }
-// }
+const getLabels = (itemCount: number) => {
+  const doubleSize = itemCount > singleLabelLimit
+  return {
+    labelSize: doubleSize ? 2 : 1,
+    getLabel: (index: number) => doubleSize
+      ? labels.double[index]
+      : labels.single[index],
+    // TODO: would it be faster to use a map? only lookup instead of find
+    indexOfLabel: (label: string) => doubleSize
+      ? labels.double.indexOf(label)
+      : labels.single.indexOf(label),
+  }
+}
 
-// const labelHTML = (label: string) => label
-//   .split('')
-//   // using margin-right instead of letter-spacing because letter-spacing adds space
-//   // to the right of the last letter - so it ends up with more padding on the right :/
-//   .map((char, ix) => `<span${!ix ? ' style="margin-right: 2px"': ''}>${char}</span>`)
-//   .join('')
+const labelHTML = (label: string) => label
+  .split('')
+  // using margin-right instead of letter-spacing because letter-spacing adds space
+  // to the right of the last letter - so it ends up with more padding on the right :/
+  .map((char, ix) => `<span${!ix ? ' style="margin-right: 2px"': ''}>${char}</span>`)
+  .join('')
 
 const divinationLine = async ({ visual }: { visual: boolean }) => {
-  console.log('NYI: divinationLine', visual)
-  // if (visual) nvim.feedkeys('gv', 'n')
-  // else nvim.feedkeys('m`', 'n')
+  if (visual) nvim.feedkeys('gv', 'n')
+  else nvim.feedkeys('m`', 'n')
 
-  // const win = activeWindow()
-  // if (!win) throw new Error('no window found for divination purposes lol wtf')
+  const win = windows.getActive()
+  const rowPositions = genList(win.rows, row => win.editor.positionToEditorPixels(row, 0))
+  const labelContainer = makel({ position: 'absolute' })
+  const { labelSize, getLabel, indexOfLabel } = getLabels(rowPositions.length)
 
-  // const { height: rowCount, row } = win.getSpecs()
-  // const cursorDistanceFromTopOfEditor = cursor.row - row
+  const labels = rowPositions.map(({ y }, ix) => {
+    const el = makel({
+      ...paddingV(4),
+      position: 'absolute',
+      fontSize: '1.1rem',
+      top: `${y}px`,
+      background: '#000',
+      marginTop: '-1px',
+      color: '#eee',
+    })
 
-  // const rowPositions = genList(rowCount, ix => win.relativeRowToY(ix))
-  // const labelContainer = makel({ position: 'absolute' })
-  // const { labelSize, getLabel, indexOfLabel } = getLabels(rowPositions.length)
+    el.innerHTML = labelHTML(getLabel(ix))
+    return el
+  })
 
-  // const labels = rowPositions.map((y, ix) => {
-  //   const el = makel({
-  //     ...paddingV(4),
-  //     position: 'absolute',
-  //     fontSize: '1.1rem',
-  //     top: `${y}px`,
-  //     left: '8px',
-  //     background: '#000',
-  //     color: '#eee',
-  //   })
+  labels
+    .filter((_, ix) => ix !== cursor.row)
+    .forEach(label => labelContainer.appendChild(label))
 
-  //   el.innerHTML = labelHTML(getLabel(ix))
-  //   return el
-  // })
+  const overlay = win.addOverlayElement(labelContainer)
 
-  // labels
-  //   .filter((_, ix) => ix !== cursorDistanceFromTopOfEditor)
-  //   .forEach(label => labelContainer.appendChild(label))
+  const updateLabels = (matchChar: string) => labels
+    .filter(m => (m.children[0] as HTMLElement).innerText.toLowerCase() === matchChar)
+    .forEach(m => Object.assign((m.children[0] as HTMLElement).style, {
+      // TODO: inherit from colorscheme
+      color: '#ff007c'
+    }))
 
-  // currentWindowElement.add(labelContainer)
+  const grabbedKeys: string[] = []
 
-  // const updateLabels = (matchChar: string) => labels
-  //   .filter(m => (m.children[0] as HTMLElement).innerText.toLowerCase() === matchChar)
-  //   .forEach(m => merge((m.children[0] as HTMLElement).style, {
-  //     // TODO: inherit from colorscheme
-  //     color: '#ff007c'
-  //   }))
+  const reset = () => {
+    restoreInput()
+    overlay.remove()
+  }
 
-  // const grabbedKeys: string[] = []
+  const jump = () => {
+    const jumpLabel = grabbedKeys.join('').toUpperCase()
+    const targetRow = indexOfLabel(jumpLabel)
+    if (targetRow === -1) return reset()
 
-  // const reset = () => {
-  //   restoreInput()
-  //   currentWindowElement.remove(labelContainer)
-  // }
+    const jumpDistance = targetRow - cursor.row
+    const jumpMotion = jumpDistance > 0 ? 'j' : 'k'
+    const cursorAdjustment = visual
+      ? jumpDistance > 0 ? 'g$' : ''
+      : 'g^'
 
-  // const jump = () => {
-  //   const jumpLabel = grabbedKeys.join('').toUpperCase()
-  //   const targetRow = indexOfLabel(jumpLabel)
-  //   if (targetRow === -1) return reset()
+    const command = `${Math.abs(jumpDistance)}g${jumpMotion}${cursorAdjustment}`
+    nvim.feedkeys(command, 'n')
+    reset()
+  }
 
-  //   const jumpDistance = targetRow - cursorDistanceFromTopOfEditor
-  //   const jumpMotion = jumpDistance > 0 ? 'j' : 'k'
-  //   const cursorAdjustment = visual
-  //     ? jumpDistance > 0 ? 'g$' : ''
-  //     : 'g^'
+  const restoreInput = stealInput(keys => {
+    if (keys === '<Esc>') return reset()
 
-  //   const command = `${Math.abs(jumpDistance)}g${jumpMotion}${cursorAdjustment}`
-  //   nvim.feedkeys(command, 'n')
-  //   reset()
-  // }
-
-  // const restoreInput = stealInput(keys => {
-  //   if (keys === '<Esc>') return reset()
-
-  //   grabbedKeys.push(keys)
-  //   if (labelSize === 1 && grabbedKeys.length === 1) return jump()
-  //   if (labelSize === 2 && grabbedKeys.length === 1) return updateLabels(keys)
-  //   if (labelSize === 2 && grabbedKeys.length === 2) return jump()
-  //   else reset()
-  // })
+    grabbedKeys.push(keys)
+    if (labelSize === 1 && grabbedKeys.length === 1) return jump()
+    if (labelSize === 2 && grabbedKeys.length === 1) return updateLabels(keys)
+    if (labelSize === 2 && grabbedKeys.length === 2) return jump()
+    else reset()
+  })
 }
 
 // const findSearchPositions = ({ row, col, height, width, bg }: FindPosOpts) => {

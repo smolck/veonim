@@ -52,6 +52,8 @@ export interface Window {
   webgl: WebGLView
   element: HTMLElement
   editor: Editor
+  rows: number
+  cols: number
   getWindowInfo(): WindowInfo
   setWindowInfo(info: WindowInfo): void
   applyGridStyle(gridStyle: GridStyle): void
@@ -113,6 +115,8 @@ export default () => {
   container.appendChild(content)
 
   const api = {
+    get rows() { return wininfo.height },
+    get cols() { return wininfo.width },
     get webgl() { return webgl },
     get element() { return container },
   } as Window
