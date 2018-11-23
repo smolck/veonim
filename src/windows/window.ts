@@ -93,11 +93,14 @@ export default () => {
     display: 'flex',
     flex: 1,
     background: 'none',
+    position: 'relative',
   })
 
   const overlay = makel({
     display: 'flex',
     position: 'absolute',
+    width: '100%',
+    height: '100%',
   })
 
   const nameplate = CreateWindowNameplate()
