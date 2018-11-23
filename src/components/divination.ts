@@ -1,6 +1,5 @@
 import { cursor, hideCursor, showCursor } from '../core/cursor'
 import * as windows from '../windows/window-manager'
-import { cell } from '../core/canvas-container'
 import { genList } from '../support/utils'
 import { stealInput } from '../core/input'
 import { makel } from '../ui/vanilla'

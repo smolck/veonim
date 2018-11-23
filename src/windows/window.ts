@@ -186,7 +186,7 @@ export default () => {
   api.addOverlayElement = element => {
     overlay.appendChild(element)
     return {
-      remove: () => overlay.removeChild(element),
+      remove: () => element.remove(),
       move: (row: number, col: number) => {
         // TODO: i like to move it move it
         console.warn('NYI: overlay element move', row, col)
