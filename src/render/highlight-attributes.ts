@@ -22,16 +22,33 @@ interface HighlightGroup {
   reverse: boolean
 }
 
+interface HighlightInfoEvent {
+  kind: 'ui' | 'syntax' | 'terminal'
+  ui_name: string
+  hi_name: string
+  id: number
+}
+
+interface HighlightInfo {
+  kind: 'ui' | 'syntax' | 'terminal'
+  name: string
+  builtinName: string
+  id: number
+  hlid: number
+}
+
 const defaultColors = {
   background: '#2d2d2d',
   foreground: '#dddddd',
   special: '#ef5188',
 }
 
-// TODO: info - store the HighlightGroup name somewhere
-// this can be used to lookup items in the grid, for example:
-// find all positions where a char(s) start with Search hlgrp
-const highlightInfo = new Map<number, any>()
+// because we skip allocating 1-char strings in msgpack decode. so if we have a 1-char
+// string it might be a code point number - need to turn it back into a string. see
+// msgpack-decoder for more info on how this works.
+const sillyString = (s: any): string => typeof s === 'number' ? String.fromCodePoint(s) : s
+
+const highlightInfo = new Map<string, HighlightInfo>()
 const canvas = document.createElement('canvas')
 const ui = canvas.getContext('2d', { alpha: true }) as CanvasRenderingContext2D
 const highlights = new Map<number, HighlightGroup>([
@@ -73,7 +90,7 @@ export const setDefaultColors = (fg: number, bg: number, sp: number) => {
   return true
 }
 
-export const addHighlight = (id: number, attr: Attrs, info: any) => {
+export const addHighlight = (id: number, attr: Attrs, infos: HighlightInfoEvent[]) => {
   const foreground = attr.reverse
     ? asColor(attr.background)
     : asColor(attr.foreground)
@@ -82,8 +99,6 @@ export const addHighlight = (id: number, attr: Attrs, info: any) => {
     ? asColor(attr.foreground)
     : asColor(attr.background)
 
-  highlightInfo.set(id, info)
-
   highlights.set(id, {
     foreground,
     background,
@@ -91,8 +106,20 @@ export const addHighlight = (id: number, attr: Attrs, info: any) => {
     underline: !!(attr.underline || attr.undercurl),
     reverse: !!attr.reverse,
   })
+
+  // TODO: not sure if the id is the same as the info id?
+  // supposedly we are supposed to receive an array of infos
+  // so there could be different ids for each?
+  infos.forEach(info => highlightInfo.set(sillyString(info.hi_name), {
+    hlid: id,
+    id: info.id,
+    kind: info.kind,
+    name: sillyString(info.hi_name),
+    builtinName: sillyString(info.ui_name),
+  }))
 }
 
+export const highlightLookup = (name: string) => highlightInfo.get(name)
 export const getHighlight = (id: number) => highlights.get(id)
 export const getBackground = (id: number) => {
   const { background } = highlights.get(id) || {} as HighlightGroup

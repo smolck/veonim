@@ -33,9 +33,7 @@ const vimOptions = {
   ext_cmdline: true,
   ext_messages: true,
   ext_multigrid: true,
-  // TODO: we need this for getting highlight info? or is it already
-  // implied as true by using new grid protocol?
-  // ext_hlstate: true,
+  ext_hlstate: true,
 }
 
 const ids = {

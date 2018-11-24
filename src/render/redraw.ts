@@ -21,7 +21,7 @@ const hl_attr_define = (e: any) => {
   const count = e.length
 
   for (let ix = 1; ix < count; ix++) {
-    const [ id, attr, info ] = e[ix]
+    const [ id, attr, /*cterm_attr*/, info ] = e[ix]
     addHighlight(id, attr, info)
   }
 
