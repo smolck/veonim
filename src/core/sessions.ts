@@ -22,27 +22,30 @@ let currentVimID = -1
 
 export default (id: number, path: string) => {
   vims.set(id, { id, path, name: 'main', active: true, nameFollowsCwd: true })
+  const lastId = currentVimID
   currentVimID = id
   watchers.emit('create', { id, path })
-  watchers.emit('switch', id)
+  watchers.emit('switch', id, lastId)
 }
 
 export const createVim = async (name: string, dir?: string) => {
   const { id, path } = await create({ dir })
+  const lastId = currentVimID
   currentVimID = id
   watchers.emit('create', { id, path })
   attachTo(id)
   switchTo(id)
-  watchers.emit('switch', id)
+  watchers.emit('switch', id, lastId)
   vims.forEach(v => v.active = false)
   vims.set(id, { id, path, name, active: true, nameFollowsCwd: !!dir })
 }
 
 export const switchVim = async (id: number) => {
   if (!vims.has(id)) return
+  const lastId = currentVimID
   currentVimID = id
   switchTo(id)
-  watchers.emit('switch', id)
+  watchers.emit('switch', id, lastId)
   vims.forEach(v => v.active = false)
   vims.get(id)!.active = true
 }
@@ -82,9 +85,9 @@ export const onCreateVim = (fn: (info: VimInfo) => void) => {
   ;[...vims.entries()].forEach(([ id, vim ]) => fn({ id, path: vim.path }))
 }
 
-export const onSwitchVim = (fn: (id: number) => void) => {
-  watchers.on('switch', id => fn(id))
-  fn(currentVimID)
+export const onSwitchVim = (fn: (id: number, lastId: number) => void) => {
+  watchers.on('switch', (id, lastId) => fn(id, lastId))
+  fn(currentVimID, -1)
 }
 
 // because of circular dependency chain. master-control exports onExit.
