@@ -39,7 +39,6 @@ export const setActiveGrid = (id: number) => Object.assign(state, {
   activeInstanceGrid: id,
 })
 
-
 export const getActive = () => {
   const win = windows.get(state.activeGrid)
   if (!win) throw new Error(`trying to get window that does not exist ${state.activeGrid}`)

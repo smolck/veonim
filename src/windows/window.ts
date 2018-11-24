@@ -1,5 +1,6 @@
 import { createWebGLView, size as windowsGridSize } from '../windows/window-manager'
 import CreateWindowNameplate, { NameplateState } from '../windows/nameplate'
+import { highlightLookup } from '../render/highlight-attributes'
 import { getCharFromIndex } from '../render/font-texture-atlas'
 import { specs as titleSpecs } from '../core/title'
 import { cell } from '../core/canvas-container'
@@ -41,10 +42,15 @@ interface PosOpts {
   within: boolean
 }
 
+interface HighlightCell extends Position {
+  char: string
+}
+
 export interface Editor {
   getChar(row: number, col: number): string
   getLine(row: number): string
   getAllLines(): string[]
+  findHighlightCells(highlightGroup: string): HighlightCell[]
   positionToEditorPixels(editorLine: number, editorColumn: number, opts?: PosOpts): Position
 }
 
@@ -243,6 +249,26 @@ export default () => {
         lines.push(api.editor.getLine(row))
       }
       return lines
+    },
+    findHighlightCells: highlightGroup => {
+      const def = {} as NonNullable<ReturnType<typeof highlightLookup>>
+      const { hlid } = highlightLookup(highlightGroup) || def
+      if (!hlid) return []
+
+      const results = []
+
+      for (let row = 0; row < wininfo.height; row++) {
+        for (let col = 0; col < wininfo.width; col++) {
+          const buf = webgl.getGridCell(row, col)
+          if (buf[2] === hlid) results.push({
+            x: buf[0],
+            y: buf[1],
+            char: getCharFromIndex(buf[3])
+          })
+        }
+      }
+
+      return results
     },
     positionToEditorPixels: (line, col, fuckTypescript) => {
       const { within = false } = fuckTypescript || {} as PosOpts
