@@ -8,8 +8,8 @@ import { makel } from '../ui/vanilla'
 import nvim from '../core/neovim'
 
 export interface WindowInfo {
-  id: number
-  gridId: number
+  id: string
+  gridId: string
   row: number
   col: number
   width: number
@@ -49,6 +49,8 @@ export interface Editor {
 }
 
 export interface Window {
+  id: string
+  gridId: string
   webgl: WebGLView
   element: HTMLElement
   editor: Editor
@@ -58,6 +60,7 @@ export interface Window {
   setWindowInfo(info: WindowInfo): void
   applyGridStyle(gridStyle: GridStyle): void
   refreshLayout(): void
+  show(): void
   hide(): void
   redrawFromGridBuffer(): void
   updateNameplate(data: NameplateState): void
@@ -79,7 +82,7 @@ const edgeDetection = (el: HTMLElement) => {
 }
 
 export default () => {
-  const wininfo: WindowInfo = { id: 0, gridId: 0, row: 0, col: 0, width: 0, height: 0, visible: true }
+  const wininfo: WindowInfo = { id: '0', gridId: '0', row: 0, col: 0, width: 0, height: 0, visible: true }
   const layout = { x: 0, y: 0, width: 0, height: 0 }
   const webgl = createWebGLView()
 
@@ -118,6 +121,8 @@ export default () => {
   container.appendChild(content)
 
   const api = {
+    get id() { return wininfo.id },
+    get gridId() { return wininfo.gridId },
     get rows() { return wininfo.height },
     get cols() { return wininfo.width },
     get webgl() { return webgl },
@@ -163,6 +168,11 @@ export default () => {
     wininfo.visible = false
     container.style.display = 'none'
     webgl.clear()
+  }
+
+  api.show = () => {
+    container.style.display = 'flex'
+    webgl.renderGridBuffer()
   }
 
   api.refreshLayout = () => {

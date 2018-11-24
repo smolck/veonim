@@ -116,8 +116,7 @@ const grid_line = (e: any) => {
     if (gridId !== activeGrid) {
       activeGrid = gridId
       const win = windows.get(gridId)
-      // TODO: getting width here is kinda expensive. improve.
-      width = win.getWindowInfo().width
+      width = win.cols
       buffer = win.webgl.getBuffer()
       gridBuffer = win.webgl.getGridBuffer()
       if (!gridRenderIndexes[gridId]) gridRenderIndexes[gridId] = 0
