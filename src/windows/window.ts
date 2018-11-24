@@ -60,8 +60,9 @@ export interface Window {
   setWindowInfo(info: WindowInfo): void
   applyGridStyle(gridStyle: GridStyle): void
   refreshLayout(): void
-  show(): void
   hide(): void
+  maybeHide(): void
+  maybeShow(): void
   redrawFromGridBuffer(): void
   updateNameplate(data: NameplateState): void
   addOverlayElement(element: HTMLElement): WindowOverlay
@@ -170,7 +171,18 @@ export default () => {
     webgl.clear()
   }
 
-  api.show = () => {
+  // maybeHide + maybeShow used for hiding/showing windows when
+  // switching between vim instances. nvim controls the true visiblity
+  // state of the windows. the maybe funcs show or hide in a way that
+  // respects the true nvim visibility state of the windows
+  api.maybeHide = () => {
+    if (!wininfo.visible) return
+    container.style.display = 'none'
+    webgl.clear()
+  }
+
+  api.maybeShow = () => {
+    if (!wininfo.visible) return
     container.style.display = 'flex'
     webgl.renderGridBuffer()
   }

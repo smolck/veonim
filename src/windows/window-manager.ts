@@ -167,9 +167,8 @@ onElementResize(webglContainer, (w, h) => {
 })
 
 onSwitchVim((id, lastId) => {
-  getInstanceWindows(lastId).forEach(w => w.hide())
-  // TODO: only show windows for the relevant tab
-  getInstanceWindows(id).forEach(w => w.show())
+  getInstanceWindows(lastId).forEach(w => w.maybeHide())
+  getInstanceWindows(id).forEach(w => w.maybeShow())
   const wininfos = getInstanceWindows(id).map(w => ({ ...w.getWindowInfo() }))
   const { gridTemplateRows, gridTemplateColumns } = windowSizer(wininfos)
   Object.assign(container.style, { gridTemplateRows, gridTemplateColumns })
