@@ -290,3 +290,10 @@ export class NewlineSplitter extends Transform {
     done()
   }
 }
+
+export class MapSet extends Map {
+  add(key: any, value: any) {
+    const s = this.get(key) || new Set()
+    this.set(key, s.add(value))
+  }
+}
