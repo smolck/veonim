@@ -1,27 +1,10 @@
+import { cursor, hideCursor, showCursor } from '../core/cursor'
 import * as windows from '../windows/window-manager'
 import { genList } from '../support/utils'
 import { stealInput } from '../core/input'
-import { cursor } from '../core/cursor'
 import { makel } from '../ui/vanilla'
 import { paddingV } from '../ui/css'
-// import * as grid from '../core/grid'
 import nvim from '../core/neovim'
-
-// interface CellPosition {
-//   row: number
-//   col: number
-// }
-
-// interface FindPosOpts {
-//   row: number
-//   col: number
-//   height: number
-//   width: number
-//   paddingX: number
-//   paddingY: number
-//   fg?: string
-//   bg?: string
-// }
 
 // hand crafted for maximum ergonomic comfort
 const labels = {
@@ -79,11 +62,11 @@ const divinationLine = async ({ visual }: { visual: boolean }) => {
   else nvim.feedkeys('m`', 'n')
 
   const win = windows.getActive()
-  const rowPositions = genList(win.rows, row => win.editor.positionToEditorPixels(row, 0))
+  const positions = genList(win.rows, row => win.editor.positionToEditorPixels(row, 0))
   const labelContainer = makel({ position: 'absolute' })
-  const { labelSize, getLabel, indexOfLabel } = getLabels(rowPositions.length)
+  const { labelSize, getLabel, indexOfLabel } = getLabels(positions.length)
 
-  const labels = rowPositions.map(({ y }, ix) => {
+  const labels = positions.map(({ y }, ix) => {
     const el = makel({
       ...paddingV(4),
       position: 'absolute',
@@ -145,149 +128,93 @@ const divinationLine = async ({ visual }: { visual: boolean }) => {
   })
 }
 
-// const findSearchPositions = ({ row, col, height, width, bg }: FindPosOpts) => {
-//   const maxRow = row + height
-//   const maxCol = col + width
+const findPositions = (win: ReturnType<typeof windows.getActive>, highlight: string) => {
+  const cells = win.editor.findHighlightCells(highlight)
+  return cells.reduce((res, cell, ix) => {
+    const last = cells[ix - 1]
+    if (!last) return (res.push(cell), res)
 
-//   let lastCellWasARegularCell = true
-//   const searchPositions: CellPosition[] = []
+    const colDiff = Math.abs(cell.col - last.col)
+    if (colDiff !== 1) res.push(cell)
 
-//   for (let rowIx = row; rowIx < maxRow; rowIx++) {
-//     for (let colIx = col; colIx < maxCol; colIx++) {
-//       const [ /*char*/, /*cellFg*/, cellBg ] = grid.get(rowIx, colIx)
-//       // TODO: don't know if this will ever be good with trying
-//       // to match search highlights from color information noly
-//       // ( see below for more comments )
-//       const isSearchCell = cellBg === bg
-//       // const isSearchCell = cellFg === fg && cellBg === bg 
-
-//       if (lastCellWasARegularCell && isSearchCell) {
-//         searchPositions.push({ row: rowIx, col: colIx })
-//         lastCellWasARegularCell = false
-//       }
-
-//       if (!isSearchCell) lastCellWasARegularCell = true
-//     }
-//   }
-
-//   return searchPositions
-// }
+    return res
+  }, [] as typeof cells)
+}
 
 export const divinationSearch = async () => {
-  // const win = activeWindow()
-  // if (!win) throw new Error('no window found for divination purposes lol wtf')
+  const win = windows.getActive()
+  const positions = findPositions(win, 'Search')
+  if (!positions.length) return
 
-  // const { foreground, background } = await nvim.getColor('Search')
-  // const specs = win.getSpecs()
-  // const cursorDistanceFromTopOfEditor = cursor.row - specs.row
-  // const cursorDistanceFromLeftOfEditor = cursor.col - specs.col
+  const pixelPositions = positions.map(p => ({
+    ...p,
+    ...win.editor.positionToEditorPixels(p.row, p.col),
+  }))
 
-  // const searchPositions = findSearchPositions({
-  //   ...specs,
-  //   // TODO: this is a real shit way of doing it. getColor returns
-  //   // us the color defined in the colorscheme. color can be reversed
-  //   // but we don't know if it is reversed or not and how to compare.
-  //   // also if we specify a color as NONE, getColor will return
-  //   // some default value (#000 observed) but the rendered color
-  //   // inherits the color from somewhere else
+  const { labelSize, getLabel } = getLabels(pixelPositions.length)
+  const labelContainer = makel({ position: 'absolute' })
+  const jumpTargets = new Map()
 
-  //   // background and foreground are swapped in vim colorscheme
-  //   // for Search highlight group (because of gui=reverse)
-  //   fg: background,
-  //   bg: foreground,
-  // })
+  const labels = pixelPositions.map((pos, ix) => {
+    const el = makel({
+      ...paddingV(4),
+      position: 'absolute',
+      fontSize: '1.3rem',
+      top: `${pos.y}px`,
+      left: `${pos.x}px`,
+      background: '#000',
+      marginTop: '-4px',
+      color: '#eee',
+    })
 
-  // if (!searchPositions.length) return
+    const label = getLabel(ix)
+    jumpTargets.set(label, pos)
+    el.innerHTML = labelHTML(label)
+    return el
+  })
 
-  // // TODO: again, same issue as above, remove/filter out the current line + col
-  // // if mouse is right on top of it
-  // const searchPixelPositions = searchPositions.map(m => ({
-  //   ...m,
-  //   ...win.relativePositionToPixels(m.row, m.col),
-  // }))
+  labels.forEach(label => labelContainer.appendChild(label))
 
-  // const labelContainer = makel({ position: 'absolute' })
-  // const jumpTargets = new Map()
+  const overlay = win.addOverlayElement(labelContainer)
 
-  // const { labelSize, getLabel } = getLabels(searchPixelPositions.length)
+  const updateLabels = (matchChar: string) => labels
+    .filter(m => (m.children[0] as HTMLElement).innerText.toLowerCase() === matchChar)
+    .forEach(m => Object.assign((m.children[0] as HTMLElement).style, {
+      // TODO: inherit from colorscheme
+      color: '#ff007c'
+    }))
 
-  // const labels = searchPixelPositions.map((pos, ix) => {
-  //   const relativePosition = {
-  //     row: pos.row - specs.row,
-  //     col: pos.col - specs.col,
-  //   }
+  hideCursor()
+  const grabbedKeys: string[] = []
 
-  //   const sameRow = relativePosition.row === cursorDistanceFromTopOfEditor
-  //   const sameCol = relativePosition.col === cursorDistanceFromLeftOfEditor
+  const reset = () => {
+    restoreInput()
+    overlay.remove()
+    showCursor()
+  }
 
-  //   if (sameRow && sameCol) return
+  const jump = async () => {
+    const jumpLabel = grabbedKeys.join('').toUpperCase()
+    if (!jumpTargets.has(jumpLabel)) return reset()
 
-  //   // TODO: these styles should be shared. also i think we should use css translate
-  //   // instead of top/left
-  //   const el = makel({
-  //     ...paddingV(4),
-  //     position: 'absolute',
-  //     // TODO: this font-size depends on global font-size + line-height
-  //     // may need to figure out a good way to determine the largest font-size
-  //     // that we can display without overlapping!
-  //     fontSize: '1.3rem',
-  //     // TODO: need to figure out what to do when labels stack on top of each other???
-  //     // like if two chars are highlighted right next to each other <2 spaces
-  //     top: `${pos.y}px`,
-  //     left: `${pos.x}px`,
-  //     background: '#000',
-  //     color: '#eee',
-  //   })
+    const { row, col } = jumpTargets.get(jumpLabel)
+    const jumpDistance = row - cursor.row
+    const jumpMotion = jumpDistance > 0 ? 'j' : 'k'
+    const command = `m\`${Math.abs(jumpDistance)}g${jumpMotion}${col + 1}|`
 
-  //   const label = getLabel(ix)
-  //   jumpTargets.set(label, relativePosition)
-  //   el.innerHTML = labelHTML(label)
+    nvim.feedkeys(command, 'n')
+    reset()
+  }
 
-  //   return el
-  // }).filter(m => m) as HTMLElement[]
+  const restoreInput = stealInput(keys => {
+    if (keys === '<Esc>') return reset()
 
-  // labels.forEach(label => labelContainer.appendChild(label))
-  // currentWindowElement.add(labelContainer)
-
-  // const updateLabels = (matchChar: string) => labels
-  //   .filter(m => (m.children[0] as HTMLElement).innerText.toLowerCase() === matchChar)
-  //   .forEach(m => merge((m.children[0] as HTMLElement).style, {
-  //     // TODO: inherit from colorscheme
-  //     color: '#ff007c'
-  //   }))
-
-  // hideCursor()
-  // const grabbedKeys: string[] = []
-
-  // const reset = () => {
-  //   restoreInput()
-  //   currentWindowElement.remove(labelContainer)
-  //   showCursor()
-  // }
-
-  // const jump = async () => {
-  //   const jumpLabel = grabbedKeys.join('').toUpperCase()
-  //   if (!jumpTargets.has(jumpLabel)) return reset()
-
-  //   const { row, col } = jumpTargets.get(jumpLabel)
-
-  //   const jumpDistance = row - cursorDistanceFromTopOfEditor
-  //   const jumpMotion = jumpDistance > 0 ? 'j' : 'k'
-  //   const command = `m\`${Math.abs(jumpDistance)}g${jumpMotion}${col + 1}|`
-
-  //   nvim.feedkeys(command, 'n')
-  //   reset()
-  // }
-
-  // const restoreInput = stealInput(keys => {
-  //   if (keys === '<Esc>') return reset()
-
-  //   grabbedKeys.push(keys)
-  //   if (labelSize === 1 && grabbedKeys.length === 1) return jump()
-  //   if (labelSize === 2 && grabbedKeys.length === 1) return updateLabels(keys)
-  //   if (labelSize === 2 && grabbedKeys.length === 2) return jump()
-  //   else reset()
-  // })
+    grabbedKeys.push(keys)
+    if (labelSize === 1 && grabbedKeys.length === 1) return jump()
+    if (labelSize === 2 && grabbedKeys.length === 1) return updateLabels(keys)
+    if (labelSize === 2 && grabbedKeys.length === 2) return jump()
+    else reset()
+  })
 }
 
 nvim.onAction('jump-search', divinationSearch)
