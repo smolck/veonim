@@ -42,7 +42,9 @@ interface PosOpts {
   within: boolean
 }
 
-interface HighlightCell extends Position {
+interface HighlightCell {
+  row: number
+  col: number
   char: string
 }
 
@@ -251,18 +253,17 @@ export default () => {
       return lines
     },
     findHighlightCells: highlightGroup => {
-      const def = {} as NonNullable<ReturnType<typeof highlightLookup>>
-      const { hlid } = highlightLookup(highlightGroup) || def
-      if (!hlid) return []
+      const highlights = highlightLookup(highlightGroup).map(m => m.hlid)
+      if (!highlights.length) return []
 
       const results = []
 
       for (let row = 0; row < wininfo.height; row++) {
         for (let col = 0; col < wininfo.width; col++) {
           const buf = webgl.getGridCell(row, col)
-          if (buf[2] === hlid) results.push({
-            x: buf[0],
-            y: buf[1],
+          if (highlights.includes(buf[2])) results.push({
+            col: buf[0],
+            row: buf[1],
             char: getCharFromIndex(buf[3])
           })
         }

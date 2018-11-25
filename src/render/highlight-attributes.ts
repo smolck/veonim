@@ -1,4 +1,4 @@
-import { asColor } from '../support/utils'
+import { asColor, MapSet } from '../support/utils'
 import nvim from '../core/neovim'
 
 export interface Attrs {
@@ -48,7 +48,7 @@ const defaultColors = {
 // msgpack-decoder for more info on how this works.
 const sillyString = (s: any): string => typeof s === 'number' ? String.fromCodePoint(s) : s
 
-const highlightInfo = new Map<string, HighlightInfo>()
+const highlightInfo = new MapSet()
 const canvas = document.createElement('canvas')
 const ui = canvas.getContext('2d', { alpha: true }) as CanvasRenderingContext2D
 const highlights = new Map<number, HighlightGroup>([
@@ -107,10 +107,7 @@ export const addHighlight = (id: number, attr: Attrs, infos: HighlightInfoEvent[
     reverse: !!attr.reverse,
   })
 
-  // TODO: not sure if the id is the same as the info id?
-  // supposedly we are supposed to receive an array of infos
-  // so there could be different ids for each?
-  infos.forEach(info => highlightInfo.set(sillyString(info.hi_name), {
+  infos.forEach(info => highlightInfo.add(sillyString(info.hi_name), {
     hlid: id,
     id: info.id,
     kind: info.kind,
@@ -119,7 +116,7 @@ export const addHighlight = (id: number, attr: Attrs, infos: HighlightInfoEvent[
   }))
 }
 
-export const highlightLookup = (name: string) => highlightInfo.get(name)
+export const highlightLookup = (name: string): HighlightInfo[] => [...highlightInfo.get(name)]
 export const getHighlight = (id: number) => highlights.get(id)
 export const getBackground = (id: number) => {
   const { background } = highlights.get(id) || {} as HighlightGroup
