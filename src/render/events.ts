@@ -94,8 +94,12 @@ export const msg_show = ([ , [ kind, msgs, flag ] ]: [any, [string, MessageEvent
   // TODO: map message kind to err/warn/info/etc
   // TODO: what is flag?
   console.log('MSG OF:', kind, flag)
-  const notifyKind = messageNotifyKindMappings.get(sillyString(kind))
-  if (!notifyKind) console.warn('PLS MAP msg kind:', sillyString(kind))
+  const skind = sillyString(kind)
+  // TODO: i think no msg kind means we don't show it??? or do we??
+  if (!skind) return
+
+  const notifyKind = messageNotifyKindMappings.get(skind)
+  if (!notifyKind) console.warn('PLS MAP msg kind:', JSON.stringify(skind))
   // TODO: do something with hlid or ignore?
   msgs.forEach(([ /*hlid*/, text ]) => notify(sillyString(text), notifyKind))
 }
