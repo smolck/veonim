@@ -82,7 +82,8 @@ const grid_cursor_goto = ([ , [ gridId, row, col ] ]: any) => {
   moveCursor(gridId, row, col)
 }
 
-const grid_scroll = ([ , [ gridId, top, bottom, /*left*/, /*right*/, amount ] ]: any) => {
+const grid_scroll = ([ , [ gridId, top, bottom, left, right, amount ] ]: any) => {
+  console.log('grid_scroll', gridId, top, bottom, left, right, amount)
   if (gridId === 1) return
   // we make the assumption that left & right will always be
   // at the window edges (left == 0 && right == window.width)
