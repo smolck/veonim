@@ -81,8 +81,13 @@ export interface Window {
 }
 
 const edgeDetection = (el: HTMLElement) => {
-  const { top, left, bottom, right } = el.getBoundingClientRect()
+  const size = el.getBoundingClientRect()
+  const top = Math.round(size.top)
+  const bottom = Math.round(size.bottom)
+  const left = Math.round(size.left)
+  const right = Math.round(size.right)
   const edges = Object.create(null)
+
   if (left === 0) edges.borderLeft = 'none'
   if (top === titleSpecs.height) edges.borderTop = 'none'
   if (bottom - titleSpecs.height === windowsGridSize.height) edges.borderBottom = 'none'
