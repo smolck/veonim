@@ -34,6 +34,7 @@ const canvas = sandboxCanvas.getContext('2d', { alpha: false }) as CanvasRenderi
 merge(container.style, {
   display: 'flex',
   flex: '1',
+  position: 'relative',
   background: 'var(--background-30)',
 })
 

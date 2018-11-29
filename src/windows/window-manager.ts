@@ -1,6 +1,5 @@
 import CreateWindow, { Window } from '../windows/window'
 import { onSwitchVim, sessions } from '../core/sessions'
-import { specs as titleSpecs } from '../core/title'
 import getWindowMetadata from '../windows/metadata'
 import { cursor, moveCursor } from '../core/cursor'
 import CreateWebGLRenderer from '../render/webgl'
@@ -119,22 +118,18 @@ webgl.backgroundElement.setAttribute('wat', 'webgl-background')
 webgl.foregroundElement.setAttribute('wat', 'webgl-foreground')
 
 Object.assign(webglContainer.style, {
-  width: '100vw',
-  // TODO: 24px for statusline. do it better
-  // TODO: and title. bruv do i even know css?
-  height: `calc(100vh - 24px - ${titleSpecs.height}px)`,
+  position: 'absolute',
+  width: '100%',
+  height: '100%',
   flex: 1,
   zIndex: 2,
-  position: 'absolute',
   background: 'var(--background)',
 })
 
 Object.assign(container.style, {
-  width: '100vw',
-  // TODO: 24px for statusline. do it better
-  // TODO: and title. bruv do i even know css?
-  height: `calc(100vh - 24px - ${titleSpecs.height}px)`,
   position: 'absolute',
+  width: '100%',
+  height: '100%',
   flex: 1,
   zIndex: 5,
   display: 'grid',
