@@ -144,6 +144,7 @@ export default () => {
   } as Window
 
   api.resizeWindow = (width, height) => {
+    Object.assign(wininfo, { height, width })
     webgl.resize(height, width)
   }
 
@@ -154,6 +155,7 @@ export default () => {
     }
 
     container.id = `${info.id}`
+    container.setAttribute('gridid', info.gridId)
     Object.assign(wininfo, info)
   }
 
