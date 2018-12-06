@@ -1,10 +1,12 @@
-import { app as makeApp, h as makeHyperscript, ActionsType, View } from 'hyperapp'
+import { ActionsType, View } from 'hyperapp'
 import { showCursor, hideCursor } from '../core/cursor'
 import { specs as titleSpecs } from '../core/title'
 import * as dispatch from '../messaging/dispatch'
 import { merge, uuid } from '../support/utils'
 import hyperscript from '../ui/hyperscript'
 import * as viminput from '../core/input'
+// using our own version of hyperapp patched to fix removeChild errors
+const { app: makeApp, h: makeHyperscript } = require('../ui/hyperapp')
 
 export const h = hyperscript(makeHyperscript)
 

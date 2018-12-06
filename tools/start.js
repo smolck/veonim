@@ -15,6 +15,7 @@ go(async () => {
     copy.processExplorer(),
     copy.assets(),
     copy.runtime(),
+    copy.hyperapp(),
   ])
 
   const tsc = { main: createTask(), workers: createTask() }

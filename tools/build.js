@@ -25,6 +25,10 @@ const copy = {
     $`copying runtime files`
     return fs.copy(fromRoot('runtime'), fromRoot('build/runtime'))
   },
+  hyperapp: () => {
+    $`copying hyperapp`
+    return fs.copy(fromRoot('src/ui/hyperapp.js'), fromRoot('build/ui/hyperapp.js'))
+  },
 }
 
 const codemod = {
@@ -55,6 +59,7 @@ require.main === module && go(async () => {
     copy.processExplorer(),
     copy.assets(),
     copy.runtime(),
+    copy.hyperapp(),
   ])
 })
 
