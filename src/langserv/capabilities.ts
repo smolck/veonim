@@ -38,7 +38,7 @@ export default (cwd: string) => ({
           snippetSupport: true
         },
         completionItemKind: {
-          valueSet: CompletionItemKind,
+          valueSet: Object.values(CompletionItemKind),
         }
       },
       hover: {
