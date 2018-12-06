@@ -1,6 +1,6 @@
 import { CodeLens, Diagnostic, Command, Location, WorkspaceEdit, Hover,
   SignatureHelp, SymbolInformation, SymbolKind, CompletionItem,
-  DocumentHighlight } from 'vscode-languageserver-protocol'
+  DocumentHighlight, InsertTextFormat } from 'vscode-languageserver-protocol'
 import { is, merge, uriToPath, uriAsCwd, uriAsFile } from '../support/utils'
 import { notify, request, setTextSyncState, onDiagnostics as onDiags } from '../langserv/director'
 import { Patch, workspaceEditToPatch } from '../langserv/patch'
@@ -260,12 +260,19 @@ export const workspaceSymbols = async (data: NeovimState, query: string): Promis
   return filterWorkspaceSymbols(mappedSymbols)
 }
 
+const parseCompletionSnippets = (completions: CompletionItem[]): CompletionItem[] => completions.map(c => {
+  if (c.insertTextFormat !== InsertTextFormat.Snippet) return c
+  // TODO: when we have snippet support, we will actually parse the snippets
+  return { ...c, insertText: c.label }
+})
+
 export const completions = async (data: NeovimState): Promise<CompletionItem[]> => {
   const req = toProtocol(data)
   const res = await request('textDocument/completion', req)
   // TODO: handle isIncomplete flag in completions result
   // docs: * This list it not complete. Further typing should result in recomputing this list
-  return is.object(res) && res.items ? res.items : res
+  const comps = is.object(res) && res.items ? res.items : res
+  return parseCompletionSnippets(comps)
 }
 
 export const completionDetail = async (data: NeovimState, item: CompletionItem): Promise<CompletionItem> => {
