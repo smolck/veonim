@@ -52,8 +52,8 @@ export class Scanner {
 			|| (ch >= CharCode.A && ch <= CharCode.Z);
 	}
 
-	value: string;
-	pos: number;
+	value!: string;
+	pos!: number;
 
 	constructor() {
 		this.text('');
@@ -131,7 +131,7 @@ export abstract class Marker {
 
 	readonly _markerBrand: any;
 
-	public parent: Marker;
+	public parent!: Marker;
 	protected _children: Marker[] = [];
 
 	appendChild(child: Marker): this {
@@ -215,7 +215,7 @@ export class Text extends Marker {
 }
 
 export abstract class TransformableMarker extends Marker {
-	public transform: Transform;
+	public transform!: Transform;
 }
 
 export class Placeholder extends TransformableMarker {
@@ -310,7 +310,7 @@ export class Choice extends Marker {
 
 export class Transform extends Marker {
 
-	regexp: RegExp;
+	regexp!: RegExp;
 
 	resolve(value: string): string {
 		const _this = this;
@@ -587,7 +587,7 @@ export class SnippetParser {
 	}
 
 	private _scanner = new Scanner();
-	private _token: Token;
+	private _token!: Token;
 
 	text(value: string): string {
 		return this.parse(value).toString();
@@ -612,7 +612,7 @@ export class SnippetParser {
 			if (marker instanceof Placeholder) {
 				placeholderCount += 1;
 				if (marker.isFinalTabstop) {
-					placeholderDefaultValues.set(0, undefined);
+					placeholderDefaultValues.set(0, undefined!);
 				} else if (!placeholderDefaultValues.has(marker.index) && marker.children.length > 0) {
 					placeholderDefaultValues.set(marker.index, marker.children);
 				} else {
@@ -625,7 +625,7 @@ export class SnippetParser {
 			if (placeholderDefaultValues.has(placeholder.index)) {
 				const clone = new Placeholder(placeholder.index);
 				clone.transform = placeholder.transform;
-				for (const child of placeholderDefaultValues.get(placeholder.index)) {
+				for (const child of placeholderDefaultValues.get(placeholder.index)!) {
 					clone.appendChild(child.clone());
 				}
 				snippet.replace(placeholder, [clone]);
