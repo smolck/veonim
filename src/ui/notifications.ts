@@ -5,6 +5,7 @@ import { colors, badgeStyle } from '../ui/styles'
 import { animate, cvar } from '../ui/css'
 import * as Icon from 'hyperapp-feather'
 import { h, app } from '../ui/uikit'
+import nvim from '../core/neovim'
 
 export enum NotifyKind {
   Error = 'error',
@@ -53,6 +54,7 @@ const renderIcons = new Map([
 const getIcon = (kind: NotifyKind) => renderIcons.get(kind)!
 
 const actions = {
+  clear: () => ({ notifications: [] }),
   notify: (notification: Notification) => (s: S) => {
     if (notification.kind === NotifyKind.Hidden) return
 
@@ -156,3 +158,6 @@ export const notify = (message: string, kind = NotifyKind.Info) => {
     else console.log('@VIM@', msg.message)
   }
 }
+
+export const clear = () => ui.clear()
+nvim.onAction('messages-clear', clear)
