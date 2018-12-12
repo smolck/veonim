@@ -70,14 +70,14 @@
     "@types/fuzzaldrin-plus": "0.0.1",
     "@types/msgpack-lite": "0.1.4",
     "@types/node": "9.4.0",
-    "electron": "2.0.8",
-    "electron-builder": "20.13.3",
+    "electron": "3.0.11",
+    "electron-builder": "20.38.3",
     "electron-devtools-installer": "2.2.3",
     "fs-extra": "5.0.0",
-    "jscodeshift": "0.3.32",
+    "jscodeshift": "0.6.2",
     "mocha": "5.2.0",
     "proxyquire": "2.0.1",
-    "spectron": "4.0.0",
+    "spectron": "5.0.0",
     "ts-unused-exports": "2.0.5",
     "typescript": "2.8.1"
   }
