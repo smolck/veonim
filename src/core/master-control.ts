@@ -32,8 +32,10 @@ const vimOptions = {
   ext_tabline: true,
   ext_wildmenu: true,
   ext_cmdline: true,
-  ext_messages: true,
 }
+
+// TODO: make build for windows that supports external messages
+if (process.platform !== 'win32') Object.assign(vimOptions, { ext_messages: true })
 
 const ids = {
   vim: ID(),
