@@ -105,6 +105,7 @@ const updateCursorlinePosition = (canvas: CanvasWindow, backgroundColor: string)
     background: hexToRGBA(backgroundColor, 0.2),
     transform: translate(x, y),
     width: `${width}px`,
+    height: `${canvasContainer.cell.height}px`,
   })
 }
 
