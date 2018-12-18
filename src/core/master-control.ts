@@ -1,5 +1,5 @@
 import { startupFuncs, startupCmds, postStartupCommands } from '../core/vim-startup'
-import { asColor, ID, log, onFnCall, merge, prefixWith } from '../support/utils'
+import { asColor, ID, onFnCall, merge, prefixWith } from '../support/utils'
 import { NotifyKind, notify as notifyUI } from '../ui/notifications'
 import MsgpackStreamDecoder from '../messaging/msgpack-decoder'
 import MsgpackStreamEncoder from '../messaging/msgpack-encoder'
@@ -55,6 +55,7 @@ const msgpackEncoder = new MsgpackStreamEncoder()
 const spawnVimInstance = () => Neovim.run([
   '--cmd', `${startupFuncs()} | ${startupCmds}`,
   // noop commands. we parse plugins & extensions directly from the vimrc file text
+  // TODO: this is wrong, we should just vimscript these
   '--cmd', `com! -nargs=* Plug 1`,
   '--cmd', `com! -nargs=* VeonimExt 1`,
   '--cmd', `com! -nargs=+ -range -complete=custom,VeonimCmdCompletions Veonim call Veonim(<f-args>)`,
@@ -74,9 +75,9 @@ const createNewVimInstance = (): number => {
 
   vimInstances.set(id, { id, proc, attached: false })
 
-  proc.on('error', (e: any) => log `vim ${id} err ${e}`)
-  proc.stdout.on('error', (e: any) => log `vim ${id} stdout err ${(JSON.stringify(e))}`)
-  proc.stdin.on('error', (e: any) => log `vim ${id} stdin err ${(JSON.stringify(e))}`)
+  proc.on('error', (e: any) => console.error(`vim ${id} err ${e}`))
+  proc.stdout.on('error', (e: any) => console.error(`vim ${id} stdout err ${(JSON.stringify(e))}`))
+  proc.stdin.on('error', (e: any) => console.error(`vim ${id} stdin err ${(JSON.stringify(e))}`))
   proc.on('exit', (c: any) => onExitFn(id, c))
 
   return id

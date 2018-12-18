@@ -2,8 +2,8 @@ import { dirname, basename, join, extname, resolve, sep, parse, normalize } from
 import { promisify as P } from 'util'
 import { EventEmitter } from 'events'
 import { exec } from 'child_process'
+import { homedir, tmpdir } from 'os'
 import { Transform } from 'stream'
-import { homedir } from 'os'
 import * as fs from 'fs'
 export { watchFile } from '../support/fs-watch'
 
@@ -11,12 +11,6 @@ export interface Task<T> {
   done: (value: T) => void,
   promise: Promise<T>,
 }
-
-const logger = (str: TemplateStringsArray | string, v: any[]) => Array.isArray(str)
-  ? console.log((str as TemplateStringsArray).map((s, ix) => s + (v[ix] || '')).join(''))
-  : console.log(str as string)
-
-export const log = (str: TemplateStringsArray | string, ...vars: any[]) => logger(str, vars)
 
 process.on('unhandledRejection', e => console.error(e))
 
@@ -53,6 +47,9 @@ export const uriAsFile = (m = '') => basename(uriToPath(m))
 export const CreateTask = <T>(): Task<T> => ( (done = (_: T) => {}, promise = new Promise<T>(m => done = m)) => ({ done, promise }) )()
 export const uuid = (): string => (<any>[1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,(a: any)=>(a^Math.random()*16>>a/4).toString(16))
 export const shell = (cmd: string, opts?: object): Promise<string> => new Promise(fin => exec(cmd, opts, (_, out) => fin(out + '')))
+export const getPipeName = (name: string) => process.platform === 'win32'
+  ? `\\\\.\\pipe\\${name}${uuid()}-sock`
+  : join(tmpdir(), `${name}${uuid()}.sock`)
 
 // TODO: remove listof because it's not as performant
 export const genList = <T>(count: number, fn: (index: number) => T) => {

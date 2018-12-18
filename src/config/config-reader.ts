@@ -1,11 +1,11 @@
-import { log, exists, readFile, configPath as base, watchFile } from '../support/utils'
+import { exists, readFile, configPath as base, watchFile } from '../support/utils'
 
 type Config = Map<string, any>
 type ConfigCallback = (config: Config) => void
 
 const loadConfig = async (path: string, notify: ConfigCallback) => {
   const pathExists = await exists(path)
-  if (!pathExists) return log `config file at ${path} not found`
+  if (!pathExists) return console.error(`config file at ${path} not found`)
 
   const data = await readFile(path)
   const config = data
@@ -25,15 +25,15 @@ const loadConfig = async (path: string, notify: ConfigCallback) => {
 export default async (location: string, cb: ConfigCallback) => {
   const path = `${base}/${location}`
   const pathExists = await exists(path)
-  if (!pathExists) return log `config file at ${path} not found`
+  if (!pathExists) return console.error(`config file at ${path} not found`)
 
-  loadConfig(path, cb).catch(e => log(e))
-  watchFile(path, () => loadConfig(path, cb).catch(e => log(e)))
+  loadConfig(path, cb).catch(e => console.error(e))
+  watchFile(path, () => loadConfig(path, cb).catch(e => console.error(e)))
 }
 
 export const watchConfig = async (location: string, cb: Function) => {
   const path = `${base}/${location}`
   const pathExists = await exists(path)
-  if (!pathExists) return log `config file at ${path} not found`
+  if (!pathExists) return console.error(`config file at ${path} not found`)
   watchFile(path, () => cb())
 }

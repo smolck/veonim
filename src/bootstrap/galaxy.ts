@@ -5,7 +5,7 @@
   .forEach(m => Reflect.set(process.env, `VEONIM_TRACE_${m.toUpperCase()}`, 1))
 // end setup trace
 
-import { CreateTask, log, delay as timeout, requireDir } from '../support/utils'
+import { CreateTask, delay as timeout, requireDir } from '../support/utils'
 import { resize, attachTo, create } from '../core/master-control'
 import * as canvasContainer from '../core/canvas-container'
 import configReader from '../config/config-reader'
@@ -57,7 +57,7 @@ const main = async () => {
   setTimeout(() => require('../support/dependency-manager').default(), 100)
 }
 
-main().catch(log)
+main().catch(console.error)
 
 export const touched = () => {
   const start = document.getElementById('start')
