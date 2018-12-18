@@ -1,6 +1,6 @@
 import { onFnCall, proxyFn, Watchers, uuid, CreateTask } from '../support/utils'
 import { EV_CREATE_VIM, EV_SWITCH_VIM } from '../support/constants'
-import { onCreateVim, onSwitchVim } from '../core/sessions'
+import { onCreateVim, onSwitchVim } from '../core/instance-manager'
 
 type EventFn = { [index: string]: (...args: any[]) => void }
 type RequestEventFn = { [index: string]: (...args: any[]) => Promise<any> }

@@ -1,10 +1,8 @@
-import { startupFuncs, startupCmds, postStartupCommands } from '../core/vim-startup'
-import { asColor, ID, onFnCall, merge, prefixWith } from '../support/utils'
-import { NotifyKind, notify as notifyUI } from '../ui/notifications'
+import { asColor, ID, onFnCall, merge, prefixWith, getPipeName } from '../support/utils'
 import MsgpackStreamDecoder from '../messaging/msgpack-decoder'
 import MsgpackStreamEncoder from '../messaging/msgpack-encoder'
+import { startupFuncs, startupCmds } from '../neovim/startup'
 import { Api, Prefixes } from '../neovim/protocol'
-import NeovimUtils from '../support/neovim-utils'
 import { Neovim } from '../support/binaries'
 import { ChildProcess } from 'child_process'
 import SetupRPC from '../messaging/rpc'
@@ -18,7 +16,7 @@ interface VimInstance {
   id: number,
   proc: ChildProcess,
   attached: boolean,
-  path?: string,
+  pipeName: string,
 }
 
 interface NewVimResponse {
@@ -52,14 +50,16 @@ const vimInstances = new Map<number, VimInstance>()
 const msgpackDecoder = new MsgpackStreamDecoder()
 const msgpackEncoder = new MsgpackStreamEncoder()
 
-const spawnVimInstance = () => Neovim.run([
-  '--cmd', `${startupFuncs()} | ${startupCmds}`,
+const spawnVimInstance = (pipeName: string) => Neovim.run([
+  // '--cmd', `${startupFuncs()} | ${startupCmds}`,
   // noop commands. we parse plugins & extensions directly from the vimrc file text
   // TODO: this is wrong, we should just vimscript these
   '--cmd', `com! -nargs=* Plug 1`,
   '--cmd', `com! -nargs=* VeonimExt 1`,
   '--cmd', `com! -nargs=+ -range -complete=custom,VeonimCmdCompletions Veonim call Veonim(<f-args>)`,
-  '--embed'
+  '--embed',
+  '--listen',
+  pipeName
 ], {
   cwd: homedir(),
   env: {
@@ -70,10 +70,11 @@ const spawnVimInstance = () => Neovim.run([
 })
 
 const createNewVimInstance = (): number => {
-  const proc = spawnVimInstance()
+  const pipeName = getPipeName('veonim-instance')
+  const proc = spawnVimInstance(pipeName)
   const id = ids.vim.next()
 
-  vimInstances.set(id, { id, proc, attached: false })
+  vimInstances.set(id, { id, proc, pipeName, attached: false })
 
   proc.on('error', (e: any) => console.error(`vim ${id} err ${e}`))
   proc.stdout.on('error', (e: any) => console.error(`vim ${id} stdout err ${(JSON.stringify(e))}`))
@@ -105,44 +106,12 @@ export const switchTo = (id: number) => {
 export const create = async ({ dir } = {} as { dir?: string }): Promise<NewVimResponse> => {
   const id = createNewVimInstance()
   switchTo(id)
-  const errors = await unblock()
 
-  // usually vimrc parsing errors
-  if (errors.length) notifyUI(errors.join('\n'), NotifyKind.Error)
+  api.command(`${startupFuncs()} | ${startupCmds}`)
+  dir && api.command(`cd ${dir}`)
 
-  // v:servername used to connect other clients to nvim via TCP
-  //
-  // by default we use the nvim process stdout/stdin to do core operations.
-  // things like rendering, key input, etc. these are high priority items and
-  // will live on the main thread.
-  //
-  // now, we will have a lot of async operations like reading buffers,
-  // modifying buffer text contents, setting highlight content, etc. that could
-  // potentially be slow to serialize/deserialize on the main thread (because
-  // msgpack is SLOW as a sloth). so we will move these non-essential operations
-  // to web workers.
-  //
-  // we will also need access to the nvim apis in the extension-host web worker
-  // (or process in the future?). extensions will talk to a vscode-to-nvim api
-  // bridge. there is no good reason why we should bridge the nvim api over
-  // web worker postMessages - just have the web worker talk directly to nvim
-  const path = await req.eval('v:servername')
-
-  // uhh this fixes a situation where the post startup commands are overwritten
-  // somehow by the startup commands. i have no fucking idea why this happens
-  // as the startup cmds are sent as process arguments, so api event timing
-  // has nothing to do with this. msgpack also has nothing to do with this -
-  // i tested the original msgpack lib and the same thing happened.
-  //
-  // i am deeply unsettled by this fix, but it seems to work. PLS EXPLAIN Y
-  setImmediate(() => {
-    api.command(postStartupCommands)
-    // used when we create a new vim session with a predefined cwd
-    dir && api.command(`cd ${dir}`)
-  })
-
-  vimInstances.get(id)!.path = path
-  return { id, path }
+  const { pipeName } = vimInstances.get(id)!
+  return { id, path: pipeName }
 }
 
 export const attachTo = (id: number) => {
@@ -158,8 +127,6 @@ msgpackDecoder.on('data', ([type, ...d]: [number, any]) => onData(type, d))
 
 const req: Api = onFnCall((name: string, args: any[] = []) => request(prefix(name), args))
 const api: Api = onFnCall((name: string, args: any[]) => notify(prefix(name), args))
-
-const { unblock } = NeovimUtils({ notify: api, request: req })
 
 export const onExit = (fn: ExitFn) => { onExitFn = fn }
 export const onRedraw = (fn: RedrawFn) => onEvent('redraw', fn)

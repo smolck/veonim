@@ -76,7 +76,7 @@ export const renameCurrentToCwd = (cwd: string) => {
 
 export const list = () => [...vims.values()].filter(v => !v.active).map(v => ({ id: v.id, name: v.name }))
 
-export const sessions = {
+export const instances = {
   get current() { return currentVimID }
 }
 

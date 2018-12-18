@@ -3,7 +3,6 @@ import MsgpackStreamDecoder from '../messaging/msgpack-decoder'
 import MsgpackStreamEncoder from '../messaging/msgpack-encoder'
 import { colorscheme } from '../config/default-configs'
 import { Api, Prefixes } from '../neovim/protocol'
-import NeovimUtils from '../support/neovim-utils'
 import { on } from '../messaging/worker-client'
 import { Neovim } from '../support/binaries'
 import SetupRPC from '../messaging/rpc'
@@ -66,20 +65,7 @@ decoder.on('data', ([type, ...d]: [number, any]) => onData(type, d))
 const req: Api = onFnCall((name: string, args: any[] = []) => request(prefix.core(name), args))
 const api: Api = onFnCall((name: string, args: any[]) => notify(prefix.core(name), args))
 
-const { unblock } = NeovimUtils({ notify: api, request: req })
-
-unblock().then(errors => {
-  if (errors.length) {
-    console.error(`vim colorizer had some errors starting up`)
-    errors.forEach(e => console.error(e))
-  }
-
-  // TODO: if plugins are not installed, defer loading colorizer.
-  // figure out a way to wait for main neovim instance to finish
-  // installing plugins (aka downloading packages)
-
-  api.uiAttach(100, 10, vimOptions)
-})
+api.uiAttach(100, 10, vimOptions)
 
 api.command(asVimFunc('Colorize', `
   execute 'set filetype=' . a:1

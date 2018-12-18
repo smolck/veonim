@@ -7,11 +7,11 @@ import { uriToPath, pathRelativeToCwd } from '../support/utils'
 import { positionWithinRange } from '../support/neovim-utils'
 import * as codeActionUI from '../components/code-actions'
 import { supports } from '../langserv/server-features'
+import { onSwitchVim } from '../core/instance-manager'
+import { instances } from '../core/instance-manager'
 import * as problemsUI from '../components/problems'
 import * as dispatch from '../messaging/dispatch'
 import { setCursorColor } from '../core/cursor'
-import { onSwitchVim } from '../core/sessions'
-import { sessions } from '../core/sessions'
 import { cursor } from '../core/cursor'
 import nvim from '../core/neovim'
 import '../ai/remote-problems'
@@ -33,7 +33,7 @@ const cache = {
 }
 
 const clearAllDiagnosticsForSource = (source: string) => {
-  const sessionDiagnostics = cache.diagnostics.get(sessions.current)
+  const sessionDiagnostics = cache.diagnostics.get(instances.current)
   if (!sessionDiagnostics) return
 
   const diagValues = [...sessionDiagnostics.entries()]
@@ -43,19 +43,19 @@ const clearAllDiagnosticsForSource = (source: string) => {
     return next
   }, new Map())
 
-  cache.diagnostics.set(sessions.current, filteredDiagnostics)
+  cache.diagnostics.set(instances.current, filteredDiagnostics)
 }
 
 const updateDiagnostics = (path: string, diagnostics: Diagnostic[]) => {
-  const sessionDiagnostics = cache.diagnostics.get(sessions.current)
+  const sessionDiagnostics = cache.diagnostics.get(instances.current)
   if (sessionDiagnostics) return sessionDiagnostics.set(path, diagnostics)
   const newSessionDiags = new Map([ [ path, diagnostics ] ])
-  cache.diagnostics.set(sessions.current, newSessionDiags)
+  cache.diagnostics.set(instances.current, newSessionDiags)
 }
 
 const current = {
-  get diagnostics(): Diags { return cache.diagnostics.get(sessions.current) || new Map() },
-  get problems(): Problem[] { return cache.problems.get(sessions.current) || [] },
+  get diagnostics(): Diags { return cache.diagnostics.get(instances.current) || new Map() },
+  get problems(): Problem[] { return cache.problems.get(instances.current) || [] },
 }
 
 const updateUI = () => {
@@ -162,7 +162,7 @@ nvim.onAction('problems-focus', () => problemsUI.focus())
 
 export const setProblems = (problems: Problem[]) => {
   if (!problems || !problems.length) return
-  cache.problems.set(sessions.current, problems)
+  cache.problems.set(instances.current, problems)
   updateUI()
 }
 

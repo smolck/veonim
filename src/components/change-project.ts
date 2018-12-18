@@ -1,6 +1,6 @@
 import { getDirFiles, exists, pathRelativeToHome, simplifyPath, absolutePath } from '../support/utils'
 import { RowNormal, RowImportant } from '../components/row-container'
-import { createVim, renameCurrentToCwd } from '../core/sessions'
+import { createVim, renameCurrentToCwd } from '../core/instance-manager'
 import { h, app, vimBlur, vimFocus } from '../ui/uikit'
 import { Plugin } from '../components/plugin-container'
 import configReader from '../config/config-service'

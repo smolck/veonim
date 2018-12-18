@@ -1,6 +1,6 @@
-import { BufferOption, BufferType } from '../neovim/types'
 import { simplifyPath, pathReducer } from '../support/utils'
-import { BufferVar } from '../core/vim-functions'
+import { BufferOption, BufferType } from '../neovim/types'
+import { BufferVar } from '../neovim/function-types'
 import nvim from '../core/neovim'
 
 export interface WindowMetadata {

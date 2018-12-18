@@ -1,7 +1,7 @@
 import { Plugin } from '../components/plugin-container'
 import { RowNormal } from '../components/row-container'
 import { h, app, vimBlur, vimFocus } from '../ui/uikit'
-import { list, switchVim } from '../core/sessions'
+import { list, switchVim } from '../core/instance-manager'
 import Input from '../components/text-input'
 import { filter } from 'fuzzaldrin-plus'
 import * as Icon from 'hyperapp-feather'

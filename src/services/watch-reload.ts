@@ -1,5 +1,5 @@
 import { exists, watchFile } from '../support/utils'
-import { onSwitchVim } from '../core/sessions'
+import { onSwitchVim } from '../core/instance-manager'
 import nvim from '../core/neovim'
 import { join } from 'path'
 

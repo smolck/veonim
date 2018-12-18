@@ -1,46 +1,7 @@
-import { delay, pascalCase, onProp } from '../support/utils'
 import { Range } from 'vscode-languageserver-protocol'
-import { Api } from '../neovim/protocol'
+import { pascalCase, onProp } from '../support/utils'
 
 type DefineFunction = { [index: string]: (fnBody: TemplateStringsArray, ...vars: any[]) => void }
-
-interface VimMode {
-  blocking: boolean,
-  mode: string,
-}
-
-// TODO: this getMode/blocking/input/capture :messages is kinda hack.
-// when neovim implements external dialogs, please revisit
-const unblock = (notify: Api, request: Api) => (): Promise<string[]> => new Promise(fin => {
-  let neverGonnaGiveYouUp = false
-  const typescript_y_u_do_dis = (): Promise<VimMode> => request.getMode() as Promise<VimMode>
-
-  const timer = setTimeout(() => {
-    neverGonnaGiveYouUp = true // never gonna let you down
-    fin([])
-  }, 2e3)
-
-  const tryToUnblock = () => typescript_y_u_do_dis().then(mode => {
-    if (!mode.blocking) {
-      Promise.race([
-        request.commandOutput('messages').then(m => m.split('\n').filter(m => m)),
-        delay(250).then(() => [])
-      ]).then(fin)
-
-      clearInterval(timer)
-      return
-    }
-
-    notify.input(`<Enter>`)
-    if (!neverGonnaGiveYouUp) setImmediate(() => tryToUnblock())
-  })
-
-  tryToUnblock()
-})
-
-export default ({ notify, request }: { notify: Api, request: Api }) => ({
-  unblock: unblock(notify, request)
-})
 
 export const FunctionGroup = () => {
   const fns: string[] = []

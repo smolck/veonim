@@ -1,4 +1,4 @@
-import { renameCurrent, getCurrentName } from '../core/sessions'
+import { renameCurrent, getCurrentName } from '../core/instance-manager'
 import { Plugin } from '../components/plugin-container'
 import { app, vimBlur, vimFocus } from '../ui/uikit'
 import Input from '../components/text-input'

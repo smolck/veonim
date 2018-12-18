@@ -1,7 +1,7 @@
 import userPicksAnOption, { MenuOption } from '../components/generic-menu'
-import { BufferVar } from '../core/vim-functions'
+import { BufferVar } from '../neovim/function-types'
+import { instances } from '../core/instance-manager'
 import { is, debounce } from '../support/utils'
-import { sessions } from '../core/sessions'
 import { addQF } from '../ai/diagnostics'
 import * as Icon from 'hyperapp-feather'
 import Worker from '../messaging/worker'
@@ -31,14 +31,14 @@ const formats = new Map([
 const terminals = new Map<number, Map<number, ParserFormat>>()
 
 const registerTerminal = (jobId: number, format: ParserFormat) => {
-  const sessionTerminals = terminals.get(sessions.current)
+  const sessionTerminals = terminals.get(instances.current)
   if (sessionTerminals) return sessionTerminals.set(jobId, format)
   const newSessionTerminals = new Map([ [ jobId, format ] ])
-  terminals.set(sessions.current, newSessionTerminals)
+  terminals.set(instances.current, newSessionTerminals)
 }
 
 const unregisterTerminal = (jobId: number) => {
-  const sessionTerminals = terminals.get(sessions.current)
+  const sessionTerminals = terminals.get(instances.current)
   if (sessionTerminals) return sessionTerminals.delete(jobId)
 }
 
@@ -46,7 +46,7 @@ const getFormatValue = (format: ParserFormat) =>
   (parserFormatOptions.find(m => m.key === format) || {} as any).value
 
 const getTerminalFormat = (jobId: number) => {
-  const sessionTerminals = terminals.get(sessions.current)
+  const sessionTerminals = terminals.get(instances.current)
   return sessionTerminals ? sessionTerminals.get(jobId) : undefined
 }
 

@@ -1,4 +1,4 @@
-import { onCreateVim, onSwitchVim } from '../core/sessions'
+import { onCreateVim, onSwitchVim } from '../core/instance-manager'
 import setupRPC from '../messaging/rpc'
 import Neovim from '../neovim/api'
 

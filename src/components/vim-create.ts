@@ -1,7 +1,7 @@
 import { Plugin } from '../components/plugin-container'
 import { app, vimBlur, vimFocus } from '../ui/uikit'
 import Input from '../components/text-input'
-import { createVim } from '../core/sessions'
+import { createVim } from '../core/instance-manager'
 import * as Icon from 'hyperapp-feather'
 import nvim from '../core/neovim'
 
