@@ -1,6 +1,6 @@
 {
   "name": "veonim",
-  "version": "0.11.0",
+  "version": "0.42.0",
   "description": "simple modal IDE built on neovim",
   "main": "build/bootstrap/main.js",
   "scripts": {
@@ -33,7 +33,7 @@
     "https://veonim@gitlab.com/veonim/veonim.git",
     "https://veonim@bitbucket.org/veonim/veonim.git"
   ],
-  "author": "VeonimDev",
+  "author": "veonim",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/veonim/veonim/issues"
@@ -63,7 +63,6 @@
     "vscode-languageserver-protocol": "3.9.0"
   },
   "devDependencies": {
-    "vscode-debugprotocol": "1.29.0",
     "@deomitrus/hyperapp-redux-devtools": "1.2.0",
     "@medv/finder": "1.1.0",
     "@types/fuzzaldrin-plus": "0.0.1",
@@ -73,11 +72,12 @@
     "electron-builder": "20.13.3",
     "electron-devtools-installer": "2.2.3",
     "fs-extra": "5.0.0",
-    "jscodeshift": "0.3.32",
     "mocha": "5.2.0",
     "proxyquire": "2.0.1",
     "spectron": "4.0.0",
     "ts-unused-exports": "2.0.5",
-    "typescript": "2.8.1"
+    "ttypescript": "1.5.5",
+    "typescript": "2.8.1",
+    "vscode-debugprotocol": "1.29.0"
   }
 }

@@ -1,7 +1,10 @@
 'use strict'
 
 const { spawn } = require('child_process')
+const { promisify: P } = require('util')
+const { Transform } = require('stream')
 const { join } = require('path')
+const fs = require('fs')
 
 const root = join(__dirname, '..')
 const fromRoot = (...paths) => join(root, ...paths)
@@ -52,4 +55,19 @@ const fetch = (url, options = { method: 'GET' }) => new Promise((done, fail) => 
   req.end()
 })
 
-module.exports = { $, go, run, root, fromRoot, createTask, fetch }
+const getFSStat = async path => P(fs.stat)(path).catch(() => emptyStat)
+
+const getDirFiles = async path => {
+  const paths = await P(fs.readdir)(path).catch(() => [])
+  const filepaths = paths.map(f => ({ name: f, path: join(path, f) }))
+  const filesreq = await Promise.all(filepaths.map(async f => ({
+    path: f.path,
+    name: f.name,
+    stats: await getFSStat(f.path),
+  })))
+  return filesreq
+    .map(({ name, path, stats }) => ({ name, path, dir: stats.isDirectory(), file: stats.isFile() }))
+    .filter(m => m.dir || m.file)
+}
+
+module.exports = { $, go, run, root, fromRoot, createTask, fetch, getDirFiles }

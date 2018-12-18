@@ -1,5 +1,6 @@
 import SessionTransport from '../messaging/session-transport'
 
+// @ts-ignore - typescript is confused about web workers
 const { send, connectTo, switchTo } = SessionTransport(m => postMessage(m))
 
 onmessage = ({ data }: MessageEvent) => {
