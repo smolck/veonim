@@ -5,8 +5,9 @@ import { onCreateVim, onSwitchVim } from '../core/instance-manager'
 type EventFn = { [index: string]: (...args: any[]) => void }
 type RequestEventFn = { [index: string]: (...args: any[]) => Promise<any> }
 
-export default (name: string) => {
-  const worker = new Worker(`${__dirname}/../workers/${name}.js`)
+export default (name: string, debugName?: string) => {
+  // @ts-ignore
+  const worker = new Worker(`${__dirname}/../workers/${name}.js`, { name: debugName })
   const watchers = new Watchers()
   const pendingRequests = new Map()
 

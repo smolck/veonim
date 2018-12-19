@@ -2,6 +2,7 @@ import { CursorShape, setCursorColor, setCursorShape } from '../core/cursor'
 import { getBackground } from '../render/highlight-attributes'
 import { notify, NotifyKind } from '../ui/notifications'
 import * as dispatch from '../messaging/dispatch'
+import * as workspace from '../core/workspace'
 import { VimMode } from '../neovim/types'
 import nvim from '../core/neovim'
 
@@ -123,11 +124,14 @@ export const mode_change = ([ , [ m ] ]: [any, [string]]) => {
   setCursorShape(info.shape, info.size)
 }
 
-export const option_set = (e: any) => e.slice(1).forEach(([ k, value ]: any) => {
-  const key = sillyString(k)
-  console.log(key, value)
-  options.set(key, value)
-})
+const updateFont = () => {
+
+}
+
+export const option_set = (e: any) => {
+  e.slice(1).forEach(([ k, value ]: any) => options.set(sillyString(k), value))
+  console.log('option_set', options)
+}
 
 export const mode_info_set = ([ , [ , infos ] ]: any) => infos.forEach((m: ModeInfo) => {
   const info = {

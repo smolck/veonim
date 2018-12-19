@@ -145,6 +145,3 @@ export const getColor = async (id: number) => {
     bg: asColor(background),
   }
 }
-
-// at the end, because when redraw inits, master control will not have been init
-import '../render/redraw'

@@ -1,6 +1,6 @@
 import * as windows from '../windows/window-manager'
 import { partialFill, translate } from '../ui/css'
-import { cell } from '../core/canvas-container'
+import { cell } from './workspace'
 
 export enum CursorShape {
   block,

@@ -1,6 +1,6 @@
 import CreateWebGLBuffer from '../render/webgl-grid-buffer'
 import CreateWebGL from '../render/webgl-utils'
-import { cell } from '../core/canvas-container'
+import { cell } from '../core/workspace'
 import TextFG from '../render/webgl-text-fg'
 import TextBG from '../render/webgl-text-bg'
 

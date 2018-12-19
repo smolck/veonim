@@ -1,4 +1,4 @@
-import * as canvasContainer from '../core/canvas-container'
+import * as canvasContainer from './workspace'
 import { listof } from '../support/utils'
 
 type Character = string

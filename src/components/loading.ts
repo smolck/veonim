@@ -1,4 +1,4 @@
-import * as canvasContainer from '../core/canvas-container'
+import * as canvasContainer from '../core/workspace'
 import { Loader } from 'hyperapp-feather'
 import { h } from '../ui/uikit'
 

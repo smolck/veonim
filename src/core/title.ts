@@ -1,4 +1,4 @@
-import * as canvasContainer from '../core/canvas-container'
+import * as canvasContainer from './workspace'
 import { merge, simplifyPath } from '../support/utils'
 import * as dispatch from '../messaging/dispatch'
 import nvim from '../core/neovim'

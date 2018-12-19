@@ -1,4 +1,4 @@
-import { cell, font } from '../core/canvas-container'
+import { cell, font } from '../core/workspace'
 
 interface UnicodeChar {
   index: number

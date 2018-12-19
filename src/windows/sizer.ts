@@ -1,4 +1,4 @@
-import { size } from '../core/canvas-container'
+import { size } from '../core/workspace'
 import { WindowInfo } from '../windows/window'
 import { within } from '../support/utils'
 

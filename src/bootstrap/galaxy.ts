@@ -5,43 +5,40 @@
   .forEach(m => Reflect.set(process.env, `VEONIM_TRACE_${m.toUpperCase()}`, 1))
 // end setup trace
 
-import { CreateTask, delay as timeout, requireDir } from '../support/utils'
-import { resize, attachTo, create } from '../core/master-control'
-import * as canvasContainer from '../core/canvas-container'
-import configReader from '../config/config-reader'
-import setDefaultSession from '../core/instance-manager'
-import * as uiInput from '../core/input'
+import * as instanceManager from '../core/instance-manager'
+import { resize } from '../core/master-control'
+import * as workspace from '../core/workspace'
+import { requireDir } from '../support/utils'
 import nvim from '../core/neovim'
-import '../ui/notifications'
-import '../core/title'
+import '../render/redraw'
+// import '../ui/notifications'
+// import '../core/title'
+// import '../core/input'
 
-const loadingConfig = CreateTask()
+// TODO: use guioptions to do this instead
+// configReader('nvim/init.vim', c => {
+//   workspace.setFont({
+//     face: c.get('font'),
+//     size: c.get('font_size')-0,
+//     lineHeight: c.get('line_height')-0
+//   })
 
-configReader('nvim/init.vim', c => {
-  canvasContainer.setFont({
-    face: c.get('font'),
-    size: c.get('font_size')-0,
-    lineHeight: c.get('line_height')-0
-  })
+//   loadingConfig.done('')
+// })
 
-  loadingConfig.done('')
-})
+// TODO: move this to styles
+// nvim.watchState.background(color => {
+//   if (document.body.style.background !== color) document.body.style.background = color
+// })
 
-nvim.watchState.background(color => {
-  if (document.body.style.background !== color) document.body.style.background = color
-})
+workspace.on('resize', ({ rows, cols }) => resize(cols, rows))
 
-canvasContainer.on('resize', ({ rows, cols }) => resize(cols, rows))
+requestAnimationFrame(() => {
+  // TODO: rename to cwd
+  instanceManager.createVim('main')
+  resize(workspace.size.cols, workspace.size.rows)
 
-const main = async () => {
-  const { id, path } = await create()
-  await Promise.race([ loadingConfig.promise, timeout(500) ])
-  resize(canvasContainer.size.cols, canvasContainer.size.rows)
-  uiInput.focus()
-  attachTo(id)
-  setDefaultSession(id, path)
-
-  setTimeout(() => {
+  requestAnimationFrame(() => {
     // TODO: can we load copmonents on demand?
     // aka, either load when user requests, or after 10 sec of app startup shit
     // in the inventory PR, layer actions are now setup to require the componet.
@@ -49,17 +46,7 @@ const main = async () => {
     // non-important ones - color-picker, etc.)
     requireDir(`${__dirname}/../services`)
     requireDir(`${__dirname}/../components`)
-    setTimeout(() => require('../core/ai'))
-  }, 1)
-
-  // TODO: THIS SHOULD BE LOADED IN A WEB WORKER. WTF IS THIS SHIT DOING IN THE MAIN THREAD LOL
-  // TODO: clearly we are not ready for this greatness
-  setTimeout(() => require('../support/dependency-manager').default(), 100)
-}
-
-main().catch(console.error)
-
-export const touched = () => {
-  const start = document.getElementById('start')
-  if (start) start.remove()
-}
+    requestAnimationFrame(() => require('../core/ai'))
+    setTimeout(() => require('../support/dependency-manager').default(), 100)
+  })
+})

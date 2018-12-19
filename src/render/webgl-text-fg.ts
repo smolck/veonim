@@ -1,7 +1,7 @@
 import { getColorAtlas } from '../render/highlight-attributes'
 import generateFontAtlas from '../render/font-texture-atlas'
 import { WebGL2, VarKind } from '../render/webgl-utils'
-import { cell } from '../core/canvas-container'
+import { cell } from '../core/workspace'
 
 export default (webgl: WebGL2) => {
   const viewport = { x: 0, y: 0, width: 0, height: 0 }

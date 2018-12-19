@@ -1,7 +1,7 @@
 import { DiagnosticSeverity } from 'vscode-languageserver-protocol'
 import { RowHeader, RowDesc } from '../components/row-container'
 import { PluginBottom } from '../components/plugin-container'
-import * as canvasContainer from '../core/canvas-container'
+import * as canvasContainer from '../core/workspace'
 import { h, app, vimBlur, vimFocus } from '../ui/uikit'
 import { badgeStyle, colors } from '../ui/styles'
 import { simplifyPath } from '../support/utils'

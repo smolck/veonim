@@ -1,7 +1,7 @@
 import { CompletionItemKind, MarkupContent, MarkupKind } from 'vscode-languageserver-protocol'
 import { CompletionOption, getCompletionDetail } from '../ai/completions'
 import { RowNormal, RowComplete } from '../components/row-container'
-import * as canvasContainer from '../core/canvas-container'
+import * as canvasContainer from '../core/workspace'
 import { resetMarkdownHTMLStyle } from '../ui/styles'
 import { markdownToHTML } from '../support/markdown'
 import * as windows from '../windows/window-manager'

@@ -1,4 +1,4 @@
-import { size } from '../core/canvas-container'
+import { size } from '../core/workspace'
 import * as Icon from 'hyperapp-feather'
 import { uuid } from '../support/utils'
 import { makel } from '../ui/vanilla'

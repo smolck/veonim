@@ -1,4 +1,4 @@
-import * as canvasContainer from '../core/canvas-container'
+import * as canvasContainer from './workspace'
 
 interface CharPosition {
   x: number,

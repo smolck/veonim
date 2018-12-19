@@ -1,6 +1,6 @@
 import { getColorAtlas } from '../render/highlight-attributes'
 import { WebGL2, VarKind } from '../render/webgl-utils'
-import { cell } from '../core/canvas-container'
+import { cell } from '../core/workspace'
 import { hexToRGB } from '../ui/css'
 import nvim from '../core/neovim'
 

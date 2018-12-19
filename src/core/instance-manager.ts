@@ -1,13 +1,15 @@
 import { onExit, attachTo, switchTo, create } from '../core/master-control'
+import Worker from '../messaging/worker'
 import { EventEmitter } from 'events'
 import { remote } from 'electron'
 
 interface Vim {
-  id: number,
-  name: string,
-  active: boolean,
-  path: string,
-  nameFollowsCwd: boolean,
+  id: number
+  name: string
+  active: boolean
+  path: string
+  nameFollowsCwd: boolean
+  instance: ReturnType<typeof Worker>
 }
 
 interface VimInfo {
@@ -20,24 +22,17 @@ watchers.setMaxListeners(200)
 const vims = new Map<number, Vim>()
 let currentVimID = -1
 
-export default (id: number, path: string) => {
-  vims.set(id, { id, path, name: 'main', active: true, nameFollowsCwd: true })
-  const lastId = currentVimID
-  currentVimID = id
-  watchers.emit('create', { id, path })
-  watchers.emit('switch', id, lastId)
-}
-
 export const createVim = async (name: string, dir?: string) => {
   const { id, path } = await create({ dir })
   const lastId = currentVimID
+  const instance = Worker('instance', `instance-${id}`)
   currentVimID = id
   watchers.emit('create', { id, path })
   attachTo(id)
   switchTo(id)
   watchers.emit('switch', id, lastId)
   vims.forEach(v => v.active = false)
-  vims.set(id, { id, path, name, active: true, nameFollowsCwd: !!dir })
+  vims.set(id, { id, path, name, instance, active: true, nameFollowsCwd: !!dir })
 }
 
 export const switchVim = async (id: number) => {

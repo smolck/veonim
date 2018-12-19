@@ -1,6 +1,5 @@
 import { $, is, fromJSON } from '../support/utils'
 import { input } from '../core/master-control'
-import { touched } from '../bootstrap/galaxy'
 import { VimMode } from '../neovim/types'
 import { remote } from 'electron'
 import nvim from '../core/neovim'
@@ -20,11 +19,10 @@ type OnKeyFn = (inputKeys: string, inputType: InputType) => void
 
 const modifiers = ['Alt', 'Shift', 'Meta', 'Control']
 const remaps = new Map<string, string>()
-let isCapturing = false
+let isCapturing = true
 let holding = ''
 let xformed = false
 let lastDown = ''
-let initalVimStartupKeypress = true
 let windowHasFocus = true
 let lastEscapeTimestamp = 0
 let shouldClearEscapeOnNextAppFocus = false
@@ -139,14 +137,6 @@ const sendToVim = (inputKeys: string) => {
 }
 
 const sendKeys = async (e: KeyboardEvent, inputType: InputType) => {
-  // TODO: this doesn't work anymore. something is sending a keypress
-  // event on app startup. we should be using shadow buffers for this
-  // anyways for a proper startup screen. plskthx
-  if (initalVimStartupKeypress) {
-    initalVimStartupKeypress = false
-    touched()
-  }
-
   const key = bypassEmptyMod(e.key)
   if (!key) return
   const inputKeys = formatInput(mapMods(e), mapKey(e.key))
