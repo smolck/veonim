@@ -69,6 +69,7 @@ const getOption = async (name: string) => {
 }
 
 const refreshOptions = () => [...requestedOptions.values()].forEach(getOption)
+console.log('ON VIMRC RELOAD REFRESH OPTIONS! refreshOptions', refreshOptions)
 
 const readonlyOptions: VimOption = new Proxy(Object.create(null), {
   get: (_, key: string) => options.has(key)

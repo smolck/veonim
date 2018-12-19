@@ -1,7 +1,6 @@
 import { prefixWith, onFnCall, pascalCase } from '../support/utils'
 import MsgpackStreamDecoder from '../messaging/msgpack-decoder'
 import MsgpackStreamEncoder from '../messaging/msgpack-encoder'
-import { colorscheme } from '../config/default-configs'
 import { Api, Prefixes } from '../neovim/protocol'
 import { on } from '../messaging/worker-client'
 import { Neovim } from '../support/binaries'
@@ -41,7 +40,7 @@ const proc = Neovim.run([
   '--cmd', `let $VIM = '${Neovim.path}'`,
   '--cmd', `let $VIMRUNTIME = '${Neovim.runtime}'`,
   '--cmd', `let &runtimepath .= ',${runtimeDir}'`,
-  '--cmd', `colorscheme ${colorscheme}`,
+  '--cmd', `colorscheme veonim`,
   '--cmd', `let g:veonim = 1 | let g:vn_loaded = 0 | let g:vn_ask_cd = 0`,
   '--cmd', `exe ":fun! Veonim(...)\\n endfun"`,
   '--cmd', `exe ":fun! VK(...)\\n endfun"`,

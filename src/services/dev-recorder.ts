@@ -3,7 +3,7 @@ import { notify, NotifyKind } from '../ui/notifications'
 import userPrompt from '../components/generic-prompt'
 import * as storage from '../support/local-storage'
 import { makel } from '../ui/vanilla'
-import nvim from '../core/neovim'
+import nvim from '../neovim/api'
 
 if (process.env.VEONIM_DEV) {
 const finder = require('@medv/finder')

@@ -1,7 +1,7 @@
 import { simplifyPath, pathReducer } from '../support/utils'
 import { BufferOption, BufferType } from '../neovim/types'
 import { BufferVar } from '../neovim/function-types'
-import nvim from '../core/neovim'
+import nvim from '../neovim/api'
 
 export interface WindowMetadata {
   id: number

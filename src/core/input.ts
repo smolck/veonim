@@ -2,7 +2,7 @@ import { $, is, fromJSON } from '../support/utils'
 import { input } from '../core/master-control'
 import { VimMode } from '../neovim/types'
 import { remote } from 'electron'
-import nvim from '../core/neovim'
+import nvim from '../neovim/api'
 import { Script } from 'vm'
 
 export enum InputMode {
@@ -196,17 +196,17 @@ window.addEventListener('keyup', e => {
 })
 
 // TODO: deprecate remapModifier and use transform instead?
-nvim.onAction('remap-modifier', (from, to) => remapModifier(from, to))
+// nvim.onAction('remap-modifier', (from, to) => remapModifier(from, to))
 
-nvim.onAction('register-shortcut', (key, mode) => registerShortcut(key, mode, () => nvim.call.VeonimCallEvent(`key:${mode}:${key}`)))
+// nvim.onAction('register-shortcut', (key, mode) => registerShortcut(key, mode, () => nvim.call.VeonimCallEvent(`key:${mode}:${key}`)))
 
-nvim.onAction('key-transform', (type, matcher, transformer) => {
-  const fn = Reflect.get(transform, type)
-  const transformFn = new Script(transformer).runInThisContext()
-  const matchObj = is.string(matcher) ? fromJSON(matcher).or({}) : matcher
+// nvim.onAction('key-transform', (type, matcher, transformer) => {
+//   const fn = Reflect.get(transform, type)
+//   const transformFn = new Script(transformer).runInThisContext()
+//   const matchObj = is.string(matcher) ? fromJSON(matcher).or({}) : matcher
 
-  if (is.function(fn) && is.function(transformFn)) fn(matchObj, transformFn)
-})
+//   if (is.function(fn) && is.function(transformFn)) fn(matchObj, transformFn)
+// })
 
 remote.getCurrentWindow().on('focus', () => {
   windowHasFocus = true

@@ -1,14 +1,12 @@
-import { getDirFiles, exists, pathRelativeToHome, simplifyPath, absolutePath } from '../support/utils'
+import { getDirFiles, exists, pathRelativeToHome } from '../support/utils'
 import { RowNormal, RowImportant } from '../components/row-container'
-import { createVim, renameCurrentToCwd } from '../core/instance-manager'
 import { h, app, vimBlur, vimFocus } from '../ui/uikit'
 import { Plugin } from '../components/plugin-container'
-import configReader from '../config/config-service'
-import config from '../config/config-service'
+import { createVim } from '../core/instance-manager'
 import Input from '../components/text-input'
 import { filter } from 'fuzzaldrin-plus'
 import * as Icon from 'hyperapp-feather'
-import nvim from '../core/neovim'
+import nvim from '../neovim/api'
 import { join, sep } from 'path'
 import { homedir } from 'os'
 
@@ -40,8 +38,7 @@ const validPath = async (path = '') => {
   return await exists(fullpath) ? fullpath : ''
 }
 
-let ignored = config('explorer.ignore.dirs', m => ignored = m)
-const filterDirs = (filedirs: FileDir[]) => filedirs.filter(f => f.dir && !ignored.includes(f.name))
+const filterDirs = (filedirs: FileDir[]) => filedirs.filter(f => f.dir)
 
 let listElRef: HTMLElement
 
@@ -167,9 +164,11 @@ nvim.onAction('change-dir', (path = '') => go(path, false))
 nvim.onAction('vim-create-dir', (path = '') => go(path, true))
 
 nvim.watchState.cwd((cwd: string) => {
-  const defaultRoot = configReader('project.root', (root: string) => {
-    renameCurrentToCwd(simplifyPath(cwd, absolutePath(root)))
-  })
+  console.warn('NYI: cwd', cwd)
+  // TODO: project root wut?
+  // const defaultRoot = configReader('project.root', (root: string) => {
+  //   renameCurrentToCwd(simplifyPath(cwd, absolutePath(root)))
+  // })
 
-  defaultRoot && renameCurrentToCwd(simplifyPath(cwd, absolutePath(defaultRoot)))
+  // defaultRoot && renameCurrentToCwd(simplifyPath(cwd, absolutePath(defaultRoot)))
 })

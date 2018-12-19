@@ -5,7 +5,7 @@ import { list, switchVim } from '../core/instance-manager'
 import Input from '../components/text-input'
 import { filter } from 'fuzzaldrin-plus'
 import * as Icon from 'hyperapp-feather'
-import nvim from '../core/neovim'
+import nvim from '../neovim/api'
 
 interface Session {
   id: number,

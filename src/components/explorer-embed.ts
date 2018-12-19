@@ -10,7 +10,7 @@
 // import * as Icon from 'hyperapp-feather'
 // import { colors } from '../ui/styles'
 // import { h, app } from '../ui/uikit'
-// import nvim from '../core/neovim'
+// import nvim from '../neovim/api'
 // import { cvar } from '../ui/css'
 
 // interface FileDir {

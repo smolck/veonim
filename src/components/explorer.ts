@@ -4,13 +4,12 @@ import FiletypeIcon, { Folder } from '../components/filetype-icon'
 import { h, app, vimBlur, vimFocus } from '../ui/uikit'
 import { Plugin } from '../components/plugin-container'
 import { join, sep, basename, dirname } from 'path'
-import config from '../config/config-service'
 import Input from '../components/text-input'
 import { BufferType } from '../neovim/types'
 import { filter } from 'fuzzaldrin-plus'
 import * as Icon from 'hyperapp-feather'
 import { colors } from '../ui/styles'
-import nvim from '../core/neovim'
+import nvim from '../neovim/api'
 import { cvar } from '../ui/css'
 
 interface FileDir {
@@ -31,14 +30,9 @@ const state = {
   pathValue: '',
 }
 
-const ignored: { dirs: string[], files: string[] } = {
-  dirs: config('explorer.ignore.dirs', m => ignored.dirs = m),
-  files: config('explorer.ignore.files', m => ignored.files = m),
-}
-
 const sortDirFiles = (filedirs: FileDir[]) => {
-  const dirs = filedirs.filter(f => f.dir && !ignored.dirs.includes(f.name))
-  const files = filedirs.filter(f => f.file && !ignored.files.includes(f.name))
+  const dirs = filedirs.filter(f => f.dir)
+  const files = filedirs.filter(f => f.file)
   return [...dirs, ...files]
 }
 
@@ -50,8 +44,7 @@ const pathExplore = async (path: string) => {
   const dir = complete ? fullpath : dirname(fullpath)
   const top = basename(fullpath)
   const dirs = await getDirs(dir)
-  const goodDirs = dirs.filter(d => !ignored.dirs.includes(d.name))
-  return complete ? goodDirs : filter(goodDirs, top, { key: 'name' })
+  return complete ? dirs : filter(dirs, top, { key: 'name' })
 }
 
 const resetState = { val: '', path: '', vis: false, ix: 0 }

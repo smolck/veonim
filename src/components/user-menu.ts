@@ -4,7 +4,7 @@ import { h, app, vimBlur, vimFocus } from '../ui/uikit'
 import Input from '../components/text-input'
 import { filter } from 'fuzzaldrin-plus'
 import * as Icon from 'hyperapp-feather'
-import nvim from '../core/neovim'
+import nvim from '../neovim/api'
 
 const state = {
   id: 0,

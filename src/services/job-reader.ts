@@ -6,7 +6,7 @@ import { addQF } from '../ai/diagnostics'
 import * as Icon from 'hyperapp-feather'
 import Worker from '../messaging/worker'
 import { promisify as P } from 'util'
-import nvim from '../core/neovim'
+import nvim from '../neovim/api'
 import { join } from 'path'
 import * as fs from 'fs'
 

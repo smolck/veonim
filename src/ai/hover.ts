@@ -3,7 +3,7 @@ import { supports } from '../langserv/server-features'
 import * as markdown from '../support/markdown'
 import { hover } from '../langserv/adapter'
 import { ui } from '../components/hover'
-import nvim from '../core/neovim'
+import nvim from '../neovim/api'
 
 const textByWord = (data: ColorData[]): ColorData[] => data.reduce((res, item) => {
   const words = item.text.split(/(\s+)/)

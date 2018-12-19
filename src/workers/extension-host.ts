@@ -5,15 +5,16 @@ import { DebugConfiguration, collectDebuggersFromExtensions,
 import { ExtensionInfo, Extension, ActivationEventType,
   Disposable, activateExtension } from '../extensions/extensions'
 import DebugProtocolConnection, { DebugAdapterConnection } from '../messaging/debug-protocol'
-import { readFile, fromJSON, is, uuid, getDirs, getFiles, merge, CreateTask, Task } from '../support/utils'
+import { readFile, fromJSON, is, uuid, getDirs, getFiles, merge, CreateTask, Task, configPath } from '../support/utils'
 import updateLanguageServersWithTextDocuments from '../langserv/update-server'
 import { on, call, request } from '../messaging/worker-client'
-import { EXT_PATH } from '../config/default-configs'
 import { ChildProcess, spawn } from 'child_process'
 import LocalizeFile from '../support/localize'
 import pleaseGet from '../support/please-get'
 import { dirname, join } from 'path'
 import '../support/vscode-shim'
+
+const EXT_PATH = join(configPath, 'veonim', 'extensions')
 
 interface Debugger {
   type: string

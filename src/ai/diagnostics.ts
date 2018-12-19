@@ -13,7 +13,7 @@ import * as problemsUI from '../components/problems'
 import * as dispatch from '../messaging/dispatch'
 import { setCursorColor } from '../core/cursor'
 import { cursor } from '../core/cursor'
-import nvim from '../core/neovim'
+import nvim from '../neovim/api'
 import '../ai/remote-problems'
 import * as path from 'path'
 

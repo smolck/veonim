@@ -11,7 +11,7 @@ import { Problem } from '../ai/diagnostics'
 import * as Icon from 'hyperapp-feather'
 import { filter } from 'fuzzaldrin-plus'
 import { clipboard } from 'electron'
-import nvim from '../core/neovim'
+import nvim from '../neovim/api'
 import { join } from 'path'
 
 let elref: HTMLElement

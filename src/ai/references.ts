@@ -2,7 +2,7 @@ import { references as getReferences, Reference } from '../langserv/adapter'
 import { findNext, findPrevious } from '../support/relative-finder'
 import { supports } from '../langserv/server-features'
 import { show } from '../components/references'
-import nvim from '../core/neovim'
+import nvim from '../neovim/api'
 
 const groupResults = (m: Reference[]) => [...m.reduce((map, ref: Reference) => {
   map.has(ref.path)

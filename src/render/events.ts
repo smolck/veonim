@@ -4,7 +4,7 @@ import { notify, NotifyKind } from '../ui/notifications'
 import * as dispatch from '../messaging/dispatch'
 import * as workspace from '../core/workspace'
 import { VimMode } from '../neovim/types'
-import nvim from '../core/neovim'
+import nvim from '../neovim/api'
 
 interface Mode {
   shape: CursorShape

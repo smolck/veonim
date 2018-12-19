@@ -3,7 +3,7 @@ import { Highlight, HighlightGroupId } from '../neovim/types'
 import { colors } from '../render/highlight-attributes'
 import { supports } from '../langserv/server-features'
 import { brighten } from '../ui/css'
-import nvim from '../core/neovim'
+import nvim from '../neovim/api'
 
 const setHighlightColor = () => {
   const highlightColor = brighten(colors.background, 25)

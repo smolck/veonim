@@ -5,7 +5,7 @@ import { signatureHelp } from '../langserv/adapter'
 import { merge } from '../support/utils'
 import { cursor } from '../core/cursor'
 import { ui } from '../components/hint'
-import nvim from '../core/neovim'
+import nvim from '../neovim/api'
 
 const cache = {
   signatures: [] as SignatureInformation[],

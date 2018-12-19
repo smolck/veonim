@@ -4,7 +4,7 @@ import { genList } from '../support/utils'
 import { stealInput } from '../core/input'
 import { makel } from '../ui/vanilla'
 import { paddingV } from '../ui/css'
-import nvim from '../core/neovim'
+import nvim from '../neovim/api'
 
 // hand crafted for maximum ergonomic comfort
 const labels = {

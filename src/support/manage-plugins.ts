@@ -1,7 +1,7 @@
 import { exists, getDirs, is, configPath, remove as removePath } from '../support/utils'
 import { NotifyKind, notify } from '../ui/notifications'
 import { url, download } from '../support/download'
-import nvim from '../core/neovim'
+import nvim from '../neovim/api'
 import { join } from 'path'
 
 interface Plugin {

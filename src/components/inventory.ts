@@ -1,5 +1,5 @@
 import { h, app } from '../ui/uikit'
-import nvim from '../core/neovim'
+import nvim from '../neovim/api'
 
 // TODO: show some layers as disabled? like the langserv layer would be disabled if there
 // are not language servers started. user can still see options and info, but visually

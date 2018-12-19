@@ -1,18 +1,8 @@
-import { on, onCreateVim, onSwitchVim } from '../messaging/worker-client'
 import TextDocumentManager from '../neovim/text-document-manager'
-import SessionTransport from '../messaging/session-transport'
 import { filter as fuzzy, match } from 'fuzzaldrin-plus'
-import SetupRPC from '../messaging/rpc'
-import Neovim from '../neovim/api'
+import { on } from '../messaging/worker-client'
+import nvim from '../neovim/api'
 
-const { send, connectTo, switchTo, onRecvData } = SessionTransport()
-const { onData, ...rpcAPI } = SetupRPC(send)
-
-onRecvData(([ type, d ]) => onData(type, d))
-onCreateVim(connectTo)
-onSwitchVim(switchTo)
-
-const nvim = Neovim({ ...rpcAPI, onCreateVim, onSwitchVim })
 const tdm = TextDocumentManager(nvim)
 
 interface FilterResult {

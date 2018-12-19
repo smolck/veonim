@@ -1,7 +1,7 @@
 import { show, SymbolMode } from '../components/symbols'
 import { supports } from '../langserv/server-features'
 import { symbols } from '../langserv/adapter'
-import nvim from '../core/neovim'
+import nvim from '../neovim/api'
 
 nvim.onAction('symbols', async () => {
   if (!supports.symbols(nvim.state.cwd, nvim.state.filetype)) return

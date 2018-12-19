@@ -8,7 +8,7 @@
 import * as instanceManager from '../core/instance-manager'
 import { resize } from '../core/master-control'
 import * as workspace from '../core/workspace'
-import { requireDir } from '../support/utils'
+// import { requireDir } from '../support/utils'
 import '../render/redraw'
 
 workspace.on('resize', ({ rows, cols }) => resize(cols, rows))

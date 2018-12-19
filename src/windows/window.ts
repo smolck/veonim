@@ -6,7 +6,7 @@ import { specs as titleSpecs } from '../core/title'
 import { cell } from '../core/workspace'
 import { WebGLView } from '../render/webgl'
 import { makel } from '../ui/vanilla'
-import nvim from '../core/neovim'
+import nvim from '../neovim/api'
 
 export interface WindowInfo {
   id: string

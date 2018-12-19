@@ -1,6 +1,6 @@
 import { shell, exists, watchFile } from '../support/utils'
 import * as dispatch from '../messaging/dispatch'
-import nvim from '../core/neovim'
+import nvim from '../neovim/api'
 import * as path from 'path'
 
 const watchers: { branch: any, status: any } = {

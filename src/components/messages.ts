@@ -5,7 +5,7 @@ import Input from '../components/text-input'
 import { filter } from 'fuzzaldrin-plus'
 import * as Icon from 'hyperapp-feather'
 import { colors } from '../ui/styles'
-import nvim from '../core/neovim'
+import nvim from '../neovim/api'
 
 const state = {
   query: '',

@@ -6,7 +6,7 @@ import Input from '../components/text-input'
 import { badgeStyle } from '../ui/styles'
 import Worker from '../messaging/worker'
 import * as Icon from 'hyperapp-feather'
-import nvim from '../core/neovim'
+import nvim from '../neovim/api'
 
 type TextTransformer = (text: string, last?: boolean) => string
 type Result = [string, SearchResult[]]

@@ -6,7 +6,7 @@ import { showCursorline } from '../core/cursor'
 import Input from '../components/text-input'
 import { badgeStyle } from '../ui/styles'
 import * as Icon from 'hyperapp-feather'
-import nvim from '../core/neovim'
+import nvim from '../neovim/api'
 
 type TextTransformer = (text: string, last?: boolean) => string
 type Result = [string, Reference[]]

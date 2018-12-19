@@ -1,6 +1,6 @@
 import { exists, watchFile } from '../support/utils'
 import { onSwitchVim } from '../core/instance-manager'
-import nvim from '../core/neovim'
+import nvim from '../neovim/api'
 import { join } from 'path'
 
 const sessions = new Map<number, Set<string>>()

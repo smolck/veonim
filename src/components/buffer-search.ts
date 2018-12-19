@@ -10,7 +10,7 @@ import { merge } from '../support/utils'
 import * as Icon from 'hyperapp-feather'
 import Worker from '../messaging/worker'
 import { makel } from '../ui/vanilla'
-import nvim from '../core/neovim'
+import nvim from '../neovim/api'
 import { cvar } from '../ui/css'
 
 

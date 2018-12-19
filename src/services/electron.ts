@@ -1,4 +1,4 @@
-import nvim from '../core/neovim'
+import nvim from '../neovim/api'
 import { remote } from 'electron'
 
 nvim.onAction('version', () => nvim.cmd(`echo 'Veonim v${remote.app.getVersion()}'`))

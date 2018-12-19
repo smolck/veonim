@@ -8,7 +8,7 @@ import Input from '../components/text-input'
 import { basename, dirname } from 'path'
 import { filter } from 'fuzzaldrin-plus'
 import * as Icon from 'hyperapp-feather'
-import nvim from '../core/neovim'
+import nvim from '../neovim/api'
 
 interface BufferInfo {
   dir: string,

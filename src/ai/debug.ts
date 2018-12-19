@@ -10,7 +10,7 @@ import { debugline } from '../core/cursor'
 import debugUI from '../components/debug'
 import * as Icon from 'hyperapp-feather'
 // import { translate } from '../ui/css'
-import nvim from '../core/neovim'
+import nvim from '../neovim/api'
 
 // TODO: move to shared place
 interface DebugConfiguration {

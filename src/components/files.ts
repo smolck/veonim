@@ -7,7 +7,7 @@ import Input from '../components/text-input'
 import Worker from '../messaging/worker'
 import * as Icon from 'hyperapp-feather'
 import { cvar } from '../ui/css'
-import nvim from '../core/neovim'
+import nvim from '../neovim/api'
 
 interface FileDir {
   dir: string,

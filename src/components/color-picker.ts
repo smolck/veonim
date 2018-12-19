@@ -8,7 +8,7 @@ import onLoseFocus from '../ui/lose-focus'
 import { basename, extname } from 'path'
 import { cursor } from '../core/cursor'
 import { h, app } from '../ui/uikit'
-import nvim from '../core/neovim'
+import nvim from '../neovim/api'
 
 let liveMode = false
 

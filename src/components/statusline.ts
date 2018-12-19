@@ -1,13 +1,12 @@
-import { merge, simplifyPath, absolutePath } from '../support/utils'
 import { sub, processAnyBuffered } from '../messaging/dispatch'
-import configReader from '../config/config-service'
+import { onSwitchVim } from '../core/instance-manager'
 import { darken, brighten, cvar } from '../ui/css'
 import { ExtContainer } from '../neovim/protocol'
-import { onSwitchVim } from '../core/instance-manager'
+import { merge } from '../support/utils'
 import * as Icon from 'hyperapp-feather'
 import { colors } from '../ui/styles'
 import { h, app } from '../ui/uikit'
-import nvim from '../core/neovim'
+import nvim from '../neovim/api'
 import '../support/git'
 
 interface Tab {
@@ -41,7 +40,9 @@ const state = {
 type S = typeof state
 
 const refreshBaseColor = async () => {
-  const { background } = await nvim.getColor('StatusLine')
+  const background = ''
+  // TODO: GET STATUSLINE COLOR PLS
+  // const { background } = await nvim.getColor('StatusLine')
   if (background) ui.setColor(background)
 }
 
@@ -332,11 +333,13 @@ nvim.watchState.filetype(ui.setFiletype)
 nvim.watchState.line(ui.setLine)
 nvim.watchState.column(ui.setColumn)
 nvim.watchState.cwd((cwd: string) => {
-  const defaultRoot = configReader('project.root', (root: string) => {
-    ui.setCwd({ cwd: simplifyPath(cwd, absolutePath(root)) })
-  })
+  console.warn('NYI: cwd', cwd)
+  // TODO: do this shit thing
+  // const defaultRoot = configReader('project.root', (root: string) => {
+  //   ui.setCwd({ cwd: simplifyPath(cwd, absolutePath(root)) })
+  // })
 
-  defaultRoot && ui.setCwd({ cwd: simplifyPath(cwd, absolutePath(defaultRoot)) })
+  // defaultRoot && ui.setCwd({ cwd: simplifyPath(cwd, absolutePath(defaultRoot)) })
 })
 
 sub('tabs', async ({ curtab, tabs }: { curtab: ExtContainer, tabs: Tab[] }) => {

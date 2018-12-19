@@ -7,7 +7,7 @@ import Input from '../components/text-input'
 import { rgba, paddingV } from '../ui/css'
 import * as Icon from 'hyperapp-feather'
 import { makel } from '../ui/vanilla'
-import nvim from '../core/neovim'
+import nvim from '../neovim/api'
 
 interface FilterResult {
   line: string,

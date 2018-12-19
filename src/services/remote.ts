@@ -1,6 +1,6 @@
 import HttpServer from '../support/http-server'
 import { relative, join } from 'path'
-import nvim from '../core/neovim'
+import nvim from '../neovim/api'
 
 interface RemoteRequest { cwd: string, file: string }
 

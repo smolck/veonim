@@ -1,5 +1,5 @@
 import { h, app } from '../ui/uikit'
-import nvim from '../core/neovim'
+import nvim from '../neovim/api'
 
 const state = {
   visible: false,

@@ -11,7 +11,7 @@ import { filter } from 'fuzzaldrin-plus'
 import Worker from '../messaging/worker'
 import { cursor } from '../core/cursor'
 import { join, dirname } from 'path'
-import nvim from '../core/neovim'
+import nvim from '../neovim/api'
 
 interface Cache {
   semanticCompletions: Map<string, CompletionOption[]>,

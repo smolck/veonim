@@ -1,7 +1,6 @@
 import { configPath, readFile, exists, isOnline } from '../support/utils'
 import installExtensions from '../support/manage-extensions'
 import installPlugins from '../support/manage-plugins'
-import { watchConfig } from '../config/config-reader'
 import { join } from 'path'
 
 const vimrcPath = join(configPath, 'nvim/init.vim')
@@ -23,6 +22,6 @@ const refreshDependencies = async () => {
 }
 
 export default () => {
+  // TODO: refresh dependencies when vimrc config reloaded
   refreshDependencies()
-  watchConfig('nvim/init.vim', refreshDependencies)
 }

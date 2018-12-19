@@ -6,7 +6,7 @@ import Overlay from '../components/overlay'
 import { filter } from 'fuzzaldrin-plus'
 import * as Icon from 'hyperapp-feather'
 import { cursor } from '../core/cursor'
-import nvim from '../core/neovim'
+import nvim from '../neovim/api'
 import { cvar } from '../ui/css'
 
 const state = {
