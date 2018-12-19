@@ -124,13 +124,24 @@ export const mode_change = ([ , [ m ] ]: [any, [string]]) => {
   setCursorShape(info.shape, info.size)
 }
 
+// TODO: this parsing logic needs to be revisited
 const updateFont = () => {
+  const lineHeight = options.get('linespace')
+  const guifont = options.get('guifont') || ''
 
+  if (!lineHeight && !guifont) return
+
+  const [ font ] = guifont.match(/(?:\\,|[^,])+/g) || ['']
+  const [ face, ...settings] = font.split(':')
+  const height = settings.find((s: string) => s.startsWith('h'))
+  const size = Math.round(<any>(height || '').slice(1)-0)
+
+  workspace.setFont({ face, size, lineHeight })
 }
 
 export const option_set = (e: any) => {
   e.slice(1).forEach(([ k, value ]: any) => options.set(sillyString(k), value))
-  console.log('option_set', options)
+  updateFont()
 }
 
 export const mode_info_set = ([ , [ , infos ] ]: any) => infos.forEach((m: ModeInfo) => {

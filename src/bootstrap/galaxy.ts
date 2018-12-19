@@ -9,27 +9,7 @@ import * as instanceManager from '../core/instance-manager'
 import { resize } from '../core/master-control'
 import * as workspace from '../core/workspace'
 import { requireDir } from '../support/utils'
-import nvim from '../core/neovim'
 import '../render/redraw'
-// import '../ui/notifications'
-// import '../core/title'
-// import '../core/input'
-
-// TODO: use guioptions to do this instead
-// configReader('nvim/init.vim', c => {
-//   workspace.setFont({
-//     face: c.get('font'),
-//     size: c.get('font_size')-0,
-//     lineHeight: c.get('line_height')-0
-//   })
-
-//   loadingConfig.done('')
-// })
-
-// TODO: move this to styles
-// nvim.watchState.background(color => {
-//   if (document.body.style.background !== color) document.body.style.background = color
-// })
 
 workspace.on('resize', ({ rows, cols }) => resize(cols, rows))
 
