@@ -3,7 +3,7 @@ import Worker from '../messaging/worker'
 import { EventEmitter } from 'events'
 import { remote } from 'electron'
 
-interface Vim {
+interface Nvim {
   id: number
   name: string
   active: boolean
@@ -12,15 +12,21 @@ interface Vim {
   instance: ReturnType<typeof Worker>
 }
 
-interface VimInfo {
+interface NvimInfo {
   id: number
   path: string
 }
 
 const watchers = new EventEmitter()
 watchers.setMaxListeners(200)
-const vims = new Map<number, Vim>()
+const vims = new Map<number, Nvim>()
 let currentVimID = -1
+
+export const getActiveInstance = () => {
+  const nvim = vims.get(currentVimID)
+  if (!nvim) return
+  return nvim.instance
+}
 
 export const createVim = async (name: string, dir?: string) => {
   const { id, path } = await create({ dir })
@@ -75,14 +81,13 @@ export const instances = {
   get current() { return currentVimID }
 }
 
-export const onCreateVim = (fn: (info: VimInfo) => void) => {
-  watchers.on('create', (info: VimInfo) => fn(info))
+export const onCreateVim = (fn: (info: NvimInfo) => void) => {
+  watchers.on('create', (info: NvimInfo) => fn(info))
   ;[...vims.entries()].forEach(([ id, vim ]) => fn({ id, path: vim.path }))
 }
 
 export const onSwitchVim = (fn: (id: number, lastId: number) => void) => {
   watchers.on('switch', (id, lastId) => fn(id, lastId))
-  fn(currentVimID, -1)
 }
 
 // because of circular dependency chain. master-control exports onExit.

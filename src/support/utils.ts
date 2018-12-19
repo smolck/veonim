@@ -1,4 +1,5 @@
 import { dirname, basename, join, extname, resolve, sep, parse, normalize } from 'path'
+import { createConnection } from 'net'
 import { promisify as P } from 'util'
 import { EventEmitter } from 'events'
 import { exec } from 'child_process'
@@ -294,3 +295,23 @@ export class MapSet extends Map {
     this.set(key, s.add(value))
   }
 }
+
+export const tryNetConnect = (path: string, interval = 500, timeout = 5e3): Promise<ReturnType<typeof createConnection>> => new Promise((done, fail) => {
+  const timeoutTimer = setTimeout(fail, timeout)
+
+  const attemptConnection = () => {
+    const socket = createConnection(path)
+
+    socket.once('connect', () => {
+      clearTimeout(timeoutTimer)
+      socket.removeAllListeners('error')
+      done(socket)
+    })
+
+    // swallow errors until we connect
+    socket.on('error', () => {})
+    socket.once('close', () => setTimeout(attemptConnection, interval))
+  }
+
+  attemptConnection()
+})
