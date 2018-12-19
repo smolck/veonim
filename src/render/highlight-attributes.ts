@@ -1,5 +1,5 @@
 import { asColor, MapSet } from '../support/utils'
-import nvim from '../core/neovim'
+import { pub } from '../messaging/dispatch'
 
 export interface Attrs {
   foreground?: number
@@ -43,6 +43,12 @@ const defaultColors = {
   special: '#ef5188',
 }
 
+const _colors = { ...defaultColors }
+export const colors = new Proxy(_colors, {
+  set: () => true,
+  get: (_: any, key: string) => Reflect.get(_colors, key),
+})
+
 // because we skip allocating 1-char strings in msgpack decode. so if we have a 1-char
 // string it might be a code point number - need to turn it back into a string. see
 // msgpack-decoder for more info on how this works.
@@ -74,9 +80,16 @@ export const setDefaultColors = (fg: number, bg: number, sp: number) => {
 
   Object.assign(defaultColors, { foreground, background, special })
 
-  nvim.state.foreground = defaultColors.foreground
-  nvim.state.background = defaultColors.background
-  nvim.state.special = defaultColors.special
+  Object.assign(_colors, {
+    foreground: defaultColors.foreground,
+    background: defaultColors.background,
+    special: defaultColors.special,
+  })
+
+  pub('colors-changed', {
+    fg: _colors.foreground,
+    bg: _colors.background,
+  })
 
   // hlid 0 -> default highlight group
   highlights.set(0, {
