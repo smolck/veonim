@@ -2,9 +2,6 @@ import { VimMode, BufferType } from '../neovim/types'
 import { EventEmitter } from 'events'
 
 const state = {
-  background: '#2d2d2d',
-  foreground: '#dddddd',
-  special: '#ef5188',
   mode: VimMode.Normal,
   bufferType: BufferType.Normal,
   file: '',
