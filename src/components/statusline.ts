@@ -1,12 +1,12 @@
+import { highlightLookup, getBackground } from '../render/highlight-attributes'
 import { sub, processAnyBuffered } from '../messaging/dispatch'
 import { onSwitchVim } from '../core/instance-manager'
 import { darken, brighten, cvar } from '../ui/css'
 import { ExtContainer } from '../neovim/protocol'
-import { merge } from '../support/utils'
+import instance from '../core/instance-api'
 import * as Icon from 'hyperapp-feather'
 import { colors } from '../ui/styles'
 import { h, app } from '../ui/uikit'
-import nvim from '../neovim/api'
 import '../support/git'
 
 interface Tab {
@@ -40,9 +40,10 @@ const state = {
 type S = typeof state
 
 const refreshBaseColor = async () => {
-  const background = ''
-  // TODO: GET STATUSLINE COLOR PLS
-  // const { background } = await nvim.getColor('StatusLine')
+  const groups = highlightLookup('StatusLine')
+  const hlgrp = groups.find(m => m.builtinName === 'StatusLine')
+  if (!hlgrp) return
+  const background = getBackground(hlgrp.id)
   if (background) ui.setColor(background)
 }
 
@@ -68,7 +69,8 @@ const iconBoxStyle = {
 }
 
 const container = document.getElementById('statusline') as HTMLElement
-merge(container.style, {
+
+Object.assign(container.style, {
   height: '24px',
   display: 'flex',
   zIndex: 900,
@@ -195,7 +197,7 @@ const view = ($: S) => h('div', {
       }, `${$.deletions}`)
     ])
 
-    ,$.runningServers.has(nvim.state.cwd + $.filetype) && h('div', {
+    ,$.runningServers.has(instance.nvim.state.cwd + $.filetype) && h('div', {
       style: itemStyle,
     }, [
       ,h('div', [
@@ -328,11 +330,11 @@ const view = ($: S) => h('div', {
 const ui = app<S, typeof actions>({ name: 'statusline', state, actions, view, element: container })
 
 sub('colorscheme.modified', refreshBaseColor)
-nvim.watchState.colorscheme(refreshBaseColor)
-nvim.watchState.filetype(ui.setFiletype)
-nvim.watchState.line(ui.setLine)
-nvim.watchState.column(ui.setColumn)
-nvim.watchState.cwd((cwd: string) => {
+instance.nvim.watchState.colorscheme(refreshBaseColor)
+instance.nvim.watchState.filetype(ui.setFiletype)
+instance.nvim.watchState.line(ui.setLine)
+instance.nvim.watchState.column(ui.setColumn)
+instance.nvim.watchState.cwd((cwd: string) => {
   console.warn('NYI: cwd', cwd)
   // TODO: do this shit thing
   // const defaultRoot = configReader('project.root', (root: string) => {

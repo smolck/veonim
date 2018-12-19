@@ -36,9 +36,9 @@ export const createVim = async (name: string, dir?: string) => {
   watchers.emit('create', { id, path })
   attachTo(id)
   switchTo(id)
-  watchers.emit('switch', id, lastId)
   vims.forEach(v => v.active = false)
   vims.set(id, { id, path, name, instance, active: true, nameFollowsCwd: !!dir })
+  watchers.emit('switch', id, lastId)
 }
 
 export const switchVim = async (id: number) => {
@@ -46,9 +46,9 @@ export const switchVim = async (id: number) => {
   const lastId = currentVimID
   currentVimID = id
   switchTo(id)
-  watchers.emit('switch', id, lastId)
   vims.forEach(v => v.active = false)
   vims.get(id)!.active = true
+  watchers.emit('switch', id, lastId)
 }
 
 const renameVim = (id: number, newName: string) => {

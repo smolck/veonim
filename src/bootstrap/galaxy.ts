@@ -18,6 +18,10 @@ requestAnimationFrame(() => {
   instanceManager.createVim('main')
   resize(workspace.size.cols, workspace.size.rows)
 
+  requestAnimationFrame(() => {
+    require('../components/statusline')
+  })
+
   // requestAnimationFrame(() => {
   //   // TODO: can we load copmonents on demand?
   //   // aka, either load when user requests, or after 10 sec of app startup shit
