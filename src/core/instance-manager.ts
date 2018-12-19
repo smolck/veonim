@@ -33,11 +33,11 @@ export const createVim = async (name: string, dir?: string) => {
   const lastId = currentVimID
   const instance = Worker('instance', `instance-${id}`)
   currentVimID = id
+  vims.forEach(v => v.active = false)
+  vims.set(id, { id, path, name, instance, active: true, nameFollowsCwd: !!dir })
   watchers.emit('create', { id, path })
   attachTo(id)
   switchTo(id)
-  vims.forEach(v => v.active = false)
-  vims.set(id, { id, path, name, instance, active: true, nameFollowsCwd: !!dir })
   watchers.emit('switch', id, lastId)
 }
 

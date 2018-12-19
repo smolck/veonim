@@ -373,6 +373,11 @@ autocmd.InsertLeave(() => watchers.events.emit('insertLeave'))
 autocmd.OptionSet((name: string, value: any) => options.set(name, value))
 autocmd.FileType((_, filetype: string) => watchers.events.emit('filetype', filetype))
 
+// TODO: is this a way to detect vimrc reload?
+autocmd.SourcePre(sourcedFile => {
+  console.log('sourced file:', sourcedFile)
+})
+
 autocmd.TextChanged(revision => {
   state.revision = revision-0
   watchers.events.emit('bufChange', current.buffer)

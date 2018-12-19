@@ -51,11 +51,6 @@ const msgpackDecoder = new MsgpackStreamDecoder()
 const msgpackEncoder = new MsgpackStreamEncoder()
 
 const spawnVimInstance = (pipeName: string) => Neovim.run([
-  // '--cmd', `${startupFuncs()} | ${startupCmds}`,
-  // noop commands. we parse plugins & extensions directly from the vimrc file text
-  // TODO: this is wrong, we should just vimscript these
-  '--cmd', `com! -nargs=* Plug 1`,
-  '--cmd', `com! -nargs=* VeonimExt 1`,
   '--cmd', `com! -nargs=+ -range -complete=custom,VeonimCmdCompletions Veonim call Veonim(<f-args>)`,
   '--embed',
   '--listen',

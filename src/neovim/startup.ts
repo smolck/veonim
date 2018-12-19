@@ -18,6 +18,8 @@ export const startupCmds = CmdGroup`
   let g:vn_callbacks = {}
   let g:vn_callback_id = 0
   let g:vn_jobs_connected = {}
+  let g:_veonim_plugins = []
+  let g:_veonim_extensions = []
   let g:veonim_completing = 0
   let g:veonim_complete_pos = 1
   let g:veonim_completions = []
@@ -27,6 +29,8 @@ export const startupCmds = CmdGroup`
   set nocursorline
   set noshowmode
   set completefunc=VeonimComplete
+  execute "command! -nargs=1 VeonimExt call add(g:_veonim_extensions, <args>)"
+  execute "command! -nargs=1 Plug call add(g:_veonim_plugins, <args>)"
   ino <expr> <tab> VeonimCompleteScroll(1)
   ino <expr> <s-tab> VeonimCompleteScroll(0)
   highlight ${Highlight.Underline} gui=underline
@@ -71,6 +75,7 @@ const autocmds = {
   OptionSet: `expand('<amatch>'), v:option_new, v:option_old`,
   FileType: `bufnr(expand('<afile>')), expand('<amatch>')`,
   WinEnter: `win_getid()`,
+  SourcePre: `expand('<afile>')`,
 }
 
 export type Autocmd = typeof autocmds

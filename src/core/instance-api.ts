@@ -1,12 +1,18 @@
-import { getActiveInstance, onSwitchVim } from '../core/instance-manager'
+import { getActiveInstance, onSwitchVim, onCreateVim, instances } from '../core/instance-manager'
 import NeovimState from '../neovim/state'
 
 const { state, watchState, onStateValue, onStateChange, untilStateValue } = NeovimState('nvim-mirror')
-let instance = getActiveInstance()
 
-onSwitchVim(() => {
-  instance = getActiveInstance()!
-  instance.on.nvimStateUpdate((stateDiff: any) => Object.assign(state, stateDiff))
+onCreateVim(info => {
+  getActiveInstance()!.on.nvimStateUpdate((stateDiff: any) => {
+    if (info.id !== instances.current) return
+    Object.assign(state, stateDiff)
+  })
+})
+
+onSwitchVim(async () => {
+  const updatedState = await getActiveInstance()!.request.getState()
+  Object.assign(state, updatedState)
 })
 
 const api = {
