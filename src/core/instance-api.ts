@@ -1,5 +1,6 @@
 import { getActiveInstance, onSwitchVim, onCreateVim, instances } from '../core/instance-manager'
 import { WindowMetadata } from '../windows/metadata'
+import { GitStatus } from '../support/git'
 import NeovimState from '../neovim/state'
 import { VimMode } from '../neovim/types'
 import { EventEmitter } from 'events'
@@ -8,6 +9,7 @@ const ee = new EventEmitter()
 const { state, watchState, onStateValue, onStateChange, untilStateValue } = NeovimState('nvim-mirror')
 
 onCreateVim(info => {
+  const isActive = () => info.id && instances.current
   const instance = getActiveInstance()
   if (!instance) return console.error('created nvim but was not able to get a reference to the Instance')
 
@@ -16,12 +18,17 @@ onCreateVim(info => {
     Object.assign(state, stateDiff)
   })
 
-  instance.on.vimrcLoaded(() => info.id && instances.current && ee.emit('nvim.load', false))
+  instance.on.vimrcLoaded(() => isActive() && ee.emit('nvim.load', false))
+  instance.on.gitStatus((status: GitStatus) => isActive() && ee.emit('git.status', status))
+  instance.on.gitBranch((branch: string) => isActive() && ee.emit('git.branch', branch))
 })
 
 onSwitchVim(async () => {
   const updatedState = await getActiveInstance()!.request.getState()
   Object.assign(state, updatedState)
+  const gitInfo = await getActiveInstance()!.request.getGitInfo()
+  ee.emit('git.status', gitInfo.status)
+  ee.emit('git.branch', gitInfo.branch)
   ee.emit('nvim.load', true)
 })
 
@@ -50,7 +57,13 @@ const onAction = (name: string, fn: Function) => {
   console.warn('NYI: onAction registration:', name, fn)
 }
 
+const git = {
+  onStatus: (fn: (status: GitStatus) =>  void) => ee.on('git.status', fn),
+  onBranch: (fn: (branch: string) => void) => ee.on('git.branch', fn),
+}
+
 const api = {
+  git,
   onAction,
   getWindowMetadata,
   nvim: {

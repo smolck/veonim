@@ -7,7 +7,6 @@ import instance from '../core/instance-api'
 import * as Icon from 'hyperapp-feather'
 import { colors } from '../ui/styles'
 import { h, app } from '../ui/uikit'
-import '../support/git'
 
 interface Tab {
   tab: ExtContainer,
@@ -351,8 +350,8 @@ sub('tabs', async ({ curtab, tabs }: { curtab: ExtContainer, tabs: Tab[] }) => {
     : ui.updateTabs({ active: -1, tabs: [] })
 })
 
-sub('git:branch', branch => ui.setGitBranch(branch))
-sub('git:status', status => ui.setGitStatus(status))
+instance.git.onBranch(branch => ui.setGitBranch(branch))
+instance.git.onStatus(status => ui.setGitStatus(status))
 sub('ai:diagnostics.count', count => ui.setDiagnostics(count))
 sub('ai:start', opts => ui.aiStart(opts))
 sub('vim:macro.start', reg => ui.setMacro(reg))
