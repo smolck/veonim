@@ -42,10 +42,14 @@ requestAnimationFrame(() => {
   requestAnimationFrame(() => {
     require('../components/statusline')
     require('../components/command-line')
+    require('../components/vim-search')
   })
 
   setTimeout(() => {
     require('../components/change-project')
+    require('../components/vim-create')
+    require('../components/vim-switch')
+    require('../components/vim-rename')
   }, 199)
 
   // requestAnimationFrame(() => {

@@ -7,14 +7,14 @@ import { EventEmitter } from 'events'
 
 const ee = new EventEmitter()
 const { state, watchState, onStateValue, onStateChange, untilStateValue } = NeovimState('nvim-mirror')
-let bufferedActionCalls: any[] = []
+const actionRegistrations: string[] = []
 
 onCreateVim(info => {
   const isActive = () => info.id && instances.current
   const instance = getActiveInstance()
   if (!instance) return console.error('created nvim but was not able to get a reference to the Instance')
 
-  if (bufferedActionCalls.length) bufferedActionCalls.forEach(name => instance.call.onAction(name))
+  if (actionRegistrations.length) actionRegistrations.forEach(name => instance.call.onAction(name))
 
   instance.on.nvimStateUpdate((stateDiff: any) => {
     if (info.id !== instances.current) return
@@ -24,7 +24,7 @@ onCreateVim(info => {
   instance.on.vimrcLoaded(() => isActive() && ee.emit('nvim.load', false))
   instance.on.gitStatus((status: GitStatus) => isActive() && ee.emit('git.status', status))
   instance.on.gitBranch((branch: string) => isActive() && ee.emit('git.branch', branch))
-  instance.on.onActionCall((name: string, args: any[]) => isActive() && ee.emit(`action.${name}`, ...args))
+  instance.on.actionCalled((name: string, args: any[]) => isActive() && ee.emit(`action.${name}`, ...args))
 })
 
 onSwitchVim(async () => {
@@ -59,7 +59,8 @@ const getWindowMetadata = async (): Promise<WindowMetadata[]> => {
 
 const onAction = (name: string, fn: (...args: any[]) => void) => {
   const instance = getActiveInstance()
-  instance ? instance.call.onAction(name) : bufferedActionCalls.push(name)
+  actionRegistrations.push(name)
+  if (instance) instance.call.onAction(name)
   ee.on(`action.${name}`, fn)
 }
 

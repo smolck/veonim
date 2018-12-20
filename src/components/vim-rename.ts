@@ -3,7 +3,7 @@ import { Plugin } from '../components/plugin-container'
 import { app, vimBlur, vimFocus } from '../ui/uikit'
 import Input from '../components/text-input'
 import * as Icon from 'hyperapp-feather'
-import nvim from '../neovim/api'
+import api from '../core/instance-api'
 
 const state = {
   value: '',
@@ -38,4 +38,4 @@ const view = ($: S, a: typeof actions) => Plugin($.visible, [
 ])
 
 const ui = app({ name: 'vim-rename', state, actions, view })
-nvim.onAction('vim-rename', () => ui.show(getCurrentName()))
+api.onAction('vim-rename', () => ui.show(getCurrentName()))
