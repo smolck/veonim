@@ -164,6 +164,5 @@ api.onAction('change-dir', (path = '') => go(path, false))
 api.onAction('vim-create-dir', (path = '') => go(path, true))
 
 api.nvim.watchState.cwd((cwd: string) => {
-  // TODO: only rename this if cwd is valid (if default cwd, just use instance name)
-  renameCurrentToCwd(basename(cwd))
+  if (homedir() !== cwd) renameCurrentToCwd(basename(cwd))
 })
