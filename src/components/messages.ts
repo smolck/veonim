@@ -4,8 +4,8 @@ import { h, app, vimBlur, vimFocus } from '../ui/uikit'
 import Input from '../components/text-input'
 import { filter } from 'fuzzaldrin-plus'
 import * as Icon from 'hyperapp-feather'
+import api from '../core/instance-api'
 import { colors } from '../ui/styles'
-import nvim from '../neovim/api'
 
 const state = {
   query: '',
@@ -120,4 +120,4 @@ const ui = app({ name: 'messages', state, actions, view })
 
 export const addMessage = (message: Notification) => ui.addMessage(message)
 
-nvim.onAction('messages', ui.toggle)
+api.onAction('messages', ui.toggle)

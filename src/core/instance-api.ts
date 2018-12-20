@@ -1,4 +1,5 @@
 import { getActiveInstance, onSwitchVim, onCreateVim, instances } from '../core/instance-manager'
+import { WindowMetadata } from '../windows/metadata'
 import NeovimState from '../neovim/state'
 import { VimMode } from '../neovim/types'
 import { EventEmitter } from 'events'
@@ -28,17 +29,30 @@ const nvimLoaded = (fn: (switchInstance: boolean) => void) => ee.on('nvim.load',
 
 const getVar = async (key: string) => {
   const instance = getActiveInstance()
-  if (!instance) return
+  if (!instance) return console.error('no active instance... wut')
   return instance.request.getVar(key)
 }
 
 const setMode = (mode: VimMode) => {
   Object.assign(state, { mode })
-  // TODO: notify instance of the mode change to update the state
-  // since the worker nvim instance api does not have access to render events
+  const instance = getActiveInstance()
+  if (!instance) return
+  instance.call.setNvimMode(mode)
+}
+
+const getWindowMetadata = async (): Promise<WindowMetadata[]> => {
+  const instance = getActiveInstance()
+  if (!instance) return (console.error('no active instance... wut'), [])
+  return instance.request.getWindowMetadata()
+}
+
+const onAction = (name: string, fn: Function) => {
+  console.warn('NYI: onAction registration:', name, fn)
 }
 
 const api = {
+  onAction,
+  getWindowMetadata,
   nvim: {
     state,
     getVar,

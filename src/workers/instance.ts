@@ -1,5 +1,7 @@
 import { call, on } from '../messaging/worker-client'
+import getWindowMetadata from '../windows/metadata'
 import { NeovimAPI } from '../neovim/api'
+import { VimMode } from '../neovim/types'
 
 let nvim: NeovimAPI
 
@@ -12,3 +14,5 @@ on.connect((path: string) => {
 
 on.getState(async () => ({ ...nvim.state }))
 on.getVar(async (key: string) => Reflect.get(nvim.g, key))
+on.setNvimMode((mode: VimMode) => Object.assign(nvim.state, { mode }))
+on.getWindowMetadata(getWindowMetadata)

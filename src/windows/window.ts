@@ -3,10 +3,10 @@ import CreateWindowNameplate, { NameplateState } from '../windows/nameplate'
 import { highlightLookup } from '../render/highlight-attributes'
 import { getCharFromIndex } from '../render/font-texture-atlas'
 import { specs as titleSpecs } from '../core/title'
-import { cell } from '../core/workspace'
+import instanceAPI from '../core/instance-api'
 import { WebGLView } from '../render/webgl'
+import { cell } from '../core/workspace'
 import { makel } from '../ui/vanilla'
-import nvim from '../neovim/api'
 
 export interface WindowInfo {
   id: string
@@ -280,7 +280,7 @@ export default () => {
     },
     positionToEditorPixels: (line, col, fuckTypescript) => {
       const { within = false } = fuckTypescript || {} as PosOpts
-      const row = line - nvim.state.editorTopLine
+      const row = line - instanceAPI.nvim.state.editorTopLine
       const winX = Math.floor(col * cell.width)
       const winY = Math.floor(row * cell.height)
       return {
