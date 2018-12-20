@@ -104,6 +104,8 @@ export const create = async ({ dir } = {} as { dir?: string }): Promise<NewVimRe
 
   api.command(`${startupFuncs()} | ${startupCmds}`)
   dir && api.command(`cd ${dir}`)
+  // it seems autocmds are reset after we call ui_attach
+  api.command(`call VeonimRegisterAutocmds()`)
 
   const { pipeName } = vimInstances.get(id)!
   return { id, path: pipeName }
