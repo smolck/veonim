@@ -1,10 +1,10 @@
 import { CursorShape, setCursorColor, setCursorShape } from '../core/cursor'
 import { getBackground } from '../render/highlight-attributes'
+import { normalizeVimMode } from '../support/neovim-utils'
 import { notify, NotifyKind } from '../ui/notifications'
 import * as dispatch from '../messaging/dispatch'
 import * as workspace from '../core/workspace'
-import { VimMode } from '../neovim/types'
-import nvim from '../neovim/api'
+import api from '../core/instance-api'
 
 interface Mode {
   shape: CursorShape
@@ -63,20 +63,6 @@ const sillyString = (s: any): string => typeof s === 'number' ? String.fromCodeP
 const modes = new Map<string, Mode>()
 const options = new Map<string, any>()
 
-const normalizeVimMode = (mode: string): VimMode => {
-  if (mode === 't') return VimMode.Terminal
-  if (mode === 'n' || mode === 'normal') return VimMode.Normal
-  if (mode === 'i' || mode === 'insert') return VimMode.Insert
-  if (mode === 'V' || mode === 'visual') return VimMode.Visual
-  if (mode === 'R' || mode === 'replace') return VimMode.Replace
-  if (mode === 'no' || mode === 'operator') return VimMode.Operator
-  if (mode === 'c' || mode === 'cmdline_normal') return VimMode.CommandNormal
-  if (mode === 'cmdline_insert') return VimMode.CommandInsert
-  if (mode === 'cmdline_replace') return VimMode.CommandReplace
-  // there are quite a few more modes available. see `mode_info_set`
-  else return VimMode.SomeModeThatIProbablyDontCareAbout
-}
-
 const cursorShapeType = (shape?: string) => {
   if (shape === 'block') return CursorShape.block
   if (shape === 'horizontal') return CursorShape.underline
@@ -112,7 +98,7 @@ export const msg_showmode = ([, [ msgs ]]: any) => {
 
 export const mode_change = ([ , [ m ] ]: [any, [string]]) => {
   const mode = sillyString(m)
-  nvim.state.mode = normalizeVimMode(mode)
+  api.nvim.setMode(normalizeVimMode(mode))
   const info = modes.get(mode)
   if (!info) return
 

@@ -1,6 +1,7 @@
-import { $, is, fromJSON } from '../support/utils'
+import { normalizeVimMode } from '../support/neovim-utils'
 import { input } from '../core/master-control'
 import { VimMode } from '../neovim/types'
+import { $, is } from '../support/utils'
 import api from '../core/instance-api'
 import { remote } from 'electron'
 import { Script } from 'vm'
@@ -15,18 +16,23 @@ export enum InputType {
   Up = 'up',
 }
 
+interface RemapModifer {
+  from: string
+  to: string
+}
+
+interface KeyShape extends KeyboardEvent {
+  mode?: VimMode
+}
+
+interface KeyTransform {
+  mode: string
+  event: 'hold' | 'up' | 'down'
+  match: KeyboardEvent
+  transform: string
+}
+
 type OnKeyFn = (inputKeys: string, inputType: InputType) => void
-
-api.nvim.onLoad(async () => {
-  const res = await api.nvim.getVar('vn_project_root')
-  console.log('project root:', res)
-
-  const remapModifiers = await api.nvim.getVar('veonim_remap_modifiers')
-  console.log('remapModifiers', remapModifiers)
-
-  const keyTransforms = await api.nvim.getVar('veonim_key_transforms')
-  console.log('keyTransforms', keyTransforms)
-})
 
 const modifiers = ['Alt', 'Shift', 'Meta', 'Control']
 const remaps = new Map<string, string>()
@@ -80,10 +86,6 @@ const joinModsWithDash = (mods: string[]) => mods.join('-')
 const mapMods = $(handleMods, userModRemaps, joinModsWithDash)
 const mapKey = $(bypassEmptyMod, toVimKey)
 const formatInput = $(combineModsWithKey, wrapKey)
-const shortcuts = new Map<string, Function>()
-
-export const registerShortcut = (keys: string, mode: string, cb: Function) =>
-  shortcuts.set(`${mode}:<${keys.toUpperCase()}>`, cb)
 
 const resetInputState = () => {
   xformed = false
@@ -101,7 +103,37 @@ export const blur = () => {
   resetInputState()
 }
 
-// TODO: can we use transform to do the same thing as remapModifier? seems similar
+const setupRemapModifiers = (mappings: RemapModifer[]) => {
+  remaps.clear()
+  mappings.forEach(mapping => remapModifier(mapping.from, mapping.to))
+}
+
+const vimscriptObjectToECMA = (obj: any) => Object.entries(obj).reduce((res, [key, val]) => {
+  if (val === 'true') Reflect.set(res, key, true)
+  else if (val === 'false') Reflect.set(res, key, false)
+  else Reflect.set(res, key, val)
+  return res
+}, {})
+
+const setupTransforms = (transforms: KeyTransform[]) => {
+  xfrmHold.clear()
+  xfrmDown.clear()
+  xfrmUp.clear()
+
+  transforms.forEach(({ event, mode, match, transform }) => {
+    const nvimMode = normalizeVimMode(mode)
+    const fn = Reflect.get(addTransform, event)
+    if (!fn) return console.error('can not add key-transform for event:', event)
+
+    const transformFn = new Script(transform).runInThisContext()
+    const matchObj = nvimMode !== VimMode.SomeModeThatIProbablyDontCareAbout
+      ? Object.assign(vimscriptObjectToECMA(match), { mode: nvimMode })
+      : vimscriptObjectToECMA(match)
+
+    if (is.function(fn) && is.function(transformFn)) fn(matchObj, transformFn)
+  })
+}
+
 export const remapModifier = (from: string, to: string) => remaps.set(from, to)
 
 type Transformer = (input: KeyboardEvent) => KeyboardEvent
@@ -109,20 +141,35 @@ export const xfrmHold = new Map<string, Transformer>()
 export const xfrmDown = new Map<string, Transformer>()
 export const xfrmUp = new Map<string, Transformer>()
 
-const keToStr = (e: KeyboardEvent) => [e.key, <any>e.ctrlKey|0, <any>e.metaKey|0, <any>e.altKey|0, <any>e.shiftKey|0].join('')
+const keToStr = (e: KeyShape) => [
+  e.key,
+  <any>e.ctrlKey|0,
+  <any>e.metaKey|0,
+  <any>e.altKey|0,
+  <any>e.shiftKey|0,
+].join('')
+
+const keToStrMode = (e: KeyShape, mode = e.mode) => [
+  e.key,
+  <any>e.ctrlKey|0,
+  <any>e.metaKey|0,
+  <any>e.altKey|0,
+  <any>e.shiftKey|0,
+  mode,
+].join('')
 
 const defkey = {...new KeyboardEvent('keydown'), key: '', ctrlKey: false, metaKey: false, altKey: false, shiftKey: false}
 
-export const transform = {
+const addTransform = {
   hold: (e: any, fn: Transformer) =>
-    xfrmHold.set(keToStr({...defkey, ...e}), e => ({ ...e, ...fn(e) })),
+    xfrmHold.set(keToStrMode({...defkey, ...e}), e => ({ ...e, ...fn(e) })),
 
   down: (e: any, fn: Transformer) =>
-    xfrmDown.set(keToStr({...defkey, ...e}), e => ({ ...e, ...fn(e) })),
+    xfrmDown.set(keToStrMode({...defkey, ...e}), e => ({ ...e, ...fn(e) })),
 
   up: (e: any, fn: Transformer) => {
-    const before = keToStr({ ...defkey, ...e })
-    const now = keToStr({ ...defkey, key: e.key })
+    const before = keToStrMode({ ...defkey, ...e })
+    const now = keToStrMode({ ...defkey, key: e.key })
     xfrmUp.set(before + now, e => ({ ...e, ...fn(e) }))
   }
 }
@@ -138,7 +185,6 @@ const sendToVim = (inputKeys: string) => {
   // vim keybind. s-space was causing issues in terminal mode, sending weird
   // term esc char.
   if (inputKeys === '<S-Space>') return input('<space>')
-  if (shortcuts.has(`${api.nvim.state.mode}:${inputKeys}`)) return shortcuts.get(`${api.nvim.state.mode}:${inputKeys}`)!()
   if (inputKeys.length > 1 && !inputKeys.startsWith('<')) inputKeys.split('').forEach((k: string) => input(k))
   else {
     // a fix for terminal. only happens on cmd-tab. see below for more info
@@ -160,9 +206,10 @@ window.addEventListener('keydown', e => {
   if (!windowHasFocus || !isCapturing) return
 
   const es = keToStr(e)
+  const esmode = keToStrMode(e, api.nvim.state.mode)
   lastDown = es
 
-  if (xfrmDown.has(es)) {
+  if (xfrmDown.has(es) || xfrmDown.has(esmode)) {
     const remapped = xfrmDown.get(holding)!(e)
     sendKeys(remapped, InputType.Down)
     return
@@ -170,6 +217,11 @@ window.addEventListener('keydown', e => {
 
   if (xfrmHold.has(es)) {
     holding = es
+    return
+  }
+
+  if (xfrmHold.has(esmode)) {
+    holding = esmode
     return
   }
 
@@ -195,29 +247,20 @@ window.addEventListener('keyup', e => {
   // terminal, thus swallowing the first key after app focus
   if (!lastDown) return
   const es = keToStr(e)
+  const esmode = keToStrMode(e, api.nvim.state.mode)
 
   const prevKeyAndThisOne = lastDown + es
   if (xfrmUp.has(prevKeyAndThisOne)) return sendKeys(xfrmUp.get(prevKeyAndThisOne)!(e), InputType.Up)
 
-  if (holding === es) {
+  const prevKeyAndThisOneMode = lastDown + esmode
+  if (xfrmUp.has(prevKeyAndThisOneMode)) return sendKeys(xfrmUp.get(prevKeyAndThisOneMode)!(e), InputType.Up)
+
+  if (holding === es || holding === esmode) {
     if (!xformed) sendKeys(e, InputType.Up)
     xformed = false
     holding = ''
   }
 })
-
-// TODO: deprecate remapModifier and use transform instead?
-// nvim.onAction('remap-modifier', (from, to) => remapModifier(from, to))
-
-// nvim.onAction('register-shortcut', (key, mode) => registerShortcut(key, mode, () => nvim.call.VeonimCallEvent(`key:${mode}:${key}`)))
-
-// nvim.onAction('key-transform', (type, matcher, transformer) => {
-//   const fn = Reflect.get(transform, type)
-//   const transformFn = new Script(transformer).runInThisContext()
-//   const matchObj = is.string(matcher) ? fromJSON(matcher).or({}) : matcher
-
-//   if (is.function(fn) && is.function(transformFn)) fn(matchObj, transformFn)
-// })
 
 remote.getCurrentWindow().on('focus', () => {
   windowHasFocus = true
@@ -249,4 +292,12 @@ remote.getCurrentWindow().on('blur', async () => {
   const isTerminalMode = api.nvim.state.mode === VimMode.Terminal
   const fixTermEscape = isTerminalMode && lastEscapeFromNow < 25
   if (fixTermEscape) shouldClearEscapeOnNextAppFocus = true
+})
+
+api.nvim.onLoad(async () => {
+  const mappings = await api.nvim.getVar('veonim_remap_modifiers')
+  setupRemapModifiers(mappings)
+
+  const transforms = await api.nvim.getVar('veonim_key_transforms')
+  setupTransforms(transforms)
 })
