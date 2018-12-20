@@ -6,6 +6,8 @@ import { VimMode } from '../neovim/types'
 let nvim: NeovimAPI
 let git: any
 
+const actions = new Map<string, (args: any) => void>()
+
 on.connect((path: string) => {
   ;(global as any).NVIM_PATH = path
   nvim = require('../neovim/api').default
@@ -14,6 +16,12 @@ on.connect((path: string) => {
   nvim.onVimrcLoad(sourcedFile => call.vimrcLoaded(sourcedFile))
   git.onStatus((status: GitStatus) => call.gitStatus(status))
   git.onBranch((onBranch: string) => call.gitBranch(onBranch))
+})
+
+on.onAction(async (name: string) => {
+  if (!actions.has) actions.set(name, (...a: any[]) => call.onActionCall(name, a))
+  const cb = actions.get(name)!
+  nvim.onAction(name, cb)
 })
 
 on.getGitInfo(async () => git.getGitInfo())

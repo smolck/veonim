@@ -21,6 +21,7 @@ onCreateVim(info => {
   instance.on.vimrcLoaded(() => isActive() && ee.emit('nvim.load', false))
   instance.on.gitStatus((status: GitStatus) => isActive() && ee.emit('git.status', status))
   instance.on.gitBranch((branch: string) => isActive() && ee.emit('git.branch', branch))
+  instance.on.onActionCall((name: string, args: any[]) => isActive() && ee.emit(`action.${name}`, ...args))
 })
 
 onSwitchVim(async () => {
@@ -53,8 +54,11 @@ const getWindowMetadata = async (): Promise<WindowMetadata[]> => {
   return instance.request.getWindowMetadata()
 }
 
-const onAction = (name: string, fn: Function) => {
-  console.warn('NYI: onAction registration:', name, fn)
+const onAction = (name: string, fn: (...args: any[]) => void) => {
+  const instance = getActiveInstance()
+  if (!instance) return console.error('no active instance... wut')
+  instance.call.onAction(name)
+  ee.on(`action.${name}`, fn)
 }
 
 const git = {
