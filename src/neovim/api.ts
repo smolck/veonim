@@ -8,8 +8,6 @@ import CreateVimState from '../neovim/state'
 import { Patch } from '../langserv/patch'
 import { EventEmitter } from 'events'
 
-console.warn('who called me?')
-
 const prefix = {
   core: prefixWith(Prefixes.Core),
   buffer: prefixWith(Prefixes.Buffer),

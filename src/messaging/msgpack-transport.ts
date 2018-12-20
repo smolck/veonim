@@ -12,7 +12,13 @@ export default (pipeName: string): RPC => {
   let connected = false
 
   const connect = async () => {
-    socket = await tryNetConnect(pipeName, 250)
+    try {
+      socket = await tryNetConnect(pipeName, 250)
+    } catch(e) {
+      console.error('fail to connect to:', pipeName)
+    }
+
+    if (!socket) return
     connected = true
     encoder.pipe(socket)
     socket.pipe(decoder)
