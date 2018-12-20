@@ -18,9 +18,11 @@ requestAnimationFrame(() => {
   instanceManager.createVim('main')
   resize(workspace.size.cols, workspace.size.rows)
 
-  requestAnimationFrame(() => {
+  setTimeout(() => {
     require('../components/statusline')
-  })
+    require('../components/change-project')
+    require('../components/command-line')
+  }, 199)
 
   // requestAnimationFrame(() => {
   //   // TODO: can we load copmonents on demand?

@@ -68,6 +68,12 @@ const git = {
   onBranch: (fn: (branch: string) => void) => ee.on('git.branch', fn),
 }
 
+const nvimCommand = (command: string) => {
+  const instance = getActiveInstance()
+  if (!instance) return console.error('no active instance... WAT')
+  instance.call.nvimCommand(command)
+}
+
 const api = {
   git,
   onAction,
@@ -80,6 +86,7 @@ const api = {
     onStateValue,
     onStateChange,
     untilStateValue,
+    cmd: nvimCommand,
     onLoad: nvimLoaded,
   }
 }

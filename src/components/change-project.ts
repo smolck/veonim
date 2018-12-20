@@ -6,7 +6,7 @@ import { createVim } from '../core/instance-manager'
 import Input from '../components/text-input'
 import { filter } from 'fuzzaldrin-plus'
 import * as Icon from 'hyperapp-feather'
-import nvim from '../neovim/api'
+import api from '../core/instance-api'
 import { join, sep } from 'path'
 import { homedir } from 'os'
 
@@ -51,7 +51,7 @@ const actions = {
     const { name } = s.paths[s.index]
     if (!name) return
     const dirpath = join(s.path, name)
-    s.create ? createVim(name, dirpath) : nvim.cmd(`cd ${dirpath}`)
+    s.create ? createVim(name, dirpath) : api.nvim.cmd(`cd ${dirpath}`)
     return resetState
   },
 
@@ -154,16 +154,16 @@ const view = ($: S, a: typeof actions) => Plugin($.visible, [
 const ui = app({ name: 'change-project', state, actions, view })
 
 const go = async (userPath: string, create = false) => {
-  const cwd = await validPath(userPath) || nvim.state.cwd
+  const cwd = await validPath(userPath) || api.nvim.state.cwd
   const filedirs = await getDirFiles(cwd)
   const paths = filterDirs(filedirs)
   ui.show({ paths, cwd, path: cwd, create })
 }
 
-nvim.onAction('change-dir', (path = '') => go(path, false))
-nvim.onAction('vim-create-dir', (path = '') => go(path, true))
+api.onAction('change-dir', (path = '') => go(path, false))
+api.onAction('vim-create-dir', (path = '') => go(path, true))
 
-nvim.watchState.cwd((cwd: string) => {
+api.nvim.watchState.cwd((cwd: string) => {
   console.warn('NYI: cwd', cwd)
   // TODO: project root wut?
   // const defaultRoot = configReader('project.root', (root: string) => {

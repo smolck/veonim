@@ -323,7 +323,10 @@ const registerFiletype = ((bufnr: number, filetype: string) => {
 const events = [...registeredEventActions.values()].join('\\n')
 cmd(`let g:vn_cmd_completions .= "${events}\\n"`)
 
-subscribe('veonim', ([ event, args = [] ]) => watchers.actions.emit(event, ...args))
+// subscribe('veonim', ([ event, args = [] ]) => watchers.actions.emit(event, ...args))
+subscribe('veonim', ([ event, args = [] ]) => {
+  console.log('VEONIM HAPPENED:', event, args)
+})
 subscribe('veonim-state', ([ nextState ]) => Object.assign(state, nextState))
 subscribe('veonim-position', ([ position ]) => Object.assign(state, position))
 subscribe('veonim-autocmd', ([ autocmd, ...arg ]) => {

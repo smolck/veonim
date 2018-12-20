@@ -129,7 +129,11 @@ export const addHighlight = (id: number, attr: Attrs, infos: HighlightInfoEvent[
   }))
 }
 
-export const highlightLookup = (name: string): HighlightInfo[] => [...highlightInfo.get(name)]
+export const highlightLookup = (name: string): HighlightInfo[] => {
+  const info = highlightInfo.get(name)
+  if (!info) return (console.error('highlight info does not exist for:', name), [])
+  return [...info]
+}
 export const getHighlight = (id: number) => highlights.get(id)
 export const getBackground = (id: number) => {
   const { background } = highlights.get(id) || {} as HighlightGroup
