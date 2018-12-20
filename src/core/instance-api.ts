@@ -7,11 +7,14 @@ import { EventEmitter } from 'events'
 
 const ee = new EventEmitter()
 const { state, watchState, onStateValue, onStateChange, untilStateValue } = NeovimState('nvim-mirror')
+let bufferedActionCalls: any[] = []
 
 onCreateVim(info => {
   const isActive = () => info.id && instances.current
   const instance = getActiveInstance()
   if (!instance) return console.error('created nvim but was not able to get a reference to the Instance')
+
+  if (bufferedActionCalls.length) bufferedActionCalls.forEach(name => instance.call.onAction(name))
 
   instance.on.nvimStateUpdate((stateDiff: any) => {
     if (info.id !== instances.current) return
@@ -56,8 +59,7 @@ const getWindowMetadata = async (): Promise<WindowMetadata[]> => {
 
 const onAction = (name: string, fn: (...args: any[]) => void) => {
   const instance = getActiveInstance()
-  if (!instance) return console.error('no active instance... wut')
-  instance.call.onAction(name)
+  instance ? instance.call.onAction(name) : bufferedActionCalls.push(name)
   ee.on(`action.${name}`, fn)
 }
 

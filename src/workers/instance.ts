@@ -19,7 +19,7 @@ on.connect((path: string) => {
 })
 
 on.onAction(async (name: string) => {
-  if (!actions.has) actions.set(name, (...a: any[]) => call.onActionCall(name, a))
+  if (!actions.has(name)) actions.set(name, (...a: any[]) => call.onActionCall(name, a))
   const cb = actions.get(name)!
   nvim.onAction(name, cb)
 })
