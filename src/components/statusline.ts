@@ -128,8 +128,7 @@ const view = ($: S) => h('div', {
       ,h('span', $.cwd || 'no project')
     ])
 
-    // TODO: only show on git projects
-    ,h('div', {
+    ,$.branch && h('div', {
       style: {
         ...itemStyle,
         paddingLeft: '30px',
@@ -152,8 +151,7 @@ const view = ($: S) => h('div', {
       ,h('span', $.branch || 'git n/a')
     ])
 
-    // TODO: only show on git projects
-    ,h('div', {
+    ,$.branch && h('div', {
       style: {
         ...itemStyle,
         paddingLeft: '30px',
