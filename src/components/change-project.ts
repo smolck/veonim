@@ -1,13 +1,13 @@
 import { getDirFiles, exists, pathRelativeToHome } from '../support/utils'
+import { createVim, renameCurrentToCwd } from '../core/instance-manager'
 import { RowNormal, RowImportant } from '../components/row-container'
 import { h, app, vimBlur, vimFocus } from '../ui/uikit'
 import { Plugin } from '../components/plugin-container'
-import { createVim } from '../core/instance-manager'
 import Input from '../components/text-input'
+import { join, sep, basename } from 'path'
 import { filter } from 'fuzzaldrin-plus'
 import * as Icon from 'hyperapp-feather'
 import api from '../core/instance-api'
-import { join, sep } from 'path'
 import { homedir } from 'os'
 
 const $HOME = homedir()
@@ -164,11 +164,6 @@ api.onAction('change-dir', (path = '') => go(path, false))
 api.onAction('vim-create-dir', (path = '') => go(path, true))
 
 api.nvim.watchState.cwd((cwd: string) => {
-  console.warn('NYI: cwd', cwd)
-  // TODO: project root wut?
-  // const defaultRoot = configReader('project.root', (root: string) => {
-  //   renameCurrentToCwd(simplifyPath(cwd, absolutePath(root)))
-  // })
-
-  // defaultRoot && renameCurrentToCwd(simplifyPath(cwd, absolutePath(defaultRoot)))
+  // TODO: only rename this if cwd is valid (if default cwd, just use instance name)
+  renameCurrentToCwd(basename(cwd))
 })

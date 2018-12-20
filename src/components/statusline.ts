@@ -1,12 +1,14 @@
 import { highlightLookup, getBackground } from '../render/highlight-attributes'
+import { onSwitchVim, getCurrentName } from '../core/instance-manager'
 import { sub, processAnyBuffered } from '../messaging/dispatch'
-import { onSwitchVim } from '../core/instance-manager'
 import { darken, brighten, cvar } from '../ui/css'
 import { ExtContainer } from '../neovim/protocol'
 import instance from '../core/instance-api'
 import * as Icon from 'hyperapp-feather'
 import { colors } from '../ui/styles'
 import { h, app } from '../ui/uikit'
+import { basename } from 'path'
+import { homedir } from 'os'
 
 interface Tab {
   tab: ExtContainer,
@@ -80,7 +82,7 @@ const actions = {
   setFiletype: (filetype: any) => ({ filetype }),
   setLine: (line: any) => ({ line }),
   setColumn: (column: any) => ({ column }),
-  setCwd: ({ cwd, projectRoot }: any) => ({ cwd, projectRoot }),
+  setCwd: (cwd: string) => ({ cwd }),
   setDiagnostics: ({ errors = 0, warnings = 0 }: any) => ({ errors, warnings }),
   setGitBranch: (branch: any) => ({ branch }),
   setGitStatus: ({ additions, deletions }: any) => ({ additions, deletions }),
@@ -334,13 +336,10 @@ instance.nvim.watchState.filetype(ui.setFiletype)
 instance.nvim.watchState.line(ui.setLine)
 instance.nvim.watchState.column(ui.setColumn)
 instance.nvim.watchState.cwd((cwd: string) => {
-  console.warn('NYI: cwd', cwd)
-  // TODO: do this shit thing
-  // const defaultRoot = configReader('project.root', (root: string) => {
-  //   ui.setCwd({ cwd: simplifyPath(cwd, absolutePath(root)) })
-  // })
-
-  // defaultRoot && ui.setCwd({ cwd: simplifyPath(cwd, absolutePath(defaultRoot)) })
+  const next = homedir() === cwd
+    ? getCurrentName()
+    : basename(cwd)
+  ui.setCwd(next)
 })
 
 sub('tabs', async ({ curtab, tabs }: { curtab: ExtContainer, tabs: Tab[] }) => {
