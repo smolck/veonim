@@ -292,25 +292,10 @@ const applyPatchesToBuffers = async (patches: Patch[], buffers: PathBuf[]) => bu
   })
 })
 
-// TODO: this is not deterministic, it mutates global state...
-// maybe we can move this to postStsartupCmds. that way nvim
-// pushes out buffered actions instead of pulling.
-// still have issue that it's a one-time mutation tho.
-// maybe any buffered notifications only needed for main thread anyways
-const processBufferedActions = async () => {
-  const bufferedActions = await g.vn_rpc_buf
-  if (!bufferedActions || !bufferedActions.length) return
-  bufferedActions.forEach(([event, ...args]: any) => watchers.actions.emit(event, ...args))
-  g.vn_rpc_buf = []
-}
-
 const refreshState = async () => {
   const nextState = await call.VeonimState()
   Object.assign(state, nextState)
 }
-
-// TODO: vimrc read autocmd pls
-// watchConfig('nvim/init.vim', refreshOptions)
 
 // keeping this per instance of nvim, because i think it is reasonable to
 // expect that the same document filepath could have different filetypes in
@@ -323,10 +308,7 @@ const registerFiletype = ((bufnr: number, filetype: string) => {
 const events = [...registeredEventActions.values()].join('\\n')
 cmd(`let g:vn_cmd_completions .= "${events}\\n"`)
 
-// subscribe('veonim', ([ event, args = [] ]) => watchers.actions.emit(event, ...args))
-subscribe('veonim', ([ event, args = [] ]) => {
-  console.log('VEONIM HAPPENED:', event, args)
-})
+subscribe('veonim', ([ event, args = [] ]) => watchers.actions.emit(event, ...args))
 subscribe('veonim-state', ([ nextState ]) => Object.assign(state, nextState))
 subscribe('veonim-position', ([ position ]) => Object.assign(state, position))
 subscribe('veonim-autocmd', ([ autocmd, ...arg ]) => {
@@ -359,7 +341,6 @@ onEvent('nvim_buf_lines_event', (args: any[]) => {
   })
 })
 
-processBufferedActions()
 refreshState()
 watchers.events.emit('bufLoad')
 

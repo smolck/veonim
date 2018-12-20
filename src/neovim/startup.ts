@@ -11,9 +11,7 @@ export const startupCmds = CmdGroup`
   let $PATH .= ':${runtimeDir}/${process.platform}'
   let &runtimepath .= ',${runtimeDir}'
   let g:veonim = 1
-  let g:vn_loaded = 0
   let g:vn_cmd_completions = ''
-  let g:vn_rpc_buf = []
   let g:vn_events = {}
   let g:vn_callbacks = {}
   let g:vn_callback_id = 0
@@ -153,11 +151,7 @@ startup.defineFunc.VeonimTermExit`
 `
 
 startup.defineFunc.Veonim`
-  if g:vn_loaded
-    call rpcnotify(0, 'veonim', a:1, a:000[1:])
-  else
-    call add(g:vn_rpc_buf, a:000)
-  endif
+  call rpcnotify(0, 'veonim', a:1, a:000[1:])
 `
 
 startup.defineFunc.VeonimCmdCompletions`

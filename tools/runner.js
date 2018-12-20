@@ -2,7 +2,6 @@
 
 const { spawn } = require('child_process')
 const { promisify: P } = require('util')
-const { Transform } = require('stream')
 const { join } = require('path')
 const fs = require('fs')
 
@@ -19,10 +18,10 @@ const run = (cmd, opts = {}) => new Promise(done => {
   process.on('SIGTERM', exit)
   process.on('SIGHUP', exit)
   process.on('SIGINT', exit)
+  proc.on('exit', done)
 
   proc.stdout.pipe(process.stdout)
   proc.stderr.pipe(process.stderr)
-  proc.on('exit', done)
 
   if (opts.outputMatch) proc.stdout.on('data', data => {
     const outputHas = data
