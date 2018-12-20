@@ -1,8 +1,8 @@
 import { $, is, fromJSON } from '../support/utils'
 import { input } from '../core/master-control'
 import { VimMode } from '../neovim/types'
+import api from '../core/instance-api'
 import { remote } from 'electron'
-import nvim from '../neovim/api'
 import { Script } from 'vm'
 
 export enum InputMode {
@@ -16,6 +16,11 @@ export enum InputType {
 }
 
 type OnKeyFn = (inputKeys: string, inputType: InputType) => void
+
+api.nvim.onLoad(async () => {
+  const res = await api.nvim.getConfig('vn_project_root')
+  console.log('project root:', res)
+})
 
 const modifiers = ['Alt', 'Shift', 'Meta', 'Control']
 const remaps = new Map<string, string>()
@@ -127,7 +132,7 @@ const sendToVim = (inputKeys: string) => {
   // vim keybind. s-space was causing issues in terminal mode, sending weird
   // term esc char.
   if (inputKeys === '<S-Space>') return input('<space>')
-  if (shortcuts.has(`${nvim.state.mode}:${inputKeys}`)) return shortcuts.get(`${nvim.state.mode}:${inputKeys}`)!()
+  if (shortcuts.has(`${api.nvim.state.mode}:${inputKeys}`)) return shortcuts.get(`${api.nvim.state.mode}:${inputKeys}`)!()
   if (inputKeys.length > 1 && !inputKeys.startsWith('<')) inputKeys.split('').forEach((k: string) => input(k))
   else {
     // a fix for terminal. only happens on cmd-tab. see below for more info
@@ -235,7 +240,7 @@ remote.getCurrentWindow().on('blur', async () => {
   resetInputState()
 
   const lastEscapeFromNow = Date.now() - lastEscapeTimestamp
-  const isTerminalMode = nvim.state.mode === VimMode.Terminal
+  const isTerminalMode = api.nvim.state.mode === VimMode.Terminal
   const fixTermEscape = isTerminalMode && lastEscapeFromNow < 25
   if (fixTermEscape) shouldClearEscapeOnNextAppFocus = true
 })

@@ -1,6 +1,6 @@
 import { VimOption, BufferEvent, HyperspaceCoordinates, BufferType, BufferHide, BufferOption, Buffer, Window, Tabpage, GenericCallback } from '../neovim/types'
 import { Api, ExtContainer, Prefixes, Buffer as IBuffer, Window as IWindow, Tabpage as ITabpage } from '../neovim/protocol'
-import { is, onFnCall, onProp, prefixWith, uuid, getPipeName } from '../support/utils'
+import { is, onFnCall, onProp, prefixWith, uuid } from '../support/utils'
 import ConnectMsgpackRPC from '../messaging/msgpack-transport'
 import { Functions } from '../neovim/function-types'
 import { Autocmds } from '../neovim/startup'
@@ -8,7 +8,7 @@ import CreateVimState from '../neovim/state'
 import { Patch } from '../langserv/patch'
 import { EventEmitter } from 'events'
 
-export const nvimPipeName = getPipeName('veonim')
+console.warn('who called me?')
 
 const prefix = {
   core: prefixWith(Prefixes.Core),
@@ -17,7 +17,7 @@ const prefix = {
   tabpage: prefixWith(Prefixes.Tabpage),
 }
 
-const { notify, request, onEvent } = ConnectMsgpackRPC(nvimPipeName)
+const { notify, request, onEvent } = ConnectMsgpackRPC((global as any).NVIM_PATH)
 
 const registeredEventActions = new Set<string>()
 const { state, watchState, onStateChange, onStateValue, untilStateValue } = CreateVimState('main')
@@ -58,6 +58,7 @@ const subscribe = (event: string, fn: (data: any) => void) => {
   api.core.subscribe(event)
 }
 
+// TODO: what are we using options for??
 const options = new Map<string, any>()
 const requestedOptions = new Set<string>()
 
@@ -372,11 +373,7 @@ autocmd.InsertEnter(() => watchers.events.emit('insertEnter'))
 autocmd.InsertLeave(() => watchers.events.emit('insertLeave'))
 autocmd.OptionSet((name: string, value: any) => options.set(name, value))
 autocmd.FileType((_, filetype: string) => watchers.events.emit('filetype', filetype))
-
-// TODO: is this a way to detect vimrc reload?
-autocmd.SourcePre(sourcedFile => {
-  console.log('sourced file:', sourcedFile)
-})
+autocmd.SourcePre(sourcedFile => watchers.events.emit('vimrcLoad', sourcedFile))
 
 autocmd.TextChanged(revision => {
   state.revision = revision-0
@@ -390,6 +387,8 @@ autocmd.TextChangedI(revision => {
 
 // TODO: i think we should just determine this from render events
 autocmd.WinEnter((id: number) => watchers.events.emit('winEnter', id))
+
+const onVimrcLoad = (fn: (file: string) => void) => watchers.events.on('vimrcLoad', fn)
 
 const HL_CLR = 'nvim_buf_clear_highlight'
 const HL_ADD = 'nvim_buf_add_highlight'
@@ -495,7 +494,7 @@ const dummy = {
 const exportAPI = { state, watchState, onStateChange, onStateValue, untilStateValue,
   cmd, cmdOut, expr, call, feedkeys, normal, callAtomic, onAction,
   getCurrentLine, jumpTo, jumpToProjectFile, systemAction, current,
-  g, on, untilEvent, applyPatches, buffers, windows, tabs, options: readonlyOptions }
+  g, on, untilEvent, applyPatches, buffers, windows, tabs, options: readonlyOptions, onVimrcLoad }
 
 export default exportAPI
 export type NeovimAPI = typeof exportAPI
