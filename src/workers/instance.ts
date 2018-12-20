@@ -11,4 +11,4 @@ on.connect((path: string) => {
 })
 
 on.getState(async () => ({ ...nvim.state }))
-on.getConfig(async (key: string) => Reflect.get(nvim.g, key))
+on.getVar(async (key: string) => Reflect.get(nvim.g, key))

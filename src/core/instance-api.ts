@@ -25,16 +25,16 @@ onSwitchVim(async () => {
 
 const nvimLoaded = (fn: () => void) => ee.on('nvim.load', fn)
 
-const getConfig = async (key: string) => {
+const getVar = async (key: string) => {
   const instance = getActiveInstance()
   if (!instance) return
-  return instance.request.getConfig(key)
+  return instance.request.getVar(key)
 }
 
 const api = {
   nvim: {
     state,
-    getConfig,
+    getVar,
     watchState,
     onStateValue,
     onStateChange,

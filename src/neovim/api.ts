@@ -233,7 +233,8 @@ const emptyObject: { [index: string]: any } = Object.create(null)
 const g = new Proxy(emptyObject, {
   get: async (_t, name: string) => {
     const val = await req.core.getVar(name as string).catch(e => e)
-    return Array.isArray(val) && /Key (.*?)not found/.test(val[1]) ? undefined : val
+    const err = is.array(val) && is.string(val[1]) && /Key (.*?)not found/.test(val[1])
+    return err ? undefined : val
   },
   set: (_t, name: string, val: any) => (api.core.setVar(name, val), true),
 })

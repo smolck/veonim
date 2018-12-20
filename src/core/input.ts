@@ -18,8 +18,14 @@ export enum InputType {
 type OnKeyFn = (inputKeys: string, inputType: InputType) => void
 
 api.nvim.onLoad(async () => {
-  const res = await api.nvim.getConfig('vn_project_root')
+  const res = await api.nvim.getVar('vn_project_root')
   console.log('project root:', res)
+
+  const remapModifiers = await api.nvim.getVar('veonim_remap_modifiers')
+  console.log('remapModifiers', remapModifiers)
+
+  const keyTransforms = await api.nvim.getVar('veonim_key_transforms')
+  console.log('keyTransforms', keyTransforms)
 })
 
 const modifiers = ['Alt', 'Shift', 'Meta', 'Control']
