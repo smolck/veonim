@@ -33,8 +33,6 @@ export const startupCmds = CmdGroup`
   ino <expr> <s-tab> VeonimCompleteScroll(0)
   highlight ${Highlight.Underline} gui=underline
   highlight ${Highlight.Undercurl} gui=undercurl
-  call serverstart()
-  call VeonimRegisterAutocmds()
 `
 
 // TODO: should we rename some of these "internal" functions so they
