@@ -45,6 +45,7 @@ requestAnimationFrame(() => {
     require('../components/vim-search')
   })
 
+  // TODO: use requireDir once we can load all components safely
   setTimeout(() => {
     require('../components/change-project')
     require('../components/vim-create')
@@ -55,31 +56,28 @@ requestAnimationFrame(() => {
     require('../components/explorer')
     require('../components/color-picker')
     require('../components/nc')
+    require('../components/inventory')
+    require('../components/divination')
+    require('../components/debug')
+    require('../components/generic-menu')
+    require('../components/generic-prompt')
+    require('../components/user-menu')
+    require('../components/user-overlay-menu')
   }, 199)
 
+  // TODO: user-menu and user-overlay-menu not calling user callbacks!
 
   //   ├── autocomplete.ts
   //   ├── buffer-search.ts
   //   ├── code-actions.ts
-  //   ├── debug.ts
-  //   ├── divination.ts
-  //   ├── generic-menu.ts
-  //   ├── generic-prompt.ts
   //   ├── grep.ts
   //   ├── hint.ts
   //   ├── hover.ts
-  //   ├── inventory.ts
-  //   ├── loading.ts
   //   ├── overlay.ts
-  //   ├── plugin-container.ts
   //   ├── problem-info.ts
   //   ├── problems.ts
   //   ├── references.ts
-  //   ├── row-container.ts
-  //   ├── statusline.ts
   //   ├── symbols.ts
-  //   ├── user-menu.ts
-  //   ├── user-overlay-menu.ts
   //   ├── viewport-search.ts
 
 

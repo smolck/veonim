@@ -89,6 +89,12 @@ const nvimCall: Functions = onFnCall(async (name, args) => {
   return instance.request.nvimCall(name, args)
 })
 
+const nvimFeedkeys = (keys: string, mode = 'm') => {
+  const instance = getActiveInstance()
+  if (!instance) return console.error('no active instance WHAT')
+  return instance.call.nvimFeedkeys(keys, mode)
+}
+
 const api = {
   git,
   onAction,
@@ -105,6 +111,7 @@ const api = {
     untilStateValue,
     cmd: nvimCommand,
     onLoad: nvimLoaded,
+    feedkeys: nvimFeedkeys,
   }
 }
 

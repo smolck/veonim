@@ -7,7 +7,11 @@ import getDebugConfig from '../ai/get-debug-config'
 import * as extensions from '../core/extensions'
 import * as breakpoints from '../ai/breakpoints'
 import { debugline } from '../core/cursor'
-import debugUI from '../components/debug'
+// TODO: debugUI when ready
+const debugUI: any = new Proxy({}, {
+  get: (_: any, __: string) => () => {},
+})
+// import debugUI from '../components/debug'
 import * as Icon from 'hyperapp-feather'
 // import { translate } from '../ui/css'
 import nvim from '../neovim/api'

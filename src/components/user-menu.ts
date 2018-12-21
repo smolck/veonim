@@ -4,7 +4,7 @@ import { h, app, vimBlur, vimFocus } from '../ui/uikit'
 import Input from '../components/text-input'
 import { filter } from 'fuzzaldrin-plus'
 import * as Icon from 'hyperapp-feather'
-import nvim from '../neovim/api'
+import api from '../core/instance-api'
 
 const state = {
   id: 0,
@@ -25,7 +25,7 @@ const actions = {
     vimFocus()
     if (!s.items.length) return resetState
     const item = s.items[s.index]
-    if (item) nvim.call.VeonimCallback(s.id, item)
+    if (item) api.nvim.call.VeonimCallback(s.id, item)
     return resetState
   },
 
@@ -66,4 +66,4 @@ const view = ($: S, a: typeof actions) => Plugin($.visible, [
 
 const ui = app({ name: 'user-menu', state, actions, view })
 
-nvim.onAction('user-menu', (id: number, desc: string, items = []) => items.length && ui.show({ id, items, desc }))
+api.onAction('user-menu', (id: number, desc: string, items = []) => items.length && ui.show({ id, items, desc }))
