@@ -50,6 +50,7 @@ requestAnimationFrame(() => {
     require('../components/vim-create')
     require('../components/vim-switch')
     require('../components/vim-rename')
+    require('../components/buffers')
   }, 199)
 
   // requestAnimationFrame(() => {

@@ -1,11 +1,12 @@
-import { VimOption, BufferEvent, HyperspaceCoordinates, BufferType, BufferHide, BufferOption, Buffer, Window, Tabpage, GenericCallback } from '../neovim/types'
+import { VimOption, BufferEvent, HyperspaceCoordinates, BufferType, BufferHide, BufferOption, Buffer, Window, Tabpage, GenericCallback, BufferInfo } from '../neovim/types'
 import { Api, ExtContainer, Prefixes, Buffer as IBuffer, Window as IWindow, Tabpage as ITabpage } from '../neovim/protocol'
-import { is, onFnCall, onProp, prefixWith, uuid } from '../support/utils'
+import { is, onFnCall, onProp, prefixWith, uuid, simplifyPath } from '../support/utils'
 import ConnectMsgpackRPC from '../messaging/msgpack-transport'
 import { Functions } from '../neovim/function-types'
 import { Autocmds } from '../neovim/startup'
 import CreateVimState from '../neovim/state'
 import { Patch } from '../langserv/patch'
+import { basename, dirname } from 'path'
 import { EventEmitter } from 'events'
 
 const prefix = {
@@ -167,6 +168,32 @@ const buffers = {
     await buffer.setName(name)
     cmd(`bwipeout! ${id}`)
     return buffer
+  },
+  listWithInfo: async (): Promise<BufferInfo[]> => {
+    const bufs = await buffers.list()
+    const currentBufferId = current.buffer.id
+
+    const bufInfo = await Promise.all(bufs.map(async b => ({
+      name: await b.name,
+      current: b.id === currentBufferId,
+      modified: await b.getOption(BufferOption.Modified),
+      listed: await b.getOption(BufferOption.Listed),
+      terminal: (await b.getOption(BufferOption.Type)) === BufferType.Terminal,
+    })))
+
+    if (!bufInfo) return []
+
+    return bufInfo
+      .filter(m => m.listed && !m.current)
+      .map(({ name, modified, terminal }) => ({
+        name,
+        modified,
+        terminal,
+        base: basename(name),
+        dir: simplifyPath(dirname(name), state.cwd)
+      }))
+      .map((m, ix, arr) => ({ ...m, duplicate: arr.some((n, ixf) => ixf !== ix && n.base === m.base) }))
+      .map(m => ({ ...m, name: m.duplicate ? `${m.dir}/${m.base}` : m.base }))
   },
   addShadow: async (name: string) => {
     const buffer = await buffers.add(name)
