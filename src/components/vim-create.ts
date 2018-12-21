@@ -32,7 +32,7 @@ const view = ($: S, a: typeof actions) => Plugin($.visible, [
     value: $.value,
     focus: true,
     icon: Icon.FolderPlus,
-    desc: 'create new vim session',
+    desc: 'create new vim instance',
   })
 
 ])

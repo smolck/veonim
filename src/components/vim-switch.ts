@@ -7,7 +7,7 @@ import { filter } from 'fuzzaldrin-plus'
 import * as Icon from 'hyperapp-feather'
 import api from '../core/instance-api'
 
-interface Session {
+interface Instance {
   id: number
   name: string
 }
@@ -15,15 +15,15 @@ interface Session {
 const state = {
   value: '',
   visible: false,
-  list: [] as Session[],
-  cache: [] as Session[],
+  list: [] as Instance[],
+  cache: [] as Instance[],
   index: 0,
 }
 
 type S = typeof state
 
 const actions = {
-  show: (d: Session[]) => (vimBlur(), { list: d, cache: d, visible: true }),
+  show: (d: Instance[]) => (vimBlur(), { list: d, cache: d, visible: true }),
   hide: () => (vimFocus(), { value: '', visible: false, index: 0 }),
   change: (value: string) => (s: S) => ({ value, index: 0, list: value
     ? filter(s.list, value, { key: 'name' }).slice(0, 10)
@@ -55,7 +55,7 @@ const view = ($: S, a: typeof actions) => Plugin($.visible, [
     value: $.value,
     focus: true,
     icon: Icon.Grid,
-    desc: 'switch vim session',
+    desc: 'switch vim instance',
   })
 
   ,h('div', $.list.map(({ id, name }, ix) => h(RowNormal, {

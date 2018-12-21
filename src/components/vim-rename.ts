@@ -32,7 +32,7 @@ const view = ($: S, a: typeof actions) => Plugin($.visible, [
     value: $.value,
     focus: true,
     icon: Icon.Edit,
-    desc: 'rename vim session',
+    desc: 'rename vim instance',
   })
 
 ])
