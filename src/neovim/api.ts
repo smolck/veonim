@@ -58,19 +58,13 @@ const subscribe = (event: string, fn: (data: any) => void) => {
   api.core.subscribe(event)
 }
 
-// TODO: what are we using options for??
 const options = new Map<string, any>()
-const requestedOptions = new Set<string>()
 
 const getOption = async (name: string) => {
   const optionValue = await req.core.getOption(name)
-  requestedOptions.add(name)
   options.set(name, optionValue)
   return optionValue
 }
-
-const refreshOptions = () => [...requestedOptions.values()].forEach(getOption)
-console.log('ON VIMRC RELOAD REFRESH OPTIONS! refreshOptions', refreshOptions)
 
 const readonlyOptions: VimOption = new Proxy(Object.create(null), {
   get: (_, key: string) => options.has(key)
