@@ -5,25 +5,6 @@
   .forEach(m => Reflect.set(process.env, `VEONIM_TRACE_${m.toUpperCase()}`, 1))
 // end setup trace
 
-if (process.env.VEONIM_DEV) {
-  const Consolol = require('console')
-  const stdoutConsole = new Consolol.Console(process.stdout, process.stderr)
-  const browserConsole = global.console
-
-  global.console = new Proxy(browserConsole, {
-    get: (_: any, key: string) => {
-      const yea = ['log', 'error', 'warn', 'info', 'debug'].includes(key)
-
-      if (yea) return (...a: any[]) => {
-        Reflect.get(stdoutConsole, key)('-->', ...a)
-        Reflect.get(browserConsole, key)(...a)
-      }
-
-      return Reflect.get(browserConsole, key)
-    }
-  })
-}
-
 import * as instanceManager from '../core/instance-manager'
 import { resize } from '../core/master-control'
 import * as workspace from '../core/workspace'
@@ -31,12 +12,10 @@ import * as workspace from '../core/workspace'
 import '../render/redraw'
 
 workspace.on('resize', ({ rows, cols }) => resize(cols, rows))
-
+workspace.resize()
 
 requestAnimationFrame(() => {
-  // TODO: rename to cwd
   instanceManager.createVim('main')
-  resize(workspace.size.cols, workspace.size.rows)
 
   // high priority components
   requestAnimationFrame(() => {
