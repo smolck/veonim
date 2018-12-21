@@ -54,7 +54,34 @@ requestAnimationFrame(() => {
     require('../components/files')
     require('../components/explorer')
     require('../components/color-picker')
+    require('../components/nc')
   }, 199)
+
+
+  //   ├── autocomplete.ts
+  //   ├── buffer-search.ts
+  //   ├── code-actions.ts
+  //   ├── debug.ts
+  //   ├── divination.ts
+  //   ├── generic-menu.ts
+  //   ├── generic-prompt.ts
+  //   ├── grep.ts
+  //   ├── hint.ts
+  //   ├── hover.ts
+  //   ├── inventory.ts
+  //   ├── loading.ts
+  //   ├── overlay.ts
+  //   ├── plugin-container.ts
+  //   ├── problem-info.ts
+  //   ├── problems.ts
+  //   ├── references.ts
+  //   ├── row-container.ts
+  //   ├── statusline.ts
+  //   ├── symbols.ts
+  //   ├── user-menu.ts
+  //   ├── user-overlay-menu.ts
+  //   ├── viewport-search.ts
+
 
   // requestAnimationFrame(() => {
   //   // TODO: can we load copmonents on demand?

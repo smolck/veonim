@@ -1,5 +1,6 @@
+import { stealInput } from '../core/input'
+import api from '../core/instance-api'
 import { h, app } from '../ui/uikit'
-import nvim from '../neovim/api'
 
 const state = {
   visible: false,
@@ -28,5 +29,10 @@ const view = ($: S) => h('div', {
 
 const ui = app<S, typeof actions>({ name: 'nc', state, actions, view })
 
-nvim.onAction('nc', ui.show)
-nvim.on.cursorMove(ui.hide)
+api.onAction('nc', () => {
+  ui.show()
+  const restoreInput = stealInput(() => {
+    restoreInput()
+    ui.hide()
+  })
+})
