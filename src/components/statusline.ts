@@ -1,4 +1,4 @@
-import { highlightLookup, getBackground } from '../render/highlight-attributes'
+import { highlightLookupWhenExist, getBackground } from '../render/highlight-attributes'
 import { onSwitchVim, getCurrentName } from '../core/instance-manager'
 import { sub, processAnyBuffered } from '../messaging/dispatch'
 import { darken, brighten, cvar } from '../ui/css'
@@ -41,7 +41,7 @@ const state = {
 type S = typeof state
 
 const refreshBaseColor = async () => {
-  const groups = highlightLookup('StatusLine')
+  const groups = await highlightLookupWhenExist('StatusLine')
   const hlgrp = groups.find(m => m.builtinName === 'StatusLine')
   if (!hlgrp) return
   const background = getBackground(hlgrp.id)

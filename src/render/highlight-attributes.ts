@@ -1,5 +1,8 @@
-import { asColor, MapSet } from '../support/utils'
+import { asColor, MapSet, CreateTask } from '../support/utils'
 import { pub } from '../messaging/dispatch'
+import { EventEmitter } from 'events'
+
+const ee = new EventEmitter()
 
 export interface Attrs {
   foreground?: number
@@ -127,6 +130,24 @@ export const addHighlight = (id: number, attr: Attrs, infos: HighlightInfoEvent[
     name: sillyString(info.hi_name),
     builtinName: sillyString(info.ui_name),
   }))
+
+  ee.emit('highlight-info.added')
+}
+
+export const highlightLookupWhenExist = async (name: string): Promise<HighlightInfo[]> => {
+  const info = highlightInfo.get(name)
+  if (info) return [...info]
+  const lookupTask = CreateTask()
+
+  const checkIfExist = () => {
+    const info = highlightInfo.get(name)
+    if (!info) return
+    lookupTask.done([...info])
+    ee.removeListener('highlight-info.added', checkIfExist)
+  }
+
+  ee.on('highlight-info.added', checkIfExist)
+  return lookupTask.promise as any
 }
 
 export const highlightLookup = (name: string): HighlightInfo[] => {
