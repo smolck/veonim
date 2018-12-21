@@ -119,6 +119,7 @@ startup.defineFunc.VeonimState`
   let m.revision = b:changedtick
   let m.filetype = getbufvar(currentBuffer, '&filetype')
   let m.cwd = getcwd()
+  let m.dir = expand('%:p:h')
   let m.file = expand('%f')
   let m.colorscheme = g:colors_name
   let m.bufferType = getbufvar(currentBuffer, '&buftype')

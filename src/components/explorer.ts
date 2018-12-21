@@ -8,8 +8,8 @@ import Input from '../components/text-input'
 import { BufferType } from '../neovim/types'
 import { filter } from 'fuzzaldrin-plus'
 import * as Icon from 'hyperapp-feather'
+import api from '../core/instance-api'
 import { colors } from '../ui/styles'
-import nvim from '../neovim/api'
 import { cvar } from '../ui/css'
 
 interface FileDir {
@@ -107,7 +107,7 @@ const actions = {
     if (!name) return
 
     if (file) {
-      nvim.cmd(`e ${pathRelativeToCwd(join(s.path, name), s.cwd)}`)
+      api.nvim.cmd(`e ${pathRelativeToCwd(join(s.path, name), s.cwd)}`)
       return resetState
     }
 
@@ -121,7 +121,7 @@ const actions = {
   }),
 
   ctrlH: async () => {
-    const { cwd } = nvim.state
+    const { cwd } = api.nvim.state
     const filedirs = await getDirFiles(cwd)
     const paths = sortDirFiles(filedirs)
     ui.show({ paths, cwd, path: cwd })
@@ -162,7 +162,6 @@ const actions = {
 }
 
 let listElRef: HTMLElement
-let pathInputRef: HTMLInputElement
 
 type A = typeof actions
 
@@ -203,7 +202,6 @@ const view = ($: S, a: A) => Plugin($.vis, [
     desc: 'open path',
     small: true,
     focus: true,
-    thisIsGarbage: (e: HTMLInputElement) => pathInputRef = e,
     pathMode: true,
   })
 
@@ -226,11 +224,10 @@ const view = ($: S, a: A) => Plugin($.vis, [
 
 const ui = app({ name: 'explorer', state, actions, view })
 
-nvim.onAction('explorer', async () => {
-  const { cwd, bufferType } = nvim.state
-  const dirPathOfCurrentFile = await nvim.call.expand(`%:p:h`)
+api.onAction('explorer', async () => {
+  const { cwd, bufferType } = api.nvim.state
   const isTerminal = bufferType === BufferType.Terminal
-  const path = isTerminal ? cwd : dirPathOfCurrentFile
+  const path = isTerminal ? cwd : api.nvim.state.dir
 
   const paths = sortDirFiles(await getDirFiles(path))
   ui.show({ cwd, path, paths })

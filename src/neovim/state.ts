@@ -6,6 +6,7 @@ const state = {
   bufferType: BufferType.Normal,
   file: '',
   filetype: '',
+  dir: '',
   cwd: '',
   colorscheme: '',
   revision: -1,
