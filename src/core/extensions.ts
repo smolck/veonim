@@ -1,5 +1,6 @@
 import { DebugAdapterConnection } from '../messaging/debug-protocol'
 import { traceLANGSERV as log } from '../support/trace'
+import { workerData } from '../messaging/worker-client'
 import Worker from '../messaging/worker'
 
 // TODO: move to shared place
@@ -30,7 +31,7 @@ export interface DebugStarterPack {
   launchConfig: DebugConfiguration
 }
 
-const { on, call, request } = Worker('extension-host')
+const { on, call, request } = Worker('extension-host', workerData)
 
 const bridgeServer = (serverId: string): RPCServer => {
   const api = {} as RPCServer

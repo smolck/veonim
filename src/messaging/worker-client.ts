@@ -32,6 +32,7 @@ onmessage = ({ data: [e, data = [], id] }: MessageEvent) => {
   })
 }
 
+export const workerData = (global as any).workerData
 export const call: EventFn = onFnCall((event: string, args: any[]) => send([event, args]))
 export const on = proxyFn((event: string, cb: (data: any) => void) => watchers.add(event, cb))
 export const request: RequestEventFn = onFnCall((event: string, args: any[]) => {

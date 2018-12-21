@@ -2,6 +2,7 @@ import { VimOption, BufferEvent, HyperspaceCoordinates, BufferType, BufferHide, 
 import { Api, ExtContainer, Prefixes, Buffer as IBuffer, Window as IWindow, Tabpage as ITabpage } from '../neovim/protocol'
 import { is, onFnCall, onProp, prefixWith, uuid, simplifyPath } from '../support/utils'
 import ConnectMsgpackRPC from '../messaging/msgpack-transport'
+import { workerData } from '../messaging/worker-client'
 import { Functions } from '../neovim/function-types'
 import { Autocmds } from '../neovim/startup'
 import CreateVimState from '../neovim/state'
@@ -16,7 +17,7 @@ const prefix = {
   tabpage: prefixWith(Prefixes.Tabpage),
 }
 
-const { notify, request, onEvent } = ConnectMsgpackRPC((global as any).NVIM_PATH)
+const { notify, request, onEvent } = ConnectMsgpackRPC(workerData.nvimPath)
 
 const registeredEventActions = new Set<string>()
 const { state, watchState, onStateChange, onStateValue, untilStateValue } = CreateVimState('main')

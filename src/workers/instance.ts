@@ -1,41 +1,23 @@
 import { VimMode, HyperspaceCoordinates } from '../neovim/types'
+import * as bufferSearch from '../services/buffer-search'
 import { call, on } from '../messaging/worker-client'
 import { GitStatus } from '../support/git'
-import { NeovimAPI } from '../neovim/api'
-
-let nvim: NeovimAPI
-let git: any
-let bufferSearch: any
-let ai: any
+import * as git from '../support/git'
+import nvim from '../neovim/api'
+import '../services/remote'
+import '../services/mru-buffers'
+import '../services/watch-reload'
+import '../core/ai'
+// TODO: not used:
+// require('../services/job-reader')
+// require('../services/dev-recorder')
 
 const actions = new Map<string, (args: any) => void>()
 
-on.connect((path: string) => {
-  ;(global as any).NVIM_PATH = path
-  nvim = require('../neovim/api').default
-  git = require('../support/git')
-  // TODO: no exports on AI (yet)
-  // ai = require('../core/ai')
-  bufferSearch = require('../services/buffer-search')
-
-  nvim.onStateChange(nextState => call.nvimStateUpdate(nextState))
-  nvim.onVimrcLoad(sourcedFile => call.vimrcLoaded(sourcedFile))
-  git.onStatus((status: GitStatus) => call.gitStatus(status))
-  git.onBranch((onBranch: string) => call.gitBranch(onBranch))
-
-  require('../services/remote')
-  require('../services/mru-buffers')
-  require('../services/watch-reload')
-
-  // TODO: (not used) needs to be reworked
-  // require('../services/job-reader')
-
-  // TODO: i don't use this. all that work for nothing
-  // it's not very ergonomic i think
-  // if (process.env.VEONIM_DEV) {
-  //   require('../services/dev-recorder')
-  // }
-})
+nvim.onStateChange(nextState => call.nvimStateUpdate(nextState))
+nvim.onVimrcLoad(sourcedFile => call.vimrcLoaded(sourcedFile))
+git.onStatus((status: GitStatus) => call.gitStatus(status))
+git.onBranch((onBranch: string) => call.gitBranch(onBranch))
 
 on.onAction(async (name: string) => {
   if (!actions.has(name)) actions.set(name, (...a: any[]) => call.actionCalled(name, a))

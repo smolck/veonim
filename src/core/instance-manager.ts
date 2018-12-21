@@ -31,8 +31,7 @@ export const getActiveInstance = () => {
 export const createVim = async (name: string, dir?: string) => {
   const { id, path } = await create({ dir })
   const lastId = currentVimID
-  const instance = Worker('instance', `instance-${id}`)
-  instance.call.connect(path)
+  const instance = Worker('instance', { id, nvimPath: path })
   currentVimID = id
   vims.forEach(v => v.active = false)
   vims.set(id, { id, path, name, instance, active: true, nameFollowsCwd: !!dir })

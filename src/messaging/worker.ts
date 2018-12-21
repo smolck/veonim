@@ -1,11 +1,19 @@
 import { onFnCall, proxyFn, Watchers, uuid, CreateTask } from '../support/utils'
+import { join } from 'path'
 
 type EventFn = { [index: string]: (...args: any[]) => void }
 type RequestEventFn = { [index: string]: (...args: any[]) => Promise<any> }
 
-export default (name: string, debugName?: string) => {
-  // @ts-ignore
-  const worker = new Worker(`${__dirname}/../workers/${name}.js`, { name: debugName })
+export default (name: string, workerData = {}) => {
+  const modulePath = join(__dirname, '..', 'workers', `${name}.js`)
+
+  const loaderScript = `
+    global.workerData = JSON.parse('${JSON.stringify(workerData)}')
+    require('${modulePath}')
+  `
+
+  const scriptBlobbyBluberBlob = new Blob([ loaderScript ], { type: 'application/javascript' })
+  const worker = new Worker(URL.createObjectURL(scriptBlobbyBluberBlob))
   const watchers = new Watchers()
   const pendingRequests = new Map()
 

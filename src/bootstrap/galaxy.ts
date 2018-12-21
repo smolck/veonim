@@ -58,7 +58,6 @@ requestAnimationFrame(() => {
   //   ├── references.ts
   //   ├── symbols.ts
 
-
   // requestAnimationFrame(() => {
   //   // TODO: can we load copmonents on demand?
   //   // aka, either load when user requests, or after 10 sec of app startup shit
