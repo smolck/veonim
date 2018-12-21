@@ -6,8 +6,8 @@ import { basename, dirname, join } from 'path'
 import Input from '../components/text-input'
 import Worker from '../messaging/worker'
 import * as Icon from 'hyperapp-feather'
+import api from '../core/instance-api'
 import { cvar } from '../ui/css'
-import nvim from '../neovim/api'
 
 interface FileDir {
   dir: string,
@@ -56,7 +56,7 @@ const actions = {
     if (!s.files.length) return resetState
     const { dir, file } = s.files[s.ix]
     const path = join(dir, file)
-    if (file) nvim.cmd(`e ${path}`)
+    if (file) api.nvim.cmd(`e ${path}`)
     return resetState
   },
 
@@ -114,7 +114,7 @@ const ui = app({ name: 'files', state, actions, view })
 worker.on.results((files: string[]) => ui.results(files))
 worker.on.done(ui.loadingDone)
 
-nvim.onAction('files', () => {
-  worker.call.load(nvim.state.cwd)
-  ui.show(nvim.state.file)
+api.onAction('files', () => {
+  worker.call.load(api.nvim.state.cwd)
+  ui.show(api.nvim.state.file)
 })
