@@ -64,6 +64,7 @@ requestAnimationFrame(() => {
     require('../components/user-menu')
     require('../components/user-overlay-menu')
     require('../components/buffer-search')
+    require('../components/viewport-search')
   }, 199)
 
   // TODO: user-menu and user-overlay-menu not calling user callbacks!
@@ -78,7 +79,6 @@ requestAnimationFrame(() => {
   //   ├── problems.ts
   //   ├── references.ts
   //   ├── symbols.ts
-  //   ├── viewport-search.ts
 
 
   // requestAnimationFrame(() => {
