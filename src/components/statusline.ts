@@ -125,7 +125,7 @@ const view = ($: S) => h('div', {
         ,h(Icon.HardDrive, iconStyle)
       ])
 
-      ,h('span', $.cwd || 'no project')
+      ,h('span', $.cwd || 'main')
     ])
 
     ,$.branch && h('div', {
@@ -148,7 +148,7 @@ const view = ($: S) => h('div', {
         h(Icon.GitBranch, iconStyle),
       ])
 
-      ,h('span', $.branch || 'git n/a')
+      ,h('span', $.branch)
     ])
 
     ,$.branch && h('div', {

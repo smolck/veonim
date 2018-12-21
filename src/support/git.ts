@@ -17,6 +17,8 @@ const ee = new EventEmitter()
 export const onStatus = (fn: (status: GitStatus) => void) => ee.on('status', fn)
 export const onBranch = (fn: (branch: string) => void) => ee.on('branch', fn)
 export const getGitInfo = async (): Promise<GitInfo> => {
+  if (!nvim.state.cwd) return { status: { additions: 0, deletions: 0 }, branch: '' }
+
   const [ status, branch ] = await Promise.all([
     getStatus(nvim.state.cwd),
     getBranch(nvim.state.cwd),
