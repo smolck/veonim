@@ -65,16 +65,15 @@ requestAnimationFrame(() => {
     require('../components/user-overlay-menu')
     require('../components/buffer-search')
     require('../components/viewport-search')
+    require('../components/grep')
   }, 199)
 
   // TODO: user-menu and user-overlay-menu not calling user callbacks!
 
   //   ├── autocomplete.ts
   //   ├── code-actions.ts
-  //   ├── grep.ts
   //   ├── hint.ts
   //   ├── hover.ts
-  //   ├── overlay.ts
   //   ├── problem-info.ts
   //   ├── problems.ts
   //   ├── references.ts

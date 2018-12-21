@@ -29,6 +29,7 @@ on.onAction(async (name: string) => {
 on.bufferSearch(async (file: string, query: string) => bufferSearch.fuzzy(file, query))
 on.bufferSearchVisible(async (query: string) => bufferSearch.fuzzyVisible(query))
 on.nvimJumpTo((coords: HyperspaceCoordinates) => nvim.jumpTo(coords))
+on.nvimJumpToProjectFile((coords: HyperspaceCoordinates) => nvim.jumpToProjectFile(coords))
 on.nvimExpr(async (expr: string) => nvim.expr(expr))
 on.nvimFeedkeys((keys: string, mode: string) => nvim.feedkeys(keys, mode))
 on.nvimCall(async (name: string, args: any[]) => Reflect.get(nvim.call, name)(...args))

@@ -78,6 +78,7 @@ const nvimFeedkeys = (keys: string, mode = 'm') => getActiveInstance().call.nvim
 const nvimExpr = (expr: string) => getActiveInstance().request.nvimExpr(expr)
 const nvimCall: Functions = onFnCall(async (name, a) => getActiveInstance().request.nvimCall(name, a))
 const nvimJumpTo = (coords: HyperspaceCoordinates) => getActiveInstance().call.nvimJumpTo(coords)
+const nvimJumpToProjectFile = (coords: HyperspaceCoordinates) => getActiveInstance().call.nvimJumpToProjectFile(coords)
 const nvimSaveCursor = async () => {
   const instance = getActiveInstance()
   const position = await instance.request.nvimSaveCursor()
@@ -106,6 +107,7 @@ const api = {
     onLoad: nvimLoaded,
     feedkeys: nvimFeedkeys,
     saveCursor: nvimSaveCursor,
+    jumpToProjectFile: nvimJumpToProjectFile,
   }
 }
 
