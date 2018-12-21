@@ -214,6 +214,12 @@ const tabs = {
 const isFunc = (m: any) => is.function(m) || is.asyncfunction(m)
 
 const current = {
+  get cursor() {
+    return {
+      row: state.line - state.editorTopLine,
+      col: state.column
+    }
+  },
   get buffer(): Buffer {
     const promise = as.buf(req.core.getCurrentBuf())
 

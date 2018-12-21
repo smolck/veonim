@@ -6,6 +6,7 @@ import { onFnCall } from '../support/utils'
 import { GitStatus } from '../support/git'
 import NeovimState from '../neovim/state'
 import { EventEmitter } from 'events'
+import { AIUI } from '../ai/protocol'
 
 const ee = new EventEmitter()
 const { state, watchState, onStateValue, onStateChange, untilStateValue } = NeovimState('nvim-mirror')
@@ -26,6 +27,9 @@ onCreateVim(info => {
   instance.on.gitStatus((status: GitStatus) => isActive() && ee.emit('git.status', status))
   instance.on.gitBranch((branch: string) => isActive() && ee.emit('git.branch', branch))
   instance.on.actionCalled((name: string, args: any[]) => isActive() && ee.emit(`action.${name}`, ...args))
+  instance.on.ai((namespace: string, method: string, args: any[]) => {
+    isActive() && ee.emit(`ai.${namespace}.${method}`, ...args)
+  })
 })
 
 onSwitchVim(async () => {
@@ -85,7 +89,16 @@ const nvimSaveCursor = async () => {
   return () => instance.call.nvimRestoreCursor(position)
 }
 
+const ai: AIUI = new Proxy(Object.create(null), {
+  get: (_: any, namespace: string) => new Proxy(Object.create(null), {
+    get: (_: any, method: string) => (fn: (...args: any[]) => void) => {
+      ee.on(`ai.${namespace}.${method}`, fn)
+    }
+  })
+})
+
 const api = {
+  ai,
   git,
   onAction,
   getWindowMetadata,

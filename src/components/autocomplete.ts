@@ -1,12 +1,13 @@
 import { CompletionItemKind, MarkupContent, MarkupKind } from 'vscode-languageserver-protocol'
 import { CompletionOption, getCompletionDetail } from '../ai/completions'
 import { RowNormal, RowComplete } from '../components/row-container'
-import * as canvasContainer from '../core/workspace'
 import { resetMarkdownHTMLStyle } from '../ui/styles'
 import { markdownToHTML } from '../support/markdown'
 import * as windows from '../windows/window-manager'
-import Overlay from '../components/overlay'
+import * as dispatch from '../messaging/dispatch'
+import * as workspace from '../core/workspace'
 import { paddingVH, cvar } from '../ui/css'
+import Overlay from '../components/overlay'
 import * as Icon from 'hyperapp-feather'
 import { cursor } from '../core/cursor'
 import { h, app } from '../ui/uikit'
@@ -87,7 +88,7 @@ const docs = (data: string) => h(RowNormal, {
     whiteSpace: 'normal',
     color: cvar('foreground-20'),
     background: cvar('background-45'),
-    fontSize: `${canvasContainer.font.size - 2}px`,
+    fontSize: `${workspace.font.size - 2}px`,
   },
   oncreate: (e: HTMLElement) => e.innerHTML = `<div class="${resetMarkdownHTMLStyle}">${data}</div>`,
 })
@@ -138,7 +139,7 @@ const view = ($: S) => Overlay({
     style: {
       overflowY: 'hidden',
       background: cvar('background-30'),
-      maxHeight: `${canvasContainer.cell.height * $.visibleOptions}px`,
+      maxHeight: `${workspace.cell.height * $.visibleOptions}px`,
     }
   }, $.options.map(({ text, kind }, id) => h(RowComplete, {
     key: `${text}-${kind}`,
@@ -177,7 +178,7 @@ export const hide = () => ui.hide()
 export const select = (index: number) => ui.select(index)
 export const show = ({ row, col, options }: ShowParams) => {
   const visibleOptions = Math.min(MAX_VISIBLE_OPTIONS, options.length)
-  const anchorAbove = cursor.row + visibleOptions > canvasContainer.size.rows 
+  const anchorAbove = cursor.row + visibleOptions > workspace.size.rows 
 
   ui.show({
     anchorAbove,
@@ -186,3 +187,6 @@ export const show = ({ row, col, options }: ShowParams) => {
     ...windows.pixelPosition(anchorAbove ? row : row + 1, col),
   })
 }
+
+dispatch.sub('pmenu.select', ix => select(ix))
+dispatch.sub('pmenu.hide', () => hide())

@@ -1,7 +1,9 @@
 import { filetypeDetectedStartServerMaybe } from '../langserv/director'
 // import { getSignatureHint } from '../ai/signature-hint'
-// import { getCompletions } from '../ai/completions'
+import { getCompletions } from '../ai/completions'
+import { call } from '../messaging/worker-client'
 import colorizer from '../services/colorizer'
+import { AIUI } from '../ai/protocol'
 import nvim from '../neovim/api'
 // import '../ai/type-definition'
 // import '../ai/implementation'
@@ -29,4 +31,10 @@ nvim.on.cursorMoveInsert(async () => {
   const lineContent = await nvim.getCurrentLine()
   getCompletions(lineContent, nvim.state.line, nvim.state.column)
   getSignatureHint(lineContent)
+})
+
+export const ui: AIUI = new Proxy(Object.create(null), {
+  get: (_: any, namespace: string) => new Proxy(Object.create(null), {
+    get: (_: any, method: string) => (...args: any[]) => call.ai(namespace, method, args)
+  })
 })

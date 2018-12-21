@@ -3,15 +3,14 @@ import { CompletionItemKind, CompletionItem } from 'vscode-languageserver-protoc
 import { completions, completionDetail } from '../langserv/adapter'
 import transformCompletions from '../ai/completion-transforms'
 import { getTriggerChars } from '../langserv/server-features'
-import * as completionUI from '../components/autocomplete'
 import toVSCodeLanguage from '../langserv/vsc-languages'
+import { workerData } from '../messaging/worker-client'
 import * as ai from '../langserv/server-features'
-import { sub } from '../messaging/dispatch'
 import { filter } from 'fuzzaldrin-plus'
 import Worker from '../messaging/worker'
-import { cursor } from '../core/cursor'
 import { join, dirname } from 'path'
 import nvim from '../neovim/api'
+import { ui } from '../core/ai'
 
 interface Cache {
   semanticCompletions: Map<string, CompletionOption[]>,
@@ -33,7 +32,8 @@ export interface CompletionOption {
   raw?: CompletionItem,
 }
 
-const harvester = Worker('harvester')
+// TODO: do we really want to connect another nvim instance in the worker?
+const harvester = Worker('harvester', workerData)
 const MAX_SEARCH_RESULTS = 50
 const cache: Cache = {
   semanticCompletions: new Map(),
@@ -41,8 +41,8 @@ const cache: Cache = {
 }
 
 const calcMenuPosition = (startIndex: number, column: number) => ({
-  row: cursor.row,
-  col: cursor.col - (column - Math.max(0, startIndex)),
+  row: nvim.current.cursor.row,
+  col: nvim.current.cursor.col - (column - Math.max(0, startIndex)),
 })
 
 const orderCompletions = (m: CompletionOption[], query: string) => m
@@ -141,11 +141,11 @@ const showCompletionsRaw = (column: number, query: string, startIndex: number, l
     nvim.g.veonim_completions = options.map(m => m.insertText)
     nvim.g.veonim_complete_pos = startIndex
     const { row, col } = calcMenuPosition(startIndex, column)
-    completionUI.show({ row, col, options })
+    ui.completions.show({ row, col, options })
   }
 
 // TODO: merge global semanticCompletions with keywords?
-const getCompletions = async (lineContent: string, line: number, column: number) => {
+export const getCompletions = async (lineContent: string, line: number, column: number) => {
   const { startIndex, query, leftChar } = findQuery(lineContent, column)
   const showCompletions = showCompletionsRaw(column, query, startIndex, lineContent)
   const triggerChars = getTriggerChars.completion(nvim.state.cwd, nvim.state.filetype)
@@ -203,13 +203,13 @@ const getCompletions = async (lineContent: string, line: number, column: number)
 
     if (!completionOptions.length) {
       nvim.g.veonim_completions = []
-      completionUI.hide()
+      ui.completions.hide()
       return
     }
 
     showCompletions(completionOptions, resSemantic.length ? CompletionKind.Semantic : CompletionKind.Keyword)
   } else {
-    completionUI.hide()
+    ui.completions.hide()
     nvim.g.veonim_completions = []
   }
 }
@@ -222,15 +222,10 @@ export const getCompletionDetail = (item: CompletionItem): Promise<CompletionIte
 nvim.on.insertLeave(async () => {
   cache.activeCompletion = ''
   cache.semanticCompletions.clear()
-  completionUI.hide()
+  ui.completions.hide()
 })
 
 nvim.on.completion(() => {
   nvim.g.veonim_completing = 0
   nvim.g.veonim_completions = []
 })
-
-sub('pmenu.select', ix => completionUI.select(ix))
-sub('pmenu.hide', () => completionUI.hide())
-
-export { getCompletions }

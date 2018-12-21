@@ -1,13 +1,14 @@
 import { VimMode, HyperspaceCoordinates } from '../neovim/types'
 import * as bufferSearch from '../services/buffer-search'
 import { call, on } from '../messaging/worker-client'
+import getWindowMetadata from '../windows/metadata'
 import { GitStatus } from '../support/git'
 import * as git from '../support/git'
 import nvim from '../neovim/api'
+import '../core/ai'
 import '../services/remote'
 import '../services/mru-buffers'
 import '../services/watch-reload'
-import '../core/ai'
 // TODO: not used:
 // require('../services/job-reader')
 // require('../services/dev-recorder')
@@ -38,6 +39,6 @@ on.setNvimMode((mode: VimMode) => Object.assign(nvim.state, { mode }))
 on.getBufferInfo(async () => nvim.buffers.listWithInfo())
 on.getGitInfo(async () => git.getGitInfo())
 on.getState(async () => ({ ...nvim.state }))
-on.getWindowMetadata(async () => require('../windows/metadata').default())
+on.getWindowMetadata(async () => getWindowMetadata())
 on.nvimSaveCursor(async () => nvim.current.window.cursor)
 on.nvimRestoreCursor((position: number[]) => nvim.current.window.setCursor(position[0], position[1]))
