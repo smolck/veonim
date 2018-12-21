@@ -53,6 +53,7 @@ requestAnimationFrame(() => {
     require('../components/buffers')
     require('../components/files')
     require('../components/explorer')
+    require('../components/color-picker')
   }, 199)
 
   // requestAnimationFrame(() => {
