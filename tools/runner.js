@@ -20,8 +20,10 @@ const run = (cmd, opts = {}) => new Promise(done => {
   process.on('SIGINT', exit)
   proc.on('exit', done)
 
-  proc.stdout.pipe(process.stdout)
-  proc.stderr.pipe(process.stderr)
+  if (!opts.shh) {
+    proc.stdout.pipe(process.stdout)
+    proc.stderr.pipe(process.stderr)
+  }
 
   if (opts.outputMatch) proc.stdout.on('data', data => {
     const outputHas = data

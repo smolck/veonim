@@ -35,6 +35,7 @@ go(async () => {
   await tsc.promise
 
   run('electron build/bootstrap/main.js', {
+    shh: true,
     env: {
       ...process.env,
       VEONIM_DEV: 42,
