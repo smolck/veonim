@@ -1,3 +1,4 @@
+console.warn('WHO DARES CALL UPON ME')
 import { onExit, attachTo, switchTo, create } from '../core/master-control'
 import Worker from '../messaging/worker'
 import { EventEmitter } from 'events'

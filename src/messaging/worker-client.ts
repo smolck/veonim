@@ -1,5 +1,4 @@
 import { onFnCall, proxyFn, Watchers, uuid, CreateTask } from '../support/utils'
-import { EV_CREATE_VIM, EV_SWITCH_VIM } from '../support/constants'
 import { EventEmitter } from 'events'
 
 type EventFn = { [index: string]: (...args: any[]) => void }
@@ -17,9 +16,6 @@ const watchers = new Watchers()
 const pendingRequests = new Map()
 
 onmessage = ({ data: [e, data = [], id] }: MessageEvent) => {
-  if (e === EV_CREATE_VIM) return internalEvents.emit('vim.create', ...data)
-  if (e === EV_SWITCH_VIM) return internalEvents.emit('vim.switch', ...data)
-
   if (!id) return watchers.notify(e, ...data)
 
   if (pendingRequests.has(id)) {
@@ -35,9 +31,6 @@ onmessage = ({ data: [e, data = [], id] }: MessageEvent) => {
     else send([e, resultOrPromise, id])
   })
 }
-
-export const onCreateVim = (fn: (info: any) => void) => internalEvents.on('vim.create', fn)
-export const onSwitchVim = (fn: (info: any) => void) => internalEvents.on('vim.switch', fn)
 
 export const call: EventFn = onFnCall((event: string, args: any[]) => send([event, args]))
 export const on = proxyFn((event: string, cb: (data: any) => void) => watchers.add(event, cb))

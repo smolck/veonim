@@ -20,9 +20,6 @@
     "unused-exports": "ts-unused-exports tsconfig.json $(find src -name *.ts)",
     "setup-mirrors": "node tools/setup-mirrors.js"
   },
-  "jest": {
-    "collectCoverage": true
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/veonim/veonim.git"
@@ -68,7 +65,7 @@
     "@types/fuzzaldrin-plus": "0.0.1",
     "@types/node": "9.4.0",
     "@types/webgl2": "0.0.4",
-    "electron": "3.0.2",
+    "electron": "4.0.0-nightly.20181010",
     "electron-builder": "20.13.3",
     "electron-devtools-installer": "2.2.3",
     "fs-extra": "5.0.0",

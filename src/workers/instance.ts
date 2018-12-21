@@ -6,6 +6,7 @@ import { NeovimAPI } from '../neovim/api'
 let nvim: NeovimAPI
 let git: any
 let bufferSearch: any
+let ai: any
 
 const actions = new Map<string, (args: any) => void>()
 
@@ -13,6 +14,8 @@ on.connect((path: string) => {
   ;(global as any).NVIM_PATH = path
   nvim = require('../neovim/api').default
   git = require('../support/git')
+  // TODO: no exports on AI (yet)
+  // ai = require('../core/ai')
   bufferSearch = require('../services/buffer-search')
 
   nvim.onStateChange(nextState => call.nvimStateUpdate(nextState))
