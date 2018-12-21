@@ -86,7 +86,6 @@ requestAnimationFrame(() => {
   //   // in the inventory PR, layer actions are now setup to require the componet.
   //   // this could be a way to lazy load components (or maybe some of the
   //   // non-important ones - color-picker, etc.)
-  //   requireDir(`${__dirname}/../services`)
   //   requireDir(`${__dirname}/../components`)
   //   requestAnimationFrame(() => require('../core/ai'))
   //   setTimeout(() => require('../support/dependency-manager').default(), 100)

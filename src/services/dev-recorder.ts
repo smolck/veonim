@@ -5,7 +5,6 @@ import * as storage from '../support/local-storage'
 import { makel } from '../ui/vanilla'
 import nvim from '../neovim/api'
 
-if (process.env.VEONIM_DEV) {
 const finder = require('@medv/finder')
 
 interface RecordingEvent {
@@ -234,4 +233,3 @@ setTimeout(() => {
   const { events, name } = storage.getTemp<Record>(KEY.START)
   if (events && events.length) recordPlayer(events, name)
 }, 250)
-} // end of "if" block that only runs stuff in dev mode

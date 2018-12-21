@@ -1,3 +1,5 @@
+// TODO: this module is just experimental. i don't use this functionality
+// we should probably redo this now that we have nvim buffer change events
 import userPicksAnOption, { MenuOption } from '../components/generic-menu'
 import { BufferVar } from '../neovim/function-types'
 import { instances } from '../core/instance-manager'

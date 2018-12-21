@@ -14,10 +14,24 @@ on.connect((path: string) => {
   nvim = require('../neovim/api').default
   git = require('../support/git')
   bufferSearch = require('../services/buffer-search')
+
   nvim.onStateChange(nextState => call.nvimStateUpdate(nextState))
   nvim.onVimrcLoad(sourcedFile => call.vimrcLoaded(sourcedFile))
   git.onStatus((status: GitStatus) => call.gitStatus(status))
   git.onBranch((onBranch: string) => call.gitBranch(onBranch))
+
+  require('../services/remote')
+  require('../services/mru-buffers')
+  require('../services/watch-reload')
+
+  // TODO: (not used) needs to be reworked
+  // require('../services/job-reader')
+
+  // TODO: i don't use this. all that work for nothing
+  // it's not very ergonomic i think
+  // if (process.env.VEONIM_DEV) {
+  //   require('../services/dev-recorder')
+  // }
 })
 
 on.onAction(async (name: string) => {
