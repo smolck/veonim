@@ -1,6 +1,5 @@
 import TextDocumentManager from '../neovim/text-document-manager'
-import { filter as fuzzy, match } from 'fuzzaldrin-plus'
-import { on } from '../messaging/worker-client'
+import { filter as fuzzyFilter, match } from 'fuzzaldrin-plus'
 import nvim from '../neovim/api'
 
 const tdm = TextDocumentManager(nvim)
@@ -43,15 +42,15 @@ tdm.on.didChange(({ name, textLines, firstLine, lastLine }) => {
   buf.splice(firstLine, affectAmount, ...textLines)
 })
 
-on.fuzzy(async (file: string, query: string, maxResults = 20): Promise<FilterResult[]> => {
+export const fuzzy = async (file: string, query: string, maxResults = 20): Promise<FilterResult[]> => {
   const bufferData = buffers.get(file) || []
-  const results = fuzzy(bufferData, query, { maxResults })
+  const results = fuzzyFilter(bufferData, query, { maxResults })
   return asFilterResults(results, bufferData, query)
-})
+}
 
-on.visibleFuzzy(async (query: string): Promise<FilterResult[]> => {
+export const fuzzyVisible = async (query: string): Promise<FilterResult[]> => {
   const { editorTopLine: start, editorBottomLine: end } = nvim.state
   const visibleLines = await nvim.current.buffer.getLines(start, end)
-  const results = fuzzy(visibleLines, query)
+  const results = fuzzyFilter(visibleLines, query)
   return asFilterResults(results, visibleLines, query)
-})
+}
