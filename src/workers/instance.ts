@@ -24,6 +24,7 @@ on.onAction(async (name: string) => {
   nvim.onAction(name, cb)
 })
 
+on.nvimCall(async (name: string, args: any[]) => Reflect.get(nvim.call, name)(...args))
 on.getBufferInfo(async () => nvim.buffers.listWithInfo())
 on.nvimCommand(async (command: string) => nvim.cmd(command))
 on.getGitInfo(async () => git.getGitInfo())

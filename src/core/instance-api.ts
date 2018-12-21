@@ -1,6 +1,8 @@
 import { getActiveInstance, onSwitchVim, onCreateVim, instances } from '../core/instance-manager'
 import { VimMode, BufferInfo } from '../neovim/types'
+import { Functions } from '../neovim/function-types'
 import { WindowMetadata } from '../windows/metadata'
+import { onFnCall } from '../support/utils'
 import { GitStatus } from '../support/git'
 import NeovimState from '../neovim/state'
 import { EventEmitter } from 'events'
@@ -81,6 +83,12 @@ const getBufferInfo = async (): Promise<BufferInfo[]> => {
   return instance.request.getBufferInfo()
 }
 
+const nvimCall: Functions = onFnCall(async (name, args) => {
+  const instance = getActiveInstance()
+  if (!instance) return console.error('no active instance WHAT')
+  return instance.request.nvimCall(name, args)
+})
+
 const api = {
   git,
   onAction,
@@ -93,6 +101,7 @@ const api = {
     onStateValue,
     getBufferInfo,
     onStateChange,
+    call: nvimCall,
     untilStateValue,
     cmd: nvimCommand,
     onLoad: nvimLoaded,
