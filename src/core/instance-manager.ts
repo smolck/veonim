@@ -24,7 +24,7 @@ let currentVimID = -1
 
 export const getActiveInstance = () => {
   const nvim = vims.get(currentVimID)
-  if (!nvim) return
+  if (!nvim) throw new Error(`failed to get active instance. this should probably not happen... ever`)
   return nvim.instance
 }
 

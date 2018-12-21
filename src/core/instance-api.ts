@@ -1,5 +1,5 @@
 import { getActiveInstance, onSwitchVim, onCreateVim, instances } from '../core/instance-manager'
-import { VimMode, BufferInfo } from '../neovim/types'
+import { VimMode, BufferInfo, HyperspaceCoordinates } from '../neovim/types'
 import { Functions } from '../neovim/function-types'
 import { WindowMetadata } from '../windows/metadata'
 import { onFnCall } from '../support/utils'
@@ -14,7 +14,6 @@ const actionRegistrations: string[] = []
 onCreateVim(info => {
   const isActive = () => info.id && instances.current
   const instance = getActiveInstance()
-  if (!instance) return console.error('created nvim but was not able to get a reference to the Instance')
 
   if (actionRegistrations.length) actionRegistrations.forEach(name => instance.call.onAction(name))
 
@@ -30,40 +29,38 @@ onCreateVim(info => {
 })
 
 onSwitchVim(async () => {
-  const updatedState = await getActiveInstance()!.request.getState()
-  Object.assign(state, updatedState)
-  const gitInfo = await getActiveInstance()!.request.getGitInfo()
+  const instance = getActiveInstance()
+
+  const [ nextState, gitInfo ] = await Promise.all([
+    instance.request.getState(),
+    instance.request.getGitInfo(),
+  ])
+
+  Object.assign(state, nextState)
   ee.emit('git.status', gitInfo.status)
   ee.emit('git.branch', gitInfo.branch)
   ee.emit('nvim.load', true)
 })
 
-const nvimLoaded = (fn: (switchInstance: boolean) => void) => ee.on('nvim.load', fn)
-
-const getVar = async (key: string) => {
-  const instance = getActiveInstance()
-  if (!instance) return console.error('no active instance... wut')
-  return instance.request.getVar(key)
-}
+const getBufferInfo = (): Promise<BufferInfo[]> => getActiveInstance().request.getBufferInfo()
 
 const setMode = (mode: VimMode) => {
   Object.assign(state, { mode })
-  const instance = getActiveInstance()
-  if (!instance) return
-  instance.call.setNvimMode(mode)
+  getActiveInstance().call.setNvimMode(mode)
 }
 
 const getWindowMetadata = async (): Promise<WindowMetadata[]> => {
-  const instance = getActiveInstance()
-  if (!instance) return (console.error('no active instance... wut'), [])
-  return instance.request.getWindowMetadata()
+  return getActiveInstance().request.getWindowMetadata()
 }
 
 const onAction = (name: string, fn: (...args: any[]) => void) => {
-  const instance = getActiveInstance()
   actionRegistrations.push(name)
-  if (instance) instance.call.onAction(name)
   ee.on(`action.${name}`, fn)
+  try {
+    getActiveInstance().call.onAction(name)
+  } catch (_) {
+    // not worried if no instance, we will register later in 'onCreateVim'
+  }
 }
 
 const git = {
@@ -71,47 +68,44 @@ const git = {
   onBranch: (fn: (branch: string) => void) => ee.on('git.branch', fn),
 }
 
-const nvimCommand = (command: string) => {
-  const instance = getActiveInstance()
-  if (!instance) return console.error('no active instance... WAT')
-  instance.call.nvimCommand(command)
-}
+const bufferSearch = (file: string, query: string) => getActiveInstance().request.bufferSearch(file, query)
+const bufferSearchVisible = (query: string) => getActiveInstance().request.bufferSearchVisible(query)
 
-const getBufferInfo = async (): Promise<BufferInfo[]> => {
+const nvimLoaded = (fn: (switchInstance: boolean) => void) => ee.on('nvim.load', fn)
+const nvimGetVar = async (key: string) => getActiveInstance().request.nvimGetVar(key)
+const nvimCommand = (command: string) => getActiveInstance().call.nvimCommand(command)
+const nvimFeedkeys = (keys: string, mode = 'm') => getActiveInstance().call.nvimFeedkeys(keys, mode)
+const nvimExpr = (expr: string) => getActiveInstance().request.nvimExpr(expr)
+const nvimCall: Functions = onFnCall(async (name, a) => getActiveInstance().request.nvimCall(name, a))
+const nvimJumpTo = (coords: HyperspaceCoordinates) => getActiveInstance().call.nvimJumpTo(coords)
+const nvimSaveCursor = async () => {
   const instance = getActiveInstance()
-  if (!instance) return (console.error('no active instance... lolwut'), [])
-  return instance.request.getBufferInfo()
-}
-
-const nvimCall: Functions = onFnCall(async (name, args) => {
-  const instance = getActiveInstance()
-  if (!instance) return console.error('no active instance WHAT')
-  return instance.request.nvimCall(name, args)
-})
-
-const nvimFeedkeys = (keys: string, mode = 'm') => {
-  const instance = getActiveInstance()
-  if (!instance) return console.error('no active instance WHAT')
-  return instance.call.nvimFeedkeys(keys, mode)
+  const position = await instance.request.nvimSaveCursor()
+  return () => instance.call.nvimRestoreCursor(position)
 }
 
 const api = {
   git,
   onAction,
   getWindowMetadata,
+  bufferSearch,
+  bufferSearchVisible,
   nvim: {
     state,
-    getVar,
     setMode,
     watchState,
     onStateValue,
     getBufferInfo,
     onStateChange,
     call: nvimCall,
+    expr: nvimExpr,
     untilStateValue,
     cmd: nvimCommand,
+    getVar: nvimGetVar,
+    jumpTo: nvimJumpTo,
     onLoad: nvimLoaded,
     feedkeys: nvimFeedkeys,
+    saveCursor: nvimSaveCursor,
   }
 }
 
