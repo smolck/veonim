@@ -12,7 +12,7 @@ import '../ai/implementation'
 import '../ai/definition'
 // import '../ai/highlights'
 // import '../ai/symbols'
-// import '../ai/rename'
+import '../ai/rename'
 // import '../ai/hover'
 
 nvim.on.filetype(filetype => filetypeDetectedStartServerMaybe(nvim.state.cwd, filetype))
