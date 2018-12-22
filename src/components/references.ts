@@ -2,6 +2,7 @@ import { RowNormal, RowHeader } from '../components/row-container'
 import { PluginRight } from '../components/plugin-container'
 import { h, app, vimBlur, vimFocus } from '../ui/uikit'
 import { ReferenceResult } from '../ai/protocol'
+import { simplifyPath } from '../support/utils'
 import { showCursorline } from '../core/cursor'
 import Input from '../components/text-input'
 import { badgeStyle } from '../ui/styles'
@@ -165,7 +166,7 @@ const view = ($: S, a: typeof actions) => PluginRight($.vis, [
     ,h(RowHeader, {
       active: pos === $.ix,
     }, [
-      ,h('span', path),
+      ,h('span', simplifyPath(path, api.nvim.state.cwd)),
       ,h('div', {
         style: {
           ...badgeStyle,

@@ -61,7 +61,6 @@ requestAnimationFrame(() => {
   //   ├── hover.ts
   //   ├── problem-info.ts
   //   ├── problems.ts
-  //   ├── symbols.ts
 
   // requestAnimationFrame(() => {
   //   // TODO: can we load copmonents on demand?
