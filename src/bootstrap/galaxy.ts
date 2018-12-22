@@ -11,6 +11,9 @@ import * as workspace from '../core/workspace'
 // import { requireDir } from '../support/utils'
 import '../render/redraw'
 
+// TODO: user-menu and user-overlay-menu not calling user callbacks!
+// TODO: check nvim services instances to make sure they are starting up correctly
+
 workspace.on('resize', ({ rows, cols }) => resize(cols, rows))
 workspace.resize()
 
@@ -40,7 +43,6 @@ requestAnimationFrame(() => {
     require('../components/debug')
     require('../components/generic-menu')
     require('../components/generic-prompt')
-    // TODO: user-menu and user-overlay-menu not calling user callbacks!
     require('../components/user-menu')
     require('../components/user-overlay-menu')
     require('../components/buffer-search')

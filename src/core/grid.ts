@@ -1,4 +1,4 @@
-import * as canvasContainer from './workspace'
+import * as workspace from './workspace'
 import { listof } from '../support/utils'
 
 type Character = string
@@ -146,4 +146,4 @@ export const clearLine = (row: number, col: number) => {
   }
 }
 
-canvasContainer.on('resize', ({ rows, cols }) => resize(rows, cols))
+workspace.on('resize', ({ rows, cols }) => resize(rows, cols))

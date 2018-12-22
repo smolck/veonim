@@ -1,11 +1,11 @@
 import { DiagnosticSeverity } from 'vscode-languageserver-protocol'
 import { RowHeader, RowDesc } from '../components/row-container'
 import { PluginBottom } from '../components/plugin-container'
-import * as canvasContainer from '../core/workspace'
 import { h, app, vimBlur, vimFocus } from '../ui/uikit'
 import { badgeStyle, colors } from '../ui/styles'
 import { simplifyPath } from '../support/utils'
 import { showCursorline } from '../core/cursor'
+import * as workspace from '../core/workspace'
 import Input from '../components/text-input'
 import { Problem } from '../ai/diagnostics'
 import * as Icon from 'hyperapp-feather'
@@ -179,7 +179,7 @@ const view = ($: S, a: A) => PluginBottom($.vis, {
           color: '#aaa',
           marginLeft: '10px',
           marginRight: '10px',
-          fontSize: `${canvasContainer.font.size} - 2px`,
+          fontSize: `${workspace.font.size} - 2px`,
         }
       }, simplifyPath(dir, nvim.state.cwd)),
 

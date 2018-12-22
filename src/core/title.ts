@@ -1,7 +1,7 @@
-import * as canvasContainer from './workspace'
 import { merge, simplifyPath } from '../support/utils'
 import * as dispatch from '../messaging/dispatch'
 import instance from '../core/instance-api'
+import * as workspace from './workspace'
 import { remote } from 'electron'
 
 const macos = process.platform === 'darwin'
@@ -13,7 +13,7 @@ export const setTitleVisibility = (visible: boolean) => {
   if (!titleBar) return
   titleBarVisible = visible
   titleBar.style.display = visible ? 'flex' : 'none'
-  canvasContainer.resize()
+  workspace.resize()
 }
 
 const typescriptSucks = (el: any, bar: any) => el.prepend(bar)
