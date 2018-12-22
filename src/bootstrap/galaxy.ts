@@ -40,16 +40,18 @@ requestAnimationFrame(() => {
     require('../components/debug')
     require('../components/generic-menu')
     require('../components/generic-prompt')
+    // TODO: user-menu and user-overlay-menu not calling user callbacks!
     require('../components/user-menu')
     require('../components/user-overlay-menu')
     require('../components/buffer-search')
     require('../components/viewport-search')
     require('../components/grep')
+
+    // AI
+    require('../components/autocomplete')
   }, 199)
 
-  // TODO: user-menu and user-overlay-menu not calling user callbacks!
 
-  //   ├── autocomplete.ts
   //   ├── code-actions.ts
   //   ├── hint.ts
   //   ├── hover.ts

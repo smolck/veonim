@@ -3,7 +3,7 @@ import { filetypeDetectedStartServerMaybe } from '../langserv/director'
 import { getCompletions } from '../ai/completions'
 import { call } from '../messaging/worker-client'
 import colorizer from '../services/colorizer'
-import { AIUI } from '../ai/protocol'
+import { AI } from '../ai/protocol'
 import nvim from '../neovim/api'
 // import '../ai/type-definition'
 // import '../ai/implementation'
@@ -18,6 +18,7 @@ import nvim from '../neovim/api'
 nvim.on.filetype(filetype => filetypeDetectedStartServerMaybe(nvim.state.cwd, filetype))
 nvim.watchState.colorscheme((color: string) => colorizer.call.setColorScheme(color))
 
+// TODO: DO NOT CALL THESE IF THE CURRENT INSTANCE IS NOT ACTIVE IN THE UI!!!!
 nvim.on.cursorMoveInsert(async () => {
   // tried to get the line contents from the render grid buffer, but it appears
   // this autocmd gets fired before the grid gets updated from the render event.
@@ -30,10 +31,11 @@ nvim.on.cursorMoveInsert(async () => {
   // and perhaps others in the app
   const lineContent = await nvim.getCurrentLine()
   getCompletions(lineContent, nvim.state.line, nvim.state.column)
-  getSignatureHint(lineContent)
+  // TODO: getDO
+  // getSignatureHint(lineContent)
 })
 
-export const ui: AIUI = new Proxy(Object.create(null), {
+export const ui: AI = new Proxy(Object.create(null), {
   get: (_: any, namespace: string) => new Proxy(Object.create(null), {
     get: (_: any, method: string) => (...args: any[]) => call.ai(namespace, method, args)
   })

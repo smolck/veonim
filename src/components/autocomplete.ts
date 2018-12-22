@@ -1,22 +1,18 @@
 import { CompletionItemKind, MarkupContent, MarkupKind } from 'vscode-languageserver-protocol'
-import { CompletionOption, getCompletionDetail } from '../ai/completions'
 import { RowNormal, RowComplete } from '../components/row-container'
 import { resetMarkdownHTMLStyle } from '../ui/styles'
+import { CompletionOption } from '../ai/completions'
 import { markdownToHTML } from '../support/markdown'
 import * as windows from '../windows/window-manager'
 import * as dispatch from '../messaging/dispatch'
+import { CompletionShow } from '../ai/protocol'
 import * as workspace from '../core/workspace'
 import { paddingVH, cvar } from '../ui/css'
 import Overlay from '../components/overlay'
 import * as Icon from 'hyperapp-feather'
 import { cursor } from '../core/cursor'
+import api from '../core/instance-api'
 import { h, app } from '../ui/uikit'
-
-interface ShowParams {
-  row: number,
-  col: number,
-  options: CompletionOption[],
-}
 
 const MAX_VISIBLE_OPTIONS = 12
 
@@ -176,7 +172,7 @@ const ui = app<S, typeof actions>({ name: 'autocomplete', state, actions, view }
 
 export const hide = () => ui.hide()
 export const select = (index: number) => ui.select(index)
-export const show = ({ row, col, options }: ShowParams) => {
+export const show = ({ row, col, options }: CompletionShow) => {
   const visibleOptions = Math.min(MAX_VISIBLE_OPTIONS, options.length)
   const anchorAbove = cursor.row + visibleOptions > workspace.size.rows 
 
@@ -188,5 +184,8 @@ export const show = ({ row, col, options }: ShowParams) => {
   })
 }
 
+api.ai.completions.onShow(show)
+api.ai.completions.onHide(hide)
+
 dispatch.sub('pmenu.select', ix => select(ix))
-dispatch.sub('pmenu.hide', () => hide())
+dispatch.sub('pmenu.hide', hide)
