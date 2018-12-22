@@ -13,6 +13,8 @@ import '../render/redraw'
 
 // TODO: user-menu and user-overlay-menu not calling user callbacks!
 // TODO: check nvim services instances to make sure they are starting up correctly
+// TODO: hide black canvas while webgl is init
+// TODO: need to show where code actions are available
 
 workspace.on('resize', ({ rows, cols }) => resize(cols, rows))
 workspace.resize()
@@ -29,6 +31,8 @@ requestAnimationFrame(() => {
 
   // TODO: use requireDir once we can load all components safely
   setTimeout(() => {
+    require('../services/remote')
+
     require('../components/change-project')
     require('../components/vim-create')
     require('../components/vim-switch')
@@ -49,20 +53,16 @@ requestAnimationFrame(() => {
     require('../components/viewport-search')
     require('../components/grep')
 
-    require('../services/remote')
-
     // AI
     require('../components/autocomplete')
     require('../components/hint')
     require('../components/symbols')
     require('../components/references')
     require('../components/hover')
+    require('../components/problem-info')
+    require('../components/code-actions')
   }, 199)
 
-
-  //   ├── code-actions.ts
-  //   ├── problem-info.ts
-  //   ├── problems.ts
 
   // requestAnimationFrame(() => {
   //   // TODO: can we load copmonents on demand?

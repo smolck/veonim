@@ -4,7 +4,7 @@ import userPicksAnOption, { MenuOption } from '../components/generic-menu'
 import { BufferVar } from '../neovim/function-types'
 import { instances } from '../core/instance-manager'
 import { is, debounce } from '../support/utils'
-import { addQF } from '../ai/diagnostics'
+// import { addQF } from '../ai/diagnostics'
 import * as Icon from 'hyperapp-feather'
 import Worker from '../messaging/worker'
 import { promisify as P } from 'util'
@@ -69,7 +69,8 @@ const destroyQ = async (format: ParserFormat, id: string) => {
   const filepath = await writeData(parsingQueue)
   parsingQueue = []
   const list = await formatter.request.getErrors(filepath, formats.get(format))
-  addQF(list, ParserFormat + id)
+  console.log('list', list, id)
+  // addQF(list, ParserFormat + id)
 }
 
 const tryEmptyQ = debounce(destroyQ, 2e3)

@@ -3,12 +3,12 @@ import { filetypeDetectedStartServerMaybe } from '../langserv/director'
 import { getSignatureHint } from '../ai/signature-hint'
 import { call, on } from '../messaging/worker-client'
 import { getWorkspaceSymbols } from '../ai/symbols'
+import { runCodeAction } from '../ai/diagnostics'
 import colorizer from '../services/colorizer'
 import { AI } from '../ai/protocol'
 import nvim from '../neovim/api'
 import '../ai/type-definition'
 import '../ai/implementation'
-// import '../ai/diagnostics'
 import '../ai/references'
 import '../ai/definition'
 import '../ai/highlights'
@@ -35,6 +35,7 @@ nvim.on.cursorMoveInsert(async () => {
 
 on.aiGetCompletionDetail(getCompletionDetail)
 on.aiGetWorkspaceSymbols(getWorkspaceSymbols)
+on.aiRunCodeAction(runCodeAction)
 
 export const ui: AI = new Proxy(Object.create(null), {
   get: (_: any, namespace: string) => new Proxy(Object.create(null), {

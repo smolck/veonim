@@ -1,6 +1,6 @@
 import { getActiveInstance, onSwitchVim, onCreateVim, instances } from '../core/instance-manager'
 import { VimMode, BufferInfo, HyperspaceCoordinates } from '../neovim/types'
-import { CompletionItem } from 'vscode-languageserver-protocol'
+import { CompletionItem, Command } from 'vscode-languageserver-protocol'
 import { colors } from '../render/highlight-attributes'
 import { onFnCall, pascalCase } from '../support/utils'
 import { Functions } from '../neovim/function-types'
@@ -104,6 +104,9 @@ const manualAI = {
     getWorkspaceSymbols: (query: string): Promise<Symbol[]> => {
       return getActiveInstance().request.aiGetWorkspaceSymbols(query)
     },
+  },
+  codeAction: {
+    run: (action: Command) => getActiveInstance().call.aiRunCodeAction(action),
   }
 }
 

@@ -1,3 +1,4 @@
+import { Diagnostic, Command } from 'vscode-languageserver-protocol'
 import { Symbol, Reference } from '../langserv/adapter'
 import { CompletionOption } from '../ai/completions'
 import { ColorData } from '../services/colorizer'
@@ -22,6 +23,11 @@ export interface SignatureHintShow {
 export interface HoverShow {
   data: ColorData[][]
   doc?: string
+}
+
+export interface ProblemCount {
+  errors: number
+  warnings: number
 }
 
 export enum SymbolMode {
@@ -50,6 +56,21 @@ export interface AI {
     show(options: HoverShow): void
     hide(): void
   }
+  problemInfo: {
+    show(message: string): void
+    hide(): void
+  }
+  codeAction: {
+    show(row: number, col: number, actions: Command[]): void
+  }
+  problems: {
+    update(problems: Diagnostic[]): void
+    toggle(): void
+    focus(): void
+  }
+  problemCount: {
+    update(count: ProblemCount): void
+  }
 }
 
 export interface AIClient {
@@ -70,5 +91,20 @@ export interface AIClient {
   hover: {
     onShow(fn: AI['hover']['show']): void
     onHide(fn: AI['hover']['hide']): void
+  }
+  problemInfo: {
+    onShow(fn: AI['problemInfo']['show']): void
+    onHide(fn: AI['problemInfo']['hide']): void
+  }
+  codeAction: {
+    onShow(fn: AI['codeAction']['show']): void
+  }
+  problems: {
+    onUpdate(fn: AI['problems']['update']): void
+    onToggle(fn: AI['problems']['toggle']): void
+    onFocus(fn: AI['problems']['focus']): void
+  }
+  problemCount: {
+    onUpdate(fn: AI['problemCount']['update']): void
   }
 }
