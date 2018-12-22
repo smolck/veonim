@@ -5,6 +5,7 @@ import { debounce } from '../support/utils'
 import Overlay from '../components/overlay'
 import { docStyle } from '../ui/styles'
 import { cursor } from '../core/cursor'
+import api from '../core/instance-api'
 import { h, app } from '../ui/uikit'
 import { cvar } from '../ui/css'
 
@@ -80,6 +81,10 @@ const view = ($: S) => Overlay({
 
 ])
 
-export const ui = app<S, A>({ name: 'hover', state, actions, view })
+const ui = app<S, A>({ name: 'hover', state, actions, view })
 
+api.ai.hover.onShow(ui.show)
+api.ai.hover.onHide(ui.hide)
+
+// TODO: are we still dispatching this event with the new render pipeline?
 sub('redraw', debounce(ui.updatePosition, 50))

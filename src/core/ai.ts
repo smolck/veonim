@@ -13,7 +13,7 @@ import '../ai/references'
 import '../ai/definition'
 import '../ai/highlights'
 import '../ai/rename'
-// import '../ai/hover'
+import '../ai/hover'
 
 nvim.on.filetype(filetype => filetypeDetectedStartServerMaybe(nvim.state.cwd, filetype))
 nvim.watchState.colorscheme((color: string) => colorizer.call.setColorScheme(color))

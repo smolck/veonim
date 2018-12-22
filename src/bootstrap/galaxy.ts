@@ -54,11 +54,11 @@ requestAnimationFrame(() => {
     require('../components/hint')
     require('../components/symbols')
     require('../components/references')
+    require('../components/hover')
   }, 199)
 
 
   //   ├── code-actions.ts
-  //   ├── hover.ts
   //   ├── problem-info.ts
   //   ├── problems.ts
 

@@ -1,5 +1,6 @@
 import { Symbol, Reference } from '../langserv/adapter'
 import { CompletionOption } from '../ai/completions'
+import { ColorData } from '../services/colorizer'
 
 export interface CompletionShow {
   row: number
@@ -16,6 +17,11 @@ export interface SignatureHintShow {
   documentation?: string
   selectedSignature: number
   totalSignatures: number
+}
+
+export interface HoverShow {
+  data: ColorData[][]
+  doc?: string
 }
 
 export enum SymbolMode {
@@ -40,6 +46,10 @@ export interface AI {
   references: {
     show(references: ReferenceResult[], keyword: string): void
   }
+  hover: {
+    show(options: HoverShow): void
+    hide(): void
+  }
 }
 
 export interface AIClient {
@@ -56,5 +66,9 @@ export interface AIClient {
   }
   references: {
     onShow(fn: AI['references']['show']): void
+  }
+  hover: {
+    onShow(fn: AI['hover']['show']): void
+    onHide(fn: AI['hover']['hide']): void
   }
 }
