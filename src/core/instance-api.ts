@@ -1,6 +1,7 @@
 import { getActiveInstance, onSwitchVim, onCreateVim, instances } from '../core/instance-manager'
 import { VimMode, BufferInfo, HyperspaceCoordinates } from '../neovim/types'
 import { CompletionItem } from 'vscode-languageserver-protocol'
+import { colors } from '../render/highlight-attributes'
 import { onFnCall, pascalCase } from '../support/utils'
 import { Functions } from '../neovim/function-types'
 import { WindowMetadata } from '../windows/metadata'
@@ -31,6 +32,8 @@ onCreateVim(info => {
   instance.on.ai((namespace: string, method: string, args: any[]) => {
     isActive() && ee.emit(`ai.${namespace}.on${pascalCase(method)}`, ...args)
   })
+
+  instance.on.getDefaultColors(async () => ({ ...colors }))
 })
 
 onSwitchVim(async () => {

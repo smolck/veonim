@@ -1,12 +1,13 @@
 import { highlights, references as getReferences } from '../langserv/adapter'
 import { Highlight, HighlightGroupId } from '../neovim/types'
-import { colors } from '../render/highlight-attributes'
 import { supports } from '../langserv/server-features'
+import { request } from '../messaging/worker-client'
 import { brighten } from '../ui/css'
 import nvim from '../neovim/api'
 
-const setHighlightColor = () => {
-  const highlightColor = brighten(colors.background, 25)
+const setHighlightColor = async () => {
+  const colors = await request.getDefaultColors()
+  const highlightColor = brighten(colors.background, 20)
   nvim.cmd(`highlight ${Highlight.DocumentHighlight} guibg=${highlightColor}`)
 }
 
