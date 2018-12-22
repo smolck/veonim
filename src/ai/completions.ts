@@ -216,7 +216,7 @@ export const discoverCompletions = async (lineContent: string, line: number, col
 
 export const getCompletionDetail = (item: CompletionItem): Promise<CompletionItem> => {
   const supported = ai.supports.completionResolve(nvim.state.cwd, nvim.state.filetype)
-  return supported ?  completionDetail(nvim.state, item) : Promise.resolve({} as CompletionItem)
+  return supported ? completionDetail(nvim.state, item) : Promise.resolve({} as CompletionItem)
 }
 
 nvim.on.insertLeave(async () => {

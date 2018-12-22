@@ -5,6 +5,7 @@ import { colors } from '../render/highlight-attributes'
 import { onFnCall, pascalCase } from '../support/utils'
 import { Functions } from '../neovim/function-types'
 import { WindowMetadata } from '../windows/metadata'
+import { Symbol } from '../langserv/adapter'
 import { GitStatus } from '../support/git'
 import NeovimState from '../neovim/state'
 import { AIClient } from '../ai/protocol'
@@ -95,8 +96,15 @@ const nvimSaveCursor = async () => {
 
 const manualAI = {
   completions: {
-    getDetail: (item: CompletionItem): Promise<CompletionItem> => getActiveInstance().request.aiGetCompletionDetail(item),
+    getDetail: (item: CompletionItem): Promise<CompletionItem> => {
+      return getActiveInstance().request.aiGetCompletionDetail(item)
+    },
   },
+  symbols: {
+    getWorkspaceSymbols: (query: string): Promise<Symbol[]> => {
+      return getActiveInstance().request.aiGetWorkspaceSymbols(query)
+    },
+  }
 }
 
 type AIAPI = AIClient & typeof manualAI

@@ -52,6 +52,7 @@ requestAnimationFrame(() => {
     // AI
     require('../components/autocomplete')
     require('../components/hint')
+    require('../components/symbols')
   }, 199)
 
 

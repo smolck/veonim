@@ -1,4 +1,5 @@
 import { CompletionOption } from '../ai/completions'
+import { Symbol } from '../langserv/adapter'
 
 export interface CompletionShow {
   row: number
@@ -17,6 +18,11 @@ export interface SignatureHintShow {
   totalSignatures: number
 }
 
+export enum SymbolMode {
+  Buffer,
+  Workspace,
+}
+
 export interface AI {
   completions: {
     show(options: CompletionShow): void
@@ -25,6 +31,9 @@ export interface AI {
   signatureHint: {
     show(options: SignatureHintShow): void
     hide(): void
+  }
+  symbols: {
+    show(symbols: Symbol[], mode: SymbolMode): void
   }
 }
 
@@ -36,5 +45,8 @@ export interface AIClient {
   signatureHint: {
     onShow(fn: AI['signatureHint']['show']): void
     onHide(fn: AI['signatureHint']['hide']): void
+  }
+  symbols: {
+    onShow(fn: AI['symbols']['show']): void
   }
 }
