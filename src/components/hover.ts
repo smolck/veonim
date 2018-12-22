@@ -86,5 +86,4 @@ const ui = app<S, A>({ name: 'hover', state, actions, view })
 api.ai.hover.onShow(ui.show)
 api.ai.hover.onHide(ui.hide)
 
-// TODO: are we still dispatching this event with the new render pipeline?
 sub('redraw', debounce(ui.updatePosition, 50))
