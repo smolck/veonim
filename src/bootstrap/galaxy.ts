@@ -14,9 +14,6 @@ import '../render/redraw'
 workspace.on('resize', ({ rows, cols }) => resize(cols, rows))
 workspace.resize()
 
-// TODO: this should only be loaded once from the main thread, but we should share the VEONIM_REMOTE_PORT with all nvim instances
-// import '../services/remote'
-
 requestAnimationFrame(() => {
   instanceManager.createVim('main')
 
@@ -49,6 +46,8 @@ requestAnimationFrame(() => {
     require('../components/buffer-search')
     require('../components/viewport-search')
     require('../components/grep')
+
+    require('../services/remote')
 
     // AI
     require('../components/autocomplete')
