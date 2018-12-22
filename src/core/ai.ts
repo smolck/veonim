@@ -1,6 +1,6 @@
 import { discoverCompletions, getCompletionDetail } from '../ai/completions'
 import { filetypeDetectedStartServerMaybe } from '../langserv/director'
-// import { getSignatureHint } from '../ai/signature-hint'
+import { getSignatureHint } from '../ai/signature-hint'
 import { call, on } from '../messaging/worker-client'
 import colorizer from '../services/colorizer'
 import { AI } from '../ai/protocol'
@@ -30,8 +30,7 @@ nvim.on.cursorMoveInsert(async () => {
   // and perhaps others in the app
   const lineContent = await nvim.getCurrentLine()
   discoverCompletions(lineContent, nvim.state.line, nvim.state.column)
-  // TODO: getDO
-  // getSignatureHint(lineContent)
+  getSignatureHint(lineContent)
 })
 
 on.aiGetCompletionDetail(getCompletionDetail)

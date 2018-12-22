@@ -51,11 +51,11 @@ requestAnimationFrame(() => {
 
     // AI
     require('../components/autocomplete')
+    require('../components/hint')
   }, 199)
 
 
   //   ├── code-actions.ts
-  //   ├── hint.ts
   //   ├── hover.ts
   //   ├── problem-info.ts
   //   ├── problems.ts

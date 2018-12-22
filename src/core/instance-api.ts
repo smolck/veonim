@@ -101,7 +101,8 @@ type AIAPI = AIClient & typeof manualAI
 const ai: AIAPI = new Proxy(Object.create(null), {
   get: (_: any, namespace: string) => new Proxy(Object.create(null), {
     get: (_: any, method: string) => (...args: any[]) => {
-      const manualFn = Reflect.get(Reflect.get(manualAI, namespace), method)
+      const res = Reflect.get(manualAI, namespace)
+      const manualFn = res && Reflect.get(res, method)
       if (manualFn) return manualFn(args)
       ee.on(`ai.${namespace}.${method}`, args[0])
     }

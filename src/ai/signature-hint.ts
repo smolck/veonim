@@ -3,9 +3,8 @@ import { supports, getTriggerChars } from '../langserv/server-features'
 import { markdownToHTML } from '../support/markdown'
 import { signatureHelp } from '../langserv/adapter'
 import { merge } from '../support/utils'
-import { cursor } from '../core/cursor'
-import { ui } from '../components/hint'
 import nvim from '../neovim/api'
+import { ui } from '../core/ai'
 
 const cache = {
   signatures: [] as SignatureInformation[],
@@ -25,7 +24,10 @@ const shouldCloseSignatureHint = (totalParams: number, currentParam: number, tri
     || (leftChar === ']' && triggers.has('['))
 }
 
-const cursorPos = () => ({ row: cursor.row, col: cursor.col })
+const cursorPos = () => ({
+  row: nvim.current.cursor.row,
+  col: nvim.current.cursor.col,
+})
 
 const parseDocs = async (docs?: string | MarkupContent): Promise<string | undefined> => {
   if (!docs) return
@@ -50,7 +52,7 @@ const showSignature = async (signatures: SignatureInformation[], which?: number 
       parseDocs(documentation),
     ])
 
-    ui.show({
+    ui.signatureHint.show({
       ...baseOpts,
       label,
       currentParam,
@@ -67,13 +69,13 @@ const showSignature = async (signatures: SignatureInformation[], which?: number 
       .sort((a, b) => a.parameters!.length - b.parameters!.length)
       .findIndex(s => s.parameters!.length > activeParameter)
 
-    if (!~nextSignatureIndex) return ui.hide()
+    if (!~nextSignatureIndex) return ui.signatureHint.hide()
 
     const { label = '', documentation = '', parameters = [] } = signatures[nextSignatureIndex]
     const { label: currentParam = '' } = parameters[activeParameter]
     merge(cache, { selectedSignature: nextSignatureIndex, totalParams: parameters.length })
 
-    ui.show({
+    ui.signatureHint.show({
       ...baseOpts,
       label,
       currentParam,
@@ -91,7 +93,7 @@ const getSignatureHint = async (lineContent: string) => {
   // how do we determine the difference between multiline signatures and exit signature?
   // would need to check if cursor is outside of func brackets doShit(    )   | <- cursor
   const closeSignatureHint = shouldCloseSignatureHint(cache.totalParams, cache.currentParam, triggerChars, leftChar)
-  if (closeSignatureHint) return ui.hide()
+  if (closeSignatureHint) return ui.signatureHint.hide()
 
   if (!triggerChars.has(leftChar)) return
   if (!supports.signatureHint(nvim.state.cwd, nvim.state.filetype)) return
@@ -106,9 +108,9 @@ const getSignatureHint = async (lineContent: string) => {
   showSignature(signatures, activeSignature, activeParameter)
 }
 
-nvim.on.cursorMove(ui.hide)
-nvim.on.insertEnter(ui.hide)
-nvim.on.insertLeave(ui.hide)
+nvim.on.cursorMove(() => ui.signatureHint.hide())
+nvim.on.insertEnter(() => ui.signatureHint.hide())
+nvim.on.insertLeave(() => ui.signatureHint.hide())
 
 nvim.onAction('signature-help-next', () => {
   const next = cache.selectedSignature + 1
