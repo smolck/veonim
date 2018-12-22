@@ -18,7 +18,6 @@ import nvim from '../neovim/api'
 nvim.on.filetype(filetype => filetypeDetectedStartServerMaybe(nvim.state.cwd, filetype))
 nvim.watchState.colorscheme((color: string) => colorizer.call.setColorScheme(color))
 
-// TODO: DO NOT CALL THESE IF THE CURRENT INSTANCE IS NOT ACTIVE IN THE UI!!!!
 nvim.on.cursorMoveInsert(async () => {
   // tried to get the line contents from the render grid buffer, but it appears
   // this autocmd gets fired before the grid gets updated from the render event.

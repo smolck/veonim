@@ -6,7 +6,6 @@ import { GitStatus } from '../support/git'
 import * as git from '../support/git'
 import nvim from '../neovim/api'
 import '../core/ai'
-import '../services/remote'
 import '../services/mru-buffers'
 import '../services/watch-reload'
 // TODO: not used:
@@ -14,18 +13,18 @@ import '../services/watch-reload'
 // require('../services/dev-recorder')
 
 const actions = new Map<string, (args: any) => void>()
+const state = {
+  instanceIsActive: true,
+}
+
+export const isInstanceActive = () => state.instanceIsActive
 
 nvim.onStateChange(nextState => call.nvimStateUpdate(nextState))
 nvim.onVimrcLoad(sourcedFile => call.vimrcLoaded(sourcedFile))
 git.onStatus((status: GitStatus) => call.gitStatus(status))
 git.onBranch((onBranch: string) => call.gitBranch(onBranch))
 
-on.onAction(async (name: string) => {
-  if (!actions.has(name)) actions.set(name, (...a: any[]) => call.actionCalled(name, a))
-  const cb = actions.get(name)!
-  nvim.onAction(name, cb)
-})
-
+on.instanceActiveStatus((instanceIsActive: boolean) => Object.assign(state, { instanceIsActive }))
 on.bufferSearch(async (file: string, query: string) => bufferSearch.fuzzy(file, query))
 on.bufferSearchVisible(async (query: string) => bufferSearch.fuzzyVisible(query))
 on.nvimJumpTo((coords: HyperspaceCoordinates) => nvim.jumpTo(coords))
@@ -42,3 +41,8 @@ on.getState(async () => ({ ...nvim.state }))
 on.getWindowMetadata(async () => getWindowMetadata())
 on.nvimSaveCursor(async () => nvim.current.window.cursor)
 on.nvimRestoreCursor((position: number[]) => nvim.current.window.setCursor(position[0], position[1]))
+on.onAction(async (name: string) => {
+  if (!actions.has(name)) actions.set(name, (...a: any[]) => call.actionCalled(name, a))
+  const cb = actions.get(name)!
+    nvim.onAction(name, cb)
+})

@@ -46,8 +46,10 @@ export const switchVim = async (id: number) => {
   const lastId = currentVimID
   currentVimID = id
   switchTo(id)
-  vims.forEach(v => v.active = false)
-  vims.get(id)!.active = true
+  vims.forEach(v => {
+    v.active = v.id === id
+    v.instance.call.instanceActiveStatus(v.id === id)
+  })
   watchers.emit('switch', id, lastId)
 }
 
