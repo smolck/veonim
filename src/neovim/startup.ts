@@ -29,8 +29,6 @@ export const startupCmds = CmdGroup`
   set completefunc=VeonimComplete
   execute "command! -nargs=1 VeonimExt call add(g:_veonim_extensions, <args>)"
   execute "command! -nargs=1 Plug call add(g:_veonim_plugins, <args>)"
-  ino <expr> <tab> VeonimCompleteScroll(1)
-  ino <expr> <s-tab> VeonimCompleteScroll(0)
   highlight ${Highlight.Underline} gui=underline
   highlight ${Highlight.Undercurl} gui=undercurl
 `
