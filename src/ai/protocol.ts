@@ -1,5 +1,5 @@
+import { Symbol, Reference } from '../langserv/adapter'
 import { CompletionOption } from '../ai/completions'
-import { Symbol } from '../langserv/adapter'
 
 export interface CompletionShow {
   row: number
@@ -23,6 +23,8 @@ export enum SymbolMode {
   Workspace,
 }
 
+export type ReferenceResult = [string, Reference[]]
+
 export interface AI {
   completions: {
     show(options: CompletionShow): void
@@ -34,6 +36,9 @@ export interface AI {
   }
   symbols: {
     show(symbols: Symbol[], mode: SymbolMode): void
+  }
+  references: {
+    show(references: ReferenceResult[], keyword: string): void
   }
 }
 
@@ -48,5 +53,8 @@ export interface AIClient {
   }
   symbols: {
     onShow(fn: AI['symbols']['show']): void
+  }
+  references: {
+    onShow(fn: AI['references']['show']): void
   }
 }

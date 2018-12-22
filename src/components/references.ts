@@ -1,15 +1,14 @@
 import { RowNormal, RowHeader } from '../components/row-container'
 import { PluginRight } from '../components/plugin-container'
 import { h, app, vimBlur, vimFocus } from '../ui/uikit'
-import { Reference } from '../langserv/adapter'
+import { ReferenceResult } from '../ai/protocol'
 import { showCursorline } from '../core/cursor'
 import Input from '../components/text-input'
 import { badgeStyle } from '../ui/styles'
 import * as Icon from 'hyperapp-feather'
-import nvim from '../neovim/api'
+import api from '../core/instance-api'
 
 type TextTransformer = (text: string, last?: boolean) => string
-type Result = [string, Reference[]]
 
 let elref: HTMLElement
 const SCROLL_AMOUNT = 0.25
@@ -18,8 +17,8 @@ const els = new Map<number, HTMLElement>()
 const state = {
   val: '',
   referencedSymbol: '',
-  references: [] as Result[],
-  cache: [] as Result[],
+  references: [] as ReferenceResult[],
+  cache: [] as ReferenceResult[],
   vis: false,
   ix: 0,
   subix: -1,
@@ -46,11 +45,11 @@ const scrollIntoView = (next: number) => setTimeout(() => {
   else if (top < containerTop) elref.scrollTop += top - containerTop
 }, 1)
 
-const selectResult = (references: Result[], ix: number, subix: number) => {
+const selectResult = (references: ReferenceResult[], ix: number, subix: number) => {
   if (subix < 0) return
   const [ path, items ] = references[ix]
   const { line, column } = items[subix]
-  nvim.jumpToProjectFile({ line, column, path })
+  api.nvim.jumpToProjectFile({ line, column, path })
   showCursorline()
 }
 
@@ -204,5 +203,6 @@ const view = ($: S, a: typeof actions) => PluginRight($.vis, [
 
 const ui = app({ name: 'references', state, actions, view })
 
-export const show = (references: Result[], referencedSymbol?: string) =>
+api.ai.references.onShow((references: ReferenceResult[], referencedSymbol?: string) => {
   ui.show({ references, referencedSymbol })
+})

@@ -53,6 +53,7 @@ requestAnimationFrame(() => {
     require('../components/autocomplete')
     require('../components/hint')
     require('../components/symbols')
+    require('../components/references')
   }, 199)
 
 
@@ -60,7 +61,6 @@ requestAnimationFrame(() => {
   //   ├── hover.ts
   //   ├── problem-info.ts
   //   ├── problems.ts
-  //   ├── references.ts
   //   ├── symbols.ts
 
   // requestAnimationFrame(() => {
