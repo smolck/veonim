@@ -103,7 +103,7 @@ const ai: AIAPI = new Proxy(Object.create(null), {
     get: (_: any, method: string) => (...args: any[]) => {
       const res = Reflect.get(manualAI, namespace)
       const manualFn = res && Reflect.get(res, method)
-      if (manualFn) return manualFn(args)
+      if (manualFn) return manualFn(...args)
       ee.on(`ai.${namespace}.${method}`, args[0])
     }
   })
