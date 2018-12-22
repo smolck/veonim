@@ -109,7 +109,7 @@ const actions = {
     const completionItem = (s.options[ix] || {}).raw
 
     if (completionItem) (async () => {
-      const detail = await getCompletionDetail(completionItem)
+      const detail = await api.ai.completions.getDetail(completionItem)
       if (!detail.documentation) return
       const richFormatDocs = await parseDocs(detail.documentation)
       a.showDocs(richFormatDocs)

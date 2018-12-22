@@ -1,7 +1,7 @@
+import { discoverCompletions, getCompletionDetail } from '../ai/completions'
 import { filetypeDetectedStartServerMaybe } from '../langserv/director'
 // import { getSignatureHint } from '../ai/signature-hint'
-import { getCompletions } from '../ai/completions'
-import { call } from '../messaging/worker-client'
+import { call, on } from '../messaging/worker-client'
 import colorizer from '../services/colorizer'
 import { AI } from '../ai/protocol'
 import nvim from '../neovim/api'
@@ -30,10 +30,12 @@ nvim.on.cursorMoveInsert(async () => {
   // contents + current vim mode. we could then easily improve this action here
   // and perhaps others in the app
   const lineContent = await nvim.getCurrentLine()
-  getCompletions(lineContent, nvim.state.line, nvim.state.column)
+  discoverCompletions(lineContent, nvim.state.line, nvim.state.column)
   // TODO: getDO
   // getSignatureHint(lineContent)
 })
+
+on.aiGetCompletionDetail(getCompletionDetail)
 
 export const ui: AI = new Proxy(Object.create(null), {
   get: (_: any, namespace: string) => new Proxy(Object.create(null), {

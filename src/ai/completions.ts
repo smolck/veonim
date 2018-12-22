@@ -145,7 +145,7 @@ const showCompletionsRaw = (column: number, query: string, startIndex: number, l
   }
 
 // TODO: merge global semanticCompletions with keywords?
-export const getCompletions = async (lineContent: string, line: number, column: number) => {
+export const discoverCompletions = async (lineContent: string, line: number, column: number) => {
   const { startIndex, query, leftChar } = findQuery(lineContent, column)
   const showCompletions = showCompletionsRaw(column, query, startIndex, lineContent)
   const triggerChars = getTriggerChars.completion(nvim.state.cwd, nvim.state.filetype)

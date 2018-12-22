@@ -216,7 +216,7 @@ const isFunc = (m: any) => is.function(m) || is.asyncfunction(m)
 const current = {
   get cursor() {
     return {
-      row: state.line - state.editorTopLine,
+      row: state.line - state.editorTopLine + 1,
       col: state.column
     }
   },

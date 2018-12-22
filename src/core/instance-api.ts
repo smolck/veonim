@@ -1,5 +1,6 @@
 import { getActiveInstance, onSwitchVim, onCreateVim, instances } from '../core/instance-manager'
 import { VimMode, BufferInfo, HyperspaceCoordinates } from '../neovim/types'
+import { CompletionItem } from 'vscode-languageserver-protocol'
 import { onFnCall, pascalCase } from '../support/utils'
 import { Functions } from '../neovim/function-types'
 import { WindowMetadata } from '../windows/metadata'
@@ -89,10 +90,20 @@ const nvimSaveCursor = async () => {
   return () => instance.call.nvimRestoreCursor(position)
 }
 
-const ai: AIClient = new Proxy(Object.create(null), {
+const manualAI = {
+  completions: {
+    getDetail: (item: CompletionItem): Promise<CompletionItem> => getActiveInstance().request.aiGetCompletionDetail(item),
+  },
+}
+
+type AIAPI = AIClient & typeof manualAI
+
+const ai: AIAPI = new Proxy(Object.create(null), {
   get: (_: any, namespace: string) => new Proxy(Object.create(null), {
-    get: (_: any, method: string) => (fn: (...args: any[]) => void) => {
-      ee.on(`ai.${namespace}.${method}`, fn)
+    get: (_: any, method: string) => (...args: any[]) => {
+      const manualFn = Reflect.get(Reflect.get(manualAI, namespace), method)
+      if (manualFn) return manualFn(args)
+      ee.on(`ai.${namespace}.${method}`, args[0])
     }
   })
 })
