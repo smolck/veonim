@@ -1,5 +1,4 @@
 import { CmdGroup, FunctionGroup } from '../support/neovim-utils'
-import { Highlight } from '../neovim/types'
 import { resolve } from 'path'
 
 const runtimeDir = resolve(__dirname, '..', 'runtime')
@@ -27,10 +26,9 @@ export const startupCmds = CmdGroup`
   set nocursorline
   set noshowmode
   set completefunc=VeonimComplete
-  execute "command! -nargs=1 VeonimExt call add(g:_veonim_extensions, <args>)"
-  execute "command! -nargs=1 Plug call add(g:_veonim_plugins, <args>)"
-  highlight ${Highlight.Underline} gui=underline
-  highlight ${Highlight.Undercurl} gui=undercurl
+  ino <expr> <tab> VeonimCompleteScroll(1)
+  ino <expr> <s-tab> VeonimCompleteScroll(0)
+  call VeonimRegisterAutocmds()
 `
 
 // TODO: should we rename some of these "internal" functions so they

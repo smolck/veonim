@@ -3,10 +3,10 @@ import MsgpackStreamDecoder from '../messaging/msgpack-decoder'
 import MsgpackStreamEncoder from '../messaging/msgpack-encoder'
 import { startupFuncs, startupCmds } from '../neovim/startup'
 import { Api, Prefixes } from '../neovim/protocol'
+import { Color, Highlight } from '../neovim/types'
 import { Neovim } from '../support/binaries'
 import { ChildProcess } from 'child_process'
 import SetupRPC from '../messaging/rpc'
-import { Color } from '../neovim/types'
 import { homedir } from 'os'
 
 type RedrawFn = (m: any[]) => void
@@ -52,6 +52,8 @@ const msgpackEncoder = new MsgpackStreamEncoder()
 
 const spawnVimInstance = (pipeName: string) => Neovim.run([
   '--cmd', `com! -nargs=+ -range -complete=custom,VeonimCmdCompletions Veonim call Veonim(<f-args>)`,
+  '--cmd', `com! -nargs=1 VeonimExt call add(g:_veonim_extensions, <args>)`,
+  '--cmd', `com! -nargs=1 Plug call add(g:_veonim_plugins, <args>)`,
   '--embed',
   '--listen',
   pipeName
@@ -104,11 +106,6 @@ export const create = async ({ dir } = {} as { dir?: string }): Promise<NewVimRe
 
   api.command(`${startupFuncs()} | ${startupCmds}`)
   dir && api.command(`cd ${dir}`)
-  api.command(`call VeonimRegisterAutocmds()`)
-
-  // TODO: allow user to skip these settings (since they happen after init.vim)
-  api.command('ino <expr> <tab> VeonimCompleteScroll(1)')
-  api.command('ino <expr> <s-tab> VeonimCompleteScroll(0)')
 
   const { pipeName } = vimInstances.get(id)!
   return { id, path: pipeName }
@@ -119,6 +116,9 @@ export const attachTo = (id: number) => {
   const vim = vimInstances.get(id)!
   if (vim.attached) return
   api.uiAttach(clientSize.width, clientSize.height, vimOptions)
+  // highlight groups defined before nvim_ui_attach get reset
+  api.command(`highlight ${Highlight.Undercurl} gui=undercurl`)
+  api.command(`highlight ${Highlight.Underline} gui=underline`)
   vim.attached = true
 }
 

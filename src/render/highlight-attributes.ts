@@ -181,9 +181,9 @@ export const generateColorLookupAtlas = () => {
     ui.fillStyle = hlgrp.foreground || deffg
     ui.fillRect(id, 1, 1, 1)
 
-    if (!hlgrp.underline || !hlgrp.special) return
+    if (!hlgrp.underline) return
 
-    ui.fillStyle = hlgrp.special
+    ui.fillStyle = hlgrp.special || defaultColors.special
     ui.fillRect(id, 2, 1, 1)
   })
 
