@@ -11,8 +11,6 @@ import * as workspace from '../core/workspace'
 import { requireDir } from '../support/utils'
 import '../render/redraw'
 
-// TODO: load dependency manager (in a thread)
-// TODO: rewrite dependency manager to extract plugins/extensions from vimscript
 // TODO: webgl line width
 // TODO: investigate no texture on unit0. im guessing the texture atlas are not
 // ready on load?
