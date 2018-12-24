@@ -1,4 +1,4 @@
-import { exists, getDirs, configPath } from '../support/utils'
+import { exists, getDirs, configPath, remove as removePath } from '../support/utils'
 import { url, download } from '../support/download'
 import { call } from '../messaging/worker-client'
 import { NotifyKind } from '../protocols/veonim'
@@ -13,7 +13,9 @@ interface Plugin {
   installed: boolean,
 }
 
-const packDir = join(configPath, 'nvim/pack')
+// veonim will not touch plugins installed by user or other package manager
+// this is because we do not want to delete any data that veonim did not add
+const packDir = join(configPath, 'nvim', 'pack', 'veonim-installed-plugins')
 
 const splitUserRepo = (text: string) => {
   const [ , user = '', repo = '' ] = (text.match(/^([^/]+)\/(.*)/) || [])
@@ -37,10 +39,8 @@ const removeExtraneous = async (plugins: Plugin[]) => {
   const dirs = await getDirs(packDir)
   const pluginInstalled = (path: string) => plugins.some(e => e.name === path)
   const toRemove = dirs.filter(d => !pluginInstalled(d.name))
-  console.log('toRemove', toRemove)
 
-  // TODO: remove only plugins that were installed by veonim
-  // toRemove.forEach(dir => removePath(dir.path))
+  toRemove.forEach(dir => removePath(dir.path))
 }
 
 export default async (pluginText: string[]) => {

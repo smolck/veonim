@@ -1,6 +1,8 @@
 import { CmdGroup, FunctionGroup } from '../support/neovim-utils'
-import { resolve } from 'path'
+import { configPath } from '../support/utils'
+import { resolve, join } from 'path'
 
+const pluginDir = join(configPath, 'nvim', 'pack', 'veonim-installed-plugins')
 const runtimeDir = resolve(__dirname, '..', 'runtime')
 const startup = FunctionGroup()
 
@@ -9,6 +11,7 @@ export const startupFuncs = () => startup.getFunctionsAsString()
 export const startupCmds = CmdGroup`
   let $PATH .= ':${runtimeDir}/${process.platform}'
   let &runtimepath .= ',${runtimeDir}'
+  let &packpath .= ',${pluginDir}'
   let g:veonim = 1
   let g:vn_cmd_completions = ''
   let g:vn_events = {}
