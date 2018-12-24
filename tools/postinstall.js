@@ -10,7 +10,7 @@ const binaryDependencies = async () => {
   if (!deps) return
 
   for (const [ dependency, version ] of Object.entries(deps)) {
-    await run(`npm i ${dependency}@${version} --no-save --no-package-lock --no-audit`)
+    await run(`npm i ${dependency}@${version} --no-save --no-package-lock --no-audit --loglevel=error`)
   }
 
   const pkgData = JSON.stringify(pkg, null, 2)

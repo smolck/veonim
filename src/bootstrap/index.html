@@ -3,10 +3,6 @@
   <head>
     <title>veonim</title>
     <style>
-* {
-  cursor: none;
-}
-
 @font-face {
   font-family: 'Roboto Mono Builtin';
   src: url('../assets/roboto-mono.ttf');
@@ -71,6 +67,8 @@ input::placeholder {
   flex-flow: column;
   height: 100%;
   width: 100%;
+  z-index: 420;
+  background: #29272d;
 }
 
 #start .logo {
@@ -100,20 +98,17 @@ input::placeholder {
     </style>
   </head>
   <body>
-    <div id="start">
-      <div class="logo"></div>
-      <div class="detail">now with more sodium!</div>
-    </div>
-
     <div id="notifications"></div>
-    <div id="cursor"></div>
-    <div id="cursorline"></div>
-    <div id="debugline"></div>
 
-    <div id="canvas-container">
-      <div id="plugins"></div>
+    <div id="workspace">
+      <div id="webgl"></div>
       <div id="windows"></div>
+      <div id="cursor"></div>
+      <div id="cursorline"></div>
+      <div id="debugline"></div>
+      <div id="plugins"></div>
     </div>
+
     <div id="statusline"></div>
 
     <script type="text/javascript">require('../bootstrap/galaxy')</script>

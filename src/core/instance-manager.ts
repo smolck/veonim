@@ -1,50 +1,58 @@
 import { onExit, attachTo, switchTo, create } from '../core/master-control'
+import Worker from '../messaging/worker'
 import { EventEmitter } from 'events'
 import { remote } from 'electron'
 
-interface Vim {
-  id: number,
-  name: string,
-  active: boolean,
-  path: string,
-  nameFollowsCwd: boolean,
+interface Nvim {
+  id: number
+  name: string
+  active: boolean
+  path: string
+  nameFollowsCwd: boolean
+  instance: ReturnType<typeof Worker>
 }
 
-interface VimInfo {
+interface NvimInfo {
   id: number
   path: string
 }
 
-const watchers = new EventEmitter()
-watchers.setMaxListeners(200)
-const vims = new Map<number, Vim>()
+const ee = new EventEmitter()
+ee.setMaxListeners(200)
+const vims = new Map<number, Nvim>()
 let currentVimID = -1
 
-export default (id: number, path: string) => {
-  vims.set(id, { id, path, name: 'main', active: true, nameFollowsCwd: true })
-  currentVimID = id
-  watchers.emit('create', { id, path })
-  watchers.emit('switch', id)
+export const getActiveInstance = () => {
+  const nvim = vims.get(currentVimID)
+  if (!nvim) throw new Error(`failed to get active instance. this should probably not happen... ever`)
+  return nvim.instance
 }
 
 export const createVim = async (name: string, dir?: string) => {
   const { id, path } = await create({ dir })
+  const lastId = currentVimID
+  const instance = Worker('instance', {
+    workerData: { id, nvimPath: path },
+  })
   currentVimID = id
-  watchers.emit('create', { id, path })
+  vims.forEach(v => v.active = false)
+  vims.set(id, { id, path, name, instance, active: true, nameFollowsCwd: !!dir })
+  ee.emit('create', { id, path })
   attachTo(id)
   switchTo(id)
-  watchers.emit('switch', id)
-  vims.forEach(v => v.active = false)
-  vims.set(id, { id, path, name, active: true, nameFollowsCwd: !!dir })
+  ee.emit('switch', id, lastId)
 }
 
 export const switchVim = async (id: number) => {
   if (!vims.has(id)) return
+  const lastId = currentVimID
   currentVimID = id
   switchTo(id)
-  watchers.emit('switch', id)
-  vims.forEach(v => v.active = false)
-  vims.get(id)!.active = true
+  vims.forEach(v => {
+    v.active = v.id === id
+    v.instance.call.instanceActiveStatus(v.id === id)
+  })
+  ee.emit('switch', id, lastId)
 }
 
 const renameVim = (id: number, newName: string) => {
@@ -73,18 +81,17 @@ export const renameCurrentToCwd = (cwd: string) => {
 
 export const list = () => [...vims.values()].filter(v => !v.active).map(v => ({ id: v.id, name: v.name }))
 
-export const sessions = {
+export const instances = {
   get current() { return currentVimID }
 }
 
-export const onCreateVim = (fn: (info: VimInfo) => void) => {
-  watchers.on('create', (info: VimInfo) => fn(info))
+export const onCreateVim = (fn: (info: NvimInfo) => void) => {
+  ee.on('create', (info: NvimInfo) => fn(info))
   ;[...vims.entries()].forEach(([ id, vim ]) => fn({ id, path: vim.path }))
 }
 
-export const onSwitchVim = (fn: (id: number) => void) => {
-  watchers.on('switch', id => fn(id))
-  fn(currentVimID)
+export const onSwitchVim = (fn: (id: number, lastId: number) => void) => {
+  ee.on('switch', (id, lastId) => fn(id, lastId))
 }
 
 // because of circular dependency chain. master-control exports onExit.

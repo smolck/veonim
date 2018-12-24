@@ -1,9 +1,10 @@
 import { dirname, basename, join, extname, resolve, sep, parse, normalize } from 'path'
+import { createConnection } from 'net'
 import { promisify as P } from 'util'
 import { EventEmitter } from 'events'
 import { exec } from 'child_process'
+import { homedir, tmpdir } from 'os'
 import { Transform } from 'stream'
-import { homedir } from 'os'
 import * as fs from 'fs'
 export { watchFile } from '../support/fs-watch'
 
@@ -11,12 +12,6 @@ export interface Task<T> {
   done: (value: T) => void,
   promise: Promise<T>,
 }
-
-const logger = (str: TemplateStringsArray | string, v: any[]) => Array.isArray(str)
-  ? console.log((str as TemplateStringsArray).map((s, ix) => s + (v[ix] || '')).join(''))
-  : console.log(str as string)
-
-export const log = (str: TemplateStringsArray | string, ...vars: any[]) => logger(str, vars)
 
 process.on('unhandledRejection', e => console.error(e))
 
@@ -29,8 +24,8 @@ export const configPath = process.env.XDG_CONFIG_HOME || (process.platform === '
   : `${$HOME}/.config`)
 
 const snakeCase = (m: string) => m.split('').map(ch => /[A-Z]/.test(ch) ? '_' + ch.toLowerCase(): ch).join('')
-const type = (m: any) => (Object.prototype.toString.call(m).match(/^\[object (\w+)\]/) || [])[1].toLowerCase()
-
+export const type = (m: any) => (Object.prototype.toString.call(m).match(/^\[object (\w+)\]/) || [])[1].toLowerCase()
+export const within = (target: number, tolerance: number) => (candidate: number) => Math.abs(target - candidate) <= tolerance
 export const objToMap = (obj: object, map: Map<any, any>) => Object.entries(obj).forEach(([k, v]) => map.set(k, v))
 export const listof = (count: number, fn: () => any) => [...Array(count)].map(fn)
 export const fromJSON = (m: string) => ({ or: (defaultVal: any) => { try { return JSON.parse(m) } catch(_) { return defaultVal } }})
@@ -53,6 +48,9 @@ export const uriAsFile = (m = '') => basename(uriToPath(m))
 export const CreateTask = <T>(): Task<T> => ( (done = (_: T) => {}, promise = new Promise<T>(m => done = m)) => ({ done, promise }) )()
 export const uuid = (): string => (<any>[1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,(a: any)=>(a^Math.random()*16>>a/4).toString(16))
 export const shell = (cmd: string, opts?: object): Promise<string> => new Promise(fin => exec(cmd, opts, (_, out) => fin(out + '')))
+export const getPipeName = (name: string) => process.platform === 'win32'
+  ? `\\\\.\\pipe\\${name}${uuid()}-sock`
+  : join(tmpdir(), `${name}${uuid()}.sock`)
 
 // TODO: remove listof because it's not as performant
 export const genList = <T>(count: number, fn: (index: number) => T) => {
@@ -104,11 +102,11 @@ export const findIndexRight = (line: string, pattern: RegExp, start: number) => 
   }
 }
 
-export const asColor = (color: number) => '#' + [16, 8, 0].map(shift => {
+export const asColor = (color?: number) => color ? '#' + [16, 8, 0].map(shift => {
   const mask = 0xff << shift
   const hex = ((color & mask) >> shift).toString(16)
   return hex.length < 2 ? ('0' + hex) : hex
-}).join('')
+}).join('') : undefined
 
 export const readFile = (path: string, encoding = 'utf8') => P(fs.readFile)(path, encoding)
 export const exists = (path: string): Promise<boolean> => new Promise(fin => fs.access(path, e => fin(!e)))
@@ -290,3 +288,30 @@ export class NewlineSplitter extends Transform {
     done()
   }
 }
+
+export class MapSet extends Map {
+  add(key: any, value: any) {
+    const s = this.get(key) || new Set()
+    this.set(key, s.add(value))
+  }
+}
+
+export const tryNetConnect = (path: string, interval = 500, timeout = 5e3): Promise<ReturnType<typeof createConnection>> => new Promise((done, fail) => {
+  const timeoutTimer = setTimeout(fail, timeout)
+
+  const attemptConnection = () => {
+    const socket = createConnection(path)
+
+    socket.once('connect', () => {
+      clearTimeout(timeoutTimer)
+      socket.removeAllListeners('error')
+      done(socket)
+    })
+
+    // swallow errors until we connect
+    socket.on('error', () => {})
+    socket.once('close', () => setTimeout(attemptConnection, interval))
+  }
+
+  attemptConnection()
+})

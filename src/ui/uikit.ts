@@ -18,8 +18,8 @@ export const css = (builder: (classname: string) => string[]): string => {
   return id
 }
 
-const hostElement = document.getElementById('plugins') as HTMLElement
-merge(hostElement.style, {
+const pluginsContainer = document.getElementById('plugins') as HTMLElement
+merge(pluginsContainer.style, {
   position: 'absolute',
   display: 'flex',
   width: '100vw',
@@ -30,7 +30,7 @@ merge(hostElement.style, {
 })
 
 dispatch.sub('window.change', () => {
-  hostElement.style.height = `calc(100vh - 24px - ${titleSpecs.height}px)`
+  pluginsContainer.style.height = `calc(100vh - 24px - ${titleSpecs.height}px)`
 })
 
 export const vimFocus = () => {
@@ -43,8 +43,6 @@ export const vimBlur = () => {
   hideCursor()
 }
 
-const pluginsDiv = document.getElementById('plugins') as HTMLElement
-
 const prepareContainerElement = (name: string) => {
   const el = document.createElement('div')
   el.setAttribute('id', name)
@@ -54,7 +52,7 @@ const prepareContainerElement = (name: string) => {
     height: '100%',
   })
 
-  pluginsDiv.appendChild(el)
+  pluginsContainer.appendChild(el)
   return el
 }
 

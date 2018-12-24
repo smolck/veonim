@@ -1,6 +1,4 @@
 import { CmdGroup, FunctionGroup } from '../support/neovim-utils'
-import { colorscheme } from '../config/default-configs'
-import { Highlight } from '../neovim/types'
 import { resolve } from 'path'
 
 const runtimeDir = resolve(__dirname, '..', 'runtime')
@@ -12,26 +10,24 @@ export const startupCmds = CmdGroup`
   let $PATH .= ':${runtimeDir}/${process.platform}'
   let &runtimepath .= ',${runtimeDir}'
   let g:veonim = 1
-  let g:vn_loaded = 0
   let g:vn_cmd_completions = ''
-  let g:vn_rpc_buf = []
   let g:vn_events = {}
   let g:vn_callbacks = {}
   let g:vn_callback_id = 0
   let g:vn_jobs_connected = {}
-  colorscheme ${colorscheme}
+  let g:_veonim_plugins = []
+  let g:_veonim_extensions = []
+  let g:veonim_completing = 0
+  let g:veonim_complete_pos = 1
+  let g:veonim_completions = []
+  colorscheme veonim
   set guicursor=n:block-CursorNormal,i:hor10-CursorInsert,v:block-CursorVisual
   set background=dark
-  set laststatus=0
-  set shortmess+=Ic
-  set noshowcmd
-  set noshowmode
-  set noruler
   set nocursorline
+  set noshowmode
   set completefunc=VeonimComplete
   ino <expr> <tab> VeonimCompleteScroll(1)
   ino <expr> <s-tab> VeonimCompleteScroll(0)
-  call serverstart()
   call VeonimRegisterAutocmds()
 `
 
@@ -71,6 +67,7 @@ const autocmds = {
   OptionSet: `expand('<amatch>'), v:option_new, v:option_old`,
   FileType: `bufnr(expand('<afile>')), expand('<amatch>')`,
   WinEnter: `win_getid()`,
+  SourcePre: `expand('<afile>')`,
 }
 
 export type Autocmd = typeof autocmds
@@ -118,6 +115,7 @@ startup.defineFunc.VeonimState`
   let m.revision = b:changedtick
   let m.filetype = getbufvar(currentBuffer, '&filetype')
   let m.cwd = getcwd()
+  let m.dir = expand('%:p:h')
   let m.file = expand('%f')
   let m.colorscheme = g:colors_name
   let m.bufferType = getbufvar(currentBuffer, '&buftype')
@@ -148,11 +146,7 @@ startup.defineFunc.VeonimTermExit`
 `
 
 startup.defineFunc.Veonim`
-  if g:vn_loaded
-    call rpcnotify(0, 'veonim', a:1, a:000[1:])
-  else
-    call add(g:vn_rpc_buf, a:000)
-  endif
+  call rpcnotify(0, 'veonim', a:1, a:000[1:])
 `
 
 startup.defineFunc.VeonimCmdCompletions`
@@ -193,45 +187,4 @@ startup.defineFunc.VeonimOverlayMenu`
   let g:vn_callback_id += 1
   call VeonimRegisterMenuCallback(g:vn_callback_id, a:3)
   call Veonim('user-overlay-menu', g:vn_callback_id, a:1, a:2)
-`
-
-startup.defineFunc.VK`
-  call VeonimRegisterEvent('key:' . a:2 . ':' . a:1, a:3)
-  call Veonim('register-shortcut', a:1, a:2)
-`
-
-// we are going to override any of these user settings, because the user is
-// WRONG.  TODO: jk, the problem is we are hacking our own window grids, and
-// the cmd/msgline/lastrow is not hidden from the render output. these
-// settings fix some of those issues.  however once we get official support
-// for external windows from nvim, we should not need these
-//
-// laststatus=0 ---> disable statusline
-// nocursorline ---> we render our own cursorline based on cursor position. this is a bit
-//                  hacky. i think we will get official support soonish™
-// shortmess+=Ic --> disable completion "item 1 of 3" messages in message/cmdline/lastrow
-// noshowmode -----> no "--INSERT--" bullshit in lastrow
-// noshowcmd ------> disable the visual keybinds in lastrow, like "ciw" displays "c" in botright
-// noruler --------> no "42,13" line,column display in lastrow
-//
-// if we cleanup any commands from here in the future, remember to clean them
-// up also from 'startupCmds' (if applicable)
-//
-// TODO: we should probably not override the completion settings and mappings
-export const postStartupCommands = CmdGroup`
-  let g:vn_loaded = 1
-  set laststatus=0
-  set nocursorline
-  set shortmess+=Ic
-  set noshowmode
-  set noshowcmd
-  set noruler
-  let g:veonim_completing = 0
-  let g:veonim_complete_pos = 1
-  let g:veonim_completions = []
-  set completefunc=VeonimComplete
-  ino <expr> <tab> VeonimCompleteScroll(1)
-  ino <expr> <s-tab> VeonimCompleteScroll(0)
-  highlight ${Highlight.Underline} gui=underline
-  highlight ${Highlight.Undercurl} gui=undercurl
 `

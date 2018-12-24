@@ -1,4 +1,4 @@
-import nvim from '../vscode/neovim'
+import nvim from '../neovim/api'
 import { basename } from 'path'
 // import * as vsc from 'vscode'
 

@@ -32,6 +32,9 @@
 
 ## backlog - stuff that i really want
 
+- image overlay (press key to open image url under cursor in a floating image overlay)
+    an alternative to inline images
+
 - improve symbols view
   - show parent symbols if duplicate (or maybe always)
     - i noticed the veonim/ext-typescript-javascript langserv has some of this parent symbol info

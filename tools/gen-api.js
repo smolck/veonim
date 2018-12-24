@@ -1,5 +1,7 @@
 'use strict'
 
+// TODO: we should probably just move this file to @veonim/neovim repo
+// that way the generate API typings match the package version installed
 const { encode, decode, createEncodeStream, createDecodeStream } = require('msgpack-lite')
 const { createWriteStream } = require('fs')
 const { spawn } = require('child_process')

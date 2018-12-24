@@ -1,42 +1,66 @@
-import { Watchers, merge, debounce } from '../support/utils'
+import { Watchers, merge, throttle } from '../support/utils'
 const robotoSizes = require('../assets/roboto-sizes.json')
 import * as electron from 'electron'
 import { setVar } from '../ui/css'
 
-export interface Font {
+export interface SetFontParams {
   face?: string,
   size?: number,
   lineHeight?: number,
 }
 
+export interface Cell {
+  height: number
+  width: number
+  padding: number
+}
+
+export interface Font {
+  face: string
+  size: number
+  lineHeight: number
+}
+
+export interface Pad {
+  x: number
+  y: number
+}
+
 const watchers = new Watchers()
-const container = document.getElementById('canvas-container') as HTMLElement
+const container = document.getElementById('workspace') as HTMLElement
 const sandboxCanvas = document.createElement('canvas')
 const canvas = sandboxCanvas.getContext('2d', { alpha: false }) as CanvasRenderingContext2D
 
 merge(container.style, {
   display: 'flex',
   flex: '1',
+  position: 'relative',
   background: 'var(--background-30)',
 })
 
-const _font = {
+export const font: Font = {
   face: 'Roboto Mono Builtin',
   size: 14,
   lineHeight: 1.5,
 }
 
-const _cell = {
+export const pad: Pad = {
+  x: 4,
+  y: 8,
+}
+
+export const cell: Cell = {
   width: 0,
   height: 0,
   padding: 0,
 }
 
-const _size = {
+export const size = {
   rows: 0,
   cols: 0,
   height: 0,
   width: 0,
+  get nameplateHeight() { return cell.height + 4 },
 }
 
 const getCharWidth = (font: string, size: number): number => {
@@ -49,9 +73,9 @@ const getCharWidth = (font: string, size: number): number => {
   return floatWidth || possibleSize
 }
 
-export const setFont = ({ size, lineHeight, face = _font.face }: Font) => {
-  const fontSize = !size || isNaN(size) ? _font.size : size
-  const fontLineHeight = !lineHeight || isNaN(lineHeight) ? _font.lineHeight : lineHeight
+export const setFont = ({ size, lineHeight, face = font.face }: SetFontParams) => {
+  const fontSize = !size || isNaN(size) ? font.size : size
+  const fontLineHeight = !lineHeight || isNaN(lineHeight) ? font.lineHeight : lineHeight
 
   setVar('font', face)
   setVar('font-size', fontSize)
@@ -59,61 +83,44 @@ export const setFont = ({ size, lineHeight, face = _font.face }: Font) => {
 
   canvas.font = `${fontSize}px ${face}`
 
-  merge(_font, { size: fontSize, face, lineHeight: fontLineHeight })
-  merge(_cell, {
+  merge(font, { size: fontSize, face, lineHeight: fontLineHeight })
+  merge(cell, {
     width: getCharWidth(face, fontSize),
     height: Math.floor(fontSize * fontLineHeight)
   })
 
-  _cell.padding = Math.floor((_cell.height - _font.size) / 2)
+  pad.x = Math.round(cell.width / 2)
+  pad.y = pad.x + 4
 
-  watchers.notify('font', { ..._font })
-  watchers.notify('cell', { ..._cell })
+  cell.padding = Math.floor((cell.height - font.size) / 2)
+
+  watchers.notify('font', { ...font })
+  watchers.notify('cell', { ...cell })
 }
 
 export const resize = () => {
   const { width, height } = container.getBoundingClientRect()
-  merge(_size, {
+  merge(size, {
     height,
     width,
-    rows: Math.floor(height / _cell.height) - 1,
-    cols: Math.floor(width / _cell.width) - 2,
+    rows: Math.floor(height / cell.height) - 1,
+    cols: Math.floor(width / cell.width) - 2,
   })
 
-  watchers.notify('resize', _size)
+  watchers.notify('resize', size)
 }
 
 export const redoResize = (rows: number, cols: number) => {
-  merge(_size, { rows, cols })
-  watchers.notify('resize', _size)
+  merge(size, { rows, cols })
+  watchers.notify('resize', size)
 }
 
 export const on = (event: string, handler: (data: any) => void) => watchers.add(event, handler)
 
-export const size = {
-  get rows() { return _size.rows },
-  get cols() { return _size.cols },
-  get height() { return _size.height },
-  get width() { return _size.width },
-  get nameplateHeight() { return _cell.height + 4 },
-}
-
-export const cell = {
-  get height() { return _cell.height },
-  get width() { return _cell.width },
-  get padding() { return _cell.padding },
-}
-
-export const font = {
-  get face() { return _font.face },
-  get size() { return _font.size },
-  get lineHeight() { return _font.lineHeight },
-}
-
 setFont({})
 setImmediate(() => resize())
 
-window.addEventListener('resize', debounce(() => resize(), 150))
+window.addEventListener('resize', throttle(() => resize(), 150))
 window.matchMedia('screen and (min-resolution: 2dppx)').addListener(() => {
   resize()
   watchers.notify('device-pixel-ratio-changed')

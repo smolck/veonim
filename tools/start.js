@@ -1,7 +1,7 @@
 'use strict'
 
 const { $, go, run, fromRoot, createTask } = require('./runner')
-const { copy, codemod, paths } = require('./build')
+const { copy, unfuckTypescript } = require('./build')
 const fs = require('fs-extra')
 
 const devConfig = fromRoot('xdg_config')
@@ -10,6 +10,9 @@ go(async () => {
   $`local dev XDG_CONFIG_HOME dir: ${devConfig}`
   await fs.ensureDir(devConfig)
 
+  $`cleaning build folder`
+  await fs.emptyDir(fromRoot('build'))
+
   await Promise.all([
     copy.index(),
     copy.processExplorer(),
@@ -17,29 +20,26 @@ go(async () => {
     copy.runtime(),
   ])
 
-  const tsc = { main: createTask(), workers: createTask() }
+  const tsc = createTask()
 
   run('tsc -p tsconfig.json --watch --preserveWatchOutput', {
     outputMatch: 'compilation complete',
-    onOutputMatch: tsc.main.done,
+    onOutputMatch: async () => {
+      await unfuckTypescript()
+      copy.index()
+      copy.processExplorer()
+      tsc.done()
+    },
   })
 
-  run('tsc -p src/workers/tsconfig.json --watch --preserveWatchOutput', {
-    outputMatch: 'compilation complete',
-    onOutputMatch: () => codemod.workerExports().then(tsc.workers.done),
-  })
-
-  await Promise.all([ tsc.main.promise, tsc.workers.promise ])
+  await tsc.promise
 
   run('electron build/bootstrap/main.js', {
+    shh: true,
     env: {
       ...process.env,
       VEONIM_DEV: 42,
       XDG_CONFIG_HOME: devConfig,
     }
   })
-
-  $`watching index.html for changes...`
-  fs.watch(fromRoot(paths.index), copy.index)
-  fs.watch(fromRoot(paths.processExplorer), copy.processExplorer)
 })

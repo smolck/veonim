@@ -1,14 +1,13 @@
 'use strict'
 
 const { src } = require('./util')
-const msgpack = require('msgpack-lite')
 
 module.exports = () => {
   const { Neovim } = src('support/binaries')
   const { startupFuncs, startupCmds } = src('core/vim-startup')
-  const CreateTransport = src('messaging/transport').default
+  const Decoder = src('messaging/msgpack-decoder').default
+  const Encoder = src('messaging/msgpack-encoder').default
   const SetupRPC = src('messaging/rpc').default
-  let id = 1
 
   const proc = src('support/binaries').Neovim.run([
     '--cmd', `${startupFuncs()} | ${startupCmds}`,
@@ -22,7 +21,8 @@ module.exports = () => {
     VIMRUNTIME: Neovim.runtime,
   })
 
-  const { encoder, decoder } = CreateTransport()
+  const encoder = new Encoder()
+  const decoder = new Decoder()
   encoder.pipe(proc.stdin)
   proc.stdout.pipe(decoder)
   const { notify, request, onData } = SetupRPC(encoder.write)

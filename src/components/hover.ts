@@ -1,10 +1,11 @@
+import * as windows from '../windows/window-manager'
 import { ColorData } from '../services/colorizer'
-import { activeWindow } from '../core/windows'
 import { sub } from '../messaging/dispatch'
 import { debounce } from '../support/utils'
 import Overlay from '../components/overlay'
 import { docStyle } from '../ui/styles'
 import { cursor } from '../core/cursor'
+import api from '../core/instance-api'
 import { h, app } from '../ui/uikit'
 import { cvar } from '../ui/css'
 
@@ -16,8 +17,10 @@ interface ShowParams {
 const docs = (data: string) => h('div', { style: docStyle }, [ h('div', data) ])
 
 const getPosition = (row: number, col: number) => ({
-  x: activeWindow() ? activeWindow()!.colToX(col - 1) : 0,
-  y: activeWindow() ? activeWindow()!.rowToTransformY(row > 2 ? row : row + 1) : 0,
+  ...windows.pixelPosition(
+    row > 2 ? row : row + 1,
+    col - 1,
+  ),
   anchorBottom: cursor.row > 2,
 })
 
@@ -78,6 +81,9 @@ const view = ($: S) => Overlay({
 
 ])
 
-export const ui = app<S, A>({ name: 'hover', state, actions, view })
+const ui = app<S, A>({ name: 'hover', state, actions, view })
+
+api.ai.hover.onShow(ui.show)
+api.ai.hover.onHide(ui.hide)
 
 sub('redraw', debounce(ui.updatePosition, 50))

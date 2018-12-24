@@ -1,12 +1,12 @@
 import { RowNormal } from '../components/row-container'
 import { h, app, vimBlur, vimFocus } from '../ui/uikit'
-import { activeWindow } from '../core/windows'
+import * as windows from '../windows/window-manager'
 import Input from '../components/text-input'
 import Overlay from '../components/overlay'
 import { filter } from 'fuzzaldrin-plus'
 import * as Icon from 'hyperapp-feather'
 import { cursor } from '../core/cursor'
-import nvim from '../core/neovim'
+import api from '../core/instance-api'
 import { cvar } from '../ui/css'
 
 const state = {
@@ -28,7 +28,7 @@ const actions = {
     vimFocus()
     if (!s.items.length) return { value: '', visible: false, index: 0 }
     const item = s.items[s.index]
-    if (item) nvim.call.VeonimCallback(s.id, item)
+    if (item) api.nvim.call.VeonimCallback(s.id, item)
     return { value: '', visible: false, index: 0 }
   },
 
@@ -86,10 +86,8 @@ const view = ($: S, a: typeof actions) => Overlay({
 
 const ui = app({ name: 'user-overlay-menu', state, actions, view })
 
-nvim.onAction('user-overlay-menu', (id: number, desc: string, items = []) => {
+api.onAction('user-overlay-menu', (id: number, desc: string, items = []) => {
   if (!items.length) return
-  const x = activeWindow() ? activeWindow()!.colToX(cursor.col) : 0
-  // TODO: anchorBottom maybe?
-  const y = activeWindow() ? activeWindow()!.rowToTransformY(cursor.row + 1) : 0
+  const { x, y } = windows.pixelPosition(cursor.col, cursor.row + 1)
   ui.show({ x, y, id, items, desc })
 })

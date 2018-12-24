@@ -14,6 +14,15 @@ export enum VimMode {
   SomeModeThatIProbablyDontCareAbout,
 }
 
+export interface BufferInfo {
+  dir: string
+  name: string
+  base: string
+  terminal: boolean
+  modified: boolean
+  duplicate: boolean
+}
+
 export enum BufferType {
   Normal = '',
   Help = 'help',

@@ -1,9 +1,10 @@
-import { exists, getDirs, is, remove as removePath } from '../support/utils'
-import { load as loadExtensions } from '../core/extensions'
+import { exists, getDirs, is, remove as removePath, configPath } from '../support/utils'
+import { load as loadExtensions } from '../core/extensions-api'
 import { NotifyKind, notify } from '../ui/notifications'
-import { EXT_PATH } from '../config/default-configs'
 import { url, download } from '../support/download'
 import { join } from 'path'
+
+const EXT_PATH = join(configPath, 'veonim', 'extensions')
 
 interface Extension {
   name: string,
