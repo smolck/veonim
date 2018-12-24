@@ -1,4 +1,4 @@
-import { exists, getDirs, is, configPath } from '../support/utils'
+import { exists, getDirs, configPath } from '../support/utils'
 import { url, download } from '../support/download'
 import { call } from '../messaging/worker-client'
 import { NotifyKind } from '../protocols/veonim'
@@ -20,10 +20,7 @@ const splitUserRepo = (text: string) => {
   return { user, repo }
 }
 
-const getPlugins = async (configLines: string[]) => Promise.all(configLines
-  .filter(line => /^Plug(\s*)/.test(line))
-  .map(line => (line.match(/^Plug(\s*)(?:"|')(\S+)(?:"|')/) || [])[2])
-  .filter(is.string)
+const getPlugins = async (texts: string[]) => Promise.all(texts
   .map(splitUserRepo)
   .map(async m => {
     const name = `${m.user}-${m.repo}`
@@ -46,9 +43,8 @@ const removeExtraneous = async (plugins: Plugin[]) => {
   // toRemove.forEach(dir => removePath(dir.path))
 }
 
-export default async (configLines: string[]) => {
-  const plugins = await getPlugins(configLines).catch()
-  console.log('plugins', plugins)
+export default async (pluginText: string[]) => {
+  const plugins = await getPlugins(pluginText).catch()
   const pluginsNotInstalled = plugins.filter(plug => !plug.installed)
   if (!pluginsNotInstalled.length) return removeExtraneous(plugins)
 

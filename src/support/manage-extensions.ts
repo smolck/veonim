@@ -1,4 +1,4 @@
-import { exists, getDirs, is, remove as removePath, configPath } from '../support/utils'
+import { exists, getDirs, remove as removePath, configPath } from '../support/utils'
 import { load as loadExtensions } from '../core/extensions-api'
 import { url, download } from '../support/download'
 import { call } from '../messaging/worker-client'
@@ -28,10 +28,7 @@ const parseExtensionDefinition = (text: string) => {
   return { user, repo, kind: isVscodeExt ? ExtensionKind.VSCode : ExtensionKind.Github }
 }
 
-const getExtensions = async (configLines: string[]) => Promise.all(configLines
-  .filter(line => /^VeonimExt(\s*)/.test(line))
-  .map(line => (line.match(/^VeonimExt(\s*)(?:"|')(\S+)(?:"|')/) || [])[2])
-  .filter(is.string)
+const getExtensions = async (texts: string[]) => Promise.all(texts
   .map(parseExtensionDefinition)
   .map(async m => {
     const name = `${m.user}--${m.repo}`
@@ -51,8 +48,8 @@ const removeExtraneous = async (extensions: Extension[]) => {
   toRemove.forEach(dir => removePath(dir.path))
 }
 
-export default async (configLines: string[]) => {
-  const extensions = await getExtensions(configLines).catch()
+export default async (extText: string[]) => {
+  const extensions = await getExtensions(extText).catch()
   const extensionsNotInstalled = extensions.filter(ext => !ext.installed)
   if (!extensionsNotInstalled.length) return removeExtraneous(extensions)
 
