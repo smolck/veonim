@@ -1,7 +1,8 @@
 import userSelectOption from '../components/generic-menu'
-import { notify, NotifyKind } from '../ui/notifications'
 import userPrompt from '../components/generic-prompt'
 import * as storage from '../support/local-storage'
+import { NotifyKind } from '../protocols/veonim'
+import { notify } from '../ui/notifications'
 import { makel } from '../ui/vanilla'
 import nvim from '../neovim/api'
 

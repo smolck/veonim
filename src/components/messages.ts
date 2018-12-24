@@ -1,4 +1,4 @@
-import { NotifyKind, Notification } from '../ui/notifications'
+import { NotifyKind, Notification } from '../protocols/veonim'
 import { RowNormal } from '../components/row-container'
 import { h, app, vimBlur, vimFocus } from '../ui/uikit'
 import Input from '../components/text-input'

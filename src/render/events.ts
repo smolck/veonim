@@ -1,9 +1,10 @@
 import { CursorShape, setCursorColor, setCursorShape } from '../core/cursor'
 import { getBackground } from '../render/highlight-attributes'
 import { normalizeVimMode } from '../support/neovim-utils'
-import { notify, NotifyKind } from '../ui/notifications'
 import * as dispatch from '../messaging/dispatch'
+import { NotifyKind } from '../protocols/veonim'
 import * as workspace from '../core/workspace'
+import { notify } from '../ui/notifications'
 import api from '../core/instance-api'
 
 interface Mode {

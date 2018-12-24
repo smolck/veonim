@@ -1,32 +1,12 @@
+import { NotifyKind, Notification, FlexibleExpire } from '../protocols/veonim'
 import { PluginTop } from '../components/plugin-container'
 import { merge, uuid, debounce } from '../support/utils'
 import { addMessage } from '../components/messages'
 import { colors, badgeStyle } from '../ui/styles'
+import * as dispatch from '../messaging/dispatch'
 import { animate, cvar } from '../ui/css'
 import * as Icon from 'hyperapp-feather'
 import { h, app } from '../ui/uikit'
-
-export enum NotifyKind {
-  Error = 'error',
-  Warning = 'warning',
-  Info = 'info',
-  Success = 'success',
-  System = 'system',
-  Hidden = 'hidden',
-}
-
-interface FlexibleExpire {
-  refresh(): void
-}
-
-export interface Notification {
-  id: string,
-  kind: NotifyKind,
-  message: string,
-  count: number,
-  expire?: FlexibleExpire,
-  time: number,
-}
 
 const state = {
   notifications: [] as Notification[],
@@ -156,3 +136,5 @@ export const notify = (message: string, kind = NotifyKind.Info) => {
     else console.log('@VIM@', msg.message)
   }
 }
+
+dispatch.sub('notify', ({ msg, kind }: any) => notify(msg, kind))

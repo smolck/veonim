@@ -13,11 +13,6 @@ import '../render/redraw'
 
 // TODO: load dependency manager (in a thread)
 // TODO: rewrite dependency manager to extract plugins/extensions from vimscript
-// TODO: only remove extensions installed by veonim (track them in localStorage?)
-// TODO: user-menu and user-overlay-menu not calling user callbacks!
-// TODO: check nvim services instances to make sure they are starting up correctly
-// TODO: hide black canvas while webgl is init
-// TODO: need to show where code actions are available
 // TODO: webgl line width
 // TODO: investigate no texture on unit0. im guessing the texture atlas are not
 // ready on load?
@@ -40,7 +35,5 @@ requestAnimationFrame(() => {
   setTimeout(() => {
     require('../services/remote')
     requireDir(`${__dirname}/../components`)
-    //   TODO: load dependency-manager from a worker
-    //   setTimeout(() => require('../support/dependency-manager').default(), 100)
   }, 199)
 })

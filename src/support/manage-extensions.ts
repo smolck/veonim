@@ -1,7 +1,8 @@
 import { exists, getDirs, is, remove as removePath, configPath } from '../support/utils'
 import { load as loadExtensions } from '../core/extensions-api'
-import { NotifyKind, notify } from '../ui/notifications'
 import { url, download } from '../support/download'
+import { call } from '../messaging/worker-client'
+import { NotifyKind } from '../protocols/veonim'
 import { join } from 'path'
 
 const EXT_PATH = join(configPath, 'veonim', 'extensions')
@@ -55,7 +56,7 @@ export default async (configLines: string[]) => {
   const extensionsNotInstalled = extensions.filter(ext => !ext.installed)
   if (!extensionsNotInstalled.length) return removeExtraneous(extensions)
 
-  notify(`Found ${extensionsNotInstalled.length} extensions. Installing...`, NotifyKind.System)
+  call.notify(`Found ${extensionsNotInstalled.length} extensions. Installing...`, NotifyKind.System)
 
   const installed = await Promise.all(extensions.map(e => {
     const isVscodeExt = e.kind === ExtensionKind.VSCode
@@ -68,8 +69,8 @@ export default async (configLines: string[]) => {
   const installedOk = installed.filter(m => m).length
   const installedFail = installed.filter(m => !m).length
 
-  if (installedOk) notify(`Installed ${installedOk} extensions!`, NotifyKind.Success)
-  if (installedFail) notify(`Failed to install ${installedFail} extensions. See devtools console for more info.`, NotifyKind.Error)
+  if (installedOk) call.notify(`Installed ${installedOk} extensions!`, NotifyKind.Success)
+  if (installedFail) call.notify(`Failed to install ${installedFail} extensions. See devtools console for more info.`, NotifyKind.Error)
 
   removeExtraneous(extensions)
   loadExtensions()

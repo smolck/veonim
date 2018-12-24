@@ -5,6 +5,8 @@ import { colors } from '../render/highlight-attributes'
 import { onFnCall, pascalCase } from '../support/utils'
 import { Functions } from '../neovim/function-types'
 import { WindowMetadata } from '../windows/metadata'
+import * as dispatch from '../messaging/dispatch'
+import { NotifyKind } from '../protocols/veonim'
 import { Symbol } from '../langserv/adapter'
 import { GitStatus } from '../support/git'
 import NeovimState from '../neovim/state'
@@ -26,6 +28,7 @@ onCreateVim(info => {
     Object.assign(state, stateDiff)
   })
 
+  instance.on.notify((msg: string, kind: NotifyKind) => isActive() && dispatch.pub('notify', { msg, kind }))
   instance.on.vimrcLoaded(() => isActive() && ee.emit('nvim.load', false))
   instance.on.gitStatus((status: GitStatus) => isActive() && ee.emit('git.status', status))
   instance.on.gitBranch((branch: string) => isActive() && ee.emit('git.branch', branch))
