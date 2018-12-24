@@ -11,6 +11,9 @@ import * as workspace from '../core/workspace'
 import { requireDir } from '../support/utils'
 import '../render/redraw'
 
+// TODO: load dependency manager (in a thread)
+// TODO: rewrite dependency manager to extract plugins/extensions from vimscript
+// TODO: only remove extensions installed by veonim (track them in localStorage?)
 // TODO: user-menu and user-overlay-menu not calling user callbacks!
 // TODO: check nvim services instances to make sure they are starting up correctly
 // TODO: hide black canvas while webgl is init

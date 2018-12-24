@@ -1,5 +1,5 @@
 import { exists, getDirs, is, remove as removePath, configPath } from '../support/utils'
-import { load as loadExtensions } from '../core/extensions'
+import { load as loadExtensions } from '../core/extensions-api'
 import { NotifyKind, notify } from '../ui/notifications'
 import { url, download } from '../support/download'
 import { join } from 'path'
