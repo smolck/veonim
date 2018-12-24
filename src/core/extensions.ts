@@ -31,7 +31,7 @@ export interface DebugStarterPack {
   launchConfig: DebugConfiguration
 }
 
-const { on, call, request } = Worker('extension-host', workerData)
+const { on, call, request } = Worker('extension-host', { workerData })
 
 const bridgeServer = (serverId: string): RPCServer => {
   const api = {} as RPCServer

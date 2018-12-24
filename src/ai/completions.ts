@@ -33,7 +33,7 @@ export interface CompletionOption {
 }
 
 // TODO: do we really want to connect another nvim instance in the worker?
-const harvester = Worker('harvester', workerData)
+const harvester = Worker('harvester', { workerData })
 const MAX_SEARCH_RESULTS = 50
 const cache: Cache = {
   semanticCompletions: new Map(),

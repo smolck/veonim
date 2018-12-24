@@ -17,8 +17,8 @@ interface NvimInfo {
   path: string
 }
 
-const watchers = new EventEmitter()
-watchers.setMaxListeners(200)
+const ee = new EventEmitter()
+ee.setMaxListeners(200)
 const vims = new Map<number, Nvim>()
 let currentVimID = -1
 
@@ -31,14 +31,16 @@ export const getActiveInstance = () => {
 export const createVim = async (name: string, dir?: string) => {
   const { id, path } = await create({ dir })
   const lastId = currentVimID
-  const instance = Worker('instance', { id, nvimPath: path })
+  const instance = Worker('instance', {
+    workerData: { id, nvimPath: path },
+  })
   currentVimID = id
   vims.forEach(v => v.active = false)
   vims.set(id, { id, path, name, instance, active: true, nameFollowsCwd: !!dir })
-  watchers.emit('create', { id, path })
+  ee.emit('create', { id, path })
   attachTo(id)
   switchTo(id)
-  watchers.emit('switch', id, lastId)
+  ee.emit('switch', id, lastId)
 }
 
 export const switchVim = async (id: number) => {
@@ -50,7 +52,7 @@ export const switchVim = async (id: number) => {
     v.active = v.id === id
     v.instance.call.instanceActiveStatus(v.id === id)
   })
-  watchers.emit('switch', id, lastId)
+  ee.emit('switch', id, lastId)
 }
 
 const renameVim = (id: number, newName: string) => {
@@ -84,12 +86,12 @@ export const instances = {
 }
 
 export const onCreateVim = (fn: (info: NvimInfo) => void) => {
-  watchers.on('create', (info: NvimInfo) => fn(info))
+  ee.on('create', (info: NvimInfo) => fn(info))
   ;[...vims.entries()].forEach(([ id, vim ]) => fn({ id, path: vim.path }))
 }
 
 export const onSwitchVim = (fn: (id: number, lastId: number) => void) => {
-  watchers.on('switch', (id, lastId) => fn(id, lastId))
+  ee.on('switch', (id, lastId) => fn(id, lastId))
 }
 
 // because of circular dependency chain. master-control exports onExit.

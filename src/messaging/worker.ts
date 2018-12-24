@@ -1,24 +1,44 @@
-import { onFnCall, proxyFn, Watchers, uuid, CreateTask } from '../support/utils'
+import { onFnCall, proxyFn, uuid, CreateTask } from '../support/utils'
+import { EventEmitter } from 'events'
 import { join } from 'path'
 
 type EventFn = { [index: string]: (...args: any[]) => void }
 type RequestEventFn = { [index: string]: (...args: any[]) => Promise<any> }
 
-export default (name: string, workerData = {}) => {
+interface WorkerOptions {
+  workerData?: any
+  sharedMemorySize?: number
+}
+
+export default (name: string, opts = {} as WorkerOptions) => {
   const modulePath = join(__dirname, '..', 'workers', `${name}.js`)
 
   const loaderScript = `
-    global.workerData = JSON.parse('${JSON.stringify(workerData)}')
+    global.workerData = JSON.parse('${JSON.stringify(opts.workerData || {})}')
     require('${modulePath}')
   `
 
   const scriptBlobbyBluberBlob = new Blob([ loaderScript ], { type: 'application/javascript' })
   const worker = new Worker(URL.createObjectURL(scriptBlobbyBluberBlob))
-  const watchers = new Watchers()
+  const ee = new EventEmitter()
   const pendingRequests = new Map()
+  const sharedBuffer = new SharedArrayBuffer(opts.sharedMemorySize || 4)
+  const sharedArray = new Int32Array(sharedBuffer)
+
+  // @ts-ignore - Atomics typings are wrong
+  const wakeThread = () => Atomics.notify(sharedArray, 0)
+
+  const writeSharedArray = (data: any) => {
+    const jsonString = JSON.stringify(data)
+    const buffer = Buffer.from(jsonString)
+    const length = buffer.byteLength
+    Atomics.store(sharedArray, 0, length)
+    for (let ix = 0; ix < length; ix++) Atomics.store(sharedArray, ix + 1, buffer[ix])
+    wakeThread()
+  }
 
   const call: EventFn = onFnCall((event: string, args: any[]) => worker.postMessage([event, args]))
-  const on = proxyFn((event: string, cb: (data: any) => void) => watchers.add(event, cb))
+  const on = proxyFn((event: string, cb: (data: any) => void) => ee.on(event, cb))
   const request: RequestEventFn = onFnCall((event: string, args: any[]) => {
     const task = CreateTask()
     const id = uuid()
@@ -27,8 +47,16 @@ export default (name: string, workerData = {}) => {
     return task.promise
   })
 
-  worker.onmessage = ({ data: [e, data = [], id] }: MessageEvent) => {
-    if (!id) return watchers.notify(e, ...data)
+  worker.onmessage = async ({ data: [e, data = [], id, requestSync] }: MessageEvent) => {
+    if (requestSync) {
+      const listener = ee.listeners(e)[0]
+      if (!listener) return wakeThread()
+      const result = listener(...data)
+      if (!result) return wakeThread()
+      return writeSharedArray(result)
+    }
+
+    if (!id) return ee.emit(e, ...data)
 
     if (pendingRequests.has(id)) {
       pendingRequests.get(id)(data)
@@ -36,13 +64,13 @@ export default (name: string, workerData = {}) => {
       return
     }
 
-    watchers.notifyFn(e, cb => {
-      const resultOrPromise = cb(...data)
-      if (!resultOrPromise) return
-      if (resultOrPromise.then) resultOrPromise.then((res: any) => worker.postMessage([e, res, id]))
-      else worker.postMessage([e, resultOrPromise, id])
-    })
+    const listener = ee.listeners(e)[0]
+    if (!listener) return
+    const result = await listener(...data)
+    worker.postMessage([e, result, id])
   }
+
+  worker.postMessage(['@@sab', [ sharedBuffer ]])
 
   return { on, call, request }
 }
