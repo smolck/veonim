@@ -417,6 +417,10 @@ const Buffer = (id: any) => ({
   get name() { return req.buf.getName(id) },
   get length() { return req.buf.lineCount(id) },
   get changedtick() { return req.buf.getChangedtick(id) },
+  write: async () => {
+    const res = await req.core.commandOutput(`${id}bufdo write`).catch(() => false)
+    return !!res
+  },
   attach: ({ sendInitialBuffer }, cb) => {
     watchers.bufferEvents.on(`change:${id}`, cb)
     req.buf.attach(id, sendInitialBuffer, {}).then(attached => {

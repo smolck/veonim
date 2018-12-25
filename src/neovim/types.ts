@@ -134,6 +134,7 @@ export interface Buffer {
   name: Promise<string>
   length: Promise<number>
   changedtick: Promise<number>
+  write(): Promise<boolean>
   attach(options: { sendInitialBuffer: boolean }, onEventFn: (event: BufferChangeEvent) => void): void
   detach(): void
   onDetach(onDetachFn: () => void): void
