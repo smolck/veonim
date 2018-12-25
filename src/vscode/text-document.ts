@@ -1,7 +1,7 @@
 import filetypeToVSCLanguage from '../langserv/vsc-languages'
 import nvimSync from '../neovim/sync-api-client'
 import { BufferOption } from '../neovim/types'
-// import nvim from '../neovim/api'
+import { is } from '../support/utils'
 import * as vsc from 'vscode'
 
 export default (bufid: number): vsc.TextDocument => ({
@@ -35,5 +35,28 @@ export default (bufid: number): vsc.TextDocument => ({
     return !!nvimSync<any>(async (nvim, id) => {
       return nvim.fromId.buffer(id).getOption(BufferOption.Modified)
     }).withArgs(bufid)
+  },
+  get isClosed() {
+    // TODO: i'm not sure what the vimscript complement of `nvim_buf_detach_event` is. help?
+    return !!nvimSync<any>(async (nvim, id) => {
+      return nvim.fromId.buffer(id).getOption(BufferOption.Listed)
+    }).withArgs(bufid)
+  },
+  get lineCount() {
+    return nvimSync<number>(async (nvim, id) => {
+      return nvim.fromId.buffer(id).length
+    }).withArgs(bufid)
+  },
+  lineAt: (lineOrPosition: number | vsc.Position) => {
+    const line = is.number(lineOrPosition)
+      ? lineOrPosition as number
+      : (lineOrPosition as vsc.Position).line
+
+    const lineData = nvimSync<string>(async (nvim, id, line) => {
+      return nvim.fromId.buffer(id).getLine(line)
+    }).withArgs(bufid, line)
+
+    // TODO: return TextLine object
+    return lineData
   },
 })
