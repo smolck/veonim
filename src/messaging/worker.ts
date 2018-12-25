@@ -4,6 +4,7 @@ import { join } from 'path'
 
 type EventFn = { [index: string]: (...args: any[]) => void }
 type RequestEventFn = { [index: string]: (...args: any[]) => Promise<any> }
+type OnContextHandler = (fn: (func: string, args: any[]) => any) => void
 
 interface WorkerOptions {
   workerData?: any
@@ -47,11 +48,21 @@ export default (name: string, opts = {} as WorkerOptions) => {
     return task.promise
   })
 
-  worker.onmessage = async ({ data: [e, data = [], id, requestSync] }: MessageEvent) => {
+  const onContextHandler: OnContextHandler = fn => ee.on('context-handler', fn)
+
+  worker.onmessage = async ({ data: [e, data = [], id, requestSync, func] }: MessageEvent) => {
+    if (e === '@@request-sync-context') {
+      const listener = ee.listeners('context-handler')[0]
+      if (!listener) return wakeThread()
+      const result = await listener(func, data)
+      if (!result) return wakeThread()
+      return writeSharedArray(result)
+    }
+
     if (requestSync) {
       const listener = ee.listeners(e)[0]
       if (!listener) return wakeThread()
-      const result = listener(...data)
+      const result = await listener(...data)
       if (!result) return wakeThread()
       return writeSharedArray(result)
     }
@@ -72,5 +83,5 @@ export default (name: string, opts = {} as WorkerOptions) => {
 
   worker.postMessage(['@@sab', [ sharedBuffer ]])
 
-  return { on, call, request }
+  return { on, call, request, onContextHandler }
 }

@@ -38,6 +38,12 @@ onmessage = async ({ data: [e, data = [], id] }: MessageEvent) => {
   send([e, result, id])
 }
 
+export const requestSyncWithContext = (func: string, args: any[]) => {
+  send(['@@request-sync-context', args, 0, true, func])
+  Atomics.wait(sharedArray, 0, 0)
+  return readSharedArray()
+}
+
 export const requestSync = onFnCall((event: string, args: any[]) => {
   send([event, args, 0, true])
   Atomics.wait(sharedArray, 0, 0)

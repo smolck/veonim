@@ -401,6 +401,12 @@ autocmd.WinEnter((id: number) => watchers.events.emit('winEnter', id))
 
 const onVimrcLoad = (fn: (file: string) => void) => watchers.events.on('vimrcLoad', fn)
 
+const fromId = {
+  buffer: (id: number): Buffer => Buffer(id),
+  window: (id: number): Window => Window(id),
+  tabpage: (id: number): Tabpage => Tabpage(id),
+}
+
 const HL_CLR = 'nvim_buf_clear_highlight'
 const HL_ADD = 'nvim_buf_add_highlight'
 
@@ -506,7 +512,7 @@ const exportAPI = { state, watchState, onStateChange, onStateValue,
   untilStateValue, cmd, cmdOut, expr, call, feedkeys, normal, callAtomic,
   onAction, getCurrentLine, jumpTo, jumpToProjectFile, systemAction, current,
   g, on, untilEvent, applyPatches, buffers, windows, tabs, options:
-  readonlyOptions, onVimrcLoad }
+  readonlyOptions, onVimrcLoad, fromId }
 
 export default exportAPI
 export type NeovimAPI = typeof exportAPI

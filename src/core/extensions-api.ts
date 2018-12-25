@@ -1,6 +1,7 @@
 import { DebugAdapterConnection } from '../messaging/debug-protocol'
 import { traceLANGSERV as log } from '../support/trace'
 import { workerData } from '../messaging/worker-client'
+import nvimSyncApiHandler from '../neovim/sync-api'
 import Worker from '../messaging/worker'
 
 // TODO: move to shared place
@@ -31,7 +32,12 @@ export interface DebugStarterPack {
   launchConfig: DebugConfiguration
 }
 
-const { on, call, request } = Worker('extension-host', { workerData })
+const { on, call, request, onContextHandler } = Worker('extension-host', {
+  workerData,
+  sharedMemorySize: (1024**2) * 4,
+})
+
+onContextHandler(nvimSyncApiHandler)
 
 const bridgeServer = (serverId: string): RPCServer => {
   const api = {} as RPCServer
