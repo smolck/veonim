@@ -518,7 +518,8 @@ const exportAPI = { state, watchState, onStateChange, onStateValue,
   untilStateValue, cmd, cmdOut, expr, call, feedkeys, normal, callAtomic,
   onAction, getCurrentLine, jumpTo, jumpToProjectFile, systemAction, current,
   g, on, untilEvent, applyPatches, buffers, windows, tabs, options:
-  readonlyOptions, onVimrcLoad, fromId }
+  readonlyOptions, onVimrcLoad, Buffer: fromId.buffer, Window: fromId.window,
+  Tabpage: fromId.tabpage }
 
 export default exportAPI
 export type NeovimAPI = typeof exportAPI
