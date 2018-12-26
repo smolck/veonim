@@ -1,8 +1,8 @@
 import filetypeToVSCLanguage from '../langserv/vsc-languages'
+import { Position, Range } from '../vscode/types'
 import nvimSync from '../neovim/sync-api-client'
 import { BufferOption } from '../neovim/types'
 import TextLine from '../vscode/text-line'
-import { Position } from '../vscode/types'
 import { is } from '../support/utils'
 import { URI } from '../vscode/uri'
 import nvim from '../neovim/api'
@@ -119,5 +119,32 @@ export default (bufid: number): vsc.TextDocument => ({
     ]
 
     return selection.join('\n')
+  },
+  getWordRangeAtPosition: (position, regex) => {
+    // TODO: NYI
+    console.warn('NYI: getWordRangeAtPosition', position, regex)
+  },
+  // assumes given range starts a line:0, character: 0
+  validateRange: range => {
+    const lineText = nvimSync((nvim, id, line) => {
+      return nvim.Buffer(id).getLine(line)
+    }).withArgs(bufid, range.end.line)
+
+    if (!lineText) {
+      const lineCount = nvimSync((nvim, id) => nvim.Buffer(id).length).withArgs(bufid)
+      const lastLine = nvimSync((nvim, id, line) => nvim.Buffer(id).getLine(line)).withArgs(bufid)
+
+      return new Range(
+        new Position(range.start.line, range.start.character),
+        new Position(lineCount, lastLine.length)
+      )
+    }
+
+    if (lineText.length > range.end.character) return range
+
+    return new Range(
+      new Position(range.start.line, range.start.character),
+      new Position(range.end.line, lineText.length),
+    )
   },
 })
