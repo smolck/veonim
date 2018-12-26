@@ -5,8 +5,21 @@ import { is } from '../support/utils'
 import nvim from '../neovim/api'
 import * as vsc from 'vscode'
 
+// TODO:
+// - requestSync with func context works
+// - nvim write with bufdo works
+// - create TextLine obj
+// - create Uri obj
+// - write tests
+
 export default (bufid: number): vsc.TextDocument => ({
-  isUntitled: false,
+  get isUntitled() {
+    const name = nvimSync<string>(async (nvim, id) => {
+      return nvim.fromId.buffer(id).name
+    }).withArgs(bufid)
+
+    return !name
+  },
   get uri() {
     const name = nvimSync<string>(async (nvim, id) => {
       return nvim.fromId.buffer(id).name
