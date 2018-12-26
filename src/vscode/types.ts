@@ -12,8 +12,8 @@ import { isMarkdownString } from '../vscode/html-content'
 import { IRelativePattern } from '../vscode/glob'
 import { relative } from 'path'
 import { startsWith } from '../vscode/strings'
-import { values } from 'vs/base/common/map'
-import { coalesce, equals } from 'vs/base/common/arrays'
+import { values } from '../vscode/map'
+import { coalesce, equals } from '../vscode/arrays'
 import { generateUuid } from 'vs/base/common/uuid'
 
 export class Disposable {
