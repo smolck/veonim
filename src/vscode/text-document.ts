@@ -1,15 +1,15 @@
 import filetypeToVSCLanguage from '../langserv/vsc-languages'
 import nvimSync from '../neovim/sync-api-client'
 import { BufferOption } from '../neovim/types'
+import TextLine from '../vscode/text-line'
 import { is } from '../support/utils'
+import { URI } from '../vscode/uri'
 import nvim from '../neovim/api'
 import * as vsc from 'vscode'
 
 // TODO:
 // - requestSync with func context works
 // - nvim write with bufdo works
-// - create TextLine obj
-// - create Uri obj
 // - write tests
 
 export default (bufid: number): vsc.TextDocument => ({
@@ -25,8 +25,7 @@ export default (bufid: number): vsc.TextDocument => ({
       return nvim.fromId.buffer(id).name
     }).withArgs(bufid)
 
-    // TODO: need that fancy Uri object here
-    return `file://${name}`
+    return URI.file(name)
   },
   get fileName() {
     return nvimSync<string>(async (nvim, id) => {
@@ -71,7 +70,6 @@ export default (bufid: number): vsc.TextDocument => ({
       return nvim.fromId.buffer(id).getLine(line)
     }).withArgs(bufid, line)
 
-    // TODO: return TextLine object
-    return lineData
+    return TextLine(line, lineData)
   },
 })
