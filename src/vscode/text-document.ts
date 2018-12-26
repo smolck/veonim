@@ -123,11 +123,11 @@ export default (bufid: number): vsc.TextDocument => ({
   },
   // assumes given range starts a line:0, character: 0
   validateRange: range => {
-    const lineText = nvimSync((nvim, id, line) => {
+    const lastLineText = nvimSync((nvim, id, line) => {
       return nvim.Buffer(id).getLine(line)
     }).withArgs(bufid, range.end.line)
 
-    if (!lineText) {
+    if (!lastLineText) {
       const lineCount = nvimSync((nvim, id) => nvim.Buffer(id).length).withArgs(bufid)
       const lastLine = nvimSync((nvim, id, line) => nvim.Buffer(id).getLine(line)).withArgs(bufid)
 
@@ -137,11 +137,26 @@ export default (bufid: number): vsc.TextDocument => ({
       )
     }
 
-    if (lineText.length > range.end.character) return range
+    if (lastLineText.length > range.end.character) return range
 
     return new Range(
       new Position(range.start.line, range.start.character),
-      new Position(range.end.line, lineText.length),
+      new Position(range.end.line, lastLineText.length),
     )
+  },
+  validatePosition: position => {
+    const lastLineText = nvimSync((nvim, id, line) => {
+      return nvim.Buffer(id).getLine(line)
+    }).withArgs(bufid, position.line)
+
+    if (!lastLineText) {
+      const lineCount = nvimSync((nvim, id) => nvim.Buffer(id).length).withArgs(bufid)
+      const lastLine = nvimSync((nvim, id, line) => nvim.Buffer(id).getLine(line)).withArgs(bufid)
+      return new Position(lineCount, lastLine.length)
+    }
+
+    if (lastLineText.length > position.character) return position
+
+    return new Position(position.line, lastLineText.length)
   },
 })
