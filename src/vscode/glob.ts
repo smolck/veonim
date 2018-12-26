@@ -9,7 +9,7 @@ import * as strings from '../vscode/strings'
 import * as paths from '../vscode/paths'
 import { LRUCache } from '../vscode/map'
 import { CharCode } from '../vscode/char-code'
-import { isThenable } from 'vs/base/common/async'
+import { isThenable } from '../vscode/async'
 
 export interface IExpression {
 	[pattern: string]: boolean | SiblingClause | any;

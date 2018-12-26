@@ -4,7 +4,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { equals } from 'vs/base/common/arrays'
+import { equals } from '../vscode/arrays'
 import { UriComponents } from '../vscode/uri'
 
 export interface IMarkdownString {

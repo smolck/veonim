@@ -14,7 +14,7 @@ import { relative } from 'path'
 import { startsWith } from '../vscode/strings'
 import { values } from '../vscode/map'
 import { coalesce, equals } from '../vscode/arrays'
-import { generateUuid } from 'vs/base/common/uuid'
+import { uuid as generateUuid } from '../support/utils'
 
 export class Disposable {
 
