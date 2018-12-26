@@ -2,6 +2,7 @@ import filetypeToVSCLanguage from '../langserv/vsc-languages'
 import nvimSync from '../neovim/sync-api-client'
 import { BufferOption } from '../neovim/types'
 import TextLine from '../vscode/text-line'
+import { Position } from '../vscode/types'
 import { is } from '../support/utils'
 import { URI } from '../vscode/uri'
 import nvim from '../neovim/api'
@@ -60,6 +61,15 @@ export default (bufid: number): vsc.TextDocument => ({
       return nvim.fromId.buffer(id).length
     }).withArgs(bufid)
   },
+  get eol() {
+    const eol = nvimSync<string>(async (nvim, id) => {
+      return nvim.fromId.buffer(id).getOption(BufferOption.FileFormat)
+    }).withArgs(bufid)
+
+    return eol === 'dos'
+      ? vsc.EndOfLine.CRLF
+      : vsc.EndOfLine.LF
+  },
   save: () => nvim.fromId.buffer(bufid).write(),
   lineAt: (lineOrPosition: number | vsc.Position) => {
     const line = is.number(lineOrPosition)
@@ -72,4 +82,24 @@ export default (bufid: number): vsc.TextDocument => ({
 
     return TextLine(line, lineData)
   },
+  offsetAt: position => {
+    const lineByteCount = nvimSync<number>(async (nvim, id, line) => {
+      return nvim.fromId.buffer(id).bufdo(`call line2byte(${line})`)
+    }).withArgs(bufid, position.line)
+
+    return lineByteCount + position.character - 1
+  },
+  positionAt: offset => {
+    const lineNumber = nvimSync<number>(async (nvim, id, offset) => {
+      return nvim.fromId.buffer(id).bufdo(`call byte2line(${offset})`)
+    }).withArgs(bufid, offset)
+
+    const lineByteCount = nvimSync<number>(async (nvim, id, line) => {
+      return nvim.fromId.buffer(id).bufdo(`call line2byte(${line})`)
+    }).withArgs(bufid, lineNumber)
+
+    const column = offset - lineByteCount
+
+    return new Position(lineNumber, column)
+  }
 })
