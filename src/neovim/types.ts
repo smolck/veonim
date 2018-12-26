@@ -34,6 +34,7 @@ export enum BufferType {
 }
 
 export enum BufferOption {
+  FileFormat = 'fileformat',
   Modifiable = 'modifiable',
   Listed = 'buflisted',
   Modified = 'modified',
@@ -134,6 +135,7 @@ export interface Buffer {
   name: Promise<string>
   length: Promise<number>
   changedtick: Promise<number>
+  bufdo(command: string): Promise<any>
   write(): Promise<boolean>
   attach(options: { sendInitialBuffer: boolean }, onEventFn: (event: BufferChangeEvent) => void): void
   detach(): void
