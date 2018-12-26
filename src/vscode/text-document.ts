@@ -51,10 +51,7 @@ export default (bufid: number): vsc.TextDocument => ({
     }).withArgs(bufid)
   },
   get isClosed() {
-    // TODO: i'm not sure what the vimscript complement of `nvim_buf_detach_event` is. help?
-    return !!nvimSync((nvim, id) => {
-      return nvim.Buffer(id).getOption(BufferOption.Listed)
-    }).withArgs(bufid)
+    return !nvimSync((nvim, id) => nvim.Buffer(id).isLoaded()).withArgs(bufid)
   },
   get lineCount() {
     return nvimSync((nvim, id) => {
