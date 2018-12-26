@@ -4,9 +4,9 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as arrays from 'vs/base/common/arrays'
+import * as arrays from '../vscode/arrays'
 import * as strings from '../vscode/strings'
-import * as paths from 'vs/base/common/paths'
+import * as paths from '../vscode/paths'
 import { LRUCache } from 'vs/base/common/map'
 import { CharCode } from '../vscode/char-code'
 import { isThenable } from 'vs/base/common/async'
