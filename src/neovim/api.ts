@@ -423,6 +423,7 @@ const Buffer = (id: any) => ({
     const res = await req.core.commandOutput(`silent ${id}bufdo write`).catch(() => false)
     return !!res
   },
+  isLoaded: () => req.buf.isLoaded(id),
   attach: ({ sendInitialBuffer }, cb) => {
     watchers.bufferEvents.on(`change:${id}`, cb)
     req.buf.attach(id, sendInitialBuffer, {}).then(attached => {

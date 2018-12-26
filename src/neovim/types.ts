@@ -137,6 +137,7 @@ export interface Buffer {
   changedtick: Promise<number>
   bufdo(command: string): Promise<any>
   write(): Promise<boolean>
+  isLoaded(): Promise<boolean>
   attach(options: { sendInitialBuffer: boolean }, onEventFn: (event: BufferChangeEvent) => void): void
   detach(): void
   onDetach(onDetachFn: () => void): void

@@ -134,6 +134,7 @@ export interface Api {
 }
 
 export interface Buffer {
+  isLoaded(buffer: Buffer): Promise<boolean>,
   lineCount(buffer: Buffer): Promise<number>,
   attach(buffer: Buffer, send_buffer: boolean, opts: object): Promise<boolean>,
   detach(buffer: Buffer): Promise<boolean>,
