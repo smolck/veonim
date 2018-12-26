@@ -101,5 +101,26 @@ export default (bufid: number): vsc.TextDocument => ({
     const column = offset - lineByteCount
 
     return new Position(lineNumber, column)
-  }
+  },
+  getText: range => {
+    if (!range) {
+      const lines = nvimSync<string[]>(async (nvim, id) => {
+        return nvim.fromId.buffer(id).getAllLines()
+      }).withArgs(bufid)
+
+      return lines.join('\n')
+    }
+
+    const lines = nvimSync<string[]>(async (nvim, id, start, end) => {
+      return nvim.fromId.buffer(id).getLines(start, end)
+    }).withArgs(bufid, range.start.line, range.end.line)
+
+    const selection = [
+      lines[0].slice(range.start.character),
+      ...lines.slice(1, -1),
+      lines[lines.length - 1].slice(0, range.end.character),
+    ]
+
+    return selection.join('\n')
+  },
 })
