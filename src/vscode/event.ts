@@ -262,6 +262,7 @@ export namespace Event {
 		const flush = (listener: (e: T) => any, thisArgs?: any) => buffer.forEach(e => listener.call(thisArgs, e));
 
 		const emitter = new Emitter<T>({
+      // @ts-ignore
 			onListenerDidAdd(emitter, listener: (e: T) => any, thisArgs?: any) {
 				if (nextTick) {
 					setTimeout(() => flush(listener, thisArgs));
@@ -591,6 +592,7 @@ export interface IWaitUntil {
 
 export class AsyncEmitter<T extends IWaitUntil> extends Emitter<T> {
 
+  // @ts-ignore
 	private _asyncDeliveryQueue: [Listener, T, Promise<any>[]][];
 
 	async fireAsync(eventFn: (thenables: Promise<any>[], listener: Function) => T): Promise<void> {

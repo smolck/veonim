@@ -35,6 +35,7 @@ export function createCancelablePromise<T>(callback: (token: CancellationToken) 
 		});
 	});
 
+  // @ts-ignore
 	return new class implements CancelablePromise<T> {
 		cancel() {
 			source.cancel();
@@ -176,6 +177,7 @@ export class Delayer<T> implements IDisposable {
 	private timeout: any;
 	private completionPromise: Promise<any> | null;
 	private doResolve: ((value?: any | Promise<any>) => void) | null;
+  // @ts-ignore
 	private doReject: (err: any) => void;
 	private task: ITask<T | Promise<T>> | null;
 
@@ -280,10 +282,12 @@ export class Barrier {
 
 	private _isOpen: boolean;
 	private _promise: Promise<boolean>;
+  // @ts-ignore
 	private _completePromise: (v: boolean) => void;
 
 	constructor() {
 		this._isOpen = false;
+    // @ts-ignore
 		this._promise = new Promise<boolean>((c, e) => {
 			this._completePromise = c;
 		});
@@ -697,6 +701,7 @@ export function ninvoke(thisArg: any, fn: Function, ...args: any[]): any {
 
 export interface IdleDeadline {
 	readonly didTimeout: boolean;
+  // @ts-ignore
 	timeRemaining(): DOMHighResTimeStamp;
 }
 /**
@@ -752,7 +757,9 @@ export class IdleValue<T> {
 	private readonly _executor: () => void;
 	private readonly _handle: IDisposable;
 
+  // @ts-ignore
 	private _didRun: boolean;
+  // @ts-ignore
 	private _value: T;
 	private _error: any;
 

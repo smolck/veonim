@@ -10,6 +10,7 @@ import { Iterator, IteratorResult, FIN } from '../vscode/iterator'
 
 export function values<V = any>(set: Set<V>): V[];
 export function values<K = any, V = any>(map: Map<K, V>): V[];
+// @ts-ignore
 export function values<V>(forEachable: { forEach(callback: (value: V, ...more: any[]) => any) }): V[] {
 	const result: V[] = [];
 	forEachable.forEach(value => result.push(value));
@@ -18,6 +19,7 @@ export function values<V>(forEachable: { forEach(callback: (value: V, ...more: a
 
 export function keys<K, V>(map: Map<K, V>): K[] {
 	const result: K[] = [];
+  // @ts-ignore
 	map.forEach((value, key) => result.push(key));
 
 	return result;
@@ -113,8 +115,11 @@ export class StringIterator implements IKeyIterator {
 
 export class PathIterator implements IKeyIterator {
 
+  // @ts-ignore
 	private _value: string;
+  // @ts-ignore
 	private _from: number;
+  // @ts-ignore
 	private _to: number;
 
 	reset(key: string): this {
@@ -177,8 +182,10 @@ export class PathIterator implements IKeyIterator {
 }
 
 class TernarySearchTreeNode<E> {
+  // @ts-ignore
 	segment: string;
 	value: E | undefined;
+  // @ts-ignore
 	key: string;
 	left: TernarySearchTreeNode<E> | undefined;
 	mid: TernarySearchTreeNode<E> | undefined;
@@ -433,6 +440,7 @@ export class ResourceMap<T> {
 	}
 
 	get(resource: URI): T {
+    // @ts-ignore
 		return this.map.get(this.toKey(resource));
 	}
 

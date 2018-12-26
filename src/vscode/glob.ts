@@ -308,6 +308,7 @@ function parsePattern(arg1: string | IRelativePattern, options: IGlobOptions): P
 	let match: RegExpExecArray | null;
 	if (T1.test(pattern)) { // common pattern: **/*.txt just need endsWith check
 		const base = pattern.substr(4); // '**/*'.length === 4
+    // @ts-ignore
 		parsedPattern = function (path, basename) {
 			return path && strings.endsWith(path, base) ? pattern : null;
 		};
@@ -405,8 +406,10 @@ function trivia3(pattern: string, options: IGlobOptions): ParsedStringPattern {
 function trivia4and5(path: string, pattern: string, matchPathEnds: boolean): ParsedStringPattern {
 	const nativePath = paths.nativeSep !== paths.sep ? path.replace(ALL_FORWARD_SLASHES, paths.nativeSep) : path;
 	const nativePathEnd = paths.nativeSep + nativePath;
+  // @ts-ignore
 	const parsedPattern: ParsedStringPattern = matchPathEnds ? function (path, basename) {
 		return path && (path === nativePath || strings.endsWith(path, nativePathEnd)) ? pattern : null;
+    // @ts-ignore
 	} : function (path, basename) {
 		return path && path === nativePath ? pattern : null;
 	};
@@ -417,6 +420,7 @@ function trivia4and5(path: string, pattern: string, matchPathEnds: boolean): Par
 function toRegExp(pattern: string): ParsedStringPattern {
 	try {
 		const regExp = new RegExp(`^${parseRegExp(pattern)}$`);
+    // @ts-ignore
 		return function (path: string, basename: string) {
 			regExp.lastIndex = 0; // reset RegExp to its initial state to reuse it!
 			return path && regExp.test(path) ? pattern : null;
@@ -556,6 +560,7 @@ function parsedExpression(expression: IExpression, options: IGlobOptions): Parse
 
 	if (!parsedPatterns.some(parsedPattern => !!(<ParsedExpressionPattern>parsedPattern).requiresSiblings)) {
 		if (n === 1) {
+      // @ts-ignore
 			return <ParsedStringPattern>parsedPatterns[0];
 		}
 
@@ -581,6 +586,7 @@ function parsedExpression(expression: IExpression, options: IGlobOptions): Parse
 			resultExpression.allPaths = allPaths;
 		}
 
+    // @ts-ignore
 		return resultExpression;
 	}
 
@@ -617,6 +623,7 @@ function parsedExpression(expression: IExpression, options: IGlobOptions): Parse
 		resultExpression.allPaths = allPaths;
 	}
 
+  // @ts-ignore
 	return resultExpression;
 }
 
@@ -639,6 +646,7 @@ function parseExpressionPattern(pattern: string, value: any, options: IGlobOptio
 	if (value) {
 		const when = (<SiblingClause>value).when;
 		if (typeof when === 'string') {
+      // @ts-ignore
 			const result: ParsedExpressionPattern = (path: string, basename: string, name: string, hasSibling: (name: string) => boolean | Promise<boolean>) => {
 				if (!hasSibling || !parsedPattern(path, basename)) {
 					return null;

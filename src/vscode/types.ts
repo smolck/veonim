@@ -452,8 +452,11 @@ export class TextEdit {
 		return ret;
 	}
 
+  // @ts-ignore
 	protected _range: Range;
+  // @ts-ignore
 	protected _newText: string;
+  // @ts-ignore
 	protected _newEol: EndOfLine;
 
 	get range(): Range {
@@ -606,10 +609,13 @@ export class WorkspaceEdit implements vscode.WorkspaceEdit {
 		return values(textEdits);
 	}
 
+  // @ts-ignore
 	_allEntries(): ([URI, TextEdit[]] | [URI?, URI?, IFileOperationOptions?])[] {
+    // @ts-ignore
 		let res: ([URI, TextEdit[]] | [URI?, URI?, IFileOperationOptions?])[] = [];
 		for (let edit of this._edits) {
 			if (edit._type === 1) {
+        // @ts-ignore
 				res.push([edit.from, edit.to, edit.options]);
 			} else {
 				res.push([edit.uri, [edit.edit]]);
@@ -734,6 +740,7 @@ export class Location {
 	}
 
 	uri: URI;
+  // @ts-ignore
 	range: Range;
 
 	constructor(uri: URI, rangeOrPosition: Range | Position) {
@@ -795,9 +802,12 @@ export class Diagnostic {
 
 	range: Range;
 	message: string;
+  // @ts-ignore
 	source: string;
+  // @ts-ignore
 	code: string | number;
 	severity: DiagnosticSeverity;
+  // @ts-ignore
 	relatedInformation: DiagnosticRelatedInformation[];
 	tags?: DiagnosticTag[];
 
@@ -920,6 +930,7 @@ export class SymbolInformation {
 	}
 
 	name: string;
+  // @ts-ignore
 	location: Location;
 	kind: SymbolKind;
 	containerName: string | undefined;
@@ -1140,7 +1151,9 @@ export class SignatureInformation {
 export class SignatureHelp {
 
 	signatures: SignatureInformation[];
+  // @ts-ignore
 	activeSignature: number;
+  // @ts-ignore
 	activeParameter: number;
 
 	constructor() {
@@ -1197,17 +1210,28 @@ export class CompletionItem implements vscode.CompletionItem {
 
 	label: string;
 	kind: CompletionItemKind | undefined;
+  // @ts-ignore
 	detail: string;
+  // @ts-ignore
 	documentation: string | MarkdownString;
+  // @ts-ignore
 	sortText: string;
+  // @ts-ignore
 	filterText: string;
+  // @ts-ignore
 	preselect: boolean;
+  // @ts-ignore
 	insertText: string | SnippetString;
 	keepWhitespace?: boolean;
+  // @ts-ignore
 	range: Range;
+  // @ts-ignore
 	commitCharacters: string[];
+  // @ts-ignore
 	textEdit: TextEdit;
+  // @ts-ignore
 	additionalTextEdits: TextEdit[];
+  // @ts-ignore
 	command: vscode.Command;
 
 	constructor(label: string, kind?: CompletionItemKind) {
@@ -1474,6 +1498,7 @@ export class ProcessExecution implements vscode.ProcessExecution {
 				this._options = varg1;
 			}
 		}
+    // @ts-ignore
 		if (this._args === void 0) {
 			this._args = [];
 		}
@@ -1527,8 +1552,11 @@ export class ProcessExecution implements vscode.ProcessExecution {
 
 export class ShellExecution implements vscode.ShellExecution {
 
+  // @ts-ignore
 	private _commandLine: string;
+  // @ts-ignore
 	private _command: string | vscode.ShellQuotedString;
+  // @ts-ignore
 	private _args: (string | vscode.ShellQuotedString)[];
 	private _options: vscode.ShellExecutionOptions | undefined;
 
@@ -1629,13 +1657,17 @@ export class Task implements vscode.Task {
 
 	private __id: string | undefined;
 
+  // @ts-ignore
 	private _definition: vscode.TaskDefinition;
+  // @ts-ignore
 	private _scope: vscode.TaskScope.Global | vscode.TaskScope.Workspace | vscode.WorkspaceFolder | undefined;
+  // @ts-ignore
 	private _name: string;
 	private _execution: ProcessExecution | ShellExecution | undefined;
 	private _problemMatchers: string[];
 	private _hasDefinedMatchers: boolean;
 	private _isBackground: boolean;
+  // @ts-ignore
 	private _source: string;
 	private _group: TaskGroup | undefined;
 	private _presentationOptions: vscode.TaskPresentationOptions;
@@ -1855,6 +1887,7 @@ export enum ProgressLocation {
 
 export class TreeItem {
 
+  // @ts-ignore
 	label?: string | vscode.TreeItemLabel;
 	resourceUri?: URI;
 	iconPath?: string | URI | { light: string | URI; dark: string | URI };
@@ -1862,8 +1895,10 @@ export class TreeItem {
 	contextValue?: string;
 	tooltip?: string;
 
+  // @ts-ignore
 	constructor(label: string | vscode.TreeItemLabel, collapsibleState?: vscode.TreeItemCollapsibleState)
 	constructor(resourceUri: URI, collapsibleState?: vscode.TreeItemCollapsibleState)
+  // @ts-ignore
 	constructor(arg1: string | vscode.TreeItemLabel | URI, public collapsibleState: vscode.TreeItemCollapsibleState = TreeItemCollapsibleState.None) {
 		if (arg1 instanceof URI) {
 			this.resourceUri = arg1;

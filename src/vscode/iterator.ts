@@ -192,6 +192,7 @@ export interface INavigator<T> extends INextIterator<T> {
 export class MappedNavigator<T, R> extends MappedIterator<T, R> implements INavigator<R> {
 
 	constructor(protected navigator: INavigator<T>, fn: (item: T) => R) {
+    // @ts-ignore
 		super(navigator, fn);
 	}
 
