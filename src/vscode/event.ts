@@ -5,9 +5,9 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { onUnexpectedError } from '../vscode/errors'
-import { once as onceFn } from 'vs/base/common/functional'
-import { combinedDisposable, Disposable, IDisposable, toDisposable } from 'vs/base/common/lifecycle'
-import { LinkedList } from 'vs/base/common/linkedList'
+import { once as onceFn } from '../vscode/functional'
+import { combinedDisposable, Disposable, IDisposable, toDisposable } from '../vscode/lifecycle'
+import { LinkedList } from '../vscode/linked-list'
 
 /**
  * To an event a function with one or zero parameters

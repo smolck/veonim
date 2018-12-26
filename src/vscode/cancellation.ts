@@ -5,7 +5,7 @@
  *--------------------------------------------------------------------------------------------*/
 
 import { Emitter, Event } from '../vscode/event'
-import { IDisposable } from 'vs/base/common/lifecycle'
+import { IDisposable } from '../vscode/lifecycle'
 
 export interface CancellationToken {
 	readonly isCancellationRequested: boolean;
