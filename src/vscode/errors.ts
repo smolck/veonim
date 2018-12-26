@@ -1,4 +1,4 @@
-// https://raw.githubusercontent.com/Microsoft/vscode/d659000852e8ee6df3e3c1ac3cec88e963655ac6/src/vs/base/common/errors.ts
+// https://raw.githubusercontent.com/Microsoft/vscode/master/src/vs/base/common/errors.ts
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.

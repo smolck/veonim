@@ -1,4 +1,9 @@
-// stolen from: https://raw.githubusercontent.com/Microsoft/vscode/master/src/vs/base/common/uri.ts
+// https://raw.githubusercontent.com/Microsoft/vscode/master/src/vs/base/common/uri.ts
+/*---------------------------------------------------------------------------------------------
+ *  Copyright (c) Microsoft Corporation. All rights reserved.
+ *  Licensed under the MIT License. See License.txt in the project root for license information.
+ *--------------------------------------------------------------------------------------------*/
+
 import { CharCode } from '../vscode/char-code'
 
 const isWindows = process.platform === 'win32'

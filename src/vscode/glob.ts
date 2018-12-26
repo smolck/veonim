@@ -1,11 +1,11 @@
-// https://raw.githubusercontent.com/Microsoft/vscode/d659000852e8ee6df3e3c1ac3cec88e963655ac6/src/vs/base/common/glob.ts
+// https://raw.githubusercontent.com/Microsoft/vscode/master/src/vs/base/common/glob.ts
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
 import * as arrays from 'vs/base/common/arrays'
-import * as strings from 'vs/base/common/strings'
+import * as strings from '../vscode/strings'
 import * as paths from 'vs/base/common/paths'
 import { LRUCache } from 'vs/base/common/map'
 import { CharCode } from '../vscode/char-code'

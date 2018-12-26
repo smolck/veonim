@@ -1,4 +1,4 @@
-// https://raw.githubusercontent.com/Microsoft/vscode/d659000852e8ee6df3e3c1ac3cec88e963655ac6/src/vs/workbench/api/node/extHostTypes.ts
+// https://raw.githubusercontent.com/Microsoft/vscode/master/src/vs/workbench/api/node/extHostTypes.ts
 /*---------------------------------------------------------------------------------------------
  *  Copyright (c) Microsoft Corporation. All rights reserved.
  *  Licensed under the MIT License. See License.txt in the project root for license information.
@@ -11,7 +11,7 @@ import * as vscode from 'vscode'
 import { isMarkdownString } from '../vscode/html-content'
 import { IRelativePattern } from '../vscode/glob'
 import { relative } from 'path'
-import { startsWith } from 'vs/base/common/strings'
+import { startsWith } from '../vscode/strings'
 import { values } from 'vs/base/common/map'
 import { coalesce, equals } from 'vs/base/common/arrays'
 import { generateUuid } from 'vs/base/common/uuid'
