@@ -7,10 +7,6 @@ import { is } from '../support/utils'
 import { URI } from '../vscode/uri'
 import * as vsc from 'vscode'
 
-// TODO:
-// - nvim write with bufdo works
-// - write tests
-
 export default (bufid: number): vsc.TextDocument => ({
   get isUntitled() {
     const name = nvimSync((nvim, id) => {
@@ -128,7 +124,11 @@ export default (bufid: number): vsc.TextDocument => ({
   },
   getWordRangeAtPosition: (position, regex) => {
     // TODO: NYI
-    console.warn('NYI: getWordRangeAtPosition', position, regex)
+    // not sure how to define a word-range. it appears some definitions
+    // can be setup in LanguageConfiguration.wordPattern or use provided regex?
+    console.error('NYI: getWordRangeAtPosition', position, regex)
+    const start = new Position(position.line, position.character)
+    return new Range(start, start)
   },
   // assumes given range starts a line:0, character: 0
   validateRange: range => {
