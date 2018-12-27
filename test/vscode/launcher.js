@@ -41,25 +41,23 @@ const makeTestExtensionApi = socket => {
 }
 
 module.exports = async () => {
-  const testExtensionPath = getPipeName('veonim-test-ext')
+  const testExtensionPipeName = getPipeName('veonim-test-ext')
   const projectPath = path.join(__dirname, '../data')
-  const extensionsPath = path.join(__dirname, '../../xdg_config/veonim/extensions')
-  const testExtensionPath = path.join(__dirname, '../test-extension')
-
-  await fs.copy(testExtensionPath, extensionsPath)
+  const xdgConfig = path.join(__dirname, '../test_xdg_config')
 
   const app = new Application({
     path: './node_modules/.bin/electron',
     args: [ path.join(__dirname, '../../build/bootstrap/main.js') ],
     env: {
-      VEONIM_TEST_EXTENSION_PATH: testExtensionPath,
+      XDG_CONFIG_HOME: xdgConfig,
+      VEONIM_TEST_EXTENSION_PATH: testExtensionPipeName,
     }
   })
 
   await app.start()
   await app.client.waitUntilWindowLoaded()
   await delay(500)
-  const testExtensionSocket = await connectToTestExtension(testExtensionPath)
+  const testExtensionSocket = await connectToTestExtension(testExtensionPipeName)
 
   app.input = async m => {
     await delay(100)

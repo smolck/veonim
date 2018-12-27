@@ -14,7 +14,7 @@
     "test:e2e:snapshot": "npm run test:e2e -- --snapshot",
     "test:integration": "mocha test/integration -t 10000",
     "test:watch": "npm run test -- -w",
-    "test:vscode": "mocha test/vscode -t 0",
+    "test:vscode": "mocha test/vscode/vscode-api-env.test.js -t 0",
     "test:integration:watch": "npm run test:integration -- -w",
     "gen:api": "node tools/gen-api.js",
     "gen:font-sizes": "electron tools/font-sizer/index.js",

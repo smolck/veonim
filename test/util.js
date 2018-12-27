@@ -61,4 +61,15 @@ const getPipeName = name => process.platform === 'win32'
   ? `\\\\.\\pipe\\${name}${uuid()}-sock`
   : path.join(os.tmpdir(), `${name}${uuid()}.sock`)
 
-module.exports = { src, same, globalProxy, delay, pathExists, spy, resetModule, testDataPath, CreateTask }
+module.exports = {
+  src,
+  same,
+  globalProxy,
+  delay,
+  pathExists,
+  spy,
+  resetModule,
+  testDataPath,
+  getPipeName,
+  CreateTask,
+}

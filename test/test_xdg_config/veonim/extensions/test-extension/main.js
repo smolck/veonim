@@ -4,6 +4,8 @@ const { createServer } = require('net')
 const { Script } = require('vm')
 
 const activate = async () => {
+  console.log('activating test-extension')
+
   const doTheNeedful = thing => {
     const { func, args, id } = JSON.parse(thing)
     const runner = new Script(func).runInThisContext()
@@ -24,4 +26,3 @@ const activate = async () => {
 }
 
 module.exports = { activate }
-
