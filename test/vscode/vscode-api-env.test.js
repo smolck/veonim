@@ -1,11 +1,16 @@
 const { src, same } = require('../util')
+const launch = require('./launcher')
 
 describe('vscode api - env', () => {
   let env
+  let m
 
-  beforeEach(() => {
+  beforeEach(async () => {
+    m = await launch()
     env = src('vscode/env').default
   })
+
+  after(() => m.stop())
 
   describe('var', () => {
     it('appName', () => {
