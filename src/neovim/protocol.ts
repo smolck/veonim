@@ -134,6 +134,7 @@ export interface Api {
 }
 
 export interface Buffer {
+  getOffset(buffer: Buffer, index: number): Promise<number>,
   isLoaded(buffer: Buffer): Promise<boolean>,
   lineCount(buffer: Buffer): Promise<number>,
   attach(buffer: Buffer, send_buffer: boolean, opts: object): Promise<boolean>,

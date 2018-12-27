@@ -5,7 +5,6 @@ import { BufferOption } from '../neovim/types'
 import TextLine from '../vscode/text-line'
 import { is } from '../support/utils'
 import { URI } from '../vscode/uri'
-import nvim from '../neovim/api'
 import * as vsc from 'vscode'
 
 // TODO:
@@ -58,15 +57,18 @@ export default (bufid: number): vsc.TextDocument => ({
     }).call(bufid)
   },
   get eol() {
-    const eol = nvimSync((nvim, id) => {
+    const fileFormat = nvimSync((nvim, id) => {
       return nvim.Buffer(id).getOption(BufferOption.FileFormat)
     }).call(bufid)
 
-    return eol === 'dos'
+    return fileFormat === 'dos'
       ? vsc.EndOfLine.CRLF
       : vsc.EndOfLine.LF
   },
-  save: () => nvim.Buffer(bufid).write(),
+  save: async () => {
+    console.error('not possible in neovim to save a buffer in the background (when i wrote this)')
+    return false
+  },
   lineAt: (lineOrPosition: number | vsc.Position) => {
     const line = is.number(lineOrPosition)
       ? lineOrPosition as number
@@ -79,24 +81,32 @@ export default (bufid: number): vsc.TextDocument => ({
     return TextLine(line, lineData)
   },
   offsetAt: position => {
-    const lineByteCount: number = nvimSync((nvim, id, line) => {
-      return nvim.Buffer(id).bufdo(`call line2byte(${line})`)
+    const offset: number = nvimSync((nvim, id, line) => {
+      return nvim.Buffer(id).getOffset(line)
     }).call(bufid, position.line)
 
-    return lineByteCount + position.character - 1
+    return offset + position.character
   },
   positionAt: offset => {
-    const lineNumber: number = nvimSync((nvim, id, offset) => {
-      return nvim.Buffer(id).bufdo(`call byte2line(${offset})`)
-    }).call(bufid, offset)
+    const lines = nvimSync((nvim, id) => nvim.Buffer(id).getAllLines()).call(bufid)
+    const lineCount = lines.length
+    let countingOffset = 0
+    let lineNumber = -1
+    let columnNumber = -1
 
-    const lineByteCount: number = nvimSync((nvim, id, line) => {
-      return nvim.Buffer(id).bufdo(`call line2byte(${line})`)
-    }).call(bufid, lineNumber)
+    for (let ix = 0; ix < lineCount; ix++) {
+      const lineContents = lines[ix]
+      const nextOffset = countingOffset += lineContents.length
 
-    const column = offset - lineByteCount
+      if (offset >= countingOffset && offset <= nextOffset) {
+        lineNumber = ix
+        columnNumber = offset - nextOffset
+        break
+      }
+      countingOffset += lineContents.length
+    }
 
-    return new Position(lineNumber, column)
+    return new Position(lineNumber, columnNumber)
   },
   getText: range => {
     if (!range) {
