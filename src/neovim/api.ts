@@ -418,9 +418,9 @@ const Buffer = (id: any) => ({
   get length() { return req.buf.lineCount(id) },
   get changedtick() { return req.buf.getChangedtick(id) },
   // TODO: switches the current window to this buffer...?
-  bufdo: command => req.core.commandOutput(`silent ${id}bufdo ${command}`),
+  bufdo: command => req.core.commandOutput(`${id}bufdo ${command}`),
   write: async () => {
-    const res = await req.core.commandOutput(`silent ${id}bufdo write`).catch(() => false)
+    const res = await req.core.commandOutput(`${id}bufdo write`).catch(() => false)
     return !!res
   },
   isLoaded: () => req.buf.isLoaded(id),

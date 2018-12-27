@@ -9,7 +9,6 @@ import nvim from '../neovim/api'
 import * as vsc from 'vscode'
 
 // TODO:
-// - requestSync with func context works
 // - nvim write with bufdo works
 // - write tests
 
@@ -17,51 +16,51 @@ export default (bufid: number): vsc.TextDocument => ({
   get isUntitled() {
     const name = nvimSync((nvim, id) => {
       return nvim.Buffer(id).name
-    }).withArgs(bufid)
+    }).call(bufid)
 
     return !name
   },
   get uri() {
     const name = nvimSync((nvim, id) => {
       return nvim.Buffer(id).name
-    }).withArgs(bufid)
+    }).call(bufid)
 
     return URI.file(name)
   },
   get fileName() {
     return nvimSync((nvim, id) => {
       return nvim.Buffer(id).name
-    }).withArgs(bufid)
+    }).call(bufid)
   },
   get languageId() {
     const filetype: string = nvimSync((nvim, id) => {
       return nvim.Buffer(id).getOption(BufferOption.Filetype)
-    }).withArgs(bufid)
+    }).call(bufid)
 
     return filetypeToVSCLanguage(filetype)
   },
   get version() {
     return nvimSync((nvim, id) => {
       return nvim.Buffer(id).changedtick
-    }).withArgs(bufid)
+    }).call(bufid)
   },
   get isDirty() {
     return !!nvimSync((nvim, id) => {
       return nvim.Buffer(id).getOption(BufferOption.Modified)
-    }).withArgs(bufid)
+    }).call(bufid)
   },
   get isClosed() {
-    return !nvimSync((nvim, id) => nvim.Buffer(id).isLoaded()).withArgs(bufid)
+    return !nvimSync((nvim, id) => nvim.Buffer(id).isLoaded()).call(bufid)
   },
   get lineCount() {
     return nvimSync((nvim, id) => {
       return nvim.Buffer(id).length
-    }).withArgs(bufid)
+    }).call(bufid)
   },
   get eol() {
     const eol = nvimSync((nvim, id) => {
       return nvim.Buffer(id).getOption(BufferOption.FileFormat)
-    }).withArgs(bufid)
+    }).call(bufid)
 
     return eol === 'dos'
       ? vsc.EndOfLine.CRLF
@@ -75,25 +74,25 @@ export default (bufid: number): vsc.TextDocument => ({
 
     const lineData = nvimSync((nvim, id, line) => {
       return nvim.Buffer(id).getLine(line)
-    }).withArgs(bufid, line)
+    }).call(bufid, line)
 
     return TextLine(line, lineData)
   },
   offsetAt: position => {
     const lineByteCount: number = nvimSync((nvim, id, line) => {
       return nvim.Buffer(id).bufdo(`call line2byte(${line})`)
-    }).withArgs(bufid, position.line)
+    }).call(bufid, position.line)
 
     return lineByteCount + position.character - 1
   },
   positionAt: offset => {
     const lineNumber: number = nvimSync((nvim, id, offset) => {
       return nvim.Buffer(id).bufdo(`call byte2line(${offset})`)
-    }).withArgs(bufid, offset)
+    }).call(bufid, offset)
 
     const lineByteCount: number = nvimSync((nvim, id, line) => {
       return nvim.Buffer(id).bufdo(`call line2byte(${line})`)
-    }).withArgs(bufid, lineNumber)
+    }).call(bufid, lineNumber)
 
     const column = offset - lineByteCount
 
@@ -101,13 +100,13 @@ export default (bufid: number): vsc.TextDocument => ({
   },
   getText: range => {
     if (!range) {
-      const lines = nvimSync((nvim, id) => nvim.Buffer(id).getAllLines()).withArgs(bufid)
+      const lines = nvimSync((nvim, id) => nvim.Buffer(id).getAllLines()).call(bufid)
       return lines.join('\n')
     }
 
     const lines = nvimSync((nvim, id, start, end) => {
       return nvim.Buffer(id).getLines(start, end)
-    }).withArgs(bufid, range.start.line, range.end.line)
+    }).call(bufid, range.start.line, range.end.line)
 
     const selection = [
       lines[0].slice(range.start.character),
@@ -125,11 +124,11 @@ export default (bufid: number): vsc.TextDocument => ({
   validateRange: range => {
     const lastLineText = nvimSync((nvim, id, line) => {
       return nvim.Buffer(id).getLine(line)
-    }).withArgs(bufid, range.end.line)
+    }).call(bufid, range.end.line)
 
     if (!lastLineText) {
-      const lineCount = nvimSync((nvim, id) => nvim.Buffer(id).length).withArgs(bufid)
-      const lastLine = nvimSync((nvim, id, line) => nvim.Buffer(id).getLine(line)).withArgs(bufid)
+      const lineCount = nvimSync((nvim, id) => nvim.Buffer(id).length).call(bufid)
+      const lastLine = nvimSync((nvim, id, line) => nvim.Buffer(id).getLine(line)).call(bufid)
 
       return new Range(
         new Position(range.start.line, range.start.character),
@@ -147,11 +146,11 @@ export default (bufid: number): vsc.TextDocument => ({
   validatePosition: position => {
     const lastLineText = nvimSync((nvim, id, line) => {
       return nvim.Buffer(id).getLine(line)
-    }).withArgs(bufid, position.line)
+    }).call(bufid, position.line)
 
     if (!lastLineText) {
-      const lineCount = nvimSync((nvim, id) => nvim.Buffer(id).length).withArgs(bufid)
-      const lastLine = nvimSync((nvim, id, line) => nvim.Buffer(id).getLine(line)).withArgs(bufid)
+      const lineCount = nvimSync((nvim, id) => nvim.Buffer(id).length).call(bufid)
+      const lastLine = nvimSync((nvim, id, line) => nvim.Buffer(id).getLine(line)).call(bufid)
       return new Position(lineCount, lastLine.length)
     }
 
