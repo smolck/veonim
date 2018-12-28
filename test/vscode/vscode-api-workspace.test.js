@@ -14,7 +14,22 @@ test('workspace.name', eq => {
   eq(vscode.workspace.name, baseFolderName)
 })
 
-test('workspace.textDocuments')
+test('workspace.textDocuments', async eq => {
+  nvim.cmd(`e src/blarg.ts`)
+  nvim.cmd(`e src/blarg3.ts`)
+
+  await nvim.untilStateValue.file.is('src/blarg3.ts')
+  const docs = vscode.workspace.textDocuments
+
+  const [ doc1, doc2 ] = docs
+
+  console.log('doc1', doc1.fileName)
+  console.log('doc2', doc2.fileName)
+
+  eq(docs.length, 2)
+  eq(doc1.fileName, path.join(testDataPath, 'src/blarg3.ts'))
+  eq(doc2.fileName, path.join(testDataPath, 'src/blarg.ts'))
+})
 
 test('workspace.onWillSaveTextDocument')
 test('workspace.onDidChangeWorkspaceFolders')

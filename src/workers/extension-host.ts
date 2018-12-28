@@ -46,6 +46,7 @@ if (process.env.VEONIM_DEV) {
 
   const testDataPath = join(__dirname, '../../test/data')
   ;(global as any).testDataPath = testDataPath
+  ;(global as any).nvim = nvim
 
   nvim.untilStateValue.cwd.is(testDataPath).then(async () => {
     console.time('VSCODE API TESTS')
