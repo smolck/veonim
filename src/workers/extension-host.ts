@@ -17,6 +17,8 @@ import '../support/vscode-shim'
 
 if (process.env.VEONIM_DEV) {
   const { requireDir } = require('../support/utils')
+  const nvim = require('../neovim/api').default
+
   console.log(
     '%c TESTING --> %cVSCODE API ',
     'color: #aaa; background: #000',
@@ -24,6 +26,7 @@ if (process.env.VEONIM_DEV) {
   )
 
   const results = { pass: 0, fail: 0 }
+  const q: any[] = []
 
   const eq = (a: any, b: any) => {
     try { require('assert').deepStrictEqual(a, b); return true }
@@ -38,11 +41,23 @@ if (process.env.VEONIM_DEV) {
       console.assert(ok, `${name} --> expected ${JSON.stringify(result)} to equal ${JSON.stringify(expected)}`)
     }
 
-    func(assert)
+    typeof func === 'function' && q.push(func(assert))
   }
-  require('../../test/vscode/vscode-api-env.test')
-  console.log('VSCODE API test results ::', results)
-  // requireDir(`${__dirname}/../../test/vscode`)
+
+  const testData = join(__dirname, '../../test/data')
+
+  nvim.untilStateValue.cwd.is(testData).then(() => {
+    console.time('VSCODE API TESTS')
+
+    requireDir(`${__dirname}/../../test/vscode`)
+
+    Promise.all(q).then(() => {
+      console.timeEnd('VSCODE API TESTS')
+      console.log('VSCODE API test results ::', results)
+    })
+  })
+
+  nvim.cmd(`cd ${testData}`)
 }
 
 const EXT_PATH = join(configPath, 'veonim', 'extensions')

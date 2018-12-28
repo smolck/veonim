@@ -1,46 +1,34 @@
-const { src, same, spy, resetModule } = require('../util')
+// test('commands.registerCommand', async () => {
+//   const command = commands.registerCommand('blarg', () => {})
+//   const coms = await commands.getCommands()
+//   same(coms, ['blarg'])
+// })
 
-describe('vscode api - commands', () => {
-  let commands
+// test('commands.getCommands', async () => {
+//   const ayy = commands.registerCommand('ayy', () => {})
+//   const lmao = commands.registerCommand('lmao', () => {})
+//   const umad = commands.registerCommand('_umad', () => {})
 
-  beforeEach(() => {
-    commands = src('vscode/commands').default
-  })
+//   const coms = await commands.getCommands()
+//   const comsNoInternal = await commands.getCommands(true)
 
-  describe('func', () => {
-    it('registerCommand', async () => {
-      const command = commands.registerCommand('blarg', () => {})
-      const coms = await commands.getCommands()
-      same(coms, ['blarg'])
-    })
+//   same(coms, ['ayy', 'lmao', '_umad'])
+//   same(comsNoInternal, ['ayy', 'lmao'])
 
-    it('getCommands', async () => {
-      const ayy = commands.registerCommand('ayy', () => {})
-      const lmao = commands.registerCommand('lmao', () => {})
-      const umad = commands.registerCommand('_umad', () => {})
+//   ayy.dispose()
 
-      const coms = await commands.getCommands()
-      const comsNoInternal = await commands.getCommands(true)
+//   const coms2 = await commands.getCommands(true)
 
-      same(coms, ['ayy', 'lmao', '_umad'])
-      same(comsNoInternal, ['ayy', 'lmao'])
+//   same(coms2, ['lmao'])
+// })
 
-      ayy.dispose()
+// test('commands.executeCommand', async () => {
+//   const callback = spy()
+//   const command = commands.registerCommand('blarg', callback)
+//   commands.executeCommand('blarg', 42)
+//   command.dispose()
+//   commands.executeCommand('blarg', 22)
+//   same(callback.calls, [ [42] ])
+// })
 
-      const coms2 = await commands.getCommands(true)
-
-      same(coms2, ['lmao'])
-    })
-
-    it('executeCommand', async () => {
-      const callback = spy()
-      const command = commands.registerCommand('blarg', callback)
-      commands.executeCommand('blarg', 42)
-      command.dispose()
-      commands.executeCommand('blarg', 22)
-      same(callback.calls, [ [42] ])
-    })
-
-    it('registerTextEditorCommand')
-  })
-})
+// test('commands.registerTextEditorCommand')

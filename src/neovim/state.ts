@@ -68,7 +68,7 @@ export default (stateName: string) => {
     get: (_, key: string) => ({ is: (matchValue: any, matchPreviousValue?: any) => new Promise(done => {
       const callback = (value: any, previousValue: any) => {
         const same = value === matchValue
-        const prevSame = typeof matchPreviousValue == null ? true : previousValue === matchPreviousValue
+        const prevSame = matchPreviousValue == null ? true : previousValue === matchPreviousValue
 
         if (same && prevSame) {
           done(value)

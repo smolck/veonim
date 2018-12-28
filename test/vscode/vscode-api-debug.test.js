@@ -1,26 +1,14 @@
-const { src, same } = require('../util')
+// test('activeDebugConsole')
+// test('activeDebugSession')
+// test('breakpoints')
 
-const debug = src('vscode/debug').default
+// test('onDidChangeActiveDebugSession')
+// test('onDidChangeBreakpoints')
+// test('onDidReceiveDebugSessionCustomEvent')
+// test('onDidStartDebugSession')
+// test('onDidTerminateDebugSession')
 
-describe('vscode api - debug', () => {
-  describe('var', () => {
-    it('activeDebugConsole')
-    it('activeDebugSession')
-    it('breakpoints')
-  })
-
-  describe('event', () => {
-    it('onDidChangeActiveDebugSession')
-    it('onDidChangeBreakpoints')
-    it('onDidReceiveDebugSessionCustomEvent')
-    it('onDidStartDebugSession')
-    it('onDidTerminateDebugSession')
-  })
-
-  describe('func', () => {
-    it('addBreakpoints')
-    it('registerDebugConfigurationProvider')
-    it('removeBreakpoints')
-    it('startDebugging')
-  })
-})
+// test('addBreakpoints')
+// test('registerDebugConfigurationProvider')
+// test('removeBreakpoints')
+// test('startDebugging')

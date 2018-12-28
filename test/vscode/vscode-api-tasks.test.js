@@ -1,22 +1,10 @@
-const { src, same } = require('../util')
+// test('taskExecutions')
 
-const tasks = src('vscode/tasks').default
+// test('onDidEndTask')
+// test('onDidEndTaskProcess')
+// test('onDidStartTask')
+// test('onDidStartTaskProcess')
 
-describe('vscode api - tasks', () => {
-  describe('var', () => {
-    it('taskExecutions')
-  })
-
-  describe('events', () => {
-    it('onDidEndTask')
-    it('onDidEndTaskProcess')
-    it('onDidStartTask')
-    it('onDidStartTaskProcess')
-  })
-
-  describe('func', () => {
-    it('executeTask')
-    it('fetchTasks')
-    it('registerTaskProvider')
-  })
-})
+// test('executeTask')
+// test('fetchTasks')
+// test('registerTaskProvider')
