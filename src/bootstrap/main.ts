@@ -69,8 +69,8 @@ app.on('ready', async () => {
     backgroundColor: '#222',
     autoHideMenuBar: true,
     webPreferences: {
+      nodeIntegration: true,
       nodeIntegrationInWorker: true,
-      experimentalFeatures: true,
     }
   })
 

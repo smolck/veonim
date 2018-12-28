@@ -108,13 +108,7 @@ const containerEl = makel({
   position: 'absolute',
   width: '100%',
   display: 'flex',
-  backdropFilter: 'blur(24px)',
-  background: `rgba(var(--background-30-alpha), 0.6)`,
-  // TODO: this does not work with blur background. since backdrop-filter is
-  // an experimental feature, it could be a bug.
-  // actually backdrop-filter specification has a 'drop-shadow()' fn, but
-  // i have not been able to make it work in chrome 61
-  // boxShadow: '0 0 10px rgba(0, 0, 0, 0.6)',
+  background: 'var(--background-30)',
 })
 
 const ui = app<S, A>({ name: 'viewport-search', state, actions, view, element: containerEl })
