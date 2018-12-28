@@ -15,6 +15,36 @@ import pleaseGet from '../support/please-get'
 import { dirname, join } from 'path'
 import '../support/vscode-shim'
 
+if (process.env.VEONIM_DEV) {
+  const { requireDir } = require('../support/utils')
+  console.log(
+    '%c TESTING --> %cVSCODE API ',
+    'color: #aaa; background: #000',
+    'color: yellow; background: #000',
+  )
+
+  const results = { pass: 0, fail: 0 }
+
+  const eq = (a: any, b: any) => {
+    try { require('assert').deepStrictEqual(a, b); return true }
+    catch (_) { return false }
+  }
+
+  (global as any).test = (name: string, func: Function) => {
+    const assert = (result: any, expected: any, msg?: any) => {
+      const ok = eq(result, expected)
+      ok ? results.pass++ : results.fail++
+      if (msg) return console.assert(ok, `${name} --> ${msg}`)
+      console.assert(ok, `${name} --> expected ${JSON.stringify(result)} to equal ${JSON.stringify(expected)}`)
+    }
+
+    func(assert)
+  }
+  require('../../test/vscode/vscode-api-env.test')
+  console.log('VSCODE API test results ::', results)
+  // requireDir(`${__dirname}/../../test/vscode`)
+}
+
 const EXT_PATH = join(configPath, 'veonim', 'extensions')
 
 interface Debugger {

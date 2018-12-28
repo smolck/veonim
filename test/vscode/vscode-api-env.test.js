@@ -1,37 +1,22 @@
-const { src, same } = require('../util')
-const launch = require('./launcher')
+const vscode = require('vscode')
 
-describe('vscode api - env', () => {
-  let env
-  let m
+test('env.appName', eq => {
+  eq(vscode.env.appName, 'Veonim')
+})
 
-  beforeEach(async () => {
-    m = await launch()
-    env = src('vscode/env').default
-  })
+test('env.appRoot', eq => {
+  eq(vscode.env.appRoot, process.cwd())
+})
 
-  after(() => m.stop())
+test('env.language', eq => {
+  eq(vscode.env.language, 'en-US')
+})
 
-  describe('var', () => {
-    it('appName', () => {
-      same(env.appName, 'Veonim')
-    })
+test('env.machineId', eq => {
+  eq(vscode.env.machineId, require('os').hostname())
+})
 
-    it('appRoot', () => {
-      same(env.appRoot, process.cwd())
-    })
-
-    it('language', () => {
-      same(env.language, 'en-US')
-    })
-
-    it('machineId', () => {
-      same(env.machineId, require('os').hostname())
-    })
-
-    it('sessionId', () => {
-      const includesName = env.sessionId.includes('Veonim-')
-      same(includesName, true, 'sessionId starts with Veonim-')
-    })
-  })
+test('env.sessionId', eq => {
+  const includesName = vscode.env.sessionId.includes('Veonim-')
+  eq(includesName, true, `expected ${vscode.env.sessionId} to start with Veonim-`)
 })

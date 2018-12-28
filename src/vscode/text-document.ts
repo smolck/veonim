@@ -57,9 +57,10 @@ export default (bufid: number): vsc.TextDocument => ({
       return nvim.Buffer(id).getOption(BufferOption.FileFormat)
     }).call(bufid)
 
-    return fileFormat === 'dos'
-      ? vsc.EndOfLine.CRLF
-      : vsc.EndOfLine.LF
+    // numbers correspond to enum values 'vsc.EndOfLine'
+    // had to use numbers because at runtime the vscode
+    // is this API shim, not the typings
+    return fileFormat === 'dos' ? 2 : 1
   },
   save: async () => {
     console.error('not possible in neovim to save a buffer in the background (when i wrote this)')
