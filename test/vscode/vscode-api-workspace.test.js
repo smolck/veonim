@@ -2,15 +2,15 @@ const vscode = require('vscode')
 const path = require('path')
 
 test('workspace.rootPath', eq => {
-  eq(vscode.workspace.rootPath, 'lol')
+  eq(vscode.workspace.rootPath, testDataPath)
 })
 
 test('workspace.workspaceFolders', eq => {
-  eq(vscode.workspace.workspaceFolders, [ 'lol' ])
+  eq(vscode.workspace.workspaceFolders, [ testDataPath ])
 })
 
 test('workspace.name', eq => {
-  const baseFolderName = path.basename('lolss')
+  const baseFolderName = path.basename(testDataPath)
   eq(vscode.workspace.name, baseFolderName)
 })
 

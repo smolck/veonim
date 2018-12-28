@@ -44,20 +44,20 @@ if (process.env.VEONIM_DEV) {
     typeof func === 'function' && q.push(func(assert))
   }
 
-  const testData = join(__dirname, '../../test/data')
+  const testDataPath = join(__dirname, '../../test/data')
+  ;(global as any).testDataPath = testDataPath
 
-  nvim.untilStateValue.cwd.is(testData).then(() => {
+  nvim.untilStateValue.cwd.is(testDataPath).then(async () => {
     console.time('VSCODE API TESTS')
 
-    requireDir(`${__dirname}/../../test/vscode`)
+    await requireDir(`${__dirname}/../../test/vscode`)
+    await Promise.all(q)
 
-    Promise.all(q).then(() => {
-      console.timeEnd('VSCODE API TESTS')
-      console.log('VSCODE API test results ::', results)
-    })
+    console.timeEnd('VSCODE API TESTS')
+    console.log('VSCODE API test results ::', results)
   })
 
-  nvim.cmd(`cd ${testData}`)
+  setTimeout(() => nvim.cmd(`cd ${testDataPath}`), 150)
 }
 
 const EXT_PATH = join(configPath, 'veonim', 'extensions')
