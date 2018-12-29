@@ -4,7 +4,6 @@ import * as storage from '../support/local-storage'
 import { NotifyKind } from '../protocols/veonim'
 import { notify } from '../ui/notifications'
 import { makel } from '../ui/vanilla'
-import nvim from '../neovim/api'
 
 const finder = require('@medv/finder')
 
@@ -55,16 +54,16 @@ let captureEvents = false
 let lastRecordedAt = Date.now()
 let recordingStartTime = Date.now()
 
-nvim.onAction('record-start', () => {
+export const start = () => {
   banner.HULK_SMASH('RECORDING EVENTS', '#7f0202')
 
   recordedEvents = []
   lastRecordedAt = Date.now()
   recordingStartTime = Date.now()
   captureEvents = true
-})
+}
 
-nvim.onAction('record-stop', async () => {
+export const stop = async () => {
   banner.heyBigGuySunsGettingRealLow()
 
   captureEvents = false
@@ -81,9 +80,9 @@ nvim.onAction('record-stop', async () => {
   storage.setItem(KEY.ALL, [...uniqRecordings])
 
   notify(`saved "${recordingName}" to local storage`, NotifyKind.Success)
-})
+}
 
-nvim.onAction('record-replay', async () => {
+export const replay = async () => {
   const recordingName = await userSelectOption<string>({
     description: 'select recording to replay',
     options: getAllRecordings(),
@@ -94,9 +93,9 @@ nvim.onAction('record-replay', async () => {
   if (!events || !events.length) return notify(`recording "${key}" does not exist`, NotifyKind.Error)
 
   recordPlayer(events, key)
-})
+}
 
-nvim.onAction('record-remove', async () => {
+export const remove = async () => {
   const recording = await userSelectOption<string>({
     description: 'select recording to REMOVE',
     options: getAllRecordings(),
@@ -112,9 +111,9 @@ nvim.onAction('record-remove', async () => {
   storage.removeItem(recording)
 
   notify(`removed "${key}" recording`, NotifyKind.Success)
-})
+}
 
-nvim.onAction('record-remove-all', async () => {
+export const removeAll = async () => {
   const confirmation = await userPrompt('type "yes" to remove all recordings')
   if (confirmation !== 'yes') return notify('did NOT remove all recordings', NotifyKind.Error)
 
@@ -125,9 +124,9 @@ nvim.onAction('record-remove-all', async () => {
   storage.removeItem(KEY.ALL)
 
   notify('removed all recordings', NotifyKind.Success)
-})
+}
 
-nvim.onAction('record-set-startup', async () => {
+export const startupReplay = async () => {
   const recordingName = await userSelectOption<string>({
     description: 'select recording for startup',
     options: getAllRecordings(),
@@ -138,7 +137,7 @@ nvim.onAction('record-set-startup', async () => {
   notify(`set "${key}" as startup replay`, NotifyKind.System)
 
   storage.setTemp(KEY.START, { events, name: key })
-})
+}
 
 const createEvent = (kind: string, event: Event) => {
   // InputEvent is still experimental - not widely supported but used in Chrome. No typings in TS lib
