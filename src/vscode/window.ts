@@ -1,20 +1,31 @@
-import TextDocument from '../vscode/text-document'
+import TextEditor from '../vscode/text-editor'
 import nvimSync from '../neovim/sync-api-client'
 import nvim from '../neovim/api'
 import * as vsc from 'vscode'
 
 const window: typeof vsc.window = {
   get activeTextEditor() {
-    const currentBufferId = nvimSync(nvim => nvim.current.buffer.id).call()
-    return TextDocument(currentBufferId)
+    return TextEditor(nvim.current.window.id)
   },
   get visibleTextEditors() {
-    const visibleBuffersIds = nvimSync(async nvim => {
-      const windows = await nvim.current.tabpage.windows
-      const visibleBuffers = await Promise.all(windows.map(w => w.buffer))
-      return visibleBuffers.map(b => b.id)
-    }).call()
-    return visibleBuffersIds.map(id => TextDocument(id))
+    // while we could query all current windows in the tabpage, we can't
+    // perform all necessary buffer operations on inactive windows.
+    // for example, visual selections in nvim are not preserved when
+    // switching windows. in vscode that is indeed possible.
+    // so for now, we will only return the current active window
+    return TextEditor(nvim.current.window.id)
+  },
+  get activeTerminal() {
+    console.warn('NYI: window.activeTerminal')
+  },
+  get terminals() {
+    console.warn('NYI: window.terminals')
+  },
+  get state() {
+    console.warn('NYI: window.state')
+  },
+  onDidChangeActiveTextEditor: fn => {
+
   },
 }
 
