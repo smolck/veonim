@@ -129,7 +129,7 @@ export interface ProblemHighlight {
 }
 
 export interface Buffer {
-  id: any
+  id: number
   number: Promise<number>
   valid: Promise<boolean>
   name: Promise<string>
@@ -163,7 +163,7 @@ export interface Buffer {
 }
 
 export interface Window {
-  id: any
+  id: number
   number: Promise<number>
   valid: Promise<boolean>
   tab: Promise<Tabpage>
@@ -183,7 +183,7 @@ export interface Window {
 }
 
 export interface Tabpage {
-  id: any
+  id: number
   number: Promise<number>
   valid: Promise<boolean>
   window: Promise<Window>
