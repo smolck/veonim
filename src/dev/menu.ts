@@ -1,9 +1,18 @@
+import { record, replay, recordingExists } from '../dev/recorder'
 import { stealInput, registerShortcut } from '../core/input'
 import { NotifyKind } from '../protocols/veonim'
-import { record, replay } from '../dev/recorder'
 import { notify } from '../ui/notifications'
 import { VimMode } from '../neovim/types'
+import { is } from '../support/utils'
 import { h, app } from '../ui/uikit'
+
+const state = {
+  items: [],
+}
+
+const viewActions = {
+  refresh: (items: any) => ({ items }),
+}
 
 const actions = new Map()
 
@@ -14,20 +23,22 @@ actions.set('v', {
 
 actions.set('s', {
   desc: 'record all keyboard inputs for playback',
-  fn: () => setImmediate(record),
+  fn: () => setTimeout(record, 150),
 })
 
 actions.set('r', {
   desc: 'replay last input recording',
   fn: () => setImmediate(replay),
+  active: recordingExists,
 })
 
-const KeyVal = (key: string, val: string) => h('div', {
+const KeyVal = (key: string, val: string, active: boolean) => h('div', {
   style: {
     display: 'flex',
     alignItems: 'center',
     marginTop: '5px',
     marginBottom: '5px',
+    color: active ? '#fff' : '#666',
   }
 }, [
   ,h('span', {
@@ -43,8 +54,11 @@ const KeyVal = (key: string, val: string) => h('div', {
 
 const container = document.createElement('div')
 container.setAttribute('id', 'dev-menu')
-const bigChungus = [...actions.entries()].map(([ key, { desc } ]) => KeyVal(key, desc))
-const view = () => h('div', {
+
+type S = typeof state
+type A = typeof viewActions
+
+const view = ($: S) => h('div', {
   style: {
     position: 'absolute',
     zIndex: 600,
@@ -53,18 +67,31 @@ const view = () => h('div', {
     left: '40px',
     background: '#111',
   }
-}, bigChungus)
-app({ name: 'dev-menu', state: {}, actions: {}, view, element: container })
+}, $.items.map(([ key, { desc, active } ]: any) => {
+  const isActive = is.function(active) ? active() : true
+  return KeyVal(key, desc, isActive)
+}))
+
+
+const ui = app<S, A>({ name: 'dev-menu', state, actions: viewActions, view, element: container })
 
 registerShortcut('S-C-k', VimMode.Normal, () => {
+  ui.refresh([...actions.entries()])
   document.body.appendChild(container)
 
   const restoreInput = stealInput(key => {
     const action = actions.get(key)
+
     if (action) {
+      if (is.function(action.active) && action.active() === false) {
+        restoreInput()
+        container.remove()
+        return
+      }
       notify(`running: ${action.desc}`, NotifyKind.System)
       action.fn()
     }
+
     restoreInput()
     container.remove()
   })

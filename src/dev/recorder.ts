@@ -1,6 +1,7 @@
 import * as storage from '../support/local-storage'
 import { NotifyKind } from '../protocols/veonim'
 import { notify } from '../ui/notifications'
+import { is } from '../support/utils'
 import { makel } from '../ui/vanilla'
 const finder = require('@medv/finder').default
 
@@ -17,6 +18,8 @@ const container = document.getElementById('workspace') as HTMLElement
 
 const stopButton = makel('button', {
   position: 'absolute',
+  fontWeight: 'bold',
+  fontSize: '1.4rem',
   zIndex: 999,
   right: '4px',
   padding: '12px',
@@ -41,7 +44,6 @@ export const record = () => {
 
   recordedEvents = []
   lastRecordedAt = Date.now()
-  recordingStartTime = Date.now()
   captureEvents = true
 }
 
@@ -50,6 +52,8 @@ export const replay = () => {
   if (!events || !events.length) return notify(`recording does not exist`, NotifyKind.Error)
   recordPlayer(events)
 }
+
+export const recordingExists = () => is.array(storage.getItem('veonim-dev-recording'))
 
 const createEvent = (kind: string, event: Event) => {
   // InputEvent is still experimental - not widely supported but used in Chrome. No typings in TS lib
@@ -76,6 +80,7 @@ const recordPlayer = async (events: RecordingEvent[]) => {
 
 monitorEvents.forEach(ev => window.addEventListener(ev, e => {
   if (!captureEvents) return
+  if (!recordedEvents.length) recordingStartTime = Date.now()
 
   recordedEvents.push({
     kind: e.type,
