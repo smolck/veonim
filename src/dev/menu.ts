@@ -7,8 +7,7 @@ import { h, app } from '../ui/uikit'
 const actions = new Map()
 actions.set('v', {
   desc: 'run VSCODE api tests',
-  // @ts-ignore
-  fn: () => {},
+  fn: () => fetch('http://localhost:22444/test/vscode'),
 })
 
 const KeyVal = (key: string, val: string) => h('div', {

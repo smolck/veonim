@@ -15,12 +15,7 @@ import pleaseGet from '../support/please-get'
 import { dirname, join } from 'path'
 import '../support/vscode-shim'
 
-if (process.env.VEONIM_DEV) {
-  // @ts-ignore
-  if (!global.test) global.test = {}
-  // @ts-ignore
-  global.test.vscode = require('../dev/vscode-test-runner')
-}
+if (process.env.VEONIM_DEV) require('../dev/ext-host-development')
 
 const EXT_PATH = join(configPath, 'veonim', 'extensions')
 

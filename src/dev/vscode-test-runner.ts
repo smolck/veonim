@@ -1,14 +1,7 @@
 import { requireDir } from '../support/utils'
 import nvim from '../neovim/api'
-import { join } from 'path'
 
-const testDataPath = join(__dirname, '../../test/data')
-// @ts-ignore
-global.testDataPath = testDataPath
-// @ts-ignore
-global.nvim = nvim
-
-export default () => {
+export default (testDataPath: string) => {
   console.log(
     '%c TESTING --> %cVSCODE API ',
     'color: #aaa; background: #000',
