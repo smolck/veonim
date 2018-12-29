@@ -12,6 +12,7 @@ import { GitStatus } from '../support/git'
 import NeovimState from '../neovim/state'
 import { AIClient } from '../ai/protocol'
 import { EventEmitter } from 'events'
+import { clipboard } from 'electron'
 
 const ee = new EventEmitter()
 const { state, watchState, onStateValue, onStateChange, untilStateValue } = NeovimState('nvim-mirror')
@@ -38,6 +39,9 @@ onCreateVim(info => {
   })
 
   instance.on.getDefaultColors(async () => ({ ...colors }))
+
+  instance.on.clipboardRead(async () => clipboard.readText())
+  instance.on.clipboardWrite((text: string) => clipboard.writeText(text))
 })
 
 onSwitchVim(async () => {

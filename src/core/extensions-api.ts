@@ -39,6 +39,9 @@ const { on, call, request, onContextHandler } = Worker('extension-host', {
 
 onContextHandler(nvimSyncApiHandler)
 
+on.clipboardRead(request.clipboardRead)
+on.clipboardWrite(call.clipboardWrite)
+
 const bridgeServer = (serverId: string): RPCServer => {
   const api = {} as RPCServer
 
