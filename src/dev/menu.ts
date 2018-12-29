@@ -51,7 +51,7 @@ const view = () => h('div', {
     padding: '20px',
     top: '80px',
     left: '40px',
-    background: '#000',
+    background: '#111',
   }
 }, bigChungus)
 app({ name: 'dev-menu', state: {}, actions: {}, view, element: container })
