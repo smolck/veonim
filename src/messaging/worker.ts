@@ -29,12 +29,13 @@ export default (name: string, opts = {} as WorkerOptions) => {
   // @ts-ignore - Atomics typings are wrong
   const wakeThread = () => Atomics.notify(sharedArray, 0)
 
-  const writeSharedArray = (data: any) => {
+  const writeSharedArray = (id: number, data: any) => {
     const jsonString = JSON.stringify(data)
     const buffer = Buffer.from(jsonString)
     const length = buffer.byteLength
-    Atomics.store(sharedArray, 0, length)
-    for (let ix = 0; ix < length; ix++) Atomics.store(sharedArray, ix + 1, buffer[ix])
+    for (let ix = 0; ix < length; ix++) Atomics.store(sharedArray, ix + 2, buffer[ix])
+    Atomics.store(sharedArray, 1, length)
+    Atomics.store(sharedArray, 0, id)
     wakeThread()
   }
 
@@ -53,10 +54,9 @@ export default (name: string, opts = {} as WorkerOptions) => {
   worker.onmessage = async ({ data: [e, data = [], id, requestSync, func] }: MessageEvent) => {
     if (e === '@@request-sync-context') {
       const listener = ee.listeners('context-handler')[0]
-      if (!listener) return wakeThread()
+      if (!listener) throw new Error('no "onContextHandler" function registered for synchronous RPC requests. you should register a function handler with "onContextHandler"')
       const result = await listener(func, data)
-      if (!result) return wakeThread()
-      return writeSharedArray(result)
+      return writeSharedArray(id, result)
     }
 
     if (requestSync) {
@@ -64,7 +64,7 @@ export default (name: string, opts = {} as WorkerOptions) => {
       if (!listener) return wakeThread()
       const result = await listener(...data)
       if (!result) return wakeThread()
-      return writeSharedArray(result)
+      return writeSharedArray(id, result)
     }
 
     if (!id) return ee.emit(e, ...data)

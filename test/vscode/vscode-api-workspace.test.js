@@ -27,8 +27,8 @@ test('workspace.textDocuments', async eq => {
   console.log('doc2', doc2.fileName)
 
   eq(docs.length, 2)
-  eq(doc1.fileName, path.join(testDataPath, 'src/blarg3.ts'))
-  eq(doc2.fileName, path.join(testDataPath, 'src/blarg.ts'))
+  eq(doc1.fileName, path.join(testDataPath, 'src/blarg.ts'))
+  eq(doc2.fileName, path.join(testDataPath, 'src/blarg3.ts'))
 })
 
 test('workspace.onWillSaveTextDocument')

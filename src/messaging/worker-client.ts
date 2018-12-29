@@ -1,4 +1,4 @@
-import { onFnCall, proxyFn, uuid, CreateTask, fromJSON } from '../support/utils'
+import { onFnCall, proxyFn, uuid, CreateTask, fromJSON, ID } from '../support/utils'
 import { EventEmitter } from 'events'
 
 type EventFn = { [index: string]: (...args: any[]) => void }
@@ -9,11 +9,15 @@ const internalEvents = new EventEmitter()
 internalEvents.setMaxListeners(200)
 const ee = new EventEmitter()
 const pendingRequests = new Map()
+const requestId = ID()
 let sharedArray = new Int32Array()
 
-const readSharedArray = () => {
-  const payloadLength = sharedArray[0]
-  const payload = sharedArray.subarray(1, payloadLength + 1)
+const readSharedArray = (id: number) => {
+  const responseId = sharedArray[0]
+  if (responseId !== id) console.warn(`this response does not belong to the correct request. request was: ${id}, but response is: ${responseId}`)
+  const payloadLength = sharedArray[1]
+  const dataStartIndex = 2
+  const payload = sharedArray.subarray(dataStartIndex, payloadLength + dataStartIndex)
   const jsonString = Buffer.from(payload as any).toString()
   return fromJSON(jsonString).or({})
 }
@@ -39,15 +43,17 @@ onmessage = async ({ data: [e, data = [], id] }: MessageEvent) => {
 }
 
 export const requestSyncWithContext = (func: string, args: any[]) => {
-  send(['@@request-sync-context', args, 0, true, func])
-  Atomics.wait(sharedArray, 0, 0)
-  return readSharedArray()
+  const id = requestId.next()
+  send(['@@request-sync-context', args, id, true, func])
+  Atomics.wait(sharedArray, 0, sharedArray[0])
+  return readSharedArray(id)
 }
 
 export const requestSync = onFnCall((event: string, args: any[]) => {
-  send([event, args, 0, true])
-  Atomics.wait(sharedArray, 0, 0)
-  return readSharedArray()
+  const id = requestId.next()
+  send([event, args, id, true])
+  Atomics.wait(sharedArray, 0, sharedArray[0])
+  return readSharedArray(id)
 })
 
 export const workerData = (global as any).workerData
