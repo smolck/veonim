@@ -86,6 +86,7 @@ const joinModsWithDash = (mods: string[]) => mods.join('-')
 const mapMods = $(handleMods, userModRemaps, joinModsWithDash)
 const mapKey = $(bypassEmptyMod, toVimKey)
 const formatInput = $(combineModsWithKey, wrapKey)
+const shortcuts = new Map<string, Function>()
 
 const resetInputState = () => {
   xformed = false
@@ -181,16 +182,26 @@ export const stealInput = (onKeyFn: OnKeyFn) => {
 }
 
 const sendToVim = (inputKeys: string) => {
+  // TODO: for now shortcuts only work in dev mode
+  if (process.env.VEONIM_DEV) {
+    if (shortcuts.has(`${api.nvim.state.mode}:${inputKeys}`)) {
+      return shortcuts.get(`${api.nvim.state.mode}:${inputKeys}`)!()
+    }
+  }
+
   // TODO: this might need more attention. i think s-space can be a valid
   // vim keybind. s-space was causing issues in terminal mode, sending weird
   // term esc char.
   if (inputKeys === '<S-Space>') return input('<space>')
   if (inputKeys.length > 1 && !inputKeys.startsWith('<')) inputKeys.split('').forEach((k: string) => input(k))
-  else {
-    // a fix for terminal. only happens on cmd-tab. see below for more info
-    if (inputKeys.toLowerCase() === '<esc>') lastEscapeTimestamp = Date.now()
-    input(inputKeys)
-  }
+
+  // a fix for terminal. only happens on cmd-tab. see below for more info
+  if (inputKeys.toLowerCase() === '<esc>') lastEscapeTimestamp = Date.now()
+  input(inputKeys)
+}
+
+export const registerShortcut = (keys: string, mode: VimMode, cb: Function) => {
+  shortcuts.set(`${mode}:<${keys}>`, cb)
 }
 
 const sendKeys = async (e: KeyboardEvent, inputType: InputType) => {

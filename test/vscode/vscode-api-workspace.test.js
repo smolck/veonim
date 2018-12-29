@@ -20,11 +20,7 @@ test('workspace.textDocuments', async eq => {
 
   await nvim.untilStateValue.file.is('src/blarg3.ts')
   const docs = vscode.workspace.textDocuments
-
   const [ doc1, doc2 ] = docs
-
-  console.log('doc1', doc1.fileName)
-  console.log('doc2', doc2.fileName)
 
   eq(docs.length, 2)
   eq(doc1.fileName, path.join(testDataPath, 'src/blarg.ts'))
