@@ -68,8 +68,8 @@ const getOption = async (name: string) => {
 
 const readonlyOptions: VimOption = new Proxy(Object.create(null), {
   get: (_, key: string) => options.has(key)
-  ? Promise.resolve(options.get(key))
-  : getOption(key)
+    ? Promise.resolve(options.get(key))
+    : getOption(key)
 })
 
 const cmd = (command: string) => api.core.command(command)

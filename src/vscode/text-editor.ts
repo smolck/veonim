@@ -65,4 +65,26 @@ export default (winid: number): vsc.TextEditor => ({
     const bottom = new Position(nvim.state.editorBottomLine + 1, 0)
     return new Range(top, bottom)
   },
+  viewColumn: 1,
+  get options() {
+    const { number, relativeNumber, tabstop, expandtab } = nvimSync(async (nvim, id) => {
+      const win = nvim.Window(id)
+      const [ number, relativeNumber, tabstop, expandtab ] = await Promise.all([
+        win.getOption('number'),
+        win.getOption('relativenumber'),
+        nvim.options.tabstop,
+        nvim.options.expandtab,
+      ])
+      return { number, relativeNumber, tabstop, expandtab }
+    }).call(winid)
+
+    return {
+      tabSize: tabstop,
+      insertSpaces: !!expandtab,
+      cursorStyle: 2,
+      lineNumbers: relativeNumber
+        ? 2
+        : number ? 1 : 0,
+    }
+  },
 })
