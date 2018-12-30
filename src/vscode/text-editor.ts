@@ -1,4 +1,4 @@
-import { Position, Range, Selection } from '../vscode/types'
+import { Position, Range, Selection, TextEditorRevealType, TextEditorLineNumbersStyle, ViewColumn } from '../vscode/types'
 import TextDocument from '../vscode/text-document'
 import nvimSync from '../neovim/sync-api-client'
 import nvim from '../neovim/api'
@@ -63,9 +63,9 @@ export default (winid: number): vsc.TextEditor => ({
   get visibleRanges() {
     const top = new Position(nvim.state.editorTopLine, 0)
     const bottom = new Position(nvim.state.editorBottomLine + 1, 0)
-    return new Range(top, bottom)
+    return [ new Range(top, bottom) ]
   },
-  viewColumn: 1,
+  viewColumn: ViewColumn.One,
   get options() {
     const { number, relativeNumber, tabstop, expandtab } = nvimSync(async (nvim, id) => {
       const win = nvim.Window(id)
@@ -81,10 +81,29 @@ export default (winid: number): vsc.TextEditor => ({
     return {
       tabSize: tabstop,
       insertSpaces: !!expandtab,
-      cursorStyle: 2,
+      cursorStyle: 2, // block
       lineNumbers: relativeNumber
-        ? 2
-        : number ? 1 : 0,
+        ? TextEditorLineNumbersStyle.Relative
+        : number ? TextEditorLineNumbersStyle.On : TextEditorLineNumbersStyle.Off,
     }
   },
+  edit: () => {
+    console.warn('NYI: textEditor.edit')
+    return Promise.resolve(true)
+  },
+  insertSnippet: () => {
+    console.warn('NYI: textEditor.insertSnippet')
+    return Promise.resolve(true)
+  },
+  // TODO: what are decorations? the references/git blame stuff in the editor?
+  // we could use the nvim virtual text annotations?
+  setDecorations: () => {
+    console.warn('NYI: textEditor.setDecorations')
+  },
+  // only works for current window
+  revealRange: range => {
+    nvim.jumpTo({ line: range.start.line, column: range.start.character })
+  },
+  show: () => console.warn('DEPRECATED: use window.showTextDocument'),
+  hide: () => console.warn('DEPRECATED: use workbench.action.closeActiveEditor'),
 })
