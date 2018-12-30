@@ -1,6 +1,8 @@
-import { Position, Range, Selection, TextEditorRevealType, TextEditorLineNumbersStyle, ViewColumn } from '../vscode/types'
+import { Position, Range, Selection, TextEditorLineNumbersStyle, ViewColumn, EndOfLine } from '../vscode/types'
 import TextDocument from '../vscode/text-document'
 import nvimSync from '../neovim/sync-api-client'
+import { BufferOption } from '../neovim/types'
+import { CreateTask } from '../support/utils'
 import nvim from '../neovim/api'
 import * as vsc from 'vscode'
 
@@ -87,18 +89,44 @@ export default (winid: number): vsc.TextEditor => ({
         : number ? TextEditorLineNumbersStyle.On : TextEditorLineNumbersStyle.Off,
     }
   },
-  edit: () => {
+  edit: editFn => {
     console.warn('NYI: textEditor.edit')
-    return Promise.resolve(true)
+    const editTask = CreateTask()
+
+    // TODO: how to determine when edits could be applied? the edit builder could
+    // be called over and over. there is no transaction here...
+    //
+    // oh the TextEditorEdit represents ONE edit action
+    const editBuilder: vsc.TextEditorEdit = {
+      replace: (location, value) => {
+
+      },
+      insert: (location, value) => {
+
+      },
+      delete: (location) => {
+
+      },
+      setEndOfLine: eol => {
+        const fileformat = eol === EndOfLine.LF ? 'unix' : 'dos'
+        nvim.current.buffer.setOption(BufferOption.FileFormat, fileformat)
+      },
+    }
+
+    // TODO: verify these undo options
+    editFn(editBuiler, { undoStopBefore: true, undoStopAfter: true })
+    return editTask.promise
   },
+  // TODO: i want to wait for extended marks before implementing snippets
   insertSnippet: () => {
     console.warn('NYI: textEditor.insertSnippet')
-    return Promise.resolve(true)
+    return Promise.resolve(false)
   },
   // TODO: what are decorations? the references/git blame stuff in the editor?
   // we could use the nvim virtual text annotations?
   setDecorations: () => {
     console.warn('NYI: textEditor.setDecorations')
+    // nvim.current.buffer.addVirtualText()
   },
   // only works for current window
   revealRange: range => {
