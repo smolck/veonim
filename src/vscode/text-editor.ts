@@ -37,8 +37,27 @@ export default (winid: number): vsc.TextEditor => ({
   },
   // nvim does not support multiple selections, but we should classify visual
   // block mode as multiple selections. (also only work for current window)
+  // TODO: how to determine visual block mode and breakup selections
   get selections() {
+    const { start, end } = nvimSync(async (nvim) => {
+      const [ start, end ] = await Promise.all([
+        nvim.call.getpos(`'<`),
+        nvim.call.getpos(`'>`),
+      ])
+      return { start, end }
+    }).call()
 
+    const [ /*bufnum*/, startLine, startCol ] = start
+    const [ /*bufnum*/, endLine, endCol ] = end
+
+    const isVisualLineMode = startCol === 0
+
+    const anchor = new Position(startLine, isVisualLineMode ? 0 : startCol - 1)
+    const active = isVisualLineMode
+      ? new Position(endLine + 1, 0)
+      : new Position(endLine, endCol - 1)
+
+    return [ new Selection(anchor, active) ]
   },
   // this only works for the current active window
   get visibleRanges() {
