@@ -160,6 +160,7 @@ export interface Buffer {
   clearHighlight(sourceId: number, lineStart: number, lineEnd: number): void
   clearAllHighlights(): void
   highlightProblems(problems: ProblemHighlight[]): Promise<any[]>
+  addVirtualText(line: number, text: string): void
 }
 
 export interface Window {

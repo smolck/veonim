@@ -471,6 +471,10 @@ const Buffer = (id: any) => ({
     [HL_CLR, [id, problems[0].id, 0, -1]],
     ...problems.map(p => [HL_ADD, [id, p.id, p.group, p.line, p.columnStart, p.columnEnd]]),
   ]),
+  addVirtualText: (line, text) => {
+    // TODO: set highlight groups in the chunks arr
+    api.buf.setVirtualText(id, -1, line, [ text ])
+  },
 } as Buffer)
 
 const Window = (id: any) => ({
