@@ -45,22 +45,24 @@ interface Position {
 type WindowPosition = [ string, number, number, number ]
 
 export interface Functions {
-  VeonimState(): Promise<State>,
-  VeonimPosition(): Promise<Position>,
-  VeonimCallEvent(event: string): void,
-  VeonimCallback(id: number, result: any): void,
-  Buffers(): Promise<VimBuffer[]>,
-  OpenPaths(): Promise<string[]>,
-  getcwd(): Promise<string>,
-  getline(type: string | number, end?: string): Promise<string | string[]>,
-  expand(type: string): Promise<string>,
-  synIDattr(id: number, type: string): Promise<number>,
-  getpos(where: string): Promise<WindowPosition>,
-  setloclist(window: number, list: QuickFixList[]): Promise<void>,
-  getqflist(): Promise<QuickFixList[]>,
-  cursor(line: number, column: number): Promise<void>,
-  bufname(expr: string | number): Promise<string>,
-  getbufline(expr: string | number, startLine: number, endLine?: number | string): Promise<string[]>,
-  getbufvar(expr: string | number, varname?: string, defaultValue?: any): Promise<any>,
-  termopen(cmd: string, options: object): void,
+  VeonimState(): Promise<State>
+  VeonimPosition(): Promise<Position>
+  VeonimCallEvent(event: string): void
+  VeonimCallback(id: number, result: any): void
+  Buffers(): Promise<VimBuffer[]>
+  OpenPaths(): Promise<string[]>
+  getcwd(): Promise<string>
+  getline(type: string | number, end?: string): Promise<string | string[]>
+  expand(type: string): Promise<string>
+  synIDattr(id: number, type: string): Promise<number>
+  getpos(where: string): Promise<WindowPosition>
+  setloclist(window: number, list: QuickFixList[]): Promise<void>
+  getqflist(): Promise<QuickFixList[]>
+  cursor(line: number, column: number): Promise<void>
+  bufname(expr: string | number): Promise<string>
+  getbufline(expr: string | number, startLine: number, endLine?: number | string): Promise<string[]>
+  getbufvar(expr: string | number, varname?: string, defaultValue?: any): Promise<any>
+  termopen(cmd: string, options: object): void
+  jobpid(jobId: number): Promise<number>
+  chansend(id: number, data: string | string[]): Promise<number>
 }
