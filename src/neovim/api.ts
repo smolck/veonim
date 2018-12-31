@@ -455,13 +455,22 @@ const Buffer = (id: any) => ({
   getLine: start => req.buf.getLines(id, start, start + 1, true).then(m => m[0]),
   setLines: (start, end, lines) => api.buf.setLines(id, start, end, true, lines),
   delete: start => api.buf.setLines(id, start, start + 1, true, []),
-  appendRange: (startLine, startColumn, endLine, endColumn, text) => {
+  appendRange: async (line, column, text) => {
+    console.warn('NYI: appendRange', line, column, text)
+    return
+    // const lines = text.split(/\r?\n/)
+    // const [ currentLine, ...belowLines ] = await req.buf.getLines(id, line, -1, false)
+
+    // if (text.includes('\n'))
+    // if (text.includes('\n')) return Buffer(id).append(line, text.split('\n'))
+    // const pieces = ((this.buffer != null ? this.buffer : '') + chunk).split
 
   },
   replaceRange: (startLine, startColumn, endLine, endColumn, text) => {
-
+    console.warn('NYI: replaceRange:', startLine, startColumn, endLine, endColumn, text)
   },
   deleteRange: (startLine, startColumn, endLine, endColumn) => {
+    console.warn('NYI: deleteRange:', startLine, startColumn, endLine, endColumn)
 
   },
   replace: (start, line) => api.buf.setLines(id, start, start + 1, false, [ line ]),
