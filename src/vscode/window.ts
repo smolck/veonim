@@ -2,10 +2,15 @@ import { call } from '../messaging/worker-client'
 import { NotifyKind } from '../protocols/veonim'
 import nvimSync from '../neovim/sync-api-client'
 import TextEditor from '../vscode/text-editor'
+import { is, Watcher } from '../support/utils'
 import Terminal from '../vscode/terminal'
-import { is } from '../support/utils'
 import nvim from '../neovim/api'
 import * as vsc from 'vscode'
+
+interface Events {
+  didChangeActiveTextEditor: vsc.TextEditor
+  didChangeWindowState: vsc.WindowState
+}
 
 interface UnifiedMessage {
   message: string
@@ -19,6 +24,8 @@ const unifyMessage = ([ message, optionsOrItems, itemsMaybe ]: any[]): UnifiedMe
   const actionItems: string[] = items.map((item: any) => item.title || item)
   return { message, isModal, actionItems }
 }
+
+const events = Watcher<Events>()
 
 const window: typeof vsc.window = {
   get state() {
@@ -58,9 +65,8 @@ const window: typeof vsc.window = {
 
     return terminalBufferIds.map(bufid => Terminal(bufid))
   },
-  onDidChangeActiveTextEditor: fn => {
-    console.warn('NYI: window.onDidChangeActiveTextEditor', fn)
-  },
+  onDidChangeWindowState: fn => ({ dispose: events.on('didChangeWindowState', fn) }),
+  onDidChangeActiveTextEditor: fn => ({ dispose: events.on('didChangeActiveTextEditor', fn) }),
   // TODO: maybe we can use nvim inputlist() for this?
   // TODO: we need to return the selected dialog button action item thingy value
   showInformationMessage: async (...a: any[]) => {
