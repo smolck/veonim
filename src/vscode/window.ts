@@ -1,3 +1,5 @@
+import { BufferOption, BufferType } from '../neovim/types'
+import nvimSync from '../neovim/sync-api-client'
 import TextEditor from '../vscode/text-editor'
 import Terminal from '../vscode/terminal'
 import { is } from '../support/utils'
@@ -23,12 +25,24 @@ const window: typeof vsc.window = {
     return [ TextEditor(nvim.current.window.id) ]
   },
   get activeTerminal() {
-    console.warn('NYI: window.activeTerminal')
-    return {}
+    const { bufferId, isTerminal } = nvimSync(async nvim => {
+      const currentBuffer = await nvim.current.window.buffer
+      return {
+        bufferId: currentBuffer.id,
+        isTerminal: await currentBuffer.isTerminal(),
+      }
+    }).call()
+
+    if (isTerminal) return Terminal(bufferId)
   },
   get terminals() {
-    console.warn('NYI: window.terminals')
-    return []
+    const terminalBufferIds = nvimSync(async nvim => {
+      const buffers = await nvim.buffers.list()
+      const terminalBuffers = await Promise.all(buffers.filter(b => b.isTerminal()))
+      return terminalBuffers.map(b => b.id)
+    }).call()
+
+    return terminalBufferIds.map(bufid => Terminal(bufid))
   },
   onDidChangeActiveTextEditor: fn => {
     console.warn('NYI: window.onDidChangeActiveTextEditor', fn)
