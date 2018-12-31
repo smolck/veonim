@@ -1,10 +1,24 @@
-import { BufferOption, BufferType } from '../neovim/types'
+import { call } from '../messaging/worker-client'
+import { NotifyKind } from '../protocols/veonim'
 import nvimSync from '../neovim/sync-api-client'
 import TextEditor from '../vscode/text-editor'
 import Terminal from '../vscode/terminal'
 import { is } from '../support/utils'
 import nvim from '../neovim/api'
 import * as vsc from 'vscode'
+
+interface UnifiedMessage {
+  message: string
+  isModal: boolean
+  actionItems: string[]
+}
+
+const unifyMessage = ([ message, optionsOrItems, itemsMaybe ]: any[]): UnifiedMessage => {
+  const isModal: boolean = is.object(optionsOrItems) ? <any>optionsOrItems.modal : false
+  const items: string[] = is.array(optionsOrItems) ? optionsOrItems : itemsMaybe
+  const actionItems: string[] = items.map((item: any) => item.title || item)
+  return { message, isModal, actionItems }
+}
 
 const window: typeof vsc.window = {
   get state() {
@@ -47,10 +61,22 @@ const window: typeof vsc.window = {
   onDidChangeActiveTextEditor: fn => {
     console.warn('NYI: window.onDidChangeActiveTextEditor', fn)
   },
-  showInformationMessage: (message: string, optionsOrItems: string[] | any, itemsMaybe?: string[]) => {
-    const isModal: boolean = is.object(optionsOrItems) ? <any>optionsOrItems.modal : false
-    const items: string[] = is.array(optionsOrItems) ? optionsOrItems : itemsMaybe
-    const actionItems: string[] = items.map((item: any) => item.title || item)
+  // TODO: maybe we can use nvim inputlist() for this?
+  // TODO: we need to return the selected dialog button action item thingy value
+  showInformationMessage: async (...a: any[]) => {
+    const { message, actionItems } = unifyMessage(a)
+    call.notify(message, NotifyKind.Info, actionItems)
+    return Promise.resolve(undefined)
+  },
+  showWarningMessage: async (...a: any[]) => {
+    const { message, actionItems } = unifyMessage(a)
+    call.notify(message, NotifyKind.Info, actionItems)
+    return Promise.resolve(undefined)
+  },
+  showErrorMessage: async (...a: any[]) => {
+    const { message, actionItems } = unifyMessage(a)
+    call.notify(message, NotifyKind.Info, actionItems)
+    return Promise.resolve(undefined)
   },
 }
 

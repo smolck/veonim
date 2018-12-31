@@ -118,7 +118,10 @@ const view = ($: S) => PluginTop(true, {
 
 const ui = app<S, typeof actions>({ name: 'notifications', element: container, state, actions, view })
 
-export const notify = (message: string, kind = NotifyKind.Info) => {
+export const notify = (message: string, kind = NotifyKind.Info, actions?: string[]) => {
+  // TODO: handle actions as buttons that can be activated (think vscode dialogs)
+  console.warn('NYI: veonim.notify actions as buttons for dialogs', actions)
+
   const msg = {
     kind,
     message,
