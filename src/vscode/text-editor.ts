@@ -89,32 +89,59 @@ export default (winid: number): vsc.TextEditor => ({
         : number ? TextEditorLineNumbersStyle.On : TextEditorLineNumbersStyle.Off,
     }
   },
+  // TODO: do something with the options?
   edit: editFn => {
-    console.warn('NYI: textEditor.edit')
     const editTask = CreateTask()
+    let transactionComplete = false
+    const fin = () => (transactionComplete = true, editTask.done)
 
-    // TODO: how to determine when edits could be applied? the edit builder could
-    // be called over and over. there is no transaction here...
-    //
-    // oh the TextEditorEdit represents ONE edit action
     const editBuilder: vsc.TextEditorEdit = {
-      replace: (location, value) => {
+      replace: async (location, value) => {
+        if (transactionComplete) return
+        const buffer = await nvim.Window(winid).buffer
 
+        const start = {
+          line: location instanceof Position
+            ? location.line
+            : (location as Range).start.line,
+          column: location instanceof Position
+            ? location.character
+            : (location as Range).start.character,
+        }
+
+        const end = {
+          line: location instanceof Position
+            ? location.line
+            : (location as Range).end.line,
+          column: location instanceof Position
+            ? location.character
+            : (location as Range).end.character,
+        }
+
+        buffer.replaceRange(start.line, start.column, end.line, end.column, value)
+        fin()
       },
-      insert: (location, value) => {
-
+      insert: async (location, value) => {
+        if (transactionComplete) return
+        const buffer = await nvim.Window(winid).buffer
+        buffer.appendRange(location.line, location.character, value)
+        fin()
       },
-      delete: (location) => {
-
+      delete: async ({ start, end }) => {
+        if (transactionComplete) return
+        const buffer = await nvim.Window(winid).buffer
+        buffer.deleteRange(start.line, start.character, end.line, end.character)
+        fin()
       },
       setEndOfLine: eol => {
+        if (transactionComplete) return
         const fileformat = eol === EndOfLine.LF ? 'unix' : 'dos'
         nvim.current.buffer.setOption(BufferOption.FileFormat, fileformat)
+        fin()
       },
     }
 
-    // TODO: verify these undo options
-    editFn(editBuiler, { undoStopBefore: true, undoStopAfter: true })
+    editFn(editBuilder)
     return editTask.promise
   },
   // TODO: i want to wait for extended marks before implementing snippets

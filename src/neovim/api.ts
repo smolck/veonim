@@ -455,6 +455,15 @@ const Buffer = (id: any) => ({
   getLine: start => req.buf.getLines(id, start, start + 1, true).then(m => m[0]),
   setLines: (start, end, lines) => api.buf.setLines(id, start, end, true, lines),
   delete: start => api.buf.setLines(id, start, start + 1, true, []),
+  appendRange: (startLine, startColumn, endLine, endColumn, text) => {
+
+  },
+  replaceRange: (startLine, startColumn, endLine, endColumn, text) => {
+
+  },
+  deleteRange: (startLine, startColumn, endLine, endColumn) => {
+
+  },
   replace: (start, line) => api.buf.setLines(id, start, start + 1, false, [ line ]),
   getVar: name => req.buf.getVar(id, name),
   setVar: (name, value) => api.buf.setVar(id, name, value),

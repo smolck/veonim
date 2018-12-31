@@ -141,13 +141,16 @@ export interface Buffer {
   detach(): void
   onDetach(onDetachFn: () => void): void
   onChangedTick(onChangedTickFn: (changedTick: number) => void): void
-  append(start: number, lines: string | string[]): void
   getAllLines(): Promise<string[]>
   getLines(start: number, end: number): Promise<string[]>
   getLine(start: number): Promise<string>
   setLines(start: number, end: number, replacement: string[]): void
+  append(start: number, lines: string | string[]): void
   delete(start: number): void
   replace(start: number, line: string): void
+  appendRange(line: number, column: number, text: string): void
+  replaceRange(startLine: number, startColumn: number, endLine: number, endColumn: number, text: string): void
+  deleteRange(startLine: number, startColumn: number, endLine: number, endColumn: number): void
   getKeymap(mode: string): Promise<any>
   getVar(name: string): Promise<any>
   setVar(name: string, value: any): void
