@@ -1,6 +1,6 @@
 import { simplifyPath, pathReducer } from '../support/utils'
-import { BufferOption, BufferType } from '../neovim/types'
 import { BufferVar } from '../neovim/function-types'
+import { BufferOption } from '../neovim/types'
 import nvim from '../neovim/api'
 
 export interface WindowMetadata {
@@ -47,7 +47,7 @@ export default async (): Promise<WindowMetadata[]> => {
       filetype: await buffer.getOption(BufferOption.Filetype),
       name: (simplifyPath(await buffer.name, nvim.state.cwd) || '').replace(/^term:\/\/\.\/\/\w+:/, ''),
       modified: await buffer.getOption(BufferOption.Modified),
-      terminal: (await buffer.getOption(BufferOption.Type)) === BufferType.Terminal,
+      terminal: await buffer.isTerminal(),
       termAttached: await buffer.getVar(BufferVar.TermAttached).catch(() => false),
       termFormat: await buffer.getVar(BufferVar.TermFormat).catch(() => ''),
     }

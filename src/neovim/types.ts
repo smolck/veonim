@@ -137,6 +137,7 @@ export interface Buffer {
   changedtick: Promise<number>
   getOffset(line: number): Promise<number>
   isLoaded(): Promise<boolean>
+  isTerminal(): Promise<boolean>
   attach(options: { sendInitialBuffer: boolean }, onEventFn: (event: BufferChangeEvent) => void): void
   detach(): void
   onDetach(onDetachFn: () => void): void

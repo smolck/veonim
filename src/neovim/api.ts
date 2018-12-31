@@ -173,7 +173,7 @@ const buffers = {
       current: b.id === currentBufferId,
       modified: await b.getOption(BufferOption.Modified),
       listed: await b.getOption(BufferOption.Listed),
-      terminal: (await b.getOption(BufferOption.Type)) === BufferType.Terminal,
+      terminal: await b.isTerminal(),
     })))
 
     if (!bufInfo) return []
@@ -419,6 +419,7 @@ const Buffer = (id: any) => ({
   get changedtick() { return req.buf.getChangedtick(id) },
   getOffset: line => req.buf.getOffset(id, line),
   isLoaded: () => req.buf.isLoaded(id),
+  isTerminal: async () => (await req.buf.getOption(id, BufferOption.Type)) === BufferType.Terminal,
   attach: ({ sendInitialBuffer }, cb) => {
     watchers.bufferEvents.on(`change:${id}`, cb)
     req.buf.attach(id, sendInitialBuffer, {}).then(attached => {
