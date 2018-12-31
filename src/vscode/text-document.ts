@@ -9,23 +9,14 @@ import * as vsc from 'vscode'
 
 export default (bufid: number): vsc.TextDocument => ({
   get isUntitled() {
-    const name = nvimSync((nvim, id) => {
-      return nvim.Buffer(id).name
-    }).call(bufid)
-
-    return !name
+    return !nvimSync((nvim, id) => nvim.Buffer(id).name).call(bufid)
   },
   get uri() {
-    const name = nvimSync((nvim, id) => {
-      return nvim.Buffer(id).name
-    }).call(bufid)
-
+    const name = nvimSync((nvim, id) => nvim.Buffer(id).name).call(bufid)
     return URI.file(name)
   },
   get fileName() {
-    return nvimSync((nvim, id) => {
-      return nvim.Buffer(id).name
-    }).call(bufid)
+    return nvimSync((nvim, id) => nvim.Buffer(id).name).call(bufid)
   },
   get languageId() {
     const filetype: string = nvimSync((nvim, id) => {
@@ -35,9 +26,7 @@ export default (bufid: number): vsc.TextDocument => ({
     return filetypeToVSCLanguage(filetype)
   },
   get version() {
-    return nvimSync((nvim, id) => {
-      return nvim.Buffer(id).changedtick
-    }).call(bufid)
+    return nvimSync((nvim, id) => nvim.Buffer(id).changedtick).call(bufid)
   },
   get isDirty() {
     return !!nvimSync((nvim, id) => {
@@ -48,9 +37,7 @@ export default (bufid: number): vsc.TextDocument => ({
     return !nvimSync((nvim, id) => nvim.Buffer(id).isLoaded()).call(bufid)
   },
   get lineCount() {
-    return nvimSync((nvim, id) => {
-      return nvim.Buffer(id).length
-    }).call(bufid)
+    return nvimSync((nvim, id) => nvim.Buffer(id).length).call(bufid)
   },
   get eol() {
     const fileFormat = nvimSync((nvim, id) => {
