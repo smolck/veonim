@@ -93,7 +93,10 @@ export default (winid: number): vsc.TextEditor => ({
   edit: editFn => {
     const editTask = CreateTask()
     let transactionComplete = false
-    const fin = () => (transactionComplete = true, editTask.done)
+    const fin = () => {
+      transactionComplete = true
+      editTask.done(true)
+    }
 
     const editBuilder: vsc.TextEditorEdit = {
       replace: async (location, value) => {
@@ -142,7 +145,7 @@ export default (winid: number): vsc.TextEditor => ({
     }
 
     editFn(editBuilder)
-    return editTask.promise
+    return editTask.promise as Promise<boolean>
   },
   // TODO: i want to wait for extended marks before implementing snippets
   insertSnippet: () => {
