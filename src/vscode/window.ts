@@ -1,4 +1,5 @@
 import TextEditor from '../vscode/text-editor'
+import Terminal from '../vscode/terminal'
 import { is } from '../support/utils'
 import nvim from '../neovim/api'
 import * as vsc from 'vscode'
