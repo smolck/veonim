@@ -8,8 +8,16 @@ import nvim from '../neovim/api'
 import * as vsc from 'vscode'
 
 interface Events {
-  didChangeActiveTextEditor: vsc.TextEditor
   didChangeWindowState: vsc.WindowState
+  didChangeActiveTextEditor: vsc.TextEditor | undefined
+  didChangeVisibleTextEditors: vsc.TextEditor[]
+  didChangeTextEditorSelection: vsc.TextEditorSelectionChangeEvent
+  didChangeTextEditorVisibleRanges: vsc.TextEditorVisibleRangesChangeEvent
+  didChangeTextEditorOptions: vsc.TextEditorOptionsChangeEvent
+  didChangeTextEditorViewColumn: vsc.TextEditorViewColumnChangeEvent
+  didChangeActiveTerminal: vsc.Terminal | undefined
+  didOpenTerminal: vsc.Terminal
+  didCloseTerminal: vsc.Terminal
 }
 
 interface UnifiedMessage {
@@ -26,6 +34,8 @@ const unifyMessage = ([ message, optionsOrItems, itemsMaybe ]: any[]): UnifiedMe
 }
 
 const events = Watcher<Events>()
+
+// TODO: actually implement and call event handlers when stuff happens
 
 const window: typeof vsc.window = {
   get state() {
@@ -65,8 +75,6 @@ const window: typeof vsc.window = {
 
     return terminalBufferIds.map(bufid => Terminal(bufid))
   },
-  onDidChangeWindowState: fn => ({ dispose: events.on('didChangeWindowState', fn) }),
-  onDidChangeActiveTextEditor: fn => ({ dispose: events.on('didChangeActiveTextEditor', fn) }),
   // TODO: maybe we can use nvim inputlist() for this?
   // TODO: we need to return the selected dialog button action item thingy value
   showInformationMessage: async (...a: any[]) => {
@@ -84,6 +92,17 @@ const window: typeof vsc.window = {
     call.notify(message, NotifyKind.Info, actionItems)
     return Promise.resolve(undefined)
   },
+  onDidChangeWindowState: fn => ({ dispose: events.on('didChangeWindowState', fn) }),
+  onDidChangeActiveTextEditor: fn => ({ dispose: events.on('didChangeActiveTextEditor', fn) }),
+  onDidChangeVisibleTextEditors: fn => ({ dispose: events.on('didChangeVisibleTextEditors', fn) }),
+
+  onDidChangeTextEditorSelection: fn => ({ dispose: events.on('didChangeTextEditorSelection', fn) }),
+  onDidChangeTextEditorVisibleRanges: fn => ({ dispose: events.on('didChangeTextEditorVisibleRanges', fn) }),
+  onDidChangeTextEditorOptions: fn => ({ dispose: events.on('didChangeTextEditorOptions', fn) }),
+  onDidChangeTextEditorViewColumn: fn => ({ dispose: events.on('didChangeTextEditorViewColumn', fn) }),
+  onDidChangeActiveTerminal: fn => ({ dispose: events.on('didChangeActiveTerminal', fn) }),
+  onDidOpenTerminal: fn => ({ dispose: events.on('didOpenTerminal', fn) }),
+  onDidCloseTerminal: fn => ({ dispose: events.on('didCloseTerminal', fn) }),
 }
 
 export default window
