@@ -1,7 +1,7 @@
 import WorkspaceConfiguration from '../vscode/workspace-configuration'
+import { Watcher, pathRelativeToCwd } from '../support/utils'
 import TextDocument from '../vscode/text-document'
 import nvimSync from '../neovim/sync-api-client'
-import { Watcher } from '../support/utils'
 import { URI } from '../vscode/uri'
 import Tasks from '../vscode/tasks'
 import nvim from '../neovim/api'
@@ -34,6 +34,39 @@ const workspace: typeof vsc.workspace = {
     const buffers = nvimSync(nvim => nvim.buffers.list()).call()
     const bufferIds = buffers.map(b => b.id)
     return bufferIds.map(id => TextDocument(id))
+  },
+  getWorkspaceFolder: uri => {
+    if (uri.path !== nvim.state.cwd) return
+    return WorkspaceFolder(uri.path)
+  },
+  asRelativePath: pathOrUri => {
+    const path = pathOrUri instanceof URI ? pathOrUri.path : pathOrUri as string
+    return pathRelativeToCwd(path, nvim.state.cwd)
+  },
+  updateWorkspaceFolders: (_start, _deleteCount, folder) => {
+    nvim.cmd(`cd ${folder.uri.path}`)
+    return true
+  },
+  createFileSystemWatcher: () => {
+    console.warn('NYI: workspace.createFileSystemWatcher')
+  },
+  // TODO: nvim does not provide a save buffers in background option yet
+  saveAll: () => Promise.resolve(false),
+  findFiles: async () => {
+    // TODO: i don't want to bring in a glob library, wtf
+    console.warn('NYI: workspace.findFiles')
+    return []
+  },
+  applyEdit: async () => {
+    console.warn('NYI: workspace.applyEdit')
+    return false
+  },
+  openTextDocument: () => {
+    console.warn('NYI: workspace.openTextDocument')
+  },
+  registerTextDocumentContentProvider: () => {
+    console.warn('NYI: workspace.registerTextDocumentContentProvider')
+    return ({ dispose: () => {} })
   },
   // TODO: i'm not sure what the resource is used for?
   getConfiguration: (section, resource) => {
