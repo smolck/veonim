@@ -7,7 +7,12 @@ import { is } from '../support/utils'
 import { URI } from '../vscode/uri'
 import * as vsc from 'vscode'
 
-export default (bufid: number): vsc.TextDocument => ({
+export interface SuperTextDocument extends vsc.TextDocument {
+  _nvimBufferId: number
+}
+
+export default (bufid: number): SuperTextDocument => ({
+  get _nvimBufferId() { return bufid },
   get isUntitled() {
     return !nvimSync((nvim, id) => nvim.Buffer(id).name).call(bufid)
   },
