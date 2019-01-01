@@ -1,7 +1,9 @@
+import WorkspaceConfiguration from '../vscode/workspace-configuration'
 import TextDocument from '../vscode/text-document'
 import nvimSync from '../neovim/sync-api-client'
 import { Watcher } from '../support/utils'
 import { URI } from '../vscode/uri'
+import Tasks from '../vscode/tasks'
 import nvim from '../neovim/api'
 import { basename } from 'path'
 import * as vsc from 'vscode'
@@ -32,6 +34,20 @@ const workspace: typeof vsc.workspace = {
     const buffers = nvimSync(nvim => nvim.buffers.list()).call()
     const bufferIds = buffers.map(b => b.id)
     return bufferIds.map(id => TextDocument(id))
+  },
+  // TODO: i'm not sure what the resource is used for?
+  getConfiguration: (section, resource) => {
+    if (resource) console.warn('NYI: workspace.getConfiguration - resource param not used:', resource)
+    return WorkspaceConfiguration(section)
+  },
+  registerTaskProvider: (...a: any[]) => {
+    console.warn('DEPRECATED: workspace.registerTaskProvider. use the "tasks" namespace instead')
+    // @ts-ignore - help me typescript you're my only hope
+    return Tasks.registerTaskProvider(...a as any)
+  },
+  registerFileSystemProvider: () => {
+    console.warn('NYI: workspace.registerFileSystemProvider')
+    return ({ dispose: () => {} })
   },
   onDidChangeWorkspaceFolders: fn => registerEvent('didChangeWorkspaceFolders', fn),
   onDidOpenTextDocument: fn => registerEvent('didOpenTextDocument', fn),

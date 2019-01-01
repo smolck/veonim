@@ -210,6 +210,7 @@ export const objDeepGet = (obj: object) => (givenPath: string | string[]) => {
   return dive(obj)
 }
 
+// TODO: deprecate this and use native Events.EventEmitter
 export class Watchers extends Map<string, Set<Function>> {
   constructor() {
     super()
