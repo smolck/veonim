@@ -92,6 +92,67 @@ const window: typeof vsc.window = {
     call.notify(message, NotifyKind.Info, actionItems)
     return Promise.resolve(undefined)
   },
+  showQuickPick: () => {
+    console.warn('NYI: window.showQuickPick')
+    return Promise.resolve(undefined)
+  },
+  showWorkspaceFolderPick: () => {
+    console.warn('NYI: window.showWorkspaceFolderPick')
+    return Promise.resolve(undefined)
+  },
+  showOpenDialog: () => {
+    console.warn('NYI: window.showOpenDialog')
+    return Promise.resolve(undefined)
+  },
+  showSaveDialog: () => {
+    console.warn('NYI: window.showSaveDialog')
+    return Promise.resolve(undefined)
+  },
+  showInputBox: () => {
+    console.warn('NYI: window.showInputBox')
+    return Promise.resolve(undefined)
+  },
+  createQuickPick: () => {
+    console.warn('NYI: window.createQuickPick')
+  },
+  createOutputChannel: () => {
+    console.warn('NYI: window.createOutputChannel')
+  },
+  createWebviewPanel: () => {
+    console.warn('NYI: window.createWebviewPanel')
+  },
+  setStatusBarMessage: (text: string) => {
+    console.log('vsc-ext-api (StatusBarMessage):', text)
+    return { dispose: () => {} }
+  },
+  withScmProgress: () => {
+    console.warn('NYI: window.withScmProgress')
+  },
+  withProgress: () => {
+    console.warn('NYI: window.withProgress')
+  },
+  createStatusBarItem: () => {
+    console.warn('NYI: window.createStatusBarItem')
+  },
+  createTerminal: () => {
+    // TODO: this is easy to do, but where do we show the new term buffer?
+    console.warn('NYI: window.createTerminal')
+  },
+  registerTreeDataProvider: () => {
+    console.warn('NYI: window.registerTreeDataProvider')
+  },
+  createTreeView: () => {
+    console.warn('NYI: window.createTreeView')
+  },
+  registerUriHandler: () => {
+    console.warn('NYI: window.registerUriHandler')
+  },
+  registerWebviewPanelSerializer: () => {
+    console.warn('NYI: window.registerWebviewPanelSerializer')
+  },
+  showTextDocument: (documentOrUri, optionsOrColumn) => {
+
+  },
   onDidChangeWindowState: fn => ({ dispose: events.on('didChangeWindowState', fn) }),
   onDidChangeActiveTextEditor: fn => ({ dispose: events.on('didChangeActiveTextEditor', fn) }),
   onDidChangeVisibleTextEditors: fn => ({ dispose: events.on('didChangeVisibleTextEditors', fn) }),
