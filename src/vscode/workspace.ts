@@ -8,6 +8,12 @@ import * as vsc from 'vscode'
 
 interface Events {
   didChangeWorkspaceFolders: vsc.WorkspaceFoldersChangeEvent
+  didOpenTextDocument: vsc.TextDocument
+  didCloseTextDocument: vsc.TextDocument
+  didChangeTextDocument: vsc.TextDocumentChangeEvent
+  willSaveTextDocument: vsc.TextDocumentWillSaveEvent
+  didSaveTextDocument: vsc.TextDocument
+  didChangeConfiguration: vsc.ConfigurationChangeEvent
 }
 
 const events = Watcher<Events>()
@@ -27,10 +33,16 @@ const workspace: typeof vsc.workspace = {
     const bufferIds = buffers.map(b => b.id)
     return bufferIds.map(id => TextDocument(id))
   },
-  // TODO: events...
-  // TODO: functions...
-  onDidChangeWorkspaceFolders: fn => ({ dispose: events.on('didChangeWorkspaceFolders', fn) }),
+  onDidChangeWorkspaceFolders: fn => registerEvent('didChangeWorkspaceFolders', fn),
+  onDidOpenTextDocument: fn => registerEvent('didOpenTextDocument', fn),
+  onDidCloseTextDocument: fn => registerEvent('didCloseTextDocument', fn),
+  onDidChangeTextDocument: fn => registerEvent('didChangeTextDocument', fn),
+  onWillSaveTextDocument: fn => registerEvent('willSaveTextDocument', fn),
+  onDidSaveTextDocument: fn => registerEvent('didSaveTextDocument', fn),
+  onDidChangeConfiguration: fn => registerEvent('didChangeConfiguration', fn),
 }
+
+const registerEvent = (name: keyof Events, fn: any) => ({ dispose: events.on(name, fn) })
 
 const WorkspaceFolder = (dir: string) => ({
   uri: URI.file(dir),

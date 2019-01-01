@@ -153,17 +153,19 @@ const window: typeof vsc.window = {
   showTextDocument: (documentOrUri, optionsOrColumn) => {
 
   },
-  onDidChangeWindowState: fn => ({ dispose: events.on('didChangeWindowState', fn) }),
-  onDidChangeActiveTextEditor: fn => ({ dispose: events.on('didChangeActiveTextEditor', fn) }),
-  onDidChangeVisibleTextEditors: fn => ({ dispose: events.on('didChangeVisibleTextEditors', fn) }),
+  onDidChangeWindowState: fn => registerEvent('didChangeWindowState', fn),
+  onDidChangeActiveTextEditor: fn => registerEvent('didChangeActiveTextEditor', fn),
+  onDidChangeVisibleTextEditors: fn => registerEvent('didChangeVisibleTextEditors', fn),
 
-  onDidChangeTextEditorSelection: fn => ({ dispose: events.on('didChangeTextEditorSelection', fn) }),
-  onDidChangeTextEditorVisibleRanges: fn => ({ dispose: events.on('didChangeTextEditorVisibleRanges', fn) }),
-  onDidChangeTextEditorOptions: fn => ({ dispose: events.on('didChangeTextEditorOptions', fn) }),
-  onDidChangeTextEditorViewColumn: fn => ({ dispose: events.on('didChangeTextEditorViewColumn', fn) }),
-  onDidChangeActiveTerminal: fn => ({ dispose: events.on('didChangeActiveTerminal', fn) }),
-  onDidOpenTerminal: fn => ({ dispose: events.on('didOpenTerminal', fn) }),
-  onDidCloseTerminal: fn => ({ dispose: events.on('didCloseTerminal', fn) }),
+  onDidChangeTextEditorSelection: fn => registerEvent('didChangeTextEditorSelection', fn),
+  onDidChangeTextEditorVisibleRanges: fn => registerEvent('didChangeTextEditorVisibleRanges', fn),
+  onDidChangeTextEditorOptions: fn => registerEvent('didChangeTextEditorOptions', fn),
+  onDidChangeTextEditorViewColumn: fn => registerEvent('didChangeTextEditorViewColumn', fn),
+  onDidChangeActiveTerminal: fn => registerEvent('didChangeActiveTerminal', fn),
+  onDidOpenTerminal: fn => registerEvent('didOpenTerminal', fn),
+  onDidCloseTerminal: fn => registerEvent('didCloseTerminal', fn),
 }
+
+const registerEvent = (name: keyof Events, fn: any) => ({ dispose: events.on(name, fn) })
 
 export default window
