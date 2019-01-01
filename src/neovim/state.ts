@@ -19,7 +19,7 @@ const state = {
 
 export type NeovimState = typeof state
 type StateKeys = keyof NeovimState
-type WatchState = { [Key in StateKeys]: (fn: (value: NeovimState[Key]) => void) => void }
+type WatchState = { [Key in StateKeys]: (fn: (value: NeovimState[Key], previousValue: NeovimState[Key]) => void) => void }
 
 type OnStateValue1 = { [Key in StateKeys]: (value: NeovimState[Key], fn: () => void) => void }
 type OnStateValue2 = { [Key in StateKeys]: (value: NeovimState[Key], previousValue: NeovimState[Key], fn: () => void) => void }
@@ -44,7 +44,7 @@ export default (stateName: string) => {
   const stateChangeFns = new Set<Function>()
 
   const watchState: WatchState = new Proxy(Object.create(null), {
-    get: (_, key: string) => (fn: (value: any) => void) => watchers.on(key, fn),
+    get: (_, key: string) => (fn: (value: any, previousValue: any) => void) => watchers.on(key, fn),
   })
 
   const onStateChange = (fn: (nextState: NeovimState, key: string, value: any, previousValue: any) => void) => {
