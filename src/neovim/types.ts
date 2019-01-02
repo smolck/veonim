@@ -14,6 +14,15 @@ export enum VimMode {
   SomeModeThatIProbablyDontCareAbout,
 }
 
+export interface BufferInfo {
+  dir: string
+  name: string
+  base: string
+  terminal: boolean
+  modified: boolean
+  duplicate: boolean
+}
+
 export enum BufferType {
   Normal = '',
   Help = 'help',
@@ -25,6 +34,7 @@ export enum BufferType {
 }
 
 export enum BufferOption {
+  FileFormat = 'fileformat',
   Modifiable = 'modifiable',
   Listed = 'buflisted',
   Modified = 'modified',
@@ -119,23 +129,29 @@ export interface ProblemHighlight {
 }
 
 export interface Buffer {
-  id: any
+  id: number
   number: Promise<number>
   valid: Promise<boolean>
   name: Promise<string>
   length: Promise<number>
   changedtick: Promise<number>
+  getOffset(line: number): Promise<number>
+  isLoaded(): Promise<boolean>
+  isTerminal(): Promise<boolean>
   attach(options: { sendInitialBuffer: boolean }, onEventFn: (event: BufferChangeEvent) => void): void
   detach(): void
   onDetach(onDetachFn: () => void): void
   onChangedTick(onChangedTickFn: (changedTick: number) => void): void
-  append(start: number, lines: string | string[]): void
   getAllLines(): Promise<string[]>
   getLines(start: number, end: number): Promise<string[]>
   getLine(start: number): Promise<string>
   setLines(start: number, end: number, replacement: string[]): void
+  append(start: number, lines: string | string[]): void
   delete(start: number): void
   replace(start: number, line: string): void
+  appendRange(line: number, column: number, text: string): void
+  replaceRange(startLine: number, startColumn: number, endLine: number, endColumn: number, text: string): void
+  deleteRange(startLine: number, startColumn: number, endLine: number, endColumn: number): void
   getKeymap(mode: string): Promise<any>
   getVar(name: string): Promise<any>
   setVar(name: string, value: any): void
@@ -148,10 +164,11 @@ export interface Buffer {
   clearHighlight(sourceId: number, lineStart: number, lineEnd: number): void
   clearAllHighlights(): void
   highlightProblems(problems: ProblemHighlight[]): Promise<any[]>
+  addVirtualText(line: number, text: string): void
 }
 
 export interface Window {
-  id: any
+  id: number
   number: Promise<number>
   valid: Promise<boolean>
   tab: Promise<Tabpage>
@@ -171,7 +188,7 @@ export interface Window {
 }
 
 export interface Tabpage {
-  id: any
+  id: number
   number: Promise<number>
   valid: Promise<boolean>
   window: Promise<Window>

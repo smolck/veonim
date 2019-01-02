@@ -2,9 +2,9 @@ import { cursor, hideCursor, showCursor } from '../core/cursor'
 import * as windows from '../windows/window-manager'
 import { genList } from '../support/utils'
 import { stealInput } from '../core/input'
+import api from '../core/instance-api'
 import { makel } from '../ui/vanilla'
 import { paddingV } from '../ui/css'
-import nvim from '../core/neovim'
 
 // hand crafted for maximum ergonomic comfort
 const labels = {
@@ -58,8 +58,8 @@ const labelHTML = (label: string) => label
   .join('')
 
 const divinationLine = async ({ visual }: { visual: boolean }) => {
-  if (visual) nvim.feedkeys('gv', 'n')
-  else nvim.feedkeys('m`', 'n')
+  if (visual) api.nvim.feedkeys('gv', 'n')
+  else api.nvim.feedkeys('m`', 'n')
 
   const win = windows.getActive()
   const positions = genList(win.rows, row => win.editor.positionToEditorPixels(row, 0))
@@ -113,7 +113,7 @@ const divinationLine = async ({ visual }: { visual: boolean }) => {
       : 'g^'
 
     const command = `${Math.abs(jumpDistance)}g${jumpMotion}${cursorAdjustment}`
-    nvim.feedkeys(command, 'n')
+    api.nvim.feedkeys(command, 'n')
     reset()
   }
 
@@ -202,7 +202,7 @@ export const divinationSearch = async () => {
     const jumpMotion = jumpDistance > 0 ? 'j' : 'k'
     const command = `m\`${Math.abs(jumpDistance)}g${jumpMotion}${col + 1}|`
 
-    nvim.feedkeys(command, 'n')
+    api.nvim.feedkeys(command, 'n')
     reset()
   }
 
@@ -217,6 +217,6 @@ export const divinationSearch = async () => {
   })
 }
 
-nvim.onAction('jump-search', divinationSearch)
-nvim.onAction('jump-line', () => divinationLine({ visual: false }))
-nvim.onAction('jump-line-visual', () => divinationLine({ visual: true }))
+api.onAction('jump-search', divinationSearch)
+api.onAction('jump-line', () => divinationLine({ visual: false }))
+api.onAction('jump-line-visual', () => divinationLine({ visual: true }))

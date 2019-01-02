@@ -1,6 +1,7 @@
 'use strict'
 
-const { $, go, run, fromRoot } = require('./runner')
+const { $, go, run, fromRoot, getDirFiles } = require('./runner')
+const path = require('path')
 const fs = require('fs-extra')
 
 const paths = {
@@ -27,28 +28,37 @@ const copy = {
   },
 }
 
-const codemod = {
-  workerExports: () => {
-    $`adding exports objects to web workers to work in electron context`
-    return run('jscodeshift -t tools/dummy-exports.js build/workers')
-  },
-  removeDebug: () => {
-    $`removing debug code from release build`
-    return run('jscodeshift -t tools/remove-debug.js build')
-  },
+const wtfTypescriptSucks = 'Object.defineProperty(exports, "__esModule", { value: true });'
+
+const unfuckTypescript = async () => {
+  $`unfucking typescript exports shit javascript/electron is cancer programming sucks`
+  const dirs = await getDirFiles(fromRoot('build'))
+  const filesReq = dirs.reduce((files, dir) => {
+    return [...files, getDirFiles(dir.path)]
+  }, [])
+
+  const dirfiles = await Promise.all(filesReq)
+  const files = dirfiles.reduce((files, fileGroup) => {
+    return [...files, ...fileGroup.map(f => f.path)]
+  }, [])
+
+  const jsFiles = files.filter(f => path.extname(f) === '.js')
+
+  const requests = jsFiles.map(async f => {
+    const filedata = await fs.readFile(f, 'utf8')
+    const unfucked = filedata.replace(wtfTypescriptSucks, '')
+    return fs.writeFile(f, unfucked)
+  })
+
+  return Promise.all(requests)
 }
 
 require.main === module && go(async () => {
   $`cleaning build folder`
   await fs.emptyDir(fromRoot('build'))
 
-  const tscMain = run('tsc -p tsconfig.json')
-  const tscWorkers = run('tsc -p src/workers/tsconfig.json')
-
-  await Promise.all([ tscMain, tscWorkers ])
-
-  await codemod.workerExports()
-  await codemod.removeDebug()
+  await run('ttsc -p tsconfig.json')
+  await unfuckTypescript()
 
   await Promise.all([
     copy.index(),
@@ -58,4 +68,4 @@ require.main === module && go(async () => {
   ])
 })
 
-module.exports = { paths, copy, codemod }
+module.exports = { paths, copy, unfuckTypescript }

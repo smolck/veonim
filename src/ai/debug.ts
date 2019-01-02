@@ -3,14 +3,18 @@ import { objToMap, uuid, merge, ID } from '../support/utils'
 import { DebugProtocol as DP } from 'vscode-debugprotocol'
 import userSelectOption from '../components/generic-menu'
 // import * as windows from '../windows/window-manager'
+import * as extensions from '../core/extensions-api'
 import getDebugConfig from '../ai/get-debug-config'
-import * as extensions from '../core/extensions'
 import * as breakpoints from '../ai/breakpoints'
 import { debugline } from '../core/cursor'
-import debugUI from '../components/debug'
+// TODO: debugUI when ready
+const debugUI: any = new Proxy({}, {
+  get: (_: any, __: string) => () => {},
+})
+// import debugUI from '../components/debug'
 import * as Icon from 'hyperapp-feather'
 // import { translate } from '../ui/css'
-import nvim from '../core/neovim'
+import nvim from '../neovim/api'
 
 // TODO: move to shared place
 interface DebugConfiguration {

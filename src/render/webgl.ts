@@ -1,6 +1,6 @@
 import CreateWebGLBuffer from '../render/webgl-grid-buffer'
 import CreateWebGL from '../render/webgl-utils'
-import { cell } from '../core/canvas-container'
+import { cell } from '../core/workspace'
 import TextFG from '../render/webgl-text-fg'
 import TextBG from '../render/webgl-text-bg'
 
@@ -47,6 +47,7 @@ const nutella = () => {
 
   const createView = (): WebGLView => {
     const viewport = { x: 0, y: 0, width: 0, height: 0 }
+    const gridSize = { rows: 0, cols: 0 }
     const gridBuffer = CreateWebGLBuffer()
     let dataBuffer = new Float32Array()
 
@@ -54,8 +55,11 @@ const nutella = () => {
       const width = cols * cell.width
       const height = rows * cell.height
 
-      if (viewport.width === width && viewport.height === height) return
+      const sameGridSize = gridSize.rows === rows && gridSize.cols === cols 
+      const sameViewportSize = viewport.height === height && viewport.width === width
+      if (sameGridSize || sameViewportSize) return
 
+      Object.assign(gridSize, { rows, cols })
       dataBuffer = new Float32Array(rows * cols * 4)
       gridBuffer.resize(rows, cols)
     }

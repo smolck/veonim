@@ -3,10 +3,10 @@ import CreateWindowNameplate, { NameplateState } from '../windows/nameplate'
 import { highlightLookup } from '../render/highlight-attributes'
 import { getCharFromIndex } from '../render/font-texture-atlas'
 import { specs as titleSpecs } from '../core/title'
-import { cell } from '../core/canvas-container'
+import instanceAPI from '../core/instance-api'
 import { WebGLView } from '../render/webgl'
+import { cell } from '../core/workspace'
 import { makel } from '../ui/vanilla'
-import nvim from '../core/neovim'
 
 export interface WindowInfo {
   id: string
@@ -81,8 +81,13 @@ export interface Window {
 }
 
 const edgeDetection = (el: HTMLElement) => {
-  const { top, left, bottom, right } = el.getBoundingClientRect()
+  const size = el.getBoundingClientRect()
+  const top = Math.round(size.top)
+  const bottom = Math.round(size.bottom)
+  const left = Math.round(size.left)
+  const right = Math.round(size.right)
   const edges = Object.create(null)
+
   if (left === 0) edges.borderLeft = 'none'
   if (top === titleSpecs.height) edges.borderTop = 'none'
   if (bottom - titleSpecs.height === windowsGridSize.height) edges.borderBottom = 'none'
@@ -139,6 +144,7 @@ export default () => {
   } as Window
 
   api.resizeWindow = (width, height) => {
+    Object.assign(wininfo, { height, width })
     webgl.resize(height, width)
   }
 
@@ -149,6 +155,7 @@ export default () => {
     }
 
     container.id = `${info.id}`
+    container.setAttribute('gridid', info.gridId)
     Object.assign(wininfo, info)
   }
 
@@ -273,7 +280,7 @@ export default () => {
     },
     positionToEditorPixels: (line, col, fuckTypescript) => {
       const { within = false } = fuckTypescript || {} as PosOpts
-      const row = line - nvim.state.editorTopLine
+      const row = line - instanceAPI.nvim.state.editorTopLine
       const winX = Math.floor(col * cell.width)
       const winY = Math.floor(row * cell.height)
       return {

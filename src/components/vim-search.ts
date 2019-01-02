@@ -92,8 +92,7 @@ const containerEl = makel({
   position: 'absolute',
   width: '100%',
   display: 'flex',
-  backdropFilter: 'blur(24px)',
-  background: `rgba(var(--background-30-alpha), 0.6)`,
+  background: 'var(--background-30)',
 })
 
 const ui = app<S, A>({ name: 'vim-search', state, actions, view, element: containerEl })

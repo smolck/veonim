@@ -1,21 +1,18 @@
 import { CompletionItemKind, MarkupContent, MarkupKind } from 'vscode-languageserver-protocol'
-import { CompletionOption, getCompletionDetail } from '../ai/completions'
 import { RowNormal, RowComplete } from '../components/row-container'
-import * as canvasContainer from '../core/canvas-container'
 import { resetMarkdownHTMLStyle } from '../ui/styles'
+import { CompletionOption } from '../ai/completions'
 import { markdownToHTML } from '../support/markdown'
 import * as windows from '../windows/window-manager'
-import Overlay from '../components/overlay'
+import * as dispatch from '../messaging/dispatch'
+import { CompletionShow } from '../ai/protocol'
+import * as workspace from '../core/workspace'
 import { paddingVH, cvar } from '../ui/css'
+import Overlay from '../components/overlay'
 import * as Icon from 'hyperapp-feather'
 import { cursor } from '../core/cursor'
+import api from '../core/instance-api'
 import { h, app } from '../ui/uikit'
-
-interface ShowParams {
-  row: number,
-  col: number,
-  options: CompletionOption[],
-}
 
 const MAX_VISIBLE_OPTIONS = 12
 
@@ -87,7 +84,7 @@ const docs = (data: string) => h(RowNormal, {
     whiteSpace: 'normal',
     color: cvar('foreground-20'),
     background: cvar('background-45'),
-    fontSize: `${canvasContainer.font.size - 2}px`,
+    fontSize: `${workspace.font.size - 2}px`,
   },
   oncreate: (e: HTMLElement) => e.innerHTML = `<div class="${resetMarkdownHTMLStyle}">${data}</div>`,
 })
@@ -112,7 +109,7 @@ const actions = {
     const completionItem = (s.options[ix] || {}).raw
 
     if (completionItem) (async () => {
-      const detail = await getCompletionDetail(completionItem)
+      const detail = await api.ai.completions.getDetail(completionItem)
       if (!detail.documentation) return
       const richFormatDocs = await parseDocs(detail.documentation)
       a.showDocs(richFormatDocs)
@@ -138,7 +135,7 @@ const view = ($: S) => Overlay({
     style: {
       overflowY: 'hidden',
       background: cvar('background-30'),
-      maxHeight: `${canvasContainer.cell.height * $.visibleOptions}px`,
+      maxHeight: `${workspace.cell.height * $.visibleOptions}px`,
     }
   }, $.options.map(({ text, kind }, id) => h(RowComplete, {
     key: `${text}-${kind}`,
@@ -175,9 +172,9 @@ const ui = app<S, typeof actions>({ name: 'autocomplete', state, actions, view }
 
 export const hide = () => ui.hide()
 export const select = (index: number) => ui.select(index)
-export const show = ({ row, col, options }: ShowParams) => {
+export const show = ({ row, col, options }: CompletionShow) => {
   const visibleOptions = Math.min(MAX_VISIBLE_OPTIONS, options.length)
-  const anchorAbove = cursor.row + visibleOptions > canvasContainer.size.rows 
+  const anchorAbove = cursor.row + visibleOptions > workspace.size.rows 
 
   ui.show({
     anchorAbove,
@@ -186,3 +183,9 @@ export const show = ({ row, col, options }: ShowParams) => {
     ...windows.pixelPosition(anchorAbove ? row : row + 1, col),
   })
 }
+
+api.ai.completions.onShow(show)
+api.ai.completions.onHide(hide)
+
+dispatch.sub('pmenu.select', ix => select(ix))
+dispatch.sub('pmenu.hide', hide)

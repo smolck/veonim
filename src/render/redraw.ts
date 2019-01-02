@@ -219,7 +219,11 @@ onRedraw(redrawEvents => {
     else if (e === 'set_title') renderEvents.set_title(ev)
   }
 
-  winUpdates && requestAnimationFrame(windows.layout)
+  requestAnimationFrame(() => {
+    if (winUpdates) windows.layout()
+    dispatch.pub('redraw')
+  })
+
   // TODO: we really should never have to call this outside of windows.layout
   // we should hook into autocmd events and update the title according to that
   setTimeout(windows.refresh, 50)

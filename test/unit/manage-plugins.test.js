@@ -26,7 +26,7 @@
 //     remove: mockRemovePath,
 //   }))
 
-//   jest.mock('../../build/core/neovim', () => ({
+//   jest.mock('../../build/neovim/api', () => ({
 //     cmd: mockNeovimCmd,
 //   }))
 

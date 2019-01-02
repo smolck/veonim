@@ -4,7 +4,7 @@ import TextDocumentManager from '../neovim/text-document-manager'
 import FullDocumentManager from '../neovim/full-document-manager'
 import { traceLANGSERV as log } from '../support/trace'
 import { Buffer } from '../neovim/types'
-import nvim from '../vscode/neovim'
+import nvim from '../neovim/api'
 
 interface LanguageServer extends ProtocolConnection {
   textSyncKind: TextDocumentSyncKind

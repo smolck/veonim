@@ -1,14 +1,14 @@
-import { merge, simplifyPath, absolutePath } from '../support/utils'
+import { highlightLookupWhenExist, getBackground } from '../render/highlight-attributes'
+import { onSwitchVim, getCurrentName } from '../core/instance-manager'
 import { sub, processAnyBuffered } from '../messaging/dispatch'
-import configReader from '../config/config-service'
 import { darken, brighten, cvar } from '../ui/css'
 import { ExtContainer } from '../neovim/protocol'
-import { onSwitchVim } from '../core/sessions'
+import instance from '../core/instance-api'
 import * as Icon from 'hyperapp-feather'
 import { colors } from '../ui/styles'
 import { h, app } from '../ui/uikit'
-import nvim from '../core/neovim'
-import '../support/git'
+import { basename } from 'path'
+import { homedir } from 'os'
 
 interface Tab {
   tab: ExtContainer,
@@ -41,7 +41,10 @@ const state = {
 type S = typeof state
 
 const refreshBaseColor = async () => {
-  const { background } = await nvim.getColor('StatusLine')
+  const groups = await highlightLookupWhenExist('StatusLine')
+  const hlgrp = groups.find(m => m.builtinName === 'StatusLine')
+  if (!hlgrp) return
+  const background = getBackground(hlgrp.id)
   if (background) ui.setColor(background)
 }
 
@@ -67,7 +70,8 @@ const iconBoxStyle = {
 }
 
 const container = document.getElementById('statusline') as HTMLElement
-merge(container.style, {
+
+Object.assign(container.style, {
   height: '24px',
   display: 'flex',
   zIndex: 900,
@@ -78,7 +82,7 @@ const actions = {
   setFiletype: (filetype: any) => ({ filetype }),
   setLine: (line: any) => ({ line }),
   setColumn: (column: any) => ({ column }),
-  setCwd: ({ cwd, projectRoot }: any) => ({ cwd, projectRoot }),
+  setCwd: (cwd: string) => ({ cwd }),
   setDiagnostics: ({ errors = 0, warnings = 0 }: any) => ({ errors, warnings }),
   setGitBranch: (branch: any) => ({ branch }),
   setGitStatus: ({ additions, deletions }: any) => ({ additions, deletions }),
@@ -121,11 +125,10 @@ const view = ($: S) => h('div', {
         ,h(Icon.HardDrive, iconStyle)
       ])
 
-      ,h('span', $.cwd || 'no project')
+      ,h('span', $.cwd || 'main')
     ])
 
-    // TODO: only show on git projects
-    ,h('div', {
+    ,$.branch && h('div', {
       style: {
         ...itemStyle,
         paddingLeft: '30px',
@@ -145,11 +148,10 @@ const view = ($: S) => h('div', {
         h(Icon.GitBranch, iconStyle),
       ])
 
-      ,h('span', $.branch || 'git n/a')
+      ,h('span', $.branch)
     ])
 
-    // TODO: only show on git projects
-    ,h('div', {
+    ,$.branch && h('div', {
       style: {
         ...itemStyle,
         paddingLeft: '30px',
@@ -194,7 +196,7 @@ const view = ($: S) => h('div', {
       }, `${$.deletions}`)
     ])
 
-    ,$.runningServers.has(nvim.state.cwd + $.filetype) && h('div', {
+    ,$.runningServers.has(instance.nvim.state.cwd + $.filetype) && h('div', {
       style: itemStyle,
     }, [
       ,h('div', [
@@ -327,16 +329,15 @@ const view = ($: S) => h('div', {
 const ui = app<S, typeof actions>({ name: 'statusline', state, actions, view, element: container })
 
 sub('colorscheme.modified', refreshBaseColor)
-nvim.watchState.colorscheme(refreshBaseColor)
-nvim.watchState.filetype(ui.setFiletype)
-nvim.watchState.line(ui.setLine)
-nvim.watchState.column(ui.setColumn)
-nvim.watchState.cwd((cwd: string) => {
-  const defaultRoot = configReader('project.root', (root: string) => {
-    ui.setCwd({ cwd: simplifyPath(cwd, absolutePath(root)) })
-  })
-
-  defaultRoot && ui.setCwd({ cwd: simplifyPath(cwd, absolutePath(defaultRoot)) })
+instance.nvim.watchState.colorscheme(refreshBaseColor)
+instance.nvim.watchState.filetype(ui.setFiletype)
+instance.nvim.watchState.line(ui.setLine)
+instance.nvim.watchState.column(ui.setColumn)
+instance.nvim.watchState.cwd((cwd: string) => {
+  const next = homedir() === cwd
+    ? getCurrentName()
+    : basename(cwd)
+  ui.setCwd(next)
 })
 
 sub('tabs', async ({ curtab, tabs }: { curtab: ExtContainer, tabs: Tab[] }) => {
@@ -346,8 +347,8 @@ sub('tabs', async ({ curtab, tabs }: { curtab: ExtContainer, tabs: Tab[] }) => {
     : ui.updateTabs({ active: -1, tabs: [] })
 })
 
-sub('git:branch', branch => ui.setGitBranch(branch))
-sub('git:status', status => ui.setGitStatus(status))
+instance.git.onBranch(branch => ui.setGitBranch(branch))
+instance.git.onStatus(status => ui.setGitStatus(status))
 sub('ai:diagnostics.count', count => ui.setDiagnostics(count))
 sub('ai:start', opts => ui.aiStart(opts))
 sub('vim:macro.start', reg => ui.setMacro(reg))
