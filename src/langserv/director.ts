@@ -49,7 +49,7 @@ const initServer = async (server: extensions.RPCServer, cwd: string, language: s
     .catch(console.error)
 
   if (error) throw new Error(`failed to initialize server ${cwd}:${language} -> ${JSON.stringify(error)}`)
-  server.sendNotification('initialized')
+  server.sendNotification('initialized', {})
 
   servers.set(cwd + language, server)
   registerServer(cwd, language, capabilities)
