@@ -173,3 +173,6 @@ nvim.watchState.cwd((cwd: string) => {
 
   defaultRoot && renameCurrentToCwd(simplifyPath(cwd, absolutePath(defaultRoot)))
 })
+
+export const changeDir = () => go('', false)
+export const createInstanceWithDir = () => go('', true)

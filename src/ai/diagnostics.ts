@@ -120,14 +120,16 @@ const refreshProblemHighlights = async () => {
   buffer.highlightProblems(problems)
 }
 
-nvim.onAction('show-problem', async () => {
+export const showProblem = async () => {
   const { line, column, cwd, file } = nvim.state
   const diagnostics = current.diagnostics.get(path.join(cwd, file))
   if (!diagnostics) return
 
   const targetProblem = diagnostics.find(d => positionWithinRange(line, column, d.range))
   if (targetProblem) problemInfoUI.show(targetProblem.message)
-})
+}
+
+nvim.onAction('show-problem', showProblem)
 
 nvim.on.cursorMove(problemInfoUI.hide)
 nvim.on.insertLeave(problemInfoUI.hide)
@@ -160,6 +162,8 @@ nvim.onAction('prev-problem', async () => {
 nvim.onAction('problems-toggle', () => problemsUI.toggle())
 nvim.onAction('problems-focus', () => problemsUI.focus())
 
+export const openProblems = () => problemsUI.focus()
+
 export const setProblems = (problems: Problem[]) => {
   if (!problems || !problems.length) return
   cache.problems.set(sessions.current, problems)
@@ -185,7 +189,9 @@ nvim.on.cursorMove(async () => {
 
 export const runCodeAction = (action: Command) => executeCommand(nvim.state, action)
 
-nvim.onAction('code-action', () => codeActionUI.show(cursor.row, cursor.col, cache.actions))
+export const showCodeActions = () => codeActionUI.show(cursor.row, cursor.col, cache.actions)
+
+nvim.onAction('code-action', showCodeActions)
 
 onDiagnostics(async m => {
   const path = uriToPath(m.uri)

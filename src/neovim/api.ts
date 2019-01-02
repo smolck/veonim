@@ -1,8 +1,10 @@
-import { VimOption, BufferEvent, HyperspaceCoordinates, BufferType, BufferHide, BufferOption, Color, Buffer, Window, Tabpage, GenericCallback } from '../neovim/types'
+import { VimOption, BufferEvent, HyperspaceCoordinates, BufferType, BufferHide, BufferOption, Color, Buffer, Window, Tabpage, GenericCallback, Keymap } from '../neovim/types'
 import { Api, ExtContainer, Prefixes, Buffer as IBuffer, Window as IWindow, Tabpage as ITabpage } from '../neovim/protocol'
 import { asColor, is, onFnCall, onProp, prefixWith, uuid, Watcher, GenericEvent } from '../support/utils'
+import { normalizeVimMode } from '../support/neovim-utils'
 import { SHADOW_BUFFER_TYPE } from '../support/constants'
 import { Autocmd, Autocmds } from '../core/vim-startup'
+import { InventoryAction } from '../inventory/actions'
 import { watchConfig } from '../config/config-reader'
 import { Functions } from '../core/vim-functions'
 import { NeovimRPC } from '../messaging/rpc'
@@ -20,6 +22,25 @@ export interface Neovim extends NeovimRPC {
   onCreateVim: (fn: () => void) => void
   onSwitchVim: (fn: () => void) => void
 }
+
+const parseKeymap = (keymap: any): Keymap => keymap.reduce((res: Keymap, m: any) => {
+  const { lhs, rhs, sid, buffer, mode } = m
+
+  res.set(lhs, {
+    lhs,
+    rhs,
+    sid,
+    buffer,
+    mode: normalizeVimMode(mode),
+    // vim does not have booleans. these values are returned as either 0 or 1
+    expr: !!m.expr,
+    silent: !!m.silent,
+    nowait: !!m.nowait,
+    noremap: !!m.noremap,
+  })
+
+  return res
+}, new Map())
 
 const api = ({ notify, request, onEvent, onCreateVim, onSwitchVim }: Neovim) => {
   const registeredEventActions = new Set<string>()
@@ -86,10 +107,26 @@ const api = ({ notify, request, onEvent, onCreateVim, onSwitchVim }: Neovim) => 
   const feedkeys = (keys: string, mode = 'm', escapeCSI = false) => req.core.feedkeys(keys, mode, escapeCSI)
   const normal = (keys: string) => cmd(`norm! "${keys.replace(/"/g, '\\"')}"`)
   const callAtomic = (calls: any[]) => req.core.callAtomic(calls)
+  const getKeymap = async (mode = 'n') => {
+    const map = await req.core.getKeymap(mode)
+    return parseKeymap(map)
+  }
+
+  const addActionToCommandCompletions = (actionName: string) => {
+    registeredEventActions.add(actionName)
+    cmd(`let g:vn_cmd_completions .= "${actionName}\\n"`)
+  }
+
+  const registerAction = (action: InventoryAction) => {
+    const actionCommand = `${action.layer.toLowerCase()}-${action.name.toLowerCase()}`
+    watchers.actions.on(actionCommand, action.onAction)
+    addActionToCommandCompletions(actionCommand)
+  }
+
+  // TODO: DEPRECATE THIS
   const onAction = (event: string, cb: GenericCallback) => {
     watchers.actions.on(event, cb)
-    registeredEventActions.add(event)
-    cmd(`let g:vn_cmd_completions .= "${event}\\n"`)
+    addActionToCommandCompletions(event)
   }
 
   const getCurrentLine = () => req.core.getCurrentLine()
@@ -504,7 +541,8 @@ const api = ({ notify, request, onEvent, onCreateVim, onSwitchVim }: Neovim) => 
   return { state, watchState, onStateChange, onStateValue, untilStateValue,
     cmd, cmdOut, expr, call, feedkeys, normal, callAtomic, onAction,
     getCurrentLine, jumpTo, jumpToProjectFile, getColor, systemAction, current,
-    g, on, untilEvent, applyPatches, buffers, windows, tabs, options: readonlyOptions }
+    g, on, untilEvent, applyPatches, buffers, windows, tabs, options:
+    readonlyOptions, registerAction, getKeymap }
 }
 
 export default api

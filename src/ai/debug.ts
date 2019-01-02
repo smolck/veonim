@@ -122,13 +122,13 @@ const listActiveDebuggers = () => [...debuggers.values()].map(d => ({
   type: d.type,
 }))
 
-const continuee = () => {
+export const continuee = () => {
   const dbg = debuggers.get(activeDebugger)
   if (!dbg) return console.warn('debug continue called without an active debugger')
   dbg.rpc.sendRequest('continue', { threadId: dbg.activeThread })
 }
 
-const next = () => {
+export const next = () => {
   const dbg = debuggers.get(activeDebugger)
   if (!dbg) return console.warn('debug next called without an active debugger')
   dbg.rpc.sendRequest('next', { threadId: dbg.activeThread })
@@ -164,7 +164,7 @@ const addOrRemoveVimSign = (bp: breakpoints.Breakpoint) => {
     : nvim.cmd(`sign place ${signId} name=vnbp line=${line} file=${bp.path}`)
 }
 
-const toggleBreakpoint = () => {
+export const toggleBreakpoint = () => {
   const { absoluteFilepath: path, line, column } = nvim.state
   const breakpoint = { path, line, column, kind: breakpoints.BreakpointKind.Source }
 
@@ -177,7 +177,7 @@ const toggleBreakpoint = () => {
   debugUI.updateState({ breakpoints: breakpoints.list() })
 }
 
-const toggleFunctionBreakpoint = () => {
+export const toggleFunctionBreakpoint = () => {
   const { absoluteFilepath: path, line, column } = nvim.state
   const breakpoint = { path, line, column, kind: breakpoints.BreakpointKind.Function }
 
@@ -258,13 +258,13 @@ const updateDebuggerState = (id: string, state: Partial<Debugger>) => {
   debugUI.updateState({ ...next, debuggers: listActiveDebuggers() })
 }
 
-const stop = async () => {
+export const stop = async () => {
   const dbg = debuggers.get(activeDebugger)
   if (!dbg) return console.log('no active debugger found to stop')
   terminateDebugger(dbg)
 }
 
-export const start = async (type: string) => {
+export const startType = async (type: string) => {
   const dbg: Debugger = {
     type,
     id: uuid(),
@@ -435,12 +435,12 @@ const startWithDebugger = async () => {
   console.log('starting debugger wtih type:', launchConfig, connection)
 }
 
-nvim.onAction('debug-start', async () => {
+export const start = async () => {
   const launchConfigs = await extensions.list.launchConfigs()
   launchConfigs.length
     ? startWithLaunchConfig(launchConfigs)
     : startWithDebugger()
-})
+}
 
 // TODO: add action to jump cursor location to currently stopped debug location
 // action('debug-jumpto-stopped', jumpToStopped)
@@ -448,8 +448,10 @@ nvim.onAction('debug-start', async () => {
 // action('debug-breakpoints-clear-all', clearAllBreakpoints)
 // TODO: add action to remove all breakpoints in current file
 // action('debug-breakpoints-clear-file', clearFileBreakpoints)
-nvim.onAction('debug-stop', stop)
-nvim.onAction('debug-next', next)
-nvim.onAction('debug-continue', continuee)
-nvim.onAction('debug-breakpoint', toggleBreakpoint)
-nvim.onAction('debug-breakpoint-function', toggleFunctionBreakpoint)
+
+// TODO: no one should be using these, so we can remove
+// nvim.onAction('debug-stop', stop)
+// nvim.onAction('debug-next', next)
+// nvim.onAction('debug-continue', continuee)
+// nvim.onAction('debug-breakpoint', toggleBreakpoint)
+// nvim.onAction('debug-breakpoint-function', toggleFunctionBreakpoint)

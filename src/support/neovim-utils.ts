@@ -1,10 +1,12 @@
+// TODO: this file might be better if it lived under src/neovim
 import { delay, pascalCase, onProp } from '../support/utils'
 import { Range } from 'vscode-languageserver-protocol'
+import { VimMode } from '../neovim/types'
 import { Api } from '../neovim/protocol'
 
 type DefineFunction = { [index: string]: (fnBody: TemplateStringsArray, ...vars: any[]) => void }
 
-interface VimMode {
+interface VimState {
   blocking: boolean,
   mode: string,
 }
@@ -13,7 +15,7 @@ interface VimMode {
 // when neovim implements external dialogs, please revisit
 const unblock = (notify: Api, request: Api) => (): Promise<string[]> => new Promise(fin => {
   let neverGonnaGiveYouUp = false
-  const typescript_y_u_do_dis = (): Promise<VimMode> => request.getMode() as Promise<VimMode>
+  const typescript_y_u_do_dis = (): Promise<VimState> => request.getMode() as Promise<VimState>
 
   const timer = setTimeout(() => {
     neverGonnaGiveYouUp = true // never gonna let you down
@@ -82,4 +84,18 @@ export const positionWithinRange = (line: number, column: number, { start, end }
     && (line !== end.line || column <= end.character)
 
   return startInRange && endInRange
+}
+
+export const normalizeVimMode = (mode: string): VimMode => {
+  if (mode === 't') return VimMode.Terminal
+  if (mode === 'n' || mode === 'normal') return VimMode.Normal
+  if (mode === 'i' || mode === 'insert') return VimMode.Insert
+  if (mode === 'V' || mode === 'visual') return VimMode.Visual
+  if (mode === 'R' || mode === 'replace') return VimMode.Replace
+  if (mode === 'no' || mode === 'operator') return VimMode.Operator
+  if (mode === 'c' || mode === 'cmdline_normal') return VimMode.CommandNormal
+  if (mode === 'cmdline_insert') return VimMode.CommandInsert
+  if (mode === 'cmdline_replace') return VimMode.CommandReplace
+  // there are quite a few more modes available. see `mode_info_set`
+  else return VimMode.SomeModeThatIProbablyDontCareAbout
 }

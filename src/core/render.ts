@@ -3,11 +3,11 @@ import { asColor, merge, matchOn, CreateTask, debounce, is } from '../support/ut
 import { onRedraw, getColor, getMode } from '../core/master-control'
 import { getWindow, applyToWindows } from '../core/windows'
 import * as canvasContainer from '../core/canvas-container'
+import { normalizeVimMode } from '../support/neovim-utils'
 import { Events, ExtContainer } from '../neovim/protocol'
 import { NotifyKind, notify } from '../ui/notifications'
 import * as dispatch from '../messaging/dispatch'
 import fontAtlas from '../core/font-atlas'
-import { VimMode } from '../neovim/types'
 import * as grid from '../core/grid'
 import nvim from '../core/neovim'
 
@@ -113,20 +113,6 @@ const cmdcache: CommandLineCache = {
 const attrDefaults: Attrs = {
   underline: false,
   undercurl: false
-}
-
-const normalizeVimMode = (mode: string): VimMode => {
-  if (mode === 't') return VimMode.Terminal
-  if (mode === 'n' || mode === 'normal') return VimMode.Normal
-  if (mode === 'i' || mode === 'insert') return VimMode.Insert
-  if (mode === 'V' || mode === 'visual') return VimMode.Visual
-  if (mode === 'R' || mode === 'replace') return VimMode.Replace
-  if (mode === 'no' || mode === 'operator') return VimMode.Operator
-  if (mode === 'c' || mode === 'cmdline_normal') return VimMode.CommandNormal
-  if (mode === 'cmdline_insert') return VimMode.CommandInsert
-  if (mode === 'cmdline_replace') return VimMode.CommandReplace
-  // there are quite a few more modes available. see `mode_info_set`
-  else return VimMode.SomeModeThatIProbablyDontCareAbout
 }
 
 const api = new Map<string, Function>()

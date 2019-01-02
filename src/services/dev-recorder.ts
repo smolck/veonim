@@ -3,10 +3,15 @@ import { notify, NotifyKind } from '../ui/notifications'
 import userPrompt from '../components/generic-prompt'
 import * as storage from '../support/local-storage'
 import { makel } from '../ui/vanilla'
-import nvim from '../core/neovim'
 
 if (process.env.VEONIM_DEV) {
-const finder = require('@medv/finder')
+const { default: finder } = require('@medv/finder')
+
+// TODO: stop recording should not be triggered via inventory or vim command
+// we should just have a 'STOP' button (easy) or bind a keybind [c-s-s] only
+// while there is a dev recording happening (hard)
+//
+// this way we don't have to do any event cleanup
 
 interface RecordingEvent {
   kind: string
@@ -55,16 +60,16 @@ let captureEvents = false
 let lastRecordedAt = Date.now()
 let recordingStartTime = Date.now()
 
-nvim.onAction('record-start', () => {
+const start = () => {
   banner.HULK_SMASH('RECORDING EVENTS', '#7f0202')
 
   recordedEvents = []
   lastRecordedAt = Date.now()
   recordingStartTime = Date.now()
   captureEvents = true
-})
+}
 
-nvim.onAction('record-stop', async () => {
+const stop = async () => {
   banner.heyBigGuySunsGettingRealLow()
 
   captureEvents = false
@@ -81,9 +86,9 @@ nvim.onAction('record-stop', async () => {
   storage.setItem(KEY.ALL, [...uniqRecordings])
 
   notify(`saved "${recordingName}" to local storage`, NotifyKind.Success)
-})
+}
 
-nvim.onAction('record-replay', async () => {
+const replay = async () => {
   const recordingName = await userSelectOption<string>({
     description: 'select recording to replay',
     options: getAllRecordings(),
@@ -94,9 +99,9 @@ nvim.onAction('record-replay', async () => {
   if (!events || !events.length) return notify(`recording "${key}" does not exist`, NotifyKind.Error)
 
   recordPlayer(events, key)
-})
+}
 
-nvim.onAction('record-remove', async () => {
+const remove = async () => {
   const recording = await userSelectOption<string>({
     description: 'select recording to REMOVE',
     options: getAllRecordings(),
@@ -112,9 +117,9 @@ nvim.onAction('record-remove', async () => {
   storage.removeItem(recording)
 
   notify(`removed "${key}" recording`, NotifyKind.Success)
-})
+}
 
-nvim.onAction('record-remove-all', async () => {
+const removeAll = async () => {
   const confirmation = await userPrompt('type "yes" to remove all recordings')
   if (confirmation !== 'yes') return notify('did NOT remove all recordings', NotifyKind.Error)
 
@@ -125,9 +130,9 @@ nvim.onAction('record-remove-all', async () => {
   storage.removeItem(KEY.ALL)
 
   notify('removed all recordings', NotifyKind.Success)
-})
+}
 
-nvim.onAction('record-set-startup', async () => {
+const setStartup = async () => {
   const recordingName = await userSelectOption<string>({
     description: 'select recording for startup',
     options: getAllRecordings(),
@@ -138,7 +143,7 @@ nvim.onAction('record-set-startup', async () => {
   notify(`set "${key}" as startup replay`, NotifyKind.System)
 
   storage.setTemp(KEY.START, { events, name: key })
-})
+}
 
 const createEvent = (kind: string, event: Event) => {
   // InputEvent is still experimental - not widely supported but used in Chrome. No typings in TS lib
@@ -234,4 +239,6 @@ setTimeout(() => {
   const { events, name } = storage.getTemp<Record>(KEY.START)
   if (events && events.length) recordPlayer(events, name)
 }, 250)
+
+module.exports = { start, stop, replay, remove, removeAll, setStartup }
 } // end of "if" block that only runs stuff in dev mode

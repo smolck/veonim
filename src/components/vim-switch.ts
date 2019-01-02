@@ -44,7 +44,9 @@ const actions = {
   prev: () => (s: S) => ({ index: s.index - 1 < 0 ? Math.min(s.list.length - 1, 9) : s.index - 1 }),
 }
 
-const view = ($: S, a: typeof actions) => Plugin($.visible, [
+type A = typeof actions
+
+const view = ($: S, a: A) => Plugin($.visible, [
 
   ,Input({
     hide: a.hide,
@@ -67,5 +69,7 @@ const view = ($: S, a: typeof actions) => Plugin($.visible, [
 
 ])
 
-const ui = app({ name: 'vim-switch', state, actions, view })
+const ui = app<S, A>({ name: 'vim-switch', state, actions, view })
+
 nvim.onAction('vim-switch', () => ui.show(list()))
+export default () => ui.show(list())

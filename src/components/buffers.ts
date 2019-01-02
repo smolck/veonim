@@ -111,4 +111,7 @@ const view = ($: S, a: typeof actions) => Plugin($.visible, [
 ])
 
 const ui = app({ name: 'buffers', state, actions, view })
-nvim.onAction('buffers', async () => ui.show(await getBuffers(nvim.state.cwd)))
+const doListBuffers = async () => ui.show(await getBuffers(nvim.state.cwd))
+
+nvim.onAction('buffers', doListBuffers)
+export default doListBuffers

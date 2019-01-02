@@ -11,7 +11,7 @@ const textByWord = (data: ColorData[]): ColorData[] => data.reduce((res, item) =
   return [...res, ...items]
 }, [] as ColorData[])
 
-nvim.onAction('hover', async () => {
+const showHover = async () => {
   if (!supports.hover(nvim.state.cwd, nvim.state.filetype)) return
 
   const { value, doc } = await hover(nvim.state)
@@ -24,7 +24,10 @@ nvim.onAction('hover', async () => {
     .map(m => m.filter(m => m.text.length))
 
   ui.show({ data, doc })
-})
+}
+
+nvim.onAction('hover', showHover)
+export default showHover
 
 nvim.on.cursorMove(ui.hide)
 nvim.on.insertEnter(ui.hide)

@@ -12,7 +12,7 @@ const setHighlightColor = () => {
 nvim.watchState.colorscheme(setHighlightColor)
 setHighlightColor()
 
-nvim.onAction('highlight', async () => {
+export const highlight = async () => {
   const referencesSupported = supports.references(nvim.state.cwd, nvim.state.filetype)
   const highlightsSupported = supports.highlights(nvim.state.cwd, nvim.state.filetype)
   const anySupport = highlightsSupported || referencesSupported
@@ -35,7 +35,9 @@ nvim.onAction('highlight', async () => {
     hi.column,
     hi.endColumn,
   ))
-})
+}
+
+nvim.onAction('highlight', highlight)
 
 nvim.onAction('highlight-clear', async () => {
   nvim.current.buffer.clearHighlight(HighlightGroupId.DocumentHighlight, 0, -1)

@@ -23,7 +23,9 @@ const actions = {
   },
 }
 
-const view = ($: S, a: typeof actions) => Plugin($.visible, [
+type A = typeof actions
+
+const view = ($: S, a: A) => Plugin($.visible, [
 
   ,Input({
     hide: a.hide,
@@ -37,5 +39,7 @@ const view = ($: S, a: typeof actions) => Plugin($.visible, [
 
 ])
 
-const ui = app({ name: 'vim-create', state, actions, view })
+const ui = app<S, A>({ name: 'vim-create', state, actions, view })
+
 nvim.onAction('vim-create', ui.show)
+export default ui.show

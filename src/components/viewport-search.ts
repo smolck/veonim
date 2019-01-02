@@ -125,3 +125,5 @@ nvim.onAction('viewport-search-visual', async () => {
   ui.show()
   ui.change(selection)
 })
+
+export default ui.show

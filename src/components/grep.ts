@@ -262,28 +262,33 @@ worker.on.results((results: Result[]) => ui.results(results))
 worker.on.moreResults((results: Result[]) => ui.moreResults(results))
 worker.on.done(ui.loadingDone)
 
-nvim.onAction('grep-resume', () => ui.show({ reset: false }))
+export const grepResume = () => ui.show({ reset: false })
 
-nvim.onAction('grep', async (query: string) => {
+export const grep = async (query?: string) => {
   const { cwd } = nvim.state
   ui.show({ cwd })
   query && worker.call.query({ query, cwd })
-})
+}
 
-nvim.onAction('grep-word', async () => {
+export const grepWord = async () => {
   const { cwd } = nvim.state
   const query = await nvim.call.expand('<cword>')
   ui.show({ cwd, value: query })
   worker.call.query({ query, cwd })
-})
+}
 
 // TODO: rename to grep-visual to be consistent with other actions
 // operating from visual mode
-nvim.onAction('grep-selection', async () => {
+export const grepVisual = async () => {
   await nvim.feedkeys('gv"zy')
   const selection = await nvim.expr('@z')
   const [ query ] = selection.split('\n')
   const { cwd } = nvim.state
   ui.show({ cwd, value: query })
   worker.call.query({ query, cwd })
-})
+}
+
+nvim.onAction('grep', grep)
+nvim.onAction('grep-word', grepWord)
+nvim.onAction('grep-resume', grepResume)
+nvim.onAction('grep-selection', grepVisual)

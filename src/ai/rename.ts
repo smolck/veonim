@@ -6,7 +6,7 @@ import nvim from '../core/neovim'
 // or maybe figure out how to diff based on the partial modification
 // call atomic? tricky with getting target lines for replacements
 // even if done before atomic operations, line numbers could be off
-nvim.onAction('rename', async () => {
+const doRename = async () => {
   if (!supports.rename(nvim.state.cwd, nvim.state.filetype)) return
 
   textSync.pause()
@@ -18,4 +18,7 @@ nvim.onAction('rename', async () => {
   textSync.resume()
 
   nvim.applyPatches(await rename({ ...nvim.state, ...editPosition, newName }))
-})
+}
+
+nvim.onAction('rename', doRename)
+export default doRename

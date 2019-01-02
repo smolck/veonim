@@ -12,7 +12,7 @@ const groupResults = (m: Reference[]) => [...m.reduce((map, ref: Reference) => {
   return map
 }, new Map<string, Reference[]>())]
 
-nvim.onAction('references', async () => {
+export const showReferences = async () => {
   if (!supports.references(nvim.state.cwd, nvim.state.filetype)) return
 
   const { keyword, references } = await getReferences(nvim.state)
@@ -20,7 +20,9 @@ nvim.onAction('references', async () => {
 
   const referencesForUI = groupResults(references)
   show(referencesForUI, keyword)
-})
+}
+
+nvim.onAction('references', showReferences)
 
 nvim.onAction('next-usage', async () => {
   if (!supports.references(nvim.state.cwd, nvim.state.filetype)) return

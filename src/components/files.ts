@@ -114,7 +114,10 @@ const ui = app({ name: 'files', state, actions, view })
 worker.on.results((files: string[]) => ui.results(files))
 worker.on.done(ui.loadingDone)
 
-nvim.onAction('files', () => {
+const doFiles = () => {
   worker.call.load(nvim.state.cwd)
   ui.show(nvim.state.file)
-})
+}
+
+nvim.onAction('files', doFiles)
+export default doFiles
