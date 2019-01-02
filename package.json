@@ -1,6 +1,6 @@
 {
   "name": "veonim",
-  "version": "0.13.5",
+  "version": "0.42.0-alpha.2",
   "description": "simple modal IDE built on neovim",
   "main": "build/bootstrap/main.js",
   "scripts": {
@@ -20,9 +20,6 @@
     "unused-exports": "ts-unused-exports tsconfig.json $(find src -name *.ts)",
     "setup-mirrors": "node tools/setup-mirrors.js"
   },
-  "jest": {
-    "collectCoverage": true
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/veonim/veonim.git"
@@ -33,7 +30,7 @@
     "https://veonim@gitlab.com/veonim/veonim.git",
     "https://veonim@bitbucket.org/veonim/veonim.git"
   ],
-  "author": "VeonimDev",
+  "author": "Veonim",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/veonim/veonim/issues"
