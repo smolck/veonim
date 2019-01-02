@@ -18,7 +18,7 @@ export default (cwd: string) => ({
       symbol: {
         dynamicRegistration: true,
         symbolKind: {
-          valueSet: SymbolKind,
+          valueSet: Object.values(SymbolKind),
         }
       },
       executeCommand: {
@@ -56,7 +56,7 @@ export default (cwd: string) => ({
       documentSymbol: {
         dynamicRegistration: true,
         symbolKind: {
-          valueSet: SymbolKind,
+          valueSet: Object.values(SymbolKind),
         }
       },
       formatting: {
