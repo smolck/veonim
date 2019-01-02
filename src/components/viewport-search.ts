@@ -1,12 +1,12 @@
 import { divinationSearch } from '../components/divination'
 import { app, h, vimBlur, vimFocus } from '../ui/uikit'
-import { currentWindowElement } from '../core/windows'
-import { finder } from '../components/buffer-search'
+import * as windows from '../windows/window-manager'
+import { WindowOverlay } from '../windows/window'
 import Input from '../components/text-input'
 import { rgba, paddingV } from '../ui/css'
 import * as Icon from 'hyperapp-feather'
+import api from '../core/instance-api'
 import { makel } from '../ui/vanilla'
-import nvim from '../core/neovim'
 
 interface FilterResult {
   line: string,
@@ -26,7 +26,7 @@ const state = { value: '', focus: false }
 type S = typeof state
 
 const searchInBuffer = async (results = [] as FilterResult[]) => {
-  if (!results.length) return nvim.cmd('noh')
+  if (!results.length) return api.nvim.cmd('noh')
 
   const parts = results
     .map(m => m.line.slice(m.start.column, m.end.column + 1))
@@ -35,25 +35,26 @@ const searchInBuffer = async (results = [] as FilterResult[]) => {
     .map(m => m.replace(/[\*\/\^\$\.\~\&]/g, '\\$&'))
 
   const pattern = parts.join('\\|')
-  if (!pattern) return nvim.cmd('noh')
+  if (!pattern) return api.nvim.cmd('noh')
 
-  nvim.cmd(`/\\%>${nvim.state.editorTopLine - 1}l\\%<${nvim.state.editorBottomLine + 1}l${pattern}`)
+  api.nvim.cmd(`/\\%>${api.nvim.state.editorTopLine - 1}l\\%<${api.nvim.state.editorBottomLine + 1}l${pattern}`)
 }
 
+let winOverlay: WindowOverlay
 
 const actions = {
   show: () => {
     vimBlur()
-    currentWindowElement.add(containerEl)
+    winOverlay = windows.getActive().addOverlayElement(containerEl)
     return { focus: true }
   },
   hide: () => {
     vimFocus()
-    currentWindowElement.remove(containerEl)
+    if (winOverlay) winOverlay.remove()
     return { value: '', focus: false }
   },
   change: (value: string) => {
-    finder.request.visibleFuzzy(value).then((results: FilterResult[]) => {
+    api.bufferSearchVisible(value).then((results: FilterResult[]) => {
       displayTargetJumps = results.length > 2
       searchInBuffer(results)
     })
@@ -62,9 +63,9 @@ const actions = {
   },
   select: () => {
     vimFocus()
-    currentWindowElement.remove(containerEl)
+    if (winOverlay) winOverlay.remove()
     if (displayTargetJumps) divinationSearch()
-    else nvim.feedkeys('n', 'n')
+    else api.nvim.feedkeys('n', 'n')
     return { value: '', focus: false }
   },
 }
@@ -107,21 +108,15 @@ const containerEl = makel({
   position: 'absolute',
   width: '100%',
   display: 'flex',
-  backdropFilter: 'blur(24px)',
-  background: `rgba(var(--background-30-alpha), 0.6)`,
-  // TODO: this does not work with blur background. since backdrop-filter is
-  // an experimental feature, it could be a bug.
-  // actually backdrop-filter specification has a 'drop-shadow()' fn, but
-  // i have not been able to make it work in chrome 61
-  // boxShadow: '0 0 10px rgba(0, 0, 0, 0.6)',
+  background: 'var(--background-30)',
 })
 
 const ui = app<S, A>({ name: 'viewport-search', state, actions, view, element: containerEl })
 
-nvim.onAction('viewport-search', () => ui.show())
-nvim.onAction('viewport-search-visual', async () => {
-  await nvim.feedkeys('gv"zy')
-  const selection = await nvim.expr('@z')
+api.onAction('viewport-search', () => ui.show())
+api.onAction('viewport-search-visual', async () => {
+  await api.nvim.feedkeys('gv"zy')
+  const selection = await api.nvim.expr('@z')
   ui.show()
   ui.change(selection)
 })

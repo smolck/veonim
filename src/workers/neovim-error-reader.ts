@@ -1,9 +1,9 @@
 import { Diagnostic, DiagnosticSeverity } from 'vscode-languageserver-protocol'
+import MsgpackStreamDecoder from '../messaging/msgpack-decoder'
+import MsgpackStreamEncoder from '../messaging/msgpack-encoder'
 import { prefixWith, onFnCall, is } from '../support/utils'
-import { QuickFixList } from '../core/vim-functions'
-import CreateTransport from '../messaging/transport'
+import { QuickFixList } from '../neovim/function-types'
 import { Api, Prefixes } from '../neovim/protocol'
-import NeovimUtils from '../support/neovim-utils'
 import { on } from '../messaging/worker-client'
 import { Neovim } from '../support/binaries'
 import SetupRPC from '../messaging/rpc'
@@ -17,7 +17,9 @@ const vimOptions = {
   ext_cmdline: false
 }
 
-const { encoder, decoder } = CreateTransport()
+const encoder = new MsgpackStreamEncoder()
+const decoder = new MsgpackStreamDecoder()
+
 const proc = Neovim.run([
   '--cmd', `let $VIM = '${Neovim.path}'`,
   '--cmd', `let $VIMRUNTIME = '${Neovim.runtime}'`,
@@ -38,22 +40,13 @@ proc.on('exit', () => console.error('vim error-reader exit'))
 encoder.pipe(proc.stdin)
 proc.stdout.pipe(decoder)
 
-const { notify, request, onData } = SetupRPC(encoder.write)
+const { notify, request, onData } = SetupRPC(m => encoder.write(m))
 decoder.on('data', ([type, ...d]: [number, any]) => onData(type, d))
 
 const req: Api = onFnCall((name: string, args: any[] = []) => request(prefix.core(name), args))
 const api: Api = onFnCall((name: string, args: any[]) => notify(prefix.core(name), args))
 
-const { unblock } = NeovimUtils({ notify: api, request: req })
-
-unblock().then(errors => {
-  if (errors.length) {
-    console.error(`vim error-reader had some errors starting up`)
-    errors.forEach(e => console.error(e))
-  }
-
-  api.uiAttach(5, 2, vimOptions)
-})
+api.uiAttach(5, 2, vimOptions)
 
 const severityOptions = new Map([
   [ '0', DiagnosticSeverity.Error ],

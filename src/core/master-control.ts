@@ -1,14 +1,12 @@
-import { startupFuncs, startupCmds, postStartupCommands } from '../core/vim-startup'
-import { asColor, ID, log, onFnCall, merge, prefixWith } from '../support/utils'
-import { NotifyKind, notify as notifyUI } from '../ui/notifications'
-import CreateTransport from '../messaging/transport'
+import { asColor, ID, onFnCall, merge, prefixWith, getPipeName } from '../support/utils'
+import MsgpackStreamDecoder from '../messaging/msgpack-decoder'
+import MsgpackStreamEncoder from '../messaging/msgpack-encoder'
+import { startupFuncs, startupCmds } from '../neovim/startup'
 import { Api, Prefixes } from '../neovim/protocol'
-import NeovimUtils from '../support/neovim-utils'
-import getEnvVars from '../support/shell-env'
+import { Color, Highlight } from '../neovim/types'
 import { Neovim } from '../support/binaries'
 import { ChildProcess } from 'child_process'
 import SetupRPC from '../messaging/rpc'
-import { Color } from '../neovim/types'
 import { homedir } from 'os'
 
 type RedrawFn = (m: any[]) => void
@@ -18,7 +16,7 @@ interface VimInstance {
   id: number,
   proc: ChildProcess,
   attached: boolean,
-  path?: string,
+  pipeName: string,
 }
 
 interface NewVimResponse {
@@ -27,15 +25,14 @@ interface NewVimResponse {
 }
 
 const vimOptions = {
-  rgb: true,
   ext_popupmenu: true,
   ext_tabline: true,
   ext_wildmenu: true,
   ext_cmdline: true,
+  ext_messages: true,
+  ext_multigrid: true,
+  ext_hlstate: true,
 }
-
-// TODO: make build for windows that supports external messages
-if (process.platform !== 'win32') Object.assign(vimOptions, { ext_messages: true })
 
 const ids = {
   vim: ID(),
@@ -50,34 +47,35 @@ const clientSize = {
 let onExitFn: ExitFn = () => {}
 const prefix = prefixWith(Prefixes.Core)
 const vimInstances = new Map<number, VimInstance>()
-const envVarsRequest = getEnvVars()
-const { encoder, decoder } = CreateTransport()
+const msgpackDecoder = new MsgpackStreamDecoder()
+const msgpackEncoder = new MsgpackStreamEncoder()
 
-const spawnVimInstance = async () => Neovim.run([
-  '--cmd', `${startupFuncs()} | ${startupCmds}`,
-  // noop commands. we parse plugins & extensions directly from the vimrc file text
-  '--cmd', `com! -nargs=* Plug 1`,
-  '--cmd', `com! -nargs=* VeonimExt 1`,
+const spawnVimInstance = (pipeName: string) => Neovim.run([
   '--cmd', `com! -nargs=+ -range -complete=custom,VeonimCmdCompletions Veonim call Veonim(<f-args>)`,
-  '--embed'
+  '--cmd', `com! -nargs=1 VeonimExt call add(g:_veonim_extensions, <args>)`,
+  '--cmd', `com! -nargs=1 Plug call add(g:_veonim_plugins, <args>)`,
+  '--embed',
+  '--listen',
+  pipeName
 ], {
   cwd: homedir(),
   env: {
-    ...await envVarsRequest,
+    ...process.env,
     VIM: Neovim.path,
     VIMRUNTIME: Neovim.runtime,
   },
 })
 
-const createNewVimInstance = async (): Promise<number> => {
-  const proc = await spawnVimInstance()
+const createNewVimInstance = (): number => {
+  const pipeName = getPipeName('veonim-instance')
+  const proc = spawnVimInstance(pipeName)
   const id = ids.vim.next()
 
-  vimInstances.set(id, { id, proc, attached: false })
+  vimInstances.set(id, { id, proc, pipeName, attached: false })
 
-  proc.on('error', (e: any) => log `vim ${id} err ${e}`)
-  proc.stdout.on('error', (e: any) => log `vim ${id} stdout err ${(JSON.stringify(e))}`)
-  proc.stdin.on('error', (e: any) => log `vim ${id} stdin err ${(JSON.stringify(e))}`)
+  proc.on('error', (e: any) => console.error(`vim ${id} err ${e}`))
+  proc.stdout.on('error', (e: any) => console.error(`vim ${id} stdout err ${(JSON.stringify(e))}`))
+  proc.stdin.on('error', (e: any) => console.error(`vim ${id} stdin err ${(JSON.stringify(e))}`))
   proc.on('exit', (c: any) => onExitFn(id, c))
 
   return id
@@ -88,13 +86,13 @@ export const switchTo = (id: number) => {
   const { proc, attached } = vimInstances.get(id)!
 
   if (ids.activeVim > -1) {
-    encoder.unpipe()
+    msgpackEncoder.unpipe()
     vimInstances.get(ids.activeVim)!.proc.stdout.unpipe()
   }
 
-  encoder.pipe(proc.stdin)
+  msgpackEncoder.pipe(proc.stdin)
   // don't kill decoder stream when this stdout stream ends (need for other stdouts)
-  proc.stdout.pipe(decoder, { end: false })
+  proc.stdout.pipe(msgpackDecoder, { end: false })
   ids.activeVim = id
 
   // sending resize (even of the same size) makes vim instance clear/redraw screen
@@ -103,37 +101,14 @@ export const switchTo = (id: number) => {
 }
 
 export const create = async ({ dir } = {} as { dir?: string }): Promise<NewVimResponse> => {
-  const id = await createNewVimInstance()
+  const id = createNewVimInstance()
   switchTo(id)
-  const errors = await unblock()
 
-  // usually vimrc parsing errors
-  if (errors.length) notifyUI(errors.join('\n'), NotifyKind.Error)
-
-  api.command(postStartupCommands)
-
-  // used when we create a new vim session with a predefined cwd
+  api.command(`${startupFuncs()} | ${startupCmds}`)
   dir && api.command(`cd ${dir}`)
 
-  // v:servername used to connect other clients to nvim via TCP
-  //
-  // by default we use the nvim process stdout/stdin to do core operations.
-  // things like rendering, key input, etc. these are high priority items and
-  // will live on the main thread.
-  //
-  // now, we will have a lot of async operations like reading buffers,
-  // modifying buffer text contents, setting highlight content, etc. that could
-  // potentially be slow to serialize/deserialize on the main thread (because
-  // msgpack is SLOW as a sloth). so we will move these non-essential operations
-  // to web workers.
-  //
-  // we will also need access to the nvim apis in the extension-host web worker
-  // (or process in the future?). extensions will talk to a vscode-to-nvim api
-  // bridge. there is no good reason why we should bridge the nvim api over
-  // web worker postMessages - just have the web worker talk directly to nvim
-  const path = await req.eval('v:servername')
-  vimInstances.get(id)!.path = path
-  return { id, path }
+  const { pipeName } = vimInstances.get(id)!
+  return { id, path: pipeName }
 }
 
 export const attachTo = (id: number) => {
@@ -141,16 +116,17 @@ export const attachTo = (id: number) => {
   const vim = vimInstances.get(id)!
   if (vim.attached) return
   api.uiAttach(clientSize.width, clientSize.height, vimOptions)
+  // highlight groups defined before nvim_ui_attach get reset
+  api.command(`highlight ${Highlight.Undercurl} gui=undercurl`)
+  api.command(`highlight ${Highlight.Underline} gui=underline`)
   vim.attached = true
 }
 
-const { notify, request, onEvent, onData } = SetupRPC(encoder.write)
-decoder.on('data', ([type, ...d]: [number, any]) => onData(type, d))
+const { notify, request, onEvent, onData } = SetupRPC(m => msgpackEncoder.write(m))
+msgpackDecoder.on('data', ([type, ...d]: [number, any]) => onData(type, d))
 
 const req: Api = onFnCall((name: string, args: any[] = []) => request(prefix(name), args))
 const api: Api = onFnCall((name: string, args: any[]) => notify(prefix(name), args))
-
-const { unblock } = NeovimUtils({ notify: api, request: req })
 
 export const onExit = (fn: ExitFn) => { onExitFn = fn }
 export const onRedraw = (fn: RedrawFn) => onEvent('redraw', fn)
@@ -165,7 +141,7 @@ export const resize = (width: number, height: number) => {
 export const getColor = async (id: number) => {
   const { foreground, background } = await req.getHlById(id, true) as Color
   return {
-    fg: asColor(foreground || 0),
-    bg: asColor(background || 0),
+    fg: asColor(foreground),
+    bg: asColor(background),
   }
 }

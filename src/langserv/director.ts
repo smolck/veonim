@@ -1,9 +1,9 @@
 import { Diagnostic, WorkspaceEdit } from 'vscode-languageserver-protocol'
 import { registerServer } from '../langserv/server-features'
 import toVSCodeLanguage from '../langserv/vsc-languages'
+import * as extensions from '../core/extensions-api'
 import defaultCapabs from '../langserv/capabilities'
 import * as dispatch from '../messaging/dispatch'
-import * as extensions from '../core/extensions'
 import { applyEdit } from '../langserv/adapter'
 import { Watchers } from '../support/utils'
 

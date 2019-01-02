@@ -6,7 +6,7 @@ import Input from '../components/text-input'
 import { badgeStyle } from '../ui/styles'
 import Worker from '../messaging/worker'
 import * as Icon from 'hyperapp-feather'
-import nvim from '../core/neovim'
+import api from '../core/instance-api'
 
 type TextTransformer = (text: string, last?: boolean) => string
 type Result = [string, SearchResult[]]
@@ -63,7 +63,7 @@ const selectResult = (results: Result[], ix: number, subix: number) => {
   if (subix < 0) return
   const [ path, items ] = results[ix]
   const { line, column } = items[subix]
-  nvim.jumpToProjectFile({ path, line, column })
+  api.nvim.jumpToProjectFile({ path, line, column })
   showCursorline()
 }
 
@@ -262,33 +262,28 @@ worker.on.results((results: Result[]) => ui.results(results))
 worker.on.moreResults((results: Result[]) => ui.moreResults(results))
 worker.on.done(ui.loadingDone)
 
-export const grepResume = () => ui.show({ reset: false })
+api.onAction('grep-resume', () => ui.show({ reset: false }))
 
-export const grep = async (query?: string) => {
-  const { cwd } = nvim.state
+api.onAction('grep', async (query: string) => {
+  const { cwd } = api.nvim.state
   ui.show({ cwd })
   query && worker.call.query({ query, cwd })
-}
+})
 
-export const grepWord = async () => {
-  const { cwd } = nvim.state
-  const query = await nvim.call.expand('<cword>')
+api.onAction('grep-word', async () => {
+  const { cwd } = api.nvim.state
+  const query = await api.nvim.call.expand('<cword>')
   ui.show({ cwd, value: query })
   worker.call.query({ query, cwd })
-}
+})
 
 // TODO: rename to grep-visual to be consistent with other actions
 // operating from visual mode
-export const grepVisual = async () => {
-  await nvim.feedkeys('gv"zy')
-  const selection = await nvim.expr('@z')
+api.onAction('grep-selection', async () => {
+  await api.nvim.feedkeys('gv"zy')
+  const selection = await api.nvim.expr('@z')
   const [ query ] = selection.split('\n')
-  const { cwd } = nvim.state
+  const { cwd } = api.nvim.state
   ui.show({ cwd, value: query })
   worker.call.query({ query, cwd })
-}
-
-nvim.onAction('grep', grep)
-nvim.onAction('grep-word', grepWord)
-nvim.onAction('grep-resume', grepResume)
-nvim.onAction('grep-selection', grepVisual)
+})

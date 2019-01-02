@@ -1,29 +1,29 @@
+import { list, switchVim } from '../core/instance-manager'
 import { Plugin } from '../components/plugin-container'
 import { RowNormal } from '../components/row-container'
 import { h, app, vimBlur, vimFocus } from '../ui/uikit'
-import { list, switchVim } from '../core/sessions'
 import Input from '../components/text-input'
 import { filter } from 'fuzzaldrin-plus'
 import * as Icon from 'hyperapp-feather'
-import nvim from '../core/neovim'
+import api from '../core/instance-api'
 
-interface Session {
-  id: number,
-  name: string,
+interface Instance {
+  id: number
+  name: string
 }
 
 const state = {
   value: '',
   visible: false,
-  list: [] as Session[],
-  cache: [] as Session[],
+  list: [] as Instance[],
+  cache: [] as Instance[],
   index: 0,
 }
 
 type S = typeof state
 
 const actions = {
-  show: (d: Session[]) => (vimBlur(), { list: d, cache: d, visible: true }),
+  show: (d: Instance[]) => (vimBlur(), { list: d, cache: d, visible: true }),
   hide: () => (vimFocus(), { value: '', visible: false, index: 0 }),
   change: (value: string) => (s: S) => ({ value, index: 0, list: value
     ? filter(s.list, value, { key: 'name' }).slice(0, 10)
@@ -44,9 +44,7 @@ const actions = {
   prev: () => (s: S) => ({ index: s.index - 1 < 0 ? Math.min(s.list.length - 1, 9) : s.index - 1 }),
 }
 
-type A = typeof actions
-
-const view = ($: S, a: A) => Plugin($.visible, [
+const view = ($: S, a: typeof actions) => Plugin($.visible, [
 
   ,Input({
     hide: a.hide,
@@ -57,7 +55,7 @@ const view = ($: S, a: A) => Plugin($.visible, [
     value: $.value,
     focus: true,
     icon: Icon.Grid,
-    desc: 'switch vim session',
+    desc: 'switch vim instance',
   })
 
   ,h('div', $.list.map(({ id, name }, ix) => h(RowNormal, {
@@ -69,7 +67,5 @@ const view = ($: S, a: A) => Plugin($.visible, [
 
 ])
 
-const ui = app<S, A>({ name: 'vim-switch', state, actions, view })
-
-nvim.onAction('vim-switch', () => ui.show(list()))
-export default () => ui.show(list())
+const ui = app({ name: 'vim-switch', state, actions, view })
+api.onAction('vim-switch', () => ui.show(list()))

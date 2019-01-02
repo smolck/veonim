@@ -1,9 +1,9 @@
 import { Plugin } from '../components/plugin-container'
 import { app, vimBlur, vimFocus } from '../ui/uikit'
+import { createVim } from '../core/instance-manager'
 import Input from '../components/text-input'
-import { createVim } from '../core/sessions'
 import * as Icon from 'hyperapp-feather'
-import nvim from '../core/neovim'
+import api from '../core/instance-api'
 
 const state = {
   value: '',
@@ -23,9 +23,7 @@ const actions = {
   },
 }
 
-type A = typeof actions
-
-const view = ($: S, a: A) => Plugin($.visible, [
+const view = ($: S, a: typeof actions) => Plugin($.visible, [
 
   ,Input({
     hide: a.hide,
@@ -34,12 +32,10 @@ const view = ($: S, a: A) => Plugin($.visible, [
     value: $.value,
     focus: true,
     icon: Icon.FolderPlus,
-    desc: 'create new vim session',
+    desc: 'create new vim instance',
   })
 
 ])
 
-const ui = app<S, A>({ name: 'vim-create', state, actions, view })
-
-nvim.onAction('vim-create', ui.show)
-export default ui.show
+const ui = app({ name: 'vim-create', state, actions, view })
+api.onAction('vim-create', ui.show)

@@ -36,7 +36,6 @@ interface Props {
   loadingSize: number,
   loadingColor: string,
   pathMode: boolean,
-  thisIsGarbage: (element: HTMLInputElement) => void,
 }
 
 interface TextInputProps extends Partial<Props> {

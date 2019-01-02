@@ -1,53 +1,12 @@
 import FiletypeIcon, { Terminal } from '../components/filetype-icon'
-import { BufferType, BufferOption } from '../neovim/types'
 import { Plugin } from '../components/plugin-container'
 import { RowNormal } from '../components/row-container'
 import { h, app, vimBlur, vimFocus } from '../ui/uikit'
-import { simplifyPath } from '../support/utils'
+import { BufferInfo } from '../neovim/types'
 import Input from '../components/text-input'
-import { basename, dirname } from 'path'
 import { filter } from 'fuzzaldrin-plus'
 import * as Icon from 'hyperapp-feather'
-import nvim from '../core/neovim'
-
-interface BufferInfo {
-  dir: string,
-  name: string,
-  base: string,
-  terminal: boolean,
-  modified: boolean,
-  duplicate: boolean,
-}
-
-const getVimBuffers = async () => {
-  const buffers = await nvim.buffers.list()
-  const currentBufferId = nvim.current.buffer.id
-
-  return await Promise.all(buffers.map(async b => ({
-    name: await b.name,
-    current: b.id === currentBufferId,
-    modified: await b.getOption(BufferOption.Modified),
-    listed: await b.getOption(BufferOption.Listed),
-    terminal: (await b.getOption(BufferOption.Type)) === BufferType.Terminal,
-  })))
-}
-
-const getBuffers = async (cwd: string): Promise<BufferInfo[]> => {
-  const buffers = await getVimBuffers()
-  if (!buffers) return []
-  
-  return buffers
-    .filter(m => m.listed && !m.current)
-    .map(({ name, modified, terminal }) => ({
-      name,
-      modified,
-      terminal,
-      base: basename(name),
-      dir: simplifyPath(dirname(name), cwd)
-    }))
-    .map((m, ix, arr) => ({ ...m, duplicate: arr.some((n, ixf) => ixf !== ix && n.base === m.base) }))
-    .map(m => ({ ...m, name: m.duplicate ? `${m.dir}/${m.base}` : m.base }))
-}
+import api from '../core/instance-api'
 
 const state = {
   value: '',
@@ -66,7 +25,7 @@ const actions = {
     vimFocus()
     if (!s.buffers.length) return resetState
     const { name } = s.buffers[s.index]
-    if (name) nvim.cmd(`b ${name}`)
+    if (name) api.nvim.cmd(`b ${name}`)
     return resetState
   },
 
@@ -111,7 +70,4 @@ const view = ($: S, a: typeof actions) => Plugin($.visible, [
 ])
 
 const ui = app({ name: 'buffers', state, actions, view })
-const doListBuffers = async () => ui.show(await getBuffers(nvim.state.cwd))
-
-nvim.onAction('buffers', doListBuffers)
-export default doListBuffers
+api.onAction('buffers', async () => ui.show(await api.nvim.getBufferInfo()))

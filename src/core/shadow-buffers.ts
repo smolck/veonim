@@ -1,4 +1,4 @@
-import nvim from '../core/neovim'
+import nvim from '../neovim/api'
 
 type Callback = () => void
 

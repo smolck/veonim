@@ -1,33 +1,12 @@
+import { NotifyKind, Notification, FlexibleExpire } from '../protocols/veonim'
 import { PluginTop } from '../components/plugin-container'
 import { merge, uuid, debounce } from '../support/utils'
 import { addMessage } from '../components/messages'
 import { colors, badgeStyle } from '../ui/styles'
+import * as dispatch from '../messaging/dispatch'
 import { animate, cvar } from '../ui/css'
 import * as Icon from 'hyperapp-feather'
 import { h, app } from '../ui/uikit'
-import nvim from '../core/neovim'
-
-export enum NotifyKind {
-  Error = 'error',
-  Warning = 'warning',
-  Info = 'info',
-  Success = 'success',
-  System = 'system',
-  Hidden = 'hidden',
-}
-
-interface FlexibleExpire {
-  refresh(): void
-}
-
-export interface Notification {
-  id: string,
-  kind: NotifyKind,
-  message: string,
-  count: number,
-  expire?: FlexibleExpire,
-  time: number,
-}
 
 const state = {
   notifications: [] as Notification[],
@@ -54,7 +33,6 @@ const renderIcons = new Map([
 const getIcon = (kind: NotifyKind) => renderIcons.get(kind)!
 
 const actions = {
-  clear: () => ({ notifications: [] }),
   notify: (notification: Notification) => (s: S) => {
     if (notification.kind === NotifyKind.Hidden) return
 
@@ -140,7 +118,10 @@ const view = ($: S) => PluginTop(true, {
 
 const ui = app<S, typeof actions>({ name: 'notifications', element: container, state, actions, view })
 
-export const notify = (message: string, kind = NotifyKind.Info) => {
+export const notify = (message: string, kind = NotifyKind.Info, actions?: string[]) => {
+  // TODO: handle actions as buttons that can be activated (think vscode dialogs)
+  console.warn('NYI: veonim.notify actions as buttons for dialogs', actions)
+
   const msg = {
     kind,
     message,
@@ -159,5 +140,4 @@ export const notify = (message: string, kind = NotifyKind.Info) => {
   }
 }
 
-export const clear = () => ui.clear()
-nvim.onAction('messages-clear', clear)
+dispatch.sub('notify', ({ msg, kind }: any) => notify(msg, kind))

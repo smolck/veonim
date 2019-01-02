@@ -1,4 +1,5 @@
-import CreateTransport from '../messaging/transport'
+import MsgpackStreamDecoder from '../messaging/msgpack-decoder'
+import MsgpackStreamEncoder from '../messaging/msgpack-encoder'
 import { createConnection } from 'net'
 
 interface Client {
@@ -11,7 +12,8 @@ export default (onDataSender?: (...args: any[]) => void) => {
   let sendRecvDataFn = (..._: any[]) => {}
   if (onDataSender) sendRecvDataFn = onDataSender
 
-  const { encoder, decoder } = CreateTransport()
+  const encoder = new MsgpackStreamEncoder()
+  const decoder = new MsgpackStreamDecoder()
   const clients = new Map<number, Client>()
   const config = { current: -1 }
   let buffer: any[] = []

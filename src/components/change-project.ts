@@ -1,15 +1,13 @@
-import { getDirFiles, exists, pathRelativeToHome, simplifyPath, absolutePath } from '../support/utils'
+import { getDirFiles, exists, pathRelativeToHome } from '../support/utils'
+import { createVim, renameCurrentToCwd } from '../core/instance-manager'
 import { RowNormal, RowImportant } from '../components/row-container'
-import { createVim, renameCurrentToCwd } from '../core/sessions'
 import { h, app, vimBlur, vimFocus } from '../ui/uikit'
 import { Plugin } from '../components/plugin-container'
-import configReader from '../config/config-service'
-import config from '../config/config-service'
 import Input from '../components/text-input'
+import { join, sep, basename } from 'path'
 import { filter } from 'fuzzaldrin-plus'
 import * as Icon from 'hyperapp-feather'
-import nvim from '../core/neovim'
-import { join, sep } from 'path'
+import api from '../core/instance-api'
 import { homedir } from 'os'
 
 const $HOME = homedir()
@@ -40,8 +38,7 @@ const validPath = async (path = '') => {
   return await exists(fullpath) ? fullpath : ''
 }
 
-let ignored = config('explorer.ignore.dirs', m => ignored = m)
-const filterDirs = (filedirs: FileDir[]) => filedirs.filter(f => f.dir && !ignored.includes(f.name))
+const filterDirs = (filedirs: FileDir[]) => filedirs.filter(f => f.dir)
 
 let listElRef: HTMLElement
 
@@ -54,7 +51,7 @@ const actions = {
     const { name } = s.paths[s.index]
     if (!name) return
     const dirpath = join(s.path, name)
-    s.create ? createVim(name, dirpath) : nvim.cmd(`cd ${dirpath}`)
+    s.create ? createVim(name, dirpath) : api.nvim.cmd(`cd ${dirpath}`)
     return resetState
   },
 
@@ -157,21 +154,17 @@ const view = ($: S, a: typeof actions) => Plugin($.visible, [
 const ui = app({ name: 'change-project', state, actions, view })
 
 const go = async (userPath: string, create = false) => {
-  const cwd = await validPath(userPath) || nvim.state.cwd
+  const cwd = await validPath(userPath) || api.nvim.state.cwd
   const filedirs = await getDirFiles(cwd)
   const paths = filterDirs(filedirs)
   ui.show({ paths, cwd, path: cwd, create })
 }
 
-nvim.onAction('change-dir', (path = '') => go(path, false))
-nvim.onAction('vim-create-dir', (path = '') => go(path, true))
+api.onAction('change-dir', (path = '') => go(path, false))
+api.onAction('vim-create-dir', (path = '') => go(path, true))
 
-nvim.watchState.cwd((cwd: string) => {
-  const defaultRoot = configReader('project.root', (root: string) => {
-    renameCurrentToCwd(simplifyPath(cwd, absolutePath(root)))
-  })
-
-  defaultRoot && renameCurrentToCwd(simplifyPath(cwd, absolutePath(defaultRoot)))
+api.nvim.watchState.cwd((cwd: string) => {
+  if (cwd && homedir() !== cwd) renameCurrentToCwd(basename(cwd))
 })
 
 export const changeDir = () => go('', false)

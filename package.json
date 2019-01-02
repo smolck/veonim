@@ -24,20 +24,20 @@
     "type": "git",
     "url": "git+https://github.com/veonim/veonim.git"
   },
-  "vscode-api-version": "1.27.2",
+  "vscode-api-version": "1.30.0",
   "repository-mirrors": [
     "git@github.com:veonim/veonim.git",
     "https://veonim@gitlab.com/veonim/veonim.git",
     "https://veonim@bitbucket.org/veonim/veonim.git"
   ],
-  "author": "Veonim",
+  "author": "veonim",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/veonim/veonim/issues"
   },
   "homepage": "https://github.com/veonim/veonim#readme",
   "bindeps-darwin": {
-    "@veonim/neovim-mac": "0.3.1-2",
+    "@veonim/neovim-mac": "0.0.0-alpha.92",
     "@veonim/ripgrep-mac": "0.0.1",
     "all-other-unzip-libs-suck-mac": "0.0.2"
   },
@@ -57,25 +57,24 @@
     "hyperapp-feather": "0.4.0",
     "hyperapp-seti": "0.2.0",
     "marked": "0.5.0",
-    "msgpack-lite": "0.1.26",
-    "vscode-debugprotocol": "1.29.0",
     "vscode-languageserver-protocol": "3.9.0"
   },
   "devDependencies": {
     "@deomitrus/hyperapp-redux-devtools": "1.2.0",
     "@medv/finder": "1.1.0",
     "@types/fuzzaldrin-plus": "0.0.1",
-    "@types/msgpack-lite": "0.1.4",
     "@types/node": "9.4.0",
-    "electron": "3.0.11",
-    "electron-builder": "20.38.3",
-    "electron-devtools-installer": "2.2.3",
+    "@types/webgl2": "0.0.4",
+    "electron": "4.0.0",
+    "electron-builder": "20.38.4",
+    "electron-devtools-installer": "2.2.4",
     "fs-extra": "5.0.0",
-    "jscodeshift": "0.6.2",
     "mocha": "5.2.0",
     "proxyquire": "2.0.1",
     "spectron": "5.0.0",
     "ts-unused-exports": "2.0.5",
-    "typescript": "2.8.1"
+    "ttypescript": "1.5.5",
+    "typescript": "2.8.1",
+    "vscode-debugprotocol": "1.29.0"
   }
 }

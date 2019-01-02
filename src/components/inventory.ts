@@ -1,11 +1,11 @@
-import { InputMode, switchInputMode, watchInputMode, registerShortcut } from '../core/input'
+import { InputMode, registerShortcut } from '../core/input'
 import { InventoryAction } from '../inventory/actions'
 import { InventoryLayer } from '../inventory/layers'
 import inventoryActions from '../inventory/actions'
 import inventoryLayers from '../inventory/layers'
 import { VimMode } from '../neovim/types'
+import api from '../core/instance-api'
 import { h, app } from '../ui/uikit'
-import nvim from '../core/neovim'
 
 // TODO: show some layers as disabled? like the langserv layer would be disabled if there
 // are not language servers started. user can still see options and info, but visually
@@ -209,7 +209,7 @@ const ui = app<S, A>({ name: 'inventory', state, view, actions })
 
 // TODO: how do we map an internal keybinding with the input registry?
 setImmediate(async () => {
-  const keymap = await nvim.getKeymap()
+  const keymap = await api.nvim.getKeymap()
 
   const isMapped = {
     space: keymap.has(' '),
@@ -217,11 +217,18 @@ setImmediate(async () => {
     jump: keymap.has(' js'),
   }
 
-  if (!isMapped.space) nvim.cmd('nno <space> :Veonim inventory<cr>')
-  if (!isMapped.spaceSpace) nvim.cmd('nno <space><space> :Veonim inventory-search<cr>')
+  if (!isMapped.space) api.nvim.cmd('nno <space> :Veonim inventory<cr>')
+  if (!isMapped.spaceSpace) api.nvim.cmd('nno <space><space> :Veonim inventory-search<cr>')
 
   console.log('isMapped', isMapped)
   console.log('FINAL keymap', keymap)
+})
+
+api.onAction('inventory', async () => {
+  // TODO: do we need timeoutLength? i wonder if we should just roll our own thing
+  // const timeoutLength = await nvim.options.timeoutlen
+  // console.log('timeoutLength', timeoutLength)
+  ui.show()
 })
 
 
@@ -282,5 +289,5 @@ const doIntenvory = async () => {
   })
 }
 
-nvim.onAction('inventory', doIntenvory)
+api.onAction('inventory', doIntenvory)
 registerShortcut('s-c-i', VimMode.Normal, doIntenvory)

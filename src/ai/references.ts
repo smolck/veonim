@@ -1,10 +1,11 @@
 import { references as getReferences, Reference } from '../langserv/adapter'
 import { findNext, findPrevious } from '../support/relative-finder'
 import { supports } from '../langserv/server-features'
-import { show } from '../components/references'
-import nvim from '../core/neovim'
+import { ReferenceResult } from '../ai/protocol'
+import nvim from '../neovim/api'
+import { ui } from '../core/ai'
 
-const groupResults = (m: Reference[]) => [...m.reduce((map, ref: Reference) => {
+const groupResults = (m: Reference[]): ReferenceResult[] => [...m.reduce((map, ref: Reference) => {
   map.has(ref.path)
     ? map.get(ref.path)!.push(ref)
     : map.set(ref.path, [ ref ])
@@ -12,17 +13,15 @@ const groupResults = (m: Reference[]) => [...m.reduce((map, ref: Reference) => {
   return map
 }, new Map<string, Reference[]>())]
 
-export const showReferences = async () => {
+nvim.onAction('references', async () => {
   if (!supports.references(nvim.state.cwd, nvim.state.filetype)) return
 
   const { keyword, references } = await getReferences(nvim.state)
   if (!references.length) return
 
   const referencesForUI = groupResults(references)
-  show(referencesForUI, keyword)
-}
-
-nvim.onAction('references', showReferences)
+  ui.references.show(referencesForUI, keyword)
+})
 
 nvim.onAction('next-usage', async () => {
   if (!supports.references(nvim.state.cwd, nvim.state.filetype)) return

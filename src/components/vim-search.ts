@@ -1,7 +1,7 @@
-import { hideCursor, showCursor, disableCursor, enableCursor, cursor } from '../core/cursor'
-import { currentWindowElement, getWindow } from '../core/windows'
-import { CommandType, CommandUpdate } from '../core/render'
-import { CanvasWindow } from '../core/canvas-window'
+import { hideCursor, showCursor, disableCursor, enableCursor } from '../core/cursor'
+import { CommandType, CommandUpdate } from '../render/events'
+import * as windows from '../windows/window-manager'
+import { WindowOverlay } from '../windows/window'
 import Input from '../components/text-input'
 import { sub } from '../messaging/dispatch'
 import { rgba, paddingV } from '../ui/css'
@@ -18,15 +18,13 @@ const state = {
 }
 
 type S = typeof state
-
-let targetCanvasWin: CanvasWindow
+let winOverlay: WindowOverlay
 
 const actions = {
   hide: () => {
     enableCursor()
     showCursor()
-    currentWindowElement.remove(containerEl)
-    if (targetCanvasWin) targetCanvasWin.setOverflowScrollState(true)
+    if (winOverlay) winOverlay.remove()
     return { value: '', visible: false }
   },
   updateQuery: ({ cmd, kind, position }: CommandUpdate) => (s: S) => {
@@ -35,11 +33,7 @@ const actions = {
     disableCursor()
 
     !s.visible && setImmediate(() => {
-      currentWindowElement.add(containerEl)
-      const w = getWindow(cursor.row, cursor.col, { getStuff: true })
-      if (!w) return console.warn('current window not found when trying to render vim-search. this means that canvas window overflow scrolling was not disabled. vim-search can be scrolled outta bounds!')
-      targetCanvasWin = w.canvas
-      w.canvas.setOverflowScrollState(false)
+      winOverlay = windows.getActive().addOverlayElement(containerEl)
     })
 
     return {
@@ -98,8 +92,7 @@ const containerEl = makel({
   position: 'absolute',
   width: '100%',
   display: 'flex',
-  backdropFilter: 'blur(24px)',
-  background: `rgba(var(--background-30-alpha), 0.6)`,
+  background: 'var(--background-30)',
 })
 
 const ui = app<S, A>({ name: 'vim-search', state, actions, view, element: containerEl })
