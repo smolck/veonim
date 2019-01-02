@@ -1,5 +1,6 @@
 import { setVar, paddingVH, paddingV, contrast, darken, brighten, cvar, hexToRGB } from '../ui/css'
-import nvim from '../core/neovim'
+import { colors as nvimColors } from '../render/highlight-attributes'
+import { sub } from '../messaging/dispatch'
 import { css } from '../ui/uikit'
 
 // this will return a var like '244, 120, 042'
@@ -11,7 +12,7 @@ const rgb = (hexColor: string) => {
 }
 
 // TODO: investigate if css filters would be better suited for this
-const refreshColors = ({ fg = nvim.state.foreground, bg = nvim.state.background }) => {
+const refreshColors = ({ fg, bg }: { fg: string, bg: string }) => {
   setVar('background-b10', brighten(bg, 10))
   setVar('background-b5', brighten(bg, 5))
   setVar('background', bg)
@@ -48,8 +49,12 @@ const refreshColors = ({ fg = nvim.state.foreground, bg = nvim.state.background 
   setVar('foreground-100', contrast(fg, bg, 100))
 }
 
-nvim.watchState.background(bg => refreshColors({ bg }))
-nvim.watchState.foreground(fg => refreshColors({ fg }))
+sub('colors-changed', refreshColors)
+
+requestAnimationFrame(() => refreshColors({
+  fg: nvimColors.foreground,
+  bg: nvimColors.background,
+}))
 
 setVar('error', '#ef2f2f')
 setVar('warning', '#ffb100')

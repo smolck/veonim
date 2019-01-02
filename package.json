@@ -20,14 +20,11 @@
     "unused-exports": "ts-unused-exports tsconfig.json $(find src -name *.ts)",
     "setup-mirrors": "node tools/setup-mirrors.js"
   },
-  "jest": {
-    "collectCoverage": true
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/veonim/veonim.git"
   },
-  "vscode-api-version": "1.27.2",
+  "vscode-api-version": "1.30.0",
   "repository-mirrors": [
     "git@github.com:veonim/veonim.git",
     "https://veonim@gitlab.com/veonim/veonim.git",
@@ -68,13 +65,13 @@
     "@types/fuzzaldrin-plus": "0.0.1",
     "@types/node": "9.4.0",
     "@types/webgl2": "0.0.4",
-    "electron": "3.0.2",
-    "electron-builder": "20.13.3",
-    "electron-devtools-installer": "2.2.3",
+    "electron": "4.0.0",
+    "electron-builder": "20.38.4",
+    "electron-devtools-installer": "2.2.4",
     "fs-extra": "5.0.0",
     "mocha": "5.2.0",
     "proxyquire": "2.0.1",
-    "spectron": "4.0.0",
+    "spectron": "5.0.0",
     "ts-unused-exports": "2.0.5",
     "ttypescript": "1.5.5",
     "typescript": "2.8.1",

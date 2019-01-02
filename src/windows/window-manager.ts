@@ -1,11 +1,11 @@
+import { onSwitchVim, instances } from '../core/instance-manager'
 import CreateWindow, { Window } from '../windows/window'
-import { onSwitchVim, sessions } from '../core/sessions'
-import getWindowMetadata from '../windows/metadata'
 import { cursor, moveCursor } from '../core/cursor'
 import CreateWebGLRenderer from '../render/webgl'
 import { onElementResize } from '../ui/vanilla'
 import { throttle } from '../support/utils'
 import windowSizer from '../windows/sizer'
+import api from '../core/instance-api'
 
 export const size = { width: 0, height: 0 }
 export const webgl = CreateWebGLRenderer()
@@ -15,7 +15,7 @@ const state = { activeGrid: '', activeInstanceGrid: 1 }
 const container = document.getElementById('windows') as HTMLElement
 const webglContainer = document.getElementById('webgl') as HTMLElement
 
-const superid = (id: number) => `i${sessions.current}-${id}`
+const superid = (id: number) => `i${instances.current}-${id}`
 
 const getWindowById = (windowId: number) => {
   const win = windowsById.get(superid(windowId))
@@ -23,7 +23,7 @@ const getWindowById = (windowId: number) => {
   return win
 }
 
-const getInstanceWindows = (id = sessions.current) => [...windows.values()]
+const getInstanceWindows = (id = instances.current) => [...windows.values()]
   .filter(win => win.id.startsWith(`i${id}`))
 
 const refreshWebGLGrid = () => {
@@ -99,7 +99,7 @@ export const layout = () => {
 }
 
 const updateWindowNameplates = () => requestAnimationFrame(async () => {
-  const windowsWithMetadata = await getWindowMetadata()
+  const windowsWithMetadata = await api.getWindowMetadata()
   windowsWithMetadata.forEach(w => getWindowById(w.id).updateNameplate(w))
 })
 

@@ -1,6 +1,6 @@
 import { rename, textSync } from '../langserv/adapter'
 import { supports } from '../langserv/server-features'
-import nvim from '../core/neovim'
+import nvim from '../neovim/api'
 
 // TODO: anyway to improve the glitchiness of undo/apply edit? any way to also pause render in undo
 // or maybe figure out how to diff based on the partial modification

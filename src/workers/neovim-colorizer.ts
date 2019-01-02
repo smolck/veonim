@@ -1,9 +1,7 @@
 import { prefixWith, onFnCall, pascalCase } from '../support/utils'
 import MsgpackStreamDecoder from '../messaging/msgpack-decoder'
 import MsgpackStreamEncoder from '../messaging/msgpack-encoder'
-import { colorscheme } from '../config/default-configs'
 import { Api, Prefixes } from '../neovim/protocol'
-import NeovimUtils from '../support/neovim-utils'
 import { on } from '../messaging/worker-client'
 import { Neovim } from '../support/binaries'
 import SetupRPC from '../messaging/rpc'
@@ -42,7 +40,7 @@ const proc = Neovim.run([
   '--cmd', `let $VIM = '${Neovim.path}'`,
   '--cmd', `let $VIMRUNTIME = '${Neovim.runtime}'`,
   '--cmd', `let &runtimepath .= ',${runtimeDir}'`,
-  '--cmd', `colorscheme ${colorscheme}`,
+  '--cmd', `colorscheme veonim`,
   '--cmd', `let g:veonim = 1 | let g:vn_loaded = 0 | let g:vn_ask_cd = 0`,
   '--cmd', `exe ":fun! Veonim(...)\\n endfun"`,
   '--cmd', `exe ":fun! VK(...)\\n endfun"`,
@@ -66,20 +64,7 @@ decoder.on('data', ([type, ...d]: [number, any]) => onData(type, d))
 const req: Api = onFnCall((name: string, args: any[] = []) => request(prefix.core(name), args))
 const api: Api = onFnCall((name: string, args: any[]) => notify(prefix.core(name), args))
 
-const { unblock } = NeovimUtils({ notify: api, request: req })
-
-unblock().then(errors => {
-  if (errors.length) {
-    console.error(`vim colorizer had some errors starting up`)
-    errors.forEach(e => console.error(e))
-  }
-
-  // TODO: if plugins are not installed, defer loading colorizer.
-  // figure out a way to wait for main neovim instance to finish
-  // installing plugins (aka downloading packages)
-
-  api.uiAttach(100, 10, vimOptions)
-})
+api.uiAttach(100, 10, vimOptions)
 
 api.command(asVimFunc('Colorize', `
   execute 'set filetype=' . a:1

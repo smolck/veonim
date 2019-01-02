@@ -4,6 +4,7 @@ import { sub } from '../messaging/dispatch'
 import { debounce } from '../support/utils'
 import * as Icon from 'hyperapp-feather'
 import { cursor } from '../core/cursor'
+import api from '../core/instance-api'
 import { h, app } from '../ui/uikit'
 import { cvar } from '../ui/css'
 
@@ -76,6 +77,9 @@ const view = ($: S) => Overlay({
 
 ])
 
-export const ui = app<S, A>({ name: 'problem-info', state, actions, view })
+const ui = app<S, A>({ name: 'problem-info', state, actions, view })
+
+api.ai.problemInfo.onShow(ui.show)
+api.ai.problemInfo.onHide(ui.hide)
 
 sub('redraw', debounce(ui.updatePosition, 50))

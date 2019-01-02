@@ -1,8 +1,7 @@
-import { getColorAtlas } from '../render/highlight-attributes'
+import { getColorAtlas, colors } from '../render/highlight-attributes'
 import { WebGL2, VarKind } from '../render/webgl-utils'
-import { cell } from '../core/canvas-container'
+import { cell } from '../core/workspace'
 import { hexToRGB } from '../ui/css'
-import nvim from '../core/neovim'
 
 export default (webgl: WebGL2) => {
   const viewport = { x: 0, y: 0, width: 0, height: 0 }
@@ -153,14 +152,14 @@ export default (webgl: WebGL2) => {
 
   const clear = (x: number, y: number, width: number, height: number) => {
     readjustViewportMaybe(x, y, width, height)
-    const [ r, g, b ] = hexToRGB(nvim.state.background)
+    const [ r, g, b ] = hexToRGB(colors.background)
     webgl.gl.clearColor(r / 255, g / 255, b / 255, 1)
     webgl.gl.clear(webgl.gl.COLOR_BUFFER_BIT)
   }
 
   const clearAll = () => {
     readjustViewportMaybe(0, 0, webgl.canvasElement.width, webgl.canvasElement.height)
-    const [ r, g, b ] = hexToRGB(nvim.state.background)
+    const [ r, g, b ] = hexToRGB(colors.background)
     webgl.gl.clearColor(r / 255, g / 255, b / 255, 1)
     webgl.gl.clear(webgl.gl.COLOR_BUFFER_BIT)
   }

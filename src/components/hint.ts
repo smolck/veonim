@@ -1,6 +1,7 @@
 import { docStyle, resetMarkdownHTMLStyle } from '../ui/styles'
 import * as windows from '../windows/window-manager'
 import Overlay from '../components/overlay'
+import api from '../core/instance-api'
 import { h, app } from '../ui/uikit'
 import { cvar } from '../ui/css'
 
@@ -146,4 +147,7 @@ const view = ($: S) => Overlay({
 
 ])
 
-export const ui = app<S, A>({ name: 'hint', state, actions, view })
+const ui = app<S, A>({ name: 'hint', state, actions, view })
+
+api.ai.signatureHint.onShow(ui.show)
+api.ai.signatureHint.onHide(ui.hide)

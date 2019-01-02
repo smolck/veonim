@@ -3,6 +3,7 @@
 const { deepStrictEqual: same } = require('assert')
 const proxyquire = require('proxyquire').noCallThru()
 const Module = require('module')
+const os = require('os')
 const path = require('path')
 const fs = require('fs')
 const originalModuleLoader = Module._load
@@ -52,4 +53,23 @@ global.localStorage = {
 
 const testDataPath = path.join(process.cwd(), 'test', 'data')
 
-module.exports = { src, same, globalProxy, delay, pathExists, spy, resetModule, testDataPath }
+const CreateTask = () => ( (done = () => {}, promise = new Promise(m => done = m)) => ({ done, promise }) )()
+
+const uuid = () => ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g,a=>(a^Math.random()*16>>a/4).toString(16))
+
+const getPipeName = name => process.platform === 'win32'
+  ? `\\\\.\\pipe\\${name}${uuid()}-sock`
+  : path.join(os.tmpdir(), `${name}${uuid()}.sock`)
+
+module.exports = {
+  src,
+  same,
+  globalProxy,
+  delay,
+  pathExists,
+  spy,
+  resetModule,
+  testDataPath,
+  getPipeName,
+  CreateTask,
+}

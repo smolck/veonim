@@ -1,18 +1,14 @@
-import { workspaceSymbols, Symbol } from '../langserv/adapter'
 import { SymbolKind } from 'vscode-languageserver-protocol'
 import { Plugin } from '../components/plugin-container'
 import { RowNormal } from '../components/row-container'
 import { h, app, vimBlur, vimFocus } from '../ui/uikit'
 import Input from '../components/text-input'
+import { Symbol } from '../langserv/adapter'
+import { SymbolMode } from '../ai/protocol'
 import { filter } from 'fuzzaldrin-plus'
 import * as Icon from 'hyperapp-feather'
-import nvim from '../core/neovim'
+import api from '../core/instance-api'
 import { join } from 'path'
-
-export enum SymbolMode {
-  Buffer,
-  Workspace,
-}
 
 const state = {
   loading: false,
@@ -116,7 +112,7 @@ const actions = {
     if (!s.symbols.length) return (symbolCache.clear(), resetState)
     const { location: { cwd, file, position } } = s.symbols[s.index]
     const path = join(cwd, file)
-    nvim.jumpTo({ ...position, path })
+    api.nvim.jumpTo({ ...position, path })
     return (symbolCache.clear(), resetState)
   },
 
@@ -128,7 +124,7 @@ const actions = {
     } 
 
     if (s.mode === SymbolMode.Workspace) {
-      workspaceSymbols(nvim.state, value).then(symbols => {
+      api.ai.symbols.getWorkspaceSymbols(value).then(symbols => {
         symbolCache.update(symbols)
         const results = symbols.length ? symbols : symbolCache.find(value)
         a.updateOptions(results)
@@ -221,4 +217,5 @@ const view = ($: S, a: A) => Plugin($.visible, [
 ])
 
 const ui = app({ name: 'symbols', state, actions, view })
-export const show = (symbols: Symbol[], mode: SymbolMode) => ui.show({ symbols, mode })
+
+api.ai.symbols.onShow((symbols: Symbol[], mode: SymbolMode) => ui.show({ symbols, mode }))

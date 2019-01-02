@@ -134,6 +134,8 @@ export interface Api {
 }
 
 export interface Buffer {
+  getOffset(buffer: Buffer, index: number): Promise<number>,
+  isLoaded(buffer: Buffer): Promise<boolean>,
   lineCount(buffer: Buffer): Promise<number>,
   attach(buffer: Buffer, send_buffer: boolean, opts: object): Promise<boolean>,
   detach(buffer: Buffer): Promise<boolean>,
@@ -154,6 +156,7 @@ export interface Buffer {
   getMark(buffer: Buffer, name: string): Promise<number[]>,
   addHighlight(buffer: Buffer, src_id: number, hl_group: string, line: number, col_start: number, col_end: number): Promise<number>,
   clearHighlight(buffer: Buffer, src_id: number, line_start: number, line_end: number): void,
+  setVirtualText(buffer: Buffer, src_id: number, line: number, chunks: any[]): Promise<number>,
 }
 
 export interface Window {

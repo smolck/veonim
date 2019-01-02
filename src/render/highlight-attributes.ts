@@ -1,5 +1,8 @@
-import { asColor, MapSet } from '../support/utils'
-import nvim from '../core/neovim'
+import { asColor, MapSet, CreateTask } from '../support/utils'
+import { pub } from '../messaging/dispatch'
+import { EventEmitter } from 'events'
+
+const ee = new EventEmitter()
 
 export interface Attrs {
   foreground?: number
@@ -43,6 +46,12 @@ const defaultColors = {
   special: '#ef5188',
 }
 
+const _colors = { ...defaultColors }
+export const colors = new Proxy(_colors, {
+  set: () => true,
+  get: (_: any, key: string) => Reflect.get(_colors, key),
+})
+
 // because we skip allocating 1-char strings in msgpack decode. so if we have a 1-char
 // string it might be a code point number - need to turn it back into a string. see
 // msgpack-decoder for more info on how this works.
@@ -74,9 +83,16 @@ export const setDefaultColors = (fg: number, bg: number, sp: number) => {
 
   Object.assign(defaultColors, { foreground, background, special })
 
-  nvim.state.foreground = defaultColors.foreground
-  nvim.state.background = defaultColors.background
-  nvim.state.special = defaultColors.special
+  Object.assign(_colors, {
+    foreground: defaultColors.foreground,
+    background: defaultColors.background,
+    special: defaultColors.special,
+  })
+
+  pub('colors-changed', {
+    fg: _colors.foreground,
+    bg: _colors.background,
+  })
 
   // hlid 0 -> default highlight group
   highlights.set(0, {
@@ -114,9 +130,31 @@ export const addHighlight = (id: number, attr: Attrs, infos: HighlightInfoEvent[
     name: sillyString(info.hi_name),
     builtinName: sillyString(info.ui_name),
   }))
+
+  ee.emit('highlight-info.added')
 }
 
-export const highlightLookup = (name: string): HighlightInfo[] => [...highlightInfo.get(name)]
+export const highlightLookupWhenExist = async (name: string): Promise<HighlightInfo[]> => {
+  const info = highlightInfo.get(name)
+  if (info) return [...info]
+  const lookupTask = CreateTask()
+
+  const checkIfExist = () => {
+    const info = highlightInfo.get(name)
+    if (!info) return
+    lookupTask.done([...info])
+    ee.removeListener('highlight-info.added', checkIfExist)
+  }
+
+  ee.on('highlight-info.added', checkIfExist)
+  return lookupTask.promise as any
+}
+
+export const highlightLookup = (name: string): HighlightInfo[] => {
+  const info = highlightInfo.get(name)
+  if (!info) return (console.error('highlight info does not exist for:', name), [])
+  return [...info]
+}
 export const getHighlight = (id: number) => highlights.get(id)
 export const getBackground = (id: number) => {
   const { background } = highlights.get(id) || {} as HighlightGroup
@@ -143,9 +181,9 @@ export const generateColorLookupAtlas = () => {
     ui.fillStyle = hlgrp.foreground || deffg
     ui.fillRect(id, 1, 1, 1)
 
-    if (!hlgrp.underline || !hlgrp.special) return
+    if (!hlgrp.underline) return
 
-    ui.fillStyle = hlgrp.special
+    ui.fillStyle = hlgrp.special || defaultColors.special
     ui.fillRect(id, 2, 1, 1)
   })
 

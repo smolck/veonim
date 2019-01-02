@@ -1,5 +1,5 @@
+import api from '../core/instance-api'
 import { h, app } from '../ui/uikit'
-import nvim from '../core/neovim'
 
 // TODO: show some layers as disabled? like the langserv layer would be disabled if there
 // are not language servers started. user can still see options and info, but visually
@@ -33,8 +33,9 @@ const view = ($: S) => h('div', {
 
 const ui = app<S, A>({ name: 'inventory', state, view, actions })
 
-nvim.onAction('inventory', async () => {
-  const timeoutLength = await nvim.options.timeoutlen
-  console.log('timeoutLength', timeoutLength)
+api.onAction('inventory', async () => {
+  // TODO: do we need timeoutLength? i wonder if we should just roll our own thing
+  // const timeoutLength = await nvim.options.timeoutlen
+  // console.log('timeoutLength', timeoutLength)
   ui.show()
 })

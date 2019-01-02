@@ -1,6 +1,6 @@
 import { EditorLocation, implementation, definition } from '../langserv/adapter'
 import { supports } from '../langserv/server-features'
-import nvim from '../core/neovim'
+import nvim from '../neovim/api'
 
 interface StateLocation {
   absoluteFilepath: string
