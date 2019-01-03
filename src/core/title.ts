@@ -20,6 +20,7 @@ const typescriptSucks = (el: any, bar: any) => el.prepend(bar)
 
 if (macos) {
   merge((title as HTMLElement).style, {
+    fontSize: '14px',
     marginLeft: '20%',
     marginRight: '20%',
     whiteSpace: 'nowrap',
