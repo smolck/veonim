@@ -1,5 +1,5 @@
 import { exists, getDirs, configPath, remove as removePath } from '../support/utils'
-import { url, download } from '../support/download'
+import * as downloader from '../support/download'
 import { call } from '../messaging/worker-client'
 import { NotifyKind } from '../protocols/veonim'
 import nvim from '../neovim/api'
@@ -50,7 +50,7 @@ export default async (pluginText: string[]) => {
 
   call.notify(`Found ${pluginsNotInstalled.length} Veonim plugins. Installing...`, NotifyKind.System)
 
-  const installed = await Promise.all(plugins.map(p => download(url.github(p.user, p.repo), p.path)))
+  const installed = await Promise.all(plugins.map(p => downloader.download(downloader.url.github(p.user, p.repo), p.path)))
   const installedOk = installed.filter(m => m).length
   const installedFail = installed.filter(m => !m).length
 
@@ -59,4 +59,5 @@ export default async (pluginText: string[]) => {
 
   removeExtraneous(plugins)
   nvim.cmd(`packloadall!`)
+  downloader.dispose()
 }

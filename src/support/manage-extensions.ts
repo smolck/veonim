@@ -1,6 +1,6 @@
 import { exists, getDirs, remove as removePath, configPath } from '../support/utils'
 import { load as loadExtensions } from '../core/extensions-api'
-import { url, download } from '../support/download'
+import * as downloader from '../support/download'
 import { call } from '../messaging/worker-client'
 import { NotifyKind } from '../protocols/veonim'
 import { join } from 'path'
@@ -58,9 +58,11 @@ export default async (extText: string[]) => {
   const installed = await Promise.all(extensions.map(e => {
     const isVscodeExt = e.kind === ExtensionKind.VSCode
     const destination = join(EXT_PATH, `${e.user}--${e.repo}`)
-    const downloadUrl = isVscodeExt ? url.vscode(e.user, e.repo) : url.github(e.user, e.repo)
+    const downloadUrl = isVscodeExt
+      ? downloader.url.vscode(e.user, e.repo)
+      : downloader.url.github(e.user, e.repo)
 
-    return download(downloadUrl, destination)
+    return downloader.download(downloadUrl, destination)
   }))
 
   const installedOk = installed.filter(m => m).length
@@ -71,4 +73,5 @@ export default async (extText: string[]) => {
 
   removeExtraneous(extensions)
   loadExtensions()
+  downloader.dispose()
 }
