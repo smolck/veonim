@@ -8,10 +8,13 @@ const startup = FunctionGroup()
 
 export const startupFuncs = () => startup.getFunctionsAsString()
 
+// TODO: let g:neovim_loaded is a TEMP HACK and should be removed once we merge NEXT!!!
+
 export const startupCmds = CmdGroup`
   let $PATH .= ':${runtimeDir}/${process.platform}'
   let &runtimepath .= ',${runtimeDir}'
   let g:veonim = 1
+  let g:neovim_loaded = 0
   let g:vn_loaded = 0
   let g:vn_cmd_completions = ''
   let g:vn_rpc_buf = []
@@ -89,6 +92,7 @@ const autocmdsText = Object.entries(autocmds)
 startup.defineFunc.VeonimRegisterAutocmds`
   aug VeonimAU | au! | aug END
   au VeonimAU CursorMoved,CursorMovedI * call rpcnotify(0, 'veonim-position', VeonimPosition())
+  au VeonimAU VimEnter * let g:neovim_loaded = 2
   au VeonimAU ${stateEvents.join(',')} * call rpcnotify(0, 'veonim-state', VeonimState())
   ${autocmdsText}
 `

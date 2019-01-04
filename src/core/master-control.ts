@@ -1,9 +1,7 @@
 import { startupFuncs, startupCmds, postStartupCommands } from '../core/vim-startup'
 import { asColor, ID, log, onFnCall, merge, prefixWith } from '../support/utils'
-import { NotifyKind, notify as notifyUI } from '../ui/notifications'
 import CreateTransport from '../messaging/transport'
 import { Api, Prefixes } from '../neovim/protocol'
-import NeovimUtils from '../support/neovim-utils'
 import getEnvVars from '../support/shell-env'
 import { Neovim } from '../support/binaries'
 import { ChildProcess } from 'child_process'
@@ -105,15 +103,21 @@ export const switchTo = (id: number) => {
 export const create = async ({ dir } = {} as { dir?: string }): Promise<NewVimResponse> => {
   const id = await createNewVimInstance()
   switchTo(id)
-  const errors = await unblock()
 
-  // usually vimrc parsing errors
-  if (errors.length) notifyUI(errors.join('\n'), NotifyKind.Error)
+  // TODO: remove this once we merge NEXT
+  const stupidDirtyHack = setInterval(async () => {
+    // can't get VimEnter to fire in my code probably because
+    // there's too much shit going on. doesn't matter because
+    // we are doing it the right way on NEXT so a temp dirty
+    // hack is okay until NEXT gets merged
+    const neovimLoaded = await req.getVar('neovim_loaded')
+    if (neovimLoaded !== 2) return
 
-  api.command(postStartupCommands)
-
-  // used when we create a new vim session with a predefined cwd
-  dir && api.command(`cd ${dir}`)
+    api.command(postStartupCommands)
+    // used when we create a new vim session with a predefined cwd
+    dir && api.command(`cd ${dir}`)
+    clearInterval(stupidDirtyHack)
+  }, 100)
 
   // v:servername used to connect other clients to nvim via TCP
   //
@@ -149,8 +153,6 @@ decoder.on('data', ([type, ...d]: [number, any]) => onData(type, d))
 
 const req: Api = onFnCall((name: string, args: any[] = []) => request(prefix(name), args))
 const api: Api = onFnCall((name: string, args: any[]) => notify(prefix(name), args))
-
-const { unblock } = NeovimUtils({ notify: api, request: req })
 
 export const onExit = (fn: ExitFn) => { onExitFn = fn }
 export const onRedraw = (fn: RedrawFn) => onEvent('redraw', fn)
