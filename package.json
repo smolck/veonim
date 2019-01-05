@@ -1,6 +1,6 @@
 {
   "name": "veonim",
-  "version": "0.14.0-alpha.1",
+  "version": "0.14.0-alpha.3",
   "description": "simple modal IDE built on neovim",
   "main": "build/bootstrap/main.js",
   "scripts": {
@@ -45,12 +45,12 @@
     "all-other-unzip-libs-suck-mac": "0.0.2"
   },
   "bindeps-win32": {
-    "@veonim/neovim-win": "0.3.2-2",
+    "@veonim/neovim-win": "0.3.2-3",
     "@veonim/ripgrep-win": "0.0.1",
     "all-other-unzip-libs-suck-win": "0.0.2"
   },
   "bindeps-linux": {
-    "@veonim/neovim-linux": "0.3.2-2",
+    "@veonim/neovim-linux": "0.3.2-3",
     "@veonim/ripgrep-linux": "0.0.1",
     "all-other-unzip-libs-suck-linux": "0.0.2"
   },
