@@ -11,6 +11,7 @@ import * as workspace from '../core/workspace'
 import { requireDir } from '../support/utils'
 import '../render/redraw'
 
+// TODO: do we need to sync instance nvim state to main thread? see instance-api todo note
 // TODO: webgl line width
 // TODO: investigate no texture on unit0. im guessing the texture atlas are not
 // ready on load?

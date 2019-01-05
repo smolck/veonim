@@ -26,6 +26,8 @@ onCreateVim(info => {
 
   instance.on.nvimStateUpdate((stateDiff: any) => {
     if (info.id !== instances.current) return
+    // TODO: do we need this to always be updated or can we query these values?
+    // this will trigger on every cursor move and take up time in the render cycle
     Object.assign(state, stateDiff)
   })
 

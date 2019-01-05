@@ -54,23 +54,25 @@ export const set = (id: number, gridId: number, row: number, col: number, width:
   if (!windowsById.has(wid)) windowsById.set(wid, win)
   // we only want to add grids that have valid window positions
   // this happens rarely and i think it might be a nvim bug?
-  const key = `${wid}::${gid}`
-  if (id < 0) return unpositionedWindows.add(key)
+  if (id < 0) return unpositionedWindows.add(gid)
   container.appendChild(win.element)
-  unpositionedWindows.delete(key)
+  unpositionedWindows.delete(gid)
 }
 
 // i made the assumption that a grid_resize event was always going to follow up
 // with a win_pos event. i think however there are grids that never get
 // positioned, so we need to make sure they do not get rendered
-export const disposeUnpositionedWindows = () => unpositionedWindows.forEach(key => {
-  const [ wid, gid ] = key.split('::')
-  const win = windows.get(gid)
-  if (win) win.element.remove()
-  windowsById.delete(wid)
-  windows.delete(gid)
-  unpositionedWindows.delete(key)
-})
+export const disposeUnpositionedWindows = () => {
+  unpositionedWindows.forEach(gid => {
+    const win = windows.get(gid)
+    if (!win) throw new Error(`window grid does not exist ${gid}`)
+    windows.delete(gid)
+    windowsById.delete(win.id)
+    unpositionedWindows.delete(gid)
+  })
+
+  unpositionedWindows.delete(superid(-1))
+}
 
 export const remove = (gridId: number) => {
   const win = windows.get(superid(gridId))
