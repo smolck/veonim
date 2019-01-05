@@ -11,6 +11,7 @@ export const size = { width: 0, height: 0 }
 export const webgl = CreateWebGLRenderer()
 const windows = new Map<string, Window>()
 const windowsById = new Map<string, Window>()
+const unpositionedWindows = new Set<string>()
 const state = { activeGrid: '', activeInstanceGrid: 1 }
 const container = document.getElementById('windows') as HTMLElement
 const webglContainer = document.getElementById('webgl') as HTMLElement
@@ -51,8 +52,25 @@ export const set = (id: number, gridId: number, row: number, col: number, width:
   win.setWindowInfo({ id: wid, gridId: gid, row, col, width, height, visible: true })
   if (!windows.has(gid)) windows.set(gid, win)
   if (!windowsById.has(wid)) windowsById.set(wid, win)
+  // we only want to add grids that have valid window positions
+  // this happens rarely and i think it might be a nvim bug?
+  const key = `${wid}::${gid}`
+  if (id < 0) return unpositionedWindows.add(key)
   container.appendChild(win.element)
+  unpositionedWindows.delete(key)
 }
+
+// i made the assumption that a grid_resize event was always going to follow up
+// with a win_pos event. i think however there are grids that never get
+// positioned, so we need to make sure they do not get rendered
+export const disposeUnpositionedWindows = () => unpositionedWindows.forEach(key => {
+  const [ wid, gid ] = key.split('::')
+  const win = windows.get(gid)
+  if (win) win.element.remove()
+  windowsById.delete(wid)
+  windows.delete(gid)
+  unpositionedWindows.delete(key)
+})
 
 export const remove = (gridId: number) => {
   const win = windows.get(superid(gridId))
@@ -61,7 +79,8 @@ export const remove = (gridId: number) => {
   // redraw webgl first before removing DOM element
   // this helps a bit with flickering
   requestAnimationFrame(() => {
-    if (container.contains(win.element)) container.removeChild(win.element)
+    win.element.remove()
+    // if (container.contains(win.element)) container.removeChild(win.element)
     windowsById.delete(win.getWindowInfo().id)
     windows.delete(superid(gridId))
   })

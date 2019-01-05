@@ -196,7 +196,7 @@ onRedraw(redrawEvents => {
     else if (e === 'grid_cursor_goto') grid_cursor_goto(ev)
     else if (e === 'win_pos') (winUpdates = true, win_pos(ev))
     else if (e === 'win_hide') (winUpdates = true, win_hide(ev))
-    else if (e === 'grid_resize') grid_resize(ev)
+    else if (e === 'grid_resize') (winUpdates = true, grid_resize(ev))
     else if (e === 'grid_clear') grid_clear(ev)
     else if (e === 'grid_destroy') grid_destroy(ev)
     else if (e === 'tabline_update') tabline_update(ev)
@@ -220,8 +220,10 @@ onRedraw(redrawEvents => {
   }
 
   requestAnimationFrame(() => {
-    if (winUpdates) windows.layout()
     dispatch.pub('redraw')
+    if (!winUpdates) return
+    windows.disposeUnpositionedWindows()
+    windows.layout()
   })
 
   // TODO: we really should never have to call this outside of windows.layout
