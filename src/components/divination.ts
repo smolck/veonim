@@ -117,12 +117,12 @@ const divinationLine = async ({ visual }: { visual: boolean }) => {
     reset()
   }
 
-  const restoreInput = stealInput(keys => {
-    if (keys === '<Esc>') return reset()
+  const restoreInput = stealInput(key => {
+    if (key === '<Esc>') return reset()
 
-    grabbedKeys.push(keys)
+    grabbedKeys.push(key)
     if (labelSize === 1 && grabbedKeys.length === 1) return jump()
-    if (labelSize === 2 && grabbedKeys.length === 1) return updateLabels(keys)
+    if (labelSize === 2 && grabbedKeys.length === 1) return updateLabels(key)
     if (labelSize === 2 && grabbedKeys.length === 2) return jump()
     else reset()
   })

@@ -65,6 +65,17 @@ const getInitialConfig = (dbg: Debugger, cwd: string): DebugConfiguration => {
 
   const initialConfigsDynamic = providers
     .filter(p => p.provideDebugConfigurations)
+  // TODO: hmmm check type here!?
+  // TODO: hmmm check type here!?
+  // TODO: hmmm check type here!?
+  // TODO: hmmm check type here!?
+  // TODO: hmmm check type here!?
+  // TODO: hmmm check type here!?
+  // TODO: hmmm check type here!?
+  // TODO: hmmm check type here!?
+  // TODO: hmmm check type here!?
+  // TODO: hmmm check type here!?
+  // @ts-ignore
     .map(p => p.provideDebugConfigurations!(cwd))
     .reduce((res, config) => [...res, ...config], [] as DebugConfiguration[])
 
@@ -110,6 +121,14 @@ export const resolveConfigurationByProviders = async (cwd: string, type: string,
   return getProviders(type)
     .filter(p => p.resolveDebugConfiguration)
     .reduce((q: UghWTF, provider: vsc.DebugConfigurationProvider) => q.then(config => config
+      // TODO: hmm?? check type here
+      // TODO: hmm?? check type here
+      // TODO: hmm?? check type here
+      // TODO: hmm?? check type here
+      // TODO: hmm?? check type here
+      // TODO: hmm?? check type here
+      // TODO: hmm?? check type here
+      // @ts-ignore
       ? provider.resolveDebugConfiguration!(cwd, config)
       : Promise.resolve(config)
     ), Promise.resolve(config))

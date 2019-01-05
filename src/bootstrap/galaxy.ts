@@ -32,7 +32,7 @@ requestAnimationFrame(() => {
 
   setTimeout(() => {
     require('../services/remote')
-    requireDir(`${__dirname}/../components`)
+    // requireDir(`${__dirname}/../components`)
 
     if (process.env.VEONIM_DEV) {
       require('../dev/menu')

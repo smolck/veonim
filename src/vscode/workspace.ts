@@ -49,6 +49,9 @@ const workspace: typeof vsc.workspace = {
   },
   createFileSystemWatcher: () => {
     console.warn('NYI: workspace.createFileSystemWatcher')
+    return new Proxy(Object.create(null), {
+      get: (_: any, __: string) => () => {},
+    }) as any
   },
   // TODO: nvim does not provide a save buffers in background option yet
   saveAll: () => Promise.resolve(false),
@@ -61,8 +64,10 @@ const workspace: typeof vsc.workspace = {
     console.warn('NYI: workspace.applyEdit')
     return false
   },
-  openTextDocument: () => {
+  openTextDocument: async () => {
     console.warn('NYI: workspace.openTextDocument')
+    // TODO: lolnope
+    return TextDocument(-1)
   },
   registerTextDocumentContentProvider: () => {
     console.warn('NYI: workspace.registerTextDocumentContentProvider')

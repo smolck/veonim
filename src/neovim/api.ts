@@ -18,6 +18,7 @@ const prefix = {
   tabpage: prefixWith(Prefixes.Tabpage),
 }
 
+if (!workerData || !workerData.nvimPath) throw new Error(`can't connect to nvim! workerData is missing "nvimPath" ${JSON.stringify(workerData)}`)
 const { notify, request, onEvent } = ConnectMsgpackRPC(workerData.nvimPath)
 
 const registeredEventActions = new Set<string>()
@@ -563,7 +564,7 @@ const exportAPI = { state, watchState, onStateChange, onStateValue,
   onAction, getCurrentLine, jumpTo, jumpToProjectFile, systemAction, current,
   g, on, untilEvent, applyPatches, buffers, windows, tabs, options:
   readonlyOptions, onVimrcLoad, Buffer: fromId.buffer, Window: fromId.window,
-  Tabpage: fromId.tabpage, parseKeymap }
+  Tabpage: fromId.tabpage, getKeymap }
 
 export default exportAPI
 export type NeovimAPI = typeof exportAPI

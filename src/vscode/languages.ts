@@ -11,9 +11,11 @@ interface Events {
 
 const events = Watcher<Events>()
 
-const languages: typeof vsc.languages = {
+const languages = {
+// const languages: typeof vsc.languages = {
   // TODO: sorry, but where do we get 'all known languages' from??
   getLanguages: async () => [],
+  // @ts-ignore
   setTextDocumentLanguage: async (document, languageId) => {
     const filetype = vscLanguageToFiletypes(languageId)
     nvim.Buffer((document as SuperTextDocument)._nvimBufferId).setOption(BufferOption.Filetype, filetype)
@@ -23,6 +25,7 @@ const languages: typeof vsc.languages = {
     console.warn('NYI: languages.match')
     return 0
   },
+  // @ts-ignore
   onDidChangeDiagnostics: fn => registerEvent('didChangeDiagnostics', fn),
   getDiagnostics: () => {
     console.warn('NYI: languages.getDiagnostics')

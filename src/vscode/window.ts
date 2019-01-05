@@ -37,6 +37,7 @@ const events = Watcher<Events>()
 
 // TODO: actually implement and call event handlers when stuff happens
 
+// @ts-ignore
 const window: typeof vsc.window = {
   get state() {
     // TODO: uhh what does this mean? the app is focused?
@@ -112,12 +113,23 @@ const window: typeof vsc.window = {
     console.warn('NYI: window.showInputBox')
     return Promise.resolve(undefined)
   },
+  // @ts-ignore
+  createInputBox: () => {
+    console.warn('NYI: window.createInputBox')
+  },
+  // @ts-ignore
+  createTextEditorDecorationType: () => {
+    console.warn('NYI: window.createTextEditorDecorationType')
+  },
+  // @ts-ignore
   createQuickPick: () => {
     console.warn('NYI: window.createQuickPick')
   },
+  // @ts-ignore
   createOutputChannel: () => {
     console.warn('NYI: window.createOutputChannel')
   },
+  // @ts-ignore
   createWebviewPanel: () => {
     console.warn('NYI: window.createWebviewPanel')
   },
@@ -125,33 +137,44 @@ const window: typeof vsc.window = {
     console.log('vsc-ext-api (StatusBarMessage):', text)
     return { dispose: () => {} }
   },
+  // @ts-ignore
   withScmProgress: () => {
     console.warn('NYI: window.withScmProgress')
   },
+  // @ts-ignore
   withProgress: () => {
     console.warn('NYI: window.withProgress')
   },
+  // @ts-ignore
   createStatusBarItem: () => {
     console.warn('NYI: window.createStatusBarItem')
   },
+  // @ts-ignore
   createTerminal: () => {
     // TODO: this is easy to do, but where do we show the new term buffer?
     console.warn('NYI: window.createTerminal')
   },
+  // @ts-ignore
   registerTreeDataProvider: () => {
     console.warn('NYI: window.registerTreeDataProvider')
   },
+  // @ts-ignore
   createTreeView: () => {
     console.warn('NYI: window.createTreeView')
   },
+  // @ts-ignore
   registerUriHandler: () => {
     console.warn('NYI: window.registerUriHandler')
   },
+  // @ts-ignore
   registerWebviewPanelSerializer: () => {
     console.warn('NYI: window.registerWebviewPanelSerializer')
   },
-  showTextDocument: (documentOrUri, optionsOrColumn) => {
-
+  // TODO: get the argument types here
+  // @ts-ignore
+  showTextDocument: async (documentOrUri: any, optionsOrColumn: any) => {
+    console.warn('NYI: window.showTextDocument', documentOrUri, optionsOrColumn)
+    return TextEditor(-1)
   },
   onDidChangeWindowState: fn => registerEvent('didChangeWindowState', fn),
   onDidChangeActiveTextEditor: fn => registerEvent('didChangeActiveTextEditor', fn),

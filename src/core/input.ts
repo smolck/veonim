@@ -6,11 +6,6 @@ import api from '../core/instance-api'
 import { remote } from 'electron'
 import { Script } from 'vm'
 
-export enum InputMode {
-  Vim = 'vim',
-  Motion = 'motion',
-}
-
 export enum InputType {
   Down = 'down',
   Up = 'up',

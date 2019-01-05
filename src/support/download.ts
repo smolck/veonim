@@ -1,7 +1,6 @@
 import Worker from '../messaging/worker'
 
 const state = { worker: Worker('download') }
-// const { request } = Worker('download')
 
 export const url = {
   github: (user: string, repo: string) => `https://github.com/${user}/${repo}/archive/master.zip`,
@@ -10,7 +9,7 @@ export const url = {
 
 export const download = (url: string, path: string): Promise<boolean> => {
   if (!state.worker) state.worker = Worker('download')
-  worker.request.download(url, path)
+  return state.worker.request.download(url, path)
 }
 
 export const dispose = () => {

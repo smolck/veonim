@@ -81,7 +81,9 @@ export default (name: string, opts = {} as WorkerOptions) => {
     worker.postMessage([e, result, id])
   }
 
+  const terminate = () => worker.terminate()
+
   worker.postMessage(['@@sab', [ sharedBuffer ]])
 
-  return { on, call, request, onContextHandler }
+  return { on, call, request, onContextHandler, terminate }
 }

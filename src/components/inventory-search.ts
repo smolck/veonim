@@ -7,8 +7,8 @@ import Input from '../components/text-input'
 import { VimMode } from '../neovim/types'
 import * as Icon from 'hyperapp-feather'
 import { filter } from 'fuzzaldrin-plus'
+import api from '../core/instance-api'
 import { h, app } from '../ui/uikit'
-import nvim from '../core/neovim'
 
 const state = {
   index: 0,
@@ -89,5 +89,5 @@ const doInventorySearch = () => {
   ui.show(actions)
 }
 
-nvim.onAction('inventory-search', doInventorySearch)
+api.onAction('inventory-search', doInventorySearch)
 registerShortcut('s-c-p', VimMode.Normal, doInventorySearch)

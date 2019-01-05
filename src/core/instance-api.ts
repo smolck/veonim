@@ -88,13 +88,14 @@ const bufferSearch = (file: string, query: string) => getActiveInstance().reques
 const bufferSearchVisible = (query: string) => getActiveInstance().request.bufferSearchVisible(query)
 
 const nvimLoaded = (fn: (switchInstance: boolean) => void) => ee.on('nvim.load', fn)
-const nvimGetVar = async (key: string) => getActiveInstance().request.nvimGetVar(key)
+const nvimGetVar = (key: string) => getActiveInstance().request.nvimGetVar(key)
 const nvimCommand = (command: string) => getActiveInstance().call.nvimCommand(command)
 const nvimFeedkeys = (keys: string, mode = 'm') => getActiveInstance().call.nvimFeedkeys(keys, mode)
 const nvimExpr = (expr: string) => getActiveInstance().request.nvimExpr(expr)
-const nvimCall: Functions = onFnCall(async (name, a) => getActiveInstance().request.nvimCall(name, a))
+const nvimCall: Functions = onFnCall((name, a) => getActiveInstance().request.nvimCall(name, a))
 const nvimJumpTo = (coords: HyperspaceCoordinates) => getActiveInstance().call.nvimJumpTo(coords)
 const nvimJumpToProjectFile = (coords: HyperspaceCoordinates) => getActiveInstance().call.nvimJumpToProjectFile(coords)
+const nvimGetKeymap = () => getActiveInstance().request.nvimGetKeymap()
 const nvimSaveCursor = async () => {
   const instance = getActiveInstance()
   const position = await instance.request.nvimSaveCursor()
@@ -152,6 +153,7 @@ const api = {
     jumpTo: nvimJumpTo,
     onLoad: nvimLoaded,
     feedkeys: nvimFeedkeys,
+    getKeymap: nvimGetKeymap,
     saveCursor: nvimSaveCursor,
     jumpToProjectFile: nvimJumpToProjectFile,
   }

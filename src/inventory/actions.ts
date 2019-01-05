@@ -1,5 +1,5 @@
 import { InventoryLayerKind } from '../inventory/layers'
-import nvim from '../core/neovim'
+import api from '../core/instance-api'
 
 export interface InventoryAction {
   /** Which layer this action belongs to */
@@ -238,51 +238,12 @@ const actions: InventoryAction[] = [
     description: 'List symbols for all files',
     onAction: moda('symbols', 'showWorkspaceSymbols'),
   },
-  {
-    layer: InventoryLayerKind.DEV,
-    keybind: 's',
-    name: 'Start Record',
-    description: 'Start dev recorder',
-    onAction: require('../services/dev-recorder').start,
-  },
-  {
-    layer: InventoryLayerKind.DEV,
-    keybind: 't',
-    name: 'Stop Record',
-    description: 'Stop dev recorder',
-    onAction: require('../services/dev-recorder').stop,
-  },
-  {
-    layer: InventoryLayerKind.DEV,
-    keybind: 'r',
-    name: 'Replay Recording',
-    description: 'Replay a dev recording',
-    onAction: require('../services/dev-recorder').replay,
-  },
-  {
-    layer: InventoryLayerKind.DEV,
-    keybind: 'd',
-    name: 'Delete Recording',
-    description: 'Delete a dev recording',
-    onAction: require('../services/dev-recorder').remove,
-  },
-  {
-    layer: InventoryLayerKind.DEV,
-    keybind: 'x',
-    name: 'Remove ALL Recordings',
-    description: 'Remove all dev recordings',
-    onAction: require('../services/dev-recorder').removeAll,
-  },
-  {
-    layer: InventoryLayerKind.DEV,
-    keybind: 't',
-    name: 'Startup Recording',
-    description: 'Set dev recording for app startup',
-    onAction: require('../services/dev-recorder').setStartup,
-  },
 ]
 
-actions.forEach(action => nvim.registerAction(action))
+actions.forEach(action => {
+  const name = `${action.layer.toLowerCase()}-${action.name.toLowerCase()}`
+  api.onAction(name, action.onAction)
+})
 
 export default {
   list: () => actions,

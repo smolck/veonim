@@ -1,8 +1,9 @@
-import { InputMode, registerShortcut } from '../core/input'
 import { InventoryAction } from '../inventory/actions'
 import { InventoryLayer } from '../inventory/layers'
 import inventoryActions from '../inventory/actions'
 import inventoryLayers from '../inventory/layers'
+import { registerShortcut } from '../core/input'
+import { stealInput } from '../core/input'
 import { VimMode } from '../neovim/types'
 import api from '../core/instance-api'
 import { h, app } from '../ui/uikit'
@@ -248,8 +249,7 @@ const doIntenvory = async () => {
   const validLayerKeybinds = new Set(inventoryLayers.map(m => m.keybind))
 
   const reset = (actionFn?: Function) => {
-    stopWatchingInput()
-    switchInputMode(InputMode.Vim)
+    restoreInput()
     ui.hide()
 
     // some actions funcs will switch input modes. need to cleanup our shit
@@ -257,16 +257,11 @@ const doIntenvory = async () => {
     //
     if (actionFn) setImmediate(actionFn)
   }
-  // TODO: maybe not use InputMode.Motion?
-  // i think the idea of multiple custom input modes is to allow
-  // user to setup custom keybindings per mode (like vim does nativelly)
-  // in the inventory we do not want any rebindings. it must be static
-  switchInputMode(InputMode.Motion)
 
   let captureMode = InventoryMode.Main
   let activeLayerActions: InventoryAction[]
 
-  const stopWatchingInput = watchInputMode(InputMode.Motion, key => {
+  const restoreInput = stealInput(key => {
     if (key === '<Esc>') return reset()
 
     if (captureMode === InventoryMode.Main && validLayerKeybinds.has(key)) {
