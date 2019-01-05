@@ -18,7 +18,9 @@ import '../render/redraw'
 // TODO: do we still need roboto-sizes.json? we generate the font atlas before
 // we can wrender anything to webgl, so we can probably grab the size then
 
-workspace.on('resize', ({ rows, cols }) => resize(cols, rows))
+// TODO: temp rows minus 1 because it doesn't fit. we will resize windows
+// individually once we get ext_windows working
+workspace.on('resize', ({ rows, cols }) => resize(cols, rows - 1))
 workspace.resize()
 
 requestAnimationFrame(() => {
@@ -33,7 +35,7 @@ requestAnimationFrame(() => {
 
   setTimeout(() => {
     require('../services/remote')
-    // requireDir(`${__dirname}/../components`)
+    requireDir(`${__dirname}/../components`)
 
     if (process.env.VEONIM_DEV) {
       require('../dev/menu')

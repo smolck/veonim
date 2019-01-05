@@ -118,3 +118,5 @@ api.onAction('files', () => {
   worker.call.load(api.nvim.state.cwd)
   ui.show(api.nvim.state.file)
 })
+
+export const show = () => {}

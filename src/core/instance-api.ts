@@ -1,8 +1,8 @@
 import { getActiveInstance, onSwitchVim, onCreateVim, instances } from '../core/instance-manager'
 import { VimMode, BufferInfo, HyperspaceCoordinates } from '../neovim/types'
 import { CompletionItem, Command } from 'vscode-languageserver-protocol'
-import { colors } from '../render/highlight-attributes'
 import { onFnCall, pascalCase } from '../support/utils'
+import { colors } from '../render/highlight-attributes'
 import { Functions } from '../neovim/function-types'
 import { WindowMetadata } from '../windows/metadata'
 import * as dispatch from '../messaging/dispatch'
@@ -72,6 +72,7 @@ const getWindowMetadata = async (): Promise<WindowMetadata[]> => {
 }
 
 const onAction = (name: string, fn: (...args: any[]) => void) => {
+  if (typeof fn !== 'function') throw new Error(`nvim.onAction needs a function for event ${name}`)
   actionRegistrations.push(name)
   ee.on(`action.${name}`, fn)
   try {

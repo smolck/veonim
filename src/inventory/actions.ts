@@ -1,5 +1,5 @@
 import { InventoryLayerKind } from '../inventory/layers'
-import api from '../core/instance-api'
+// import api from '../core/instance-api'
 
 export interface InventoryAction {
   /** Which layer this action belongs to */
@@ -20,9 +20,14 @@ export interface InventoryAction {
 
 const mod = (modulePath: string, func = 'default') => {
   try {
-    return require(`../${modulePath}`)[func]
+    if (process.env.VEONIM_DEV) {
+      console.log('NYI: ACTIONS REQUIRE MODULE:', modulePath, func)
+    }
+    return () => {}
+    // return require(`../${modulePath}`)[func]
   } catch(e) {
     console.error('trying to call veonim layer action with a bad modulePath. you probably mistyped the module path\n', e)
+    return () => {}
   }
 }
 
@@ -38,6 +43,8 @@ const actions: InventoryAction[] = [
     keybind: 'f',
     name: 'Files',
     description: 'Find files in project',
+    // TODO: should we do something like this instead?
+    // onAction: () => import('../components/files').then(m => m.show())
     onAction: modc('files'),
   },
   {
@@ -240,10 +247,11 @@ const actions: InventoryAction[] = [
   },
 ]
 
-actions.forEach(action => {
-  const name = `${action.layer.toLowerCase()}-${action.name.toLowerCase()}`
-  api.onAction(name, action.onAction)
-})
+// TODO: we are not ready for this greatness just yet
+// actions.forEach(action => {
+//   const name = `${action.layer.toLowerCase()}-${action.name.toLowerCase()}`
+//   api.onAction(name, action.onAction)
+// })
 
 export default {
   list: () => actions,

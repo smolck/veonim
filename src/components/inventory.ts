@@ -218,11 +218,14 @@ setImmediate(async () => {
     jump: keymap.has(' js'),
   }
 
-  if (!isMapped.space) api.nvim.cmd('nno <space> :Veonim inventory<cr>')
-  if (!isMapped.spaceSpace) api.nvim.cmd('nno <space><space> :Veonim inventory-search<cr>')
+  // TODO: we are not ready for inventory yet
+  if (process.env.VEONIM_DEV) {
+    if (!isMapped.space) api.nvim.cmd('nno <space> :Veonim inventory<cr>')
+    if (!isMapped.spaceSpace) api.nvim.cmd('nno <space><space> :Veonim inventory-search<cr>')
 
-  console.log('isMapped', isMapped)
-  console.log('FINAL keymap', keymap)
+    console.log('isMapped', isMapped)
+    console.log('FINAL keymap', keymap)
+  }
 })
 
 api.onAction('inventory', async () => {
