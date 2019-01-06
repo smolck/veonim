@@ -69,14 +69,14 @@ export default () => {
       }
     }, [
 
-      ,h('span', { style: {
-        color: cvar('foreground-50'),
-      } }, $.name || '[No Name]')
-
       ,$.dir && h('span', { style: {
         color: cvar('foreground-30'),
         marginRight: '1px',
       } }, `${$.dir}/`)
+
+      ,h('span', { style: {
+        color: cvar('foreground-50'),
+      } }, $.name || '[No Name]')
 
     ])
 
