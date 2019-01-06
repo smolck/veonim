@@ -212,10 +212,9 @@ window.addEventListener('keydown', e => {
   if (!windowHasFocus || !isCapturing) return
 
   const es = keToStr(e)
-  const esmode = keToStrMode(e, api.nvim.state.mode)
   lastDown = es
 
-  if (xfrmDown.has(es) || xfrmDown.has(esmode)) {
+  if (xfrmDown.has(es)) {
     const remapped = xfrmDown.get(holding)!(e)
     sendKeys(remapped, InputType.Down)
     return
@@ -223,11 +222,6 @@ window.addEventListener('keydown', e => {
 
   if (xfrmHold.has(es)) {
     holding = es
-    return
-  }
-
-  if (xfrmHold.has(esmode)) {
-    holding = esmode
     return
   }
 
@@ -253,15 +247,11 @@ window.addEventListener('keyup', e => {
   // terminal, thus swallowing the first key after app focus
   if (!lastDown) return
   const es = keToStr(e)
-  const esmode = keToStrMode(e, api.nvim.state.mode)
 
   const prevKeyAndThisOne = lastDown + es
   if (xfrmUp.has(prevKeyAndThisOne)) return sendKeys(xfrmUp.get(prevKeyAndThisOne)!(e), InputType.Up)
 
-  const prevKeyAndThisOneMode = lastDown + esmode
-  if (xfrmUp.has(prevKeyAndThisOneMode)) return sendKeys(xfrmUp.get(prevKeyAndThisOneMode)!(e), InputType.Up)
-
-  if (holding === es || holding === esmode) {
+  if (holding === es) {
     if (!xformed) sendKeys(e, InputType.Up)
     xformed = false
     holding = ''
