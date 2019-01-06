@@ -23,13 +23,6 @@
   - other invalid keys pressed, what do? nothing? show error? escape menu?
 
 
-## planned - upcoming
-
-- webgl renderer
-
-- optimized msgpack parser for redraw output + maybe input serializer?
-
-
 ## backlog - stuff that i really want
 
 - image overlay (press key to open image url under cursor in a floating image overlay)
