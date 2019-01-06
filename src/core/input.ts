@@ -145,27 +145,18 @@ const keToStr = (e: KeyShape) => [
   <any>e.shiftKey|0,
 ].join('')
 
-const keToStrMode = (e: KeyShape, mode = e.mode) => [
-  e.key,
-  <any>e.ctrlKey|0,
-  <any>e.metaKey|0,
-  <any>e.altKey|0,
-  <any>e.shiftKey|0,
-  mode,
-].join('')
-
 const defkey = {...new KeyboardEvent('keydown'), key: '', ctrlKey: false, metaKey: false, altKey: false, shiftKey: false}
 
 const addTransform = {
   hold: (e: any, fn: Transformer) =>
-    xfrmHold.set(keToStrMode({...defkey, ...e}), e => ({ ...e, ...fn(e) })),
+    xfrmHold.set(keToStr({...defkey, ...e}), e => ({ ...e, ...fn(e) })),
 
   down: (e: any, fn: Transformer) =>
-    xfrmDown.set(keToStrMode({...defkey, ...e}), e => ({ ...e, ...fn(e) })),
+    xfrmDown.set(keToStr({...defkey, ...e}), e => ({ ...e, ...fn(e) })),
 
   up: (e: any, fn: Transformer) => {
-    const before = keToStrMode({ ...defkey, ...e })
-    const now = keToStrMode({ ...defkey, key: e.key })
+    const before = keToStr({ ...defkey, ...e })
+    const now = keToStr({ ...defkey, key: e.key })
     xfrmUp.set(before + now, e => ({ ...e, ...fn(e) }))
   }
 }
@@ -188,7 +179,9 @@ const sendToVim = (inputKeys: string) => {
   // vim keybind. s-space was causing issues in terminal mode, sending weird
   // term esc char.
   if (inputKeys === '<S-Space>') return input('<space>')
-  if (inputKeys.length > 1 && !inputKeys.startsWith('<')) inputKeys.split('').forEach((k: string) => input(k))
+  if (inputKeys.length > 1 && !inputKeys.startsWith('<')) {
+    return inputKeys.split('').forEach((k: string) => input(k))
+  }
 
   // a fix for terminal. only happens on cmd-tab. see below for more info
   if (inputKeys.toLowerCase() === '<esc>') lastEscapeTimestamp = Date.now()
