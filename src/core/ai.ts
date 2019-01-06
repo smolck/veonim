@@ -18,6 +18,12 @@ import '../ai/hover'
 nvim.on.filetype(filetype => filetypeDetectedStartServerMaybe(nvim.state.cwd, filetype))
 nvim.watchState.colorscheme((color: string) => colorizer.call.setColorScheme(color))
 
+let completionEnabled = true
+nvim.options.completefunc.then(func => completionEnabled = func === 'VeonimComplete')
+nvim.onVimrcLoad(() => {
+  nvim.options.completefunc.then(func => completionEnabled = func === 'VeonimComplete')
+})
+
 nvim.on.cursorMoveInsert(async () => {
   // tried to get the line contents from the render grid buffer, but it appears
   // this autocmd gets fired before the grid gets updated from the render event.
@@ -29,7 +35,7 @@ nvim.on.cursorMoveInsert(async () => {
   // contents + current vim mode. we could then easily improve this action here
   // and perhaps others in the app
   const lineContent = await nvim.getCurrentLine()
-  discoverCompletions(lineContent, nvim.state.line, nvim.state.column)
+  if (completionEnabled) discoverCompletions(lineContent, nvim.state.line, nvim.state.column)
   getSignatureHint(lineContent)
 })
 
