@@ -42,12 +42,12 @@
     "all-other-unzip-libs-suck-mac": "0.0.2"
   },
   "bindeps-win32": {
-    "@veonim/neovim-win": "0.0.3",
+    "@veonim/neovim-win": "0.3.2-3",
     "@veonim/ripgrep-win": "0.0.1",
     "all-other-unzip-libs-suck-win": "0.0.2"
   },
   "bindeps-linux": {
-    "@veonim/neovim-linux": "0.0.4",
+    "@veonim/neovim-linux": "0.3.2-3",
     "@veonim/ripgrep-linux": "0.0.1",
     "all-other-unzip-libs-suck-linux": "0.0.2"
   },
