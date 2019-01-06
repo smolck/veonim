@@ -95,6 +95,9 @@ const edgeDetection = (el: HTMLElement) => {
   return edges
 }
 
+const paddingX = 5
+const paddingY = 4
+
 export default () => {
   const wininfo: WindowInfo = { id: '0', gridId: '0', row: 0, col: 0, width: 0, height: 0, visible: true }
   const layout = { x: 0, y: 0, width: 0, height: 0 }
@@ -163,8 +166,8 @@ export default () => {
 
   api.positionToWorkspacePixels = (row, col, fuckTypescript) => {
     const { within = false } = fuckTypescript || {} as PosOpts
-    const winX = Math.floor(col * cell.width)
-    const winY = Math.floor(row * cell.height)
+    const winX = Math.floor(col * cell.width) + paddingX
+    const winY = Math.floor(row * cell.height) + paddingY
     return {
       x: (within ? 0 : layout.x) + winX,
       y: (within ? 0 : layout.y) + winY,
@@ -216,7 +219,7 @@ export default () => {
     if (same) return
 
     Object.assign(layout, { x, y, width, height })
-    webgl.layout(x, y, width, height)
+    webgl.layout(x + paddingX, y + paddingY, width, height)
 
     Object.assign(container.style, {
       border: '1px solid var(--background-30)',
@@ -281,8 +284,8 @@ export default () => {
     positionToEditorPixels: (line, col, fuckTypescript) => {
       const { within = false } = fuckTypescript || {} as PosOpts
       const row = line - instanceAPI.nvim.state.editorTopLine
-      const winX = Math.floor(col * cell.width)
-      const winY = Math.floor(row * cell.height)
+      const winX = Math.floor(col * cell.width) + paddingX
+      const winY = Math.floor(row * cell.height) + paddingY
       return {
         x: (within ? 0 : layout.x) + winX,
         y: (within ? 0 : layout.y) + winY,
