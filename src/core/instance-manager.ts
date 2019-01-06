@@ -98,8 +98,12 @@ export const onSwitchVim = (fn: (id: number, lastId: number) => void) => {
 // master-control imports a series of dependencies which eventually
 // import this module. thus onExit will not be exported yet.
 setImmediate(() => onExit((id: number) => {
-  if (!vims.has(id)) return
-  vims.delete(id)
+  const vim = vims.get(id)
+
+  if (vim) {
+    vim.instance.terminate()
+    vims.delete(id)
+  }
 
   if (!vims.size) return remote.app.quit()
 
