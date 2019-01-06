@@ -20,7 +20,9 @@ export default (name: string, opts = {} as WorkerOptions) => {
   `
 
   const scriptBlobbyBluberBlob = new Blob([ loaderScript ], { type: 'application/javascript' })
-  const worker = new Worker(URL.createObjectURL(scriptBlobbyBluberBlob))
+  const objectUrl = URL.createObjectURL(scriptBlobbyBluberBlob)
+  const worker = new Worker(objectUrl)
+  URL.revokeObjectURL(objectUrl)
   const ee = new EventEmitter()
   const pendingRequests = new Map()
   const sharedBuffer = new SharedArrayBuffer(opts.sharedMemorySize || 4)
