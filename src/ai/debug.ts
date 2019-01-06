@@ -2,15 +2,19 @@ import { DebugAdapterConnection } from '../messaging/debug-protocol'
 import { objToMap, uuid, merge, ID } from '../support/utils'
 import { DebugProtocol as DP } from 'vscode-debugprotocol'
 import userSelectOption from '../components/generic-menu'
+// import * as windows from '../windows/window-manager'
+import * as extensions from '../core/extensions-api'
 import getDebugConfig from '../ai/get-debug-config'
-import { debugline, cursor } from '../core/cursor'
-import * as extensions from '../core/extensions'
 import * as breakpoints from '../ai/breakpoints'
-import { getWindow } from '../core/windows'
-import debugUI from '../components/debug'
+import { debugline } from '../core/cursor'
+// TODO: debugUI when ready
+const debugUI: any = new Proxy({}, {
+  get: (_: any, __: string) => () => {},
+})
+// import debugUI from '../components/debug'
 import * as Icon from 'hyperapp-feather'
-import { translate } from '../ui/css'
-import nvim from '../core/neovim'
+// import { translate } from '../ui/css'
+import nvim from '../neovim/api'
 
 // TODO: move to shared place
 interface DebugConfiguration {
@@ -71,27 +75,28 @@ let activeDebugger = 'lolnope'
 const debuggers = new Map<string, Debugger>()
 
 const moveDebugLine = async ({ path, line, column }: Position) => {
-  // TODO: need a way to show inline breakpoints. we can get multiple calls
-  // for the same path/line, but with different columns. without showing that
-  // the column changed in the UI, the user does not know if their actions
-  // actually worked
-  console.warn('NYI: move debugline ++ show COLUMN location', column)
-  if (path !== nvim.state.absoluteFilepath) await nvim.buffers.open(path)
+  console.warn('NYI: moveDebugLine:', path, line, column)
+  // // TODO: need a way to show inline breakpoints. we can get multiple calls
+  // // for the same path/line, but with different columns. without showing that
+  // // the column changed in the UI, the user does not know if their actions
+  // // actually worked
+  // console.warn('NYI: move debugline ++ show COLUMN location', column)
+  // if (path !== nvim.state.absoluteFilepath) await nvim.buffers.open(path)
 
-  const canvasWindow = getWindow(cursor.row, cursor.col)
-  if (!canvasWindow) return console.error('there is no current window. lolwut?')
-  const specs = canvasWindow.getSpecs()
-  const distanceFromTop = line - nvim.state.editorTopLine + 1
-  const relativeLine = specs.row + distanceFromTop
+  // const win = windows.getActive()
+  // if (!canvasWindow) return console.error('there is no current window. lolwut?')
+  // const specs = canvasWindow.getSpecs()
+  // const distanceFromTop = line - nvim.state.editorTopLine + 1
+  // const relativeLine = specs.row + distanceFromTop
 
-  const { x, y, width } = canvasWindow.whereLine(relativeLine)
+  // const { x, y, width } = canvasWindow.whereLine(relativeLine)
 
-  merge(debugline.style, {
-    background: 'rgba(118, 0, 57, 0.6)',
-    display: 'block',
-    transform: translate(x, y),
-    width: `${width}px`,
-  })
+  // merge(debugline.style, {
+  //   background: 'rgba(118, 0, 57, 0.6)',
+  //   display: 'block',
+  //   transform: translate(x, y),
+  //   width: `${width}px`,
+  // })
 }
 
 const Refresher = (dbg: DebugAdapterConnection) => ({
@@ -122,13 +127,13 @@ const listActiveDebuggers = () => [...debuggers.values()].map(d => ({
   type: d.type,
 }))
 
-const continuee = () => {
+export const continuee = () => {
   const dbg = debuggers.get(activeDebugger)
   if (!dbg) return console.warn('debug continue called without an active debugger')
   dbg.rpc.sendRequest('continue', { threadId: dbg.activeThread })
 }
 
-const next = () => {
+export const next = () => {
   const dbg = debuggers.get(activeDebugger)
   if (!dbg) return console.warn('debug next called without an active debugger')
   dbg.rpc.sendRequest('next', { threadId: dbg.activeThread })
@@ -164,7 +169,7 @@ const addOrRemoveVimSign = (bp: breakpoints.Breakpoint) => {
     : nvim.cmd(`sign place ${signId} name=vnbp line=${line} file=${bp.path}`)
 }
 
-const toggleBreakpoint = () => {
+export const toggleBreakpoint = () => {
   const { absoluteFilepath: path, line, column } = nvim.state
   const breakpoint = { path, line, column, kind: breakpoints.BreakpointKind.Source }
 
@@ -177,7 +182,7 @@ const toggleBreakpoint = () => {
   debugUI.updateState({ breakpoints: breakpoints.list() })
 }
 
-const toggleFunctionBreakpoint = () => {
+export const toggleFunctionBreakpoint = () => {
   const { absoluteFilepath: path, line, column } = nvim.state
   const breakpoint = { path, line, column, kind: breakpoints.BreakpointKind.Function }
 
@@ -258,13 +263,13 @@ const updateDebuggerState = (id: string, state: Partial<Debugger>) => {
   debugUI.updateState({ ...next, debuggers: listActiveDebuggers() })
 }
 
-const stop = async () => {
+export const stop = async () => {
   const dbg = debuggers.get(activeDebugger)
   if (!dbg) return console.log('no active debugger found to stop')
   terminateDebugger(dbg)
 }
 
-export const start = async (type: string) => {
+export const startType = async (type: string) => {
   const dbg: Debugger = {
     type,
     id: uuid(),
@@ -435,12 +440,12 @@ const startWithDebugger = async () => {
   console.log('starting debugger wtih type:', launchConfig, connection)
 }
 
-nvim.onAction('debug-start', async () => {
+export const start = async () => {
   const launchConfigs = await extensions.list.launchConfigs()
   launchConfigs.length
     ? startWithLaunchConfig(launchConfigs)
     : startWithDebugger()
-})
+}
 
 // TODO: add action to jump cursor location to currently stopped debug location
 // action('debug-jumpto-stopped', jumpToStopped)
@@ -448,8 +453,10 @@ nvim.onAction('debug-start', async () => {
 // action('debug-breakpoints-clear-all', clearAllBreakpoints)
 // TODO: add action to remove all breakpoints in current file
 // action('debug-breakpoints-clear-file', clearFileBreakpoints)
-nvim.onAction('debug-stop', stop)
-nvim.onAction('debug-next', next)
-nvim.onAction('debug-continue', continuee)
-nvim.onAction('debug-breakpoint', toggleBreakpoint)
-nvim.onAction('debug-breakpoint-function', toggleFunctionBreakpoint)
+
+// TODO: no one should be using these, so we can remove
+// nvim.onAction('debug-stop', stop)
+// nvim.onAction('debug-next', next)
+// nvim.onAction('debug-continue', continuee)
+// nvim.onAction('debug-breakpoint', toggleBreakpoint)
+// nvim.onAction('debug-breakpoint-function', toggleFunctionBreakpoint)

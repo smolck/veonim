@@ -1,20 +1,28 @@
+import { discoverCompletions, getCompletionDetail } from '../ai/completions'
 import { filetypeDetectedStartServerMaybe } from '../langserv/director'
 import { getSignatureHint } from '../ai/signature-hint'
-import { getCompletions } from '../ai/completions'
+import { call, on } from '../messaging/worker-client'
+import { getWorkspaceSymbols } from '../ai/symbols'
+import { runCodeAction } from '../ai/diagnostics'
 import colorizer from '../services/colorizer'
-import nvim from '../core/neovim'
+import { AI } from '../ai/protocol'
+import nvim from '../neovim/api'
 import '../ai/type-definition'
 import '../ai/implementation'
-import '../ai/diagnostics'
 import '../ai/references'
 import '../ai/definition'
 import '../ai/highlights'
-import '../ai/symbols'
 import '../ai/rename'
 import '../ai/hover'
 
 nvim.on.filetype(filetype => filetypeDetectedStartServerMaybe(nvim.state.cwd, filetype))
 nvim.watchState.colorscheme((color: string) => colorizer.call.setColorScheme(color))
+
+let completionEnabled = true
+nvim.options.completefunc.then(func => completionEnabled = func === 'VeonimComplete')
+nvim.onVimrcLoad(() => {
+  nvim.options.completefunc.then(func => completionEnabled = func === 'VeonimComplete')
+})
 
 nvim.on.cursorMoveInsert(async () => {
   // tried to get the line contents from the render grid buffer, but it appears
@@ -27,6 +35,16 @@ nvim.on.cursorMoveInsert(async () => {
   // contents + current vim mode. we could then easily improve this action here
   // and perhaps others in the app
   const lineContent = await nvim.getCurrentLine()
-  getCompletions(lineContent, nvim.state.line, nvim.state.column)
+  if (completionEnabled) discoverCompletions(lineContent, nvim.state.line, nvim.state.column)
   getSignatureHint(lineContent)
+})
+
+on.aiGetCompletionDetail(getCompletionDetail)
+on.aiGetWorkspaceSymbols(getWorkspaceSymbols)
+on.aiRunCodeAction(runCodeAction)
+
+export const ui: AI = new Proxy(Object.create(null), {
+  get: (_: any, namespace: string) => new Proxy(Object.create(null), {
+    get: (_: any, method: string) => (...args: any[]) => call.ai(namespace, method, args)
+  })
 })

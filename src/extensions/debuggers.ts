@@ -1,17 +1,13 @@
 import { Extension, activateExtension } from '../extensions/extensions'
 import pleaseGet from '../support/please-get'
 import { merge } from '../support/utils'
+import * as vsc from 'vscode'
 
 export interface DebugConfiguration {
   name: string
   request: string
   type: string
   [index: string]: any
-}
-
-export interface DebugConfigurationProvider {
-  provideDebugConfigurations?: (folderURI: string, token?: any) => DebugConfiguration[]
-  resolveDebugConfiguration?: (folderURI: string, debugConfig: DebugConfiguration, token?: any) => DebugConfiguration | Promise<DebugConfiguration>
 }
 
 interface Debugger {
@@ -23,7 +19,7 @@ interface Debugger {
   hasInitialConfiguration: boolean
   hasConfigurationProvider: boolean
   extension: Extension
-  debugConfigProviders: Set<DebugConfigurationProvider>
+  debugConfigProviders: Set<vsc.DebugConfigurationProvider>
 }
 
 const debuggers = new Map<string, Debugger>()
@@ -69,6 +65,17 @@ const getInitialConfig = (dbg: Debugger, cwd: string): DebugConfiguration => {
 
   const initialConfigsDynamic = providers
     .filter(p => p.provideDebugConfigurations)
+  // TODO: hmmm check type here!?
+  // TODO: hmmm check type here!?
+  // TODO: hmmm check type here!?
+  // TODO: hmmm check type here!?
+  // TODO: hmmm check type here!?
+  // TODO: hmmm check type here!?
+  // TODO: hmmm check type here!?
+  // TODO: hmmm check type here!?
+  // TODO: hmmm check type here!?
+  // TODO: hmmm check type here!?
+  // @ts-ignore
     .map(p => p.provideDebugConfigurations!(cwd))
     .reduce((res, config) => [...res, ...config], [] as DebugConfiguration[])
 
@@ -113,7 +120,15 @@ export const resolveConfigurationByProviders = async (cwd: string, type: string,
   type UghWTF = Promise<DebugConfiguration>
   return getProviders(type)
     .filter(p => p.resolveDebugConfiguration)
-    .reduce((q: UghWTF, provider: DebugConfigurationProvider) => q.then(config => config
+    .reduce((q: UghWTF, provider: vsc.DebugConfigurationProvider) => q.then(config => config
+      // TODO: hmm?? check type here
+      // TODO: hmm?? check type here
+      // TODO: hmm?? check type here
+      // TODO: hmm?? check type here
+      // TODO: hmm?? check type here
+      // TODO: hmm?? check type here
+      // TODO: hmm?? check type here
+      // @ts-ignore
       ? provider.resolveDebugConfiguration!(cwd, config)
       : Promise.resolve(config)
     ), Promise.resolve(config))
@@ -136,7 +151,7 @@ export const collectDebuggersFromExtensions = (extensions: Extension[]): void =>
   })
 }
 
-export const registerDebugConfigProvider = (type: string, provider: DebugConfigurationProvider) => {
+export const registerDebugConfigProvider = (type: string, provider: vsc.DebugConfigurationProvider) => {
   if (!provider) return
 
   const dbg = debuggers.get(type)

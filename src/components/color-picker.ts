@@ -1,5 +1,5 @@
+import * as windows from '../windows/window-manager'
 import * as dispatch from '../messaging/dispatch'
-import { activeWindow } from '../core/windows'
 import ColorPicker from '../ui/color-picker'
 import Overlay from '../components/overlay'
 import { debounce } from '../support/utils'
@@ -7,14 +7,17 @@ import { stealInput } from '../core/input'
 import onLoseFocus from '../ui/lose-focus'
 import { basename, extname } from 'path'
 import { cursor } from '../core/cursor'
+import api from '../core/instance-api'
 import { h, app } from '../ui/uikit'
-import nvim from '../core/neovim'
 
 let liveMode = false
+let restoreInput = () => {}
 
 const getPosition = (row: number, col: number) => ({
-  x: activeWindow() ? activeWindow()!.colToX(col - 1) : 0,
-  y: activeWindow() ? activeWindow()!.rowToTransformY(row > 12 ? row : row + 1) : 0,
+  ...windows.pixelPosition(
+    row > 12 ? row : row + 1,
+    col - 1,
+  ),
   anchorBottom: row > 12,
 })
 
@@ -31,15 +34,15 @@ const colorPicker = ColorPicker()
 // specified hlgroup values
 const possiblyUpdateColorScheme = debounce(() => {
   if (!liveMode) return
-  if (!nvim.state.file.endsWith('.vim')) return
+  if (!api.nvim.state.file.endsWith('.vim')) return
 
-  const colorschemeBeingEdited = basename(nvim.state.file, extname(nvim.state.file))
-  const currentActiveColorscheme = nvim.state.colorscheme
+  const colorschemeBeingEdited = basename(api.nvim.state.file, extname(api.nvim.state.file))
+  const currentActiveColorscheme = api.nvim.state.colorscheme
 
   if (currentActiveColorscheme !== colorschemeBeingEdited) return
 
-  nvim.cmd(`write`)
-  nvim.cmd(`colorscheme ${currentActiveColorscheme}`)
+  api.nvim.cmd(`write`)
+  api.nvim.cmd(`colorscheme ${currentActiveColorscheme}`)
   dispatch.pub('colorscheme.modified')
 }, 300)
 
@@ -64,7 +67,7 @@ const view = ($: typeof state, a: typeof actions) => Overlay({
 }, [
 
   ,h('.show-cursor', {
-    onupdate: (e: HTMLElement) => onLoseFocus(e, a.hide),
+    onupdate: (e: HTMLElement) => onLoseFocus(e, () => (a.hide(), restoreInput())),
     oncreate: (e: HTMLElement) => e.appendChild(colorPicker.element),
   })
 
@@ -81,7 +84,7 @@ const show = (color: string) => {
   // colorPicker.setHSL(h, s, l, a)
   ui.show()
 
-  const restoreInput = stealInput(keys => {
+  restoreInput = stealInput(keys => {
     if (keys !== '<Esc>') return
     restoreInput()
     ui.hide()
@@ -91,18 +94,18 @@ const show = (color: string) => {
 colorPicker.onChange(color => {
   // TODO: will also need to send what kind of color is updated, that way
   // we know which text edit to apply (rgba or hsla, etc.)
-  nvim.cmd(`exec "normal! ciw${color}"`)
+  api.nvim.cmd(`exec "normal! ciw${color}"`)
   possiblyUpdateColorScheme()
 })
 
-nvim.onAction('pick-color', async () => {
+api.onAction('pick-color', async () => {
   liveMode = false
-  const word = await nvim.call.expand('<cword>')
+  const word = await api.nvim.call.expand('<cword>')
   show(word)
 })
 
-nvim.onAction('modify-colorscheme-live', async () => {
+api.onAction('modify-colorscheme-live', async () => {
   liveMode = true
-  const word = await nvim.call.expand('<cword>')
+  const word = await api.nvim.call.expand('<cword>')
   show(word)
 })

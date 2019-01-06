@@ -1,17 +1,48 @@
-import { onFnCall, proxyFn, Watchers, uuid, CreateTask } from '../support/utils'
-import { EV_CREATE_VIM, EV_SWITCH_VIM } from '../support/constants'
-import { onCreateVim, onSwitchVim } from '../core/sessions'
+import { onFnCall, proxyFn, uuid, CreateTask } from '../support/utils'
+import { EventEmitter } from 'events'
+import { join } from 'path'
 
 type EventFn = { [index: string]: (...args: any[]) => void }
 type RequestEventFn = { [index: string]: (...args: any[]) => Promise<any> }
+type OnContextHandler = (fn: (func: string, args: any[]) => any) => void
 
-export default (name: string) => {
-  const worker = new Worker(`${__dirname}/../workers/${name}.js`)
-  const watchers = new Watchers()
+interface WorkerOptions {
+  workerData?: any
+  sharedMemorySize?: number
+}
+
+export default (name: string, opts = {} as WorkerOptions) => {
+  const modulePath = join(__dirname, '..', 'workers', `${name}.js`)
+
+  const loaderScript = `
+    global.workerData = JSON.parse('${JSON.stringify(opts.workerData || {})}')
+    require('${modulePath}')
+  `
+
+  const scriptBlobbyBluberBlob = new Blob([ loaderScript ], { type: 'application/javascript' })
+  const objectUrl = URL.createObjectURL(scriptBlobbyBluberBlob)
+  const worker = new Worker(objectUrl)
+  URL.revokeObjectURL(objectUrl)
+  const ee = new EventEmitter()
   const pendingRequests = new Map()
+  const sharedBuffer = new SharedArrayBuffer(opts.sharedMemorySize || 4)
+  const sharedArray = new Int32Array(sharedBuffer)
+
+  // @ts-ignore - Atomics typings are wrong
+  const wakeThread = () => Atomics.notify(sharedArray, 0)
+
+  const writeSharedArray = (id: number, data: any) => {
+    const jsonString = JSON.stringify(data)
+    const buffer = Buffer.from(jsonString)
+    const length = buffer.byteLength
+    for (let ix = 0; ix < length; ix++) Atomics.store(sharedArray, ix + 2, buffer[ix])
+    Atomics.store(sharedArray, 1, length)
+    Atomics.store(sharedArray, 0, id)
+    wakeThread()
+  }
 
   const call: EventFn = onFnCall((event: string, args: any[]) => worker.postMessage([event, args]))
-  const on = proxyFn((event: string, cb: (data: any) => void) => watchers.add(event, cb))
+  const on = proxyFn((event: string, cb: (data: any) => void) => ee.on(event, cb))
   const request: RequestEventFn = onFnCall((event: string, args: any[]) => {
     const task = CreateTask()
     const id = uuid()
@@ -20,8 +51,25 @@ export default (name: string) => {
     return task.promise
   })
 
-  worker.onmessage = ({ data: [e, data = [], id] }: MessageEvent) => {
-    if (!id) return watchers.notify(e, ...data)
+  const onContextHandler: OnContextHandler = fn => ee.on('context-handler', fn)
+
+  worker.onmessage = async ({ data: [e, data = [], id, requestSync, func] }: MessageEvent) => {
+    if (e === '@@request-sync-context') {
+      const listener = ee.listeners('context-handler')[0]
+      if (!listener) throw new Error('no "onContextHandler" function registered for synchronous RPC requests. you should register a function handler with "onContextHandler"')
+      const result = await listener(func, data)
+      return writeSharedArray(id, result)
+    }
+
+    if (requestSync) {
+      const listener = ee.listeners(e)[0]
+      if (!listener) return wakeThread()
+      const result = await listener(...data)
+      if (!result) return wakeThread()
+      return writeSharedArray(id, result)
+    }
+
+    if (!id) return ee.emit(e, ...data)
 
     if (pendingRequests.has(id)) {
       pendingRequests.get(id)(data)
@@ -29,16 +77,15 @@ export default (name: string) => {
       return
     }
 
-    watchers.notifyFn(e, cb => {
-      const resultOrPromise = cb(...data)
-      if (!resultOrPromise) return
-      if (resultOrPromise.then) resultOrPromise.then((res: any) => worker.postMessage([e, res, id]))
-      else worker.postMessage([e, resultOrPromise, id])
-    })
+    const listener = ee.listeners(e)[0]
+    if (!listener) return
+    const result = await listener(...data)
+    worker.postMessage([e, result, id])
   }
 
-  onCreateVim(m => call[EV_CREATE_VIM](m))
-  onSwitchVim(m => call[EV_SWITCH_VIM](m))
+  const terminate = () => worker.terminate()
 
-  return { on, call, request }
+  worker.postMessage(['@@sab', [ sharedBuffer ]])
+
+  return { on, call, request, onContextHandler, terminate }
 }

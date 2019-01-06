@@ -32,4 +32,3 @@ fakeModule('vscode', vscode, logMissingModuleApiDuringDevelopment)
 fakeModule('vscode-languageclient', {
   LanguageClient,
 }, logMissingModuleApiDuringDevelopment)
-

@@ -1,10 +1,6 @@
-import { hexToRGBA, partialFill, translate } from '../ui/css'
-import * as canvasContainer from '../core/canvas-container'
-import { SHADOW_BUFFER_TYPE } from '../support/constants'
-import { getWindow, RenderWindow } from '../core/windows'
-import { CanvasWindow } from '../core/canvas-window'
-import { merge } from '../support/utils'
-import { get } from '../core/grid'
+import * as windows from '../windows/window-manager'
+import { partialFill, translate } from '../ui/css'
+import { cell } from './workspace'
 
 export enum CursorShape {
   block,
@@ -12,33 +8,40 @@ export enum CursorShape {
   underline,
 }
 
-export const cursor = { row: 0, col: 0, color: '#fff', type: CursorShape.block }
+export const cursor = {
+  row: 0,
+  col: 0,
+  color: '#fff',
+  shape: CursorShape.block,
+}
+
 const cursorEl = document.getElementById('cursor') as HTMLElement
 const cursorChar = document.createElement('span')
 const cursorline = document.getElementById('cursorline') as HTMLElement
 export const debugline = document.getElementById('debugline') as HTMLElement
-let cursorRequestedToBeHidden = false
+// let cursorRequestedToBeHidden = false
 let cursorEnabled = true
 
-merge(cursorline.style, {
+Object.assign(cursorline.style, {
+  background: 'rgba(var(--background-alpha), 0.2)',
   position: 'absolute',
   mixBlendMode: 'screen',
-  height: `${canvasContainer.cell.height}px`,
+  height: `${cell.height}px`,
   zIndex: 60,
 })
 
-merge(debugline.style, {
+Object.assign(debugline.style, {
   display: 'none',
   position: 'absolute',
   mixBlendMode: 'screen',
-  height: `${canvasContainer.cell.height}px`,
+  height: `${cell.height}px`,
   zIndex: 60,
 })
 
-merge(cursorEl.style, {
+Object.assign(cursorEl.style, {
   zIndex: 70,
   position: 'absolute',
-  display: 'flex',
+  display: 'none',
   justifyContent: 'center',
   alignItems: 'center',
 })
@@ -46,28 +49,27 @@ merge(cursorEl.style, {
 cursorChar.style.filter = 'invert(1) grayscale(1)'
 cursorEl.appendChild(cursorChar)
 
-
 export const getCursorBoundingClientRect = () => cursorline.getBoundingClientRect()
 
-export const setCursorShape = (type: CursorShape, size = 20) => {
-  cursor.type = type
+export const setCursorShape = (shape: CursorShape, size = 20) => {
+  cursor.shape = shape
 
-  if (type === CursorShape.block) merge(cursorEl.style, {
+  if (shape === CursorShape.block) Object.assign(cursorEl.style, {
     background: cursor.color,
-    height: `${canvasContainer.cell.height}px`,
-    width: `${canvasContainer.cell.width}px`,
+    height: `${cell.height}px`,
+    width: `${cell.width}px`,
   })
 
-  if (type === CursorShape.line) merge(cursorEl.style, {
+  if (shape === CursorShape.line) Object.assign(cursorEl.style, {
     background: cursor.color,
-    height: `${canvasContainer.cell.height}px`,
-    width: `${(canvasContainer.cell.width * (size / 100)).toFixed(2)}px`
+    height: `${cell.height}px`,
+    width: `${(cell.width * (size / 100)).toFixed(2)}px`
   })
 
-  if (type === CursorShape.underline) merge(cursorEl.style, {
+  if (shape === CursorShape.underline) Object.assign(cursorEl.style, {
     background: partialFill('horizontal', cursor.color, size),
-    height: `${canvasContainer.cell.height}px`,
-    width: `${canvasContainer.cell.width}px`,
+    height: `${cell.height}px`,
+    width: `${cell.width}px`,
   })
 }
 
@@ -83,7 +85,7 @@ export const disableCursor = () => cursorEnabled = false
 export const hideCursor = () => {
   if (!cursorEnabled) return
 
-  cursorRequestedToBeHidden = true
+  // cursorRequestedToBeHidden = true
   cursorEl.style.display = 'none'
   cursorline.style.display = 'none'
 }
@@ -91,66 +93,46 @@ export const hideCursor = () => {
 export const showCursor = () => {
   if (!cursorEnabled) return
 
-  cursorRequestedToBeHidden = false
+  // cursorRequestedToBeHidden = false
   cursorEl.style.display = 'flex'
   cursorline.style.display = ''
 }
 
 export const showCursorline = () => cursorline.style.display = ''
 
-const updateCursorlinePosition = (canvas: CanvasWindow, backgroundColor: string) => {
-  const { x, y, width } = canvas.whereLine(cursor.row)
-
-  merge(cursorline.style, {
-    background: hexToRGBA(backgroundColor, 0.2),
-    transform: translate(x, y),
-    width: `${width}px`,
-    height: `${canvasContainer.cell.height}px`,
-  })
-}
-
-const updateCursorChar = (shape: CursorShape) => {
-  if (shape === CursorShape.block) {
-    const [ char ] = get(cursor.row, cursor.col)
-    cursorChar.innerText = char
-    cursorChar.style.display = ''
-  }
-  else {
+const updateCursorChar = (gridId: number, row: number, col: number) => {
+  if (cursor.shape !== CursorShape.block) {
     cursorChar.style.display = 'none'
     cursorChar.innerText = ''
+    return
   }
+
+  const char = windows.get(gridId).editor.getChar(row, col)
+  cursorChar.innerText = char
+  cursorChar.style.display = ''
 }
 
-const controlCursorIfShadowBuffer = (win: RenderWindow) => {
-  const isShadowBuffer = win.filetype === SHADOW_BUFFER_TYPE
-
-  if (isShadowBuffer) return cursorEl.style.display = 'none'
-  else cursorEl.style.display = 'flex'
-}
-
-const updateCursorPosition = (canvas: CanvasWindow) => {
-  const { x, y } = canvas.getCursorPosition(cursor.row, cursor.col)
-  cursorEl.style.transform = translate(x, y)
-}
-
-export const moveCursor = (backgroundColor: string) => {
-  const res = getWindow(cursor.row, cursor.col, { getStuff: true })
-  if (!res || !res.canvas) return
-  const { canvas, win } = res
+export const moveCursor = (gridId: number, row: number, col: number) => {
+  Object.assign(cursor, { row, col })
 
   // even if cursor(line) is hidden, we still need to update the positions.
   // once the cursor elements are re-activated, the position updated while
   // hidden must be accurate. (e.g. using jumpTo() in grep/references/etc)
+  const win = windows.get(gridId)
+  const cursorPos = win.positionToWorkspacePixels(row, col)
+  const linePos = win.positionToWorkspacePixels(row, 0)
+  const { width } = win.getWindowSize()
 
-  updateCursorPosition(canvas)
-  updateCursorlinePosition(canvas, backgroundColor)
+  cursorEl.style.transform = translate(cursorPos.x, cursorPos.y)
+  cursorline.style.transform = translate(linePos.x, linePos.y)
+  cursorline.style.width = `${width}px`
 
-  if (!cursorEnabled) return
-  if (cursorRequestedToBeHidden) return
+  updateCursorChar(gridId, row, col)
 
-  controlCursorIfShadowBuffer(win)
-  updateCursorChar(cursor.type)
-  showCursorline()
+  // TODO: revisit this logic, cuz we need to hide cursor on grid 1
+  // other times we need to hide cursor from components
+  // if (cursorRequestedToBeHidden) return
+  showCursor()
 }
 
 setCursorShape(CursorShape.block)

@@ -1,5 +1,5 @@
 import { enableCursor, disableCursor, hideCursor, showCursor } from '../core/cursor'
-import { CommandType, CommandUpdate } from '../core/render'
+import { CommandType, CommandUpdate } from '../render/events'
 import { Plugin } from '../components/plugin-container'
 import { RowNormal } from '../components/row-container'
 import Input from '../components/text-input'

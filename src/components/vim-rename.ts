@@ -1,9 +1,9 @@
-import { renameCurrent, getCurrentName } from '../core/sessions'
+import { renameCurrent, getCurrentName } from '../core/instance-manager'
 import { Plugin } from '../components/plugin-container'
 import { app, vimBlur, vimFocus } from '../ui/uikit'
 import Input from '../components/text-input'
 import * as Icon from 'hyperapp-feather'
-import nvim from '../core/neovim'
+import api from '../core/instance-api'
 
 const state = {
   value: '',
@@ -32,10 +32,10 @@ const view = ($: S, a: typeof actions) => Plugin($.visible, [
     value: $.value,
     focus: true,
     icon: Icon.Edit,
-    desc: 'rename vim session',
+    desc: 'rename vim instance',
   })
 
 ])
 
 const ui = app({ name: 'vim-rename', state, actions, view })
-nvim.onAction('vim-rename', () => ui.show(getCurrentName()))
+api.onAction('vim-rename', () => ui.show(getCurrentName()))

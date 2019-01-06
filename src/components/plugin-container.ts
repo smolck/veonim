@@ -19,8 +19,7 @@ const bottom = { ...base, alignItems: 'flex-end' }
 const right = { ...base, alignItems: 'stretch', justifyContent: 'flex-end' }
 
 const dialog = {
-  background: `rgba(var(--background-45-alpha), 0.7)`,
-  backdropFilter: 'blur(24px)',
+  background: 'var(--background-30)',
   marginTop: '15%',
   flexFlow: 'column',
 }
@@ -63,8 +62,7 @@ export const PluginBottom: PluginFn = (visible: boolean, ...args: any[]) => h('d
       width: '100%',
       height: '100%',
       flexFlow: 'column',
-      backdropFilter: 'blur(8px)',
-      background: `rgba(var(--background-40-alpha), 0.8)`,
+      background: 'var(--background-40)',
       display: visible ? 'flex' : 'none',
       ...args.find(is.object),
     }
@@ -83,8 +81,7 @@ export const PluginRight = (visible: boolean, ...args: any[]) => h('div', {
       height: '100%',
       flexFlow: 'column',
       marginTop: 0,
-      backdropFilter: 'blur(8px)',
-      background: `rgba(var(--background-40-alpha), 0.8)`,
+      background: 'var(--background-40)',
       display: visible ? 'flex' : 'none',
       ...args.find(is.object),
     }

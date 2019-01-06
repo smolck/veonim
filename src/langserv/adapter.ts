@@ -5,9 +5,8 @@ import { is, merge, uriToPath, uriAsCwd, uriAsFile } from '../support/utils'
 import { notify, request, setTextSyncState, onDiagnostics as onDiags } from '../langserv/director'
 import { Patch, workspaceEditToPatch } from '../langserv/patch'
 import { getLines } from '../support/get-file-contents'
-import nvim, { NeovimState } from '../core/neovim'
-import config from '../config/config-service'
-import * as path from 'path'
+import { NeovimState } from '../neovim/state'
+import nvim from '../neovim/api'
 
 export interface Reference {
   path: string,
@@ -50,15 +49,6 @@ interface MarkedStringPart {
 interface VimPosition {
   line: number,
   column: number,
-}
-
-const ignored: { dirs: string[] } = {
-  dirs: config('workspace.ignore.dirs', m => ignored.dirs = m),
-}
-
-const filterWorkspaceSymbols = (symbols: Symbol[]): Symbol[] => {
-  const excluded = ignored.dirs.map(m => path.join(nvim.state.cwd, m))
-  return symbols.filter(s => !excluded.some(dir => s.location.cwd.includes(dir)))
 }
 
 // TODO: get typings for valid requests?
@@ -256,8 +246,7 @@ export const workspaceSymbols = async (data: NeovimState, query: string): Promis
   const req = { query, ...toProtocol(data) }
   const symbols = await request('workspace/symbol', req) as SymbolInformation[]
   if (!symbols || !symbols.length) return []
-  const mappedSymbols = symbols.map(s => ({ ...s, location: toVimLocation(s.location) }))
-  return filterWorkspaceSymbols(mappedSymbols)
+  return symbols.map(s => ({ ...s, location: toVimLocation(s.location) }))
 }
 
 const parseCompletionSnippets = (completions: CompletionItem[]): CompletionItem[] => completions.map(c => {

@@ -1,5 +1,5 @@
 import Worker from '../messaging/worker'
-import nvim from '../core/neovim'
+import nvim from '../neovim/api'
 
 interface LineContents {
   ix: number,

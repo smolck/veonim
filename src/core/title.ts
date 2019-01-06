@@ -1,7 +1,7 @@
-import * as canvasContainer from '../core/canvas-container'
 import { merge, simplifyPath } from '../support/utils'
 import * as dispatch from '../messaging/dispatch'
-import nvim from '../core/neovim'
+import instance from '../core/instance-api'
+import * as workspace from './workspace'
 import { remote } from 'electron'
 
 const macos = process.platform === 'darwin'
@@ -13,13 +13,14 @@ export const setTitleVisibility = (visible: boolean) => {
   if (!titleBar) return
   titleBarVisible = visible
   titleBar.style.display = visible ? 'flex' : 'none'
-  canvasContainer.resize()
+  workspace.resize()
 }
 
 const typescriptSucks = (el: any, bar: any) => el.prepend(bar)
 
 if (macos) {
   merge((title as HTMLElement).style, {
+    fontSize: '14px',
     marginLeft: '20%',
     marginRight: '20%',
     whiteSpace: 'nowrap',
@@ -54,14 +55,14 @@ if (macos) {
     dispatch.pub('window.change')
   })
 
-  nvim.watchState.file((file: string) => {
-    const path = simplifyPath(file, nvim.state.cwd)
+  instance.nvim.watchState.file((file: string) => {
+    const path = simplifyPath(file, instance.nvim.state.cwd)
     ;(title as HTMLElement).innerText = `${path} - veonim`
   })
 }
 
-else nvim.watchState.file((file: string) => {
-  const path = simplifyPath(file, nvim.state.cwd)
+else instance.nvim.watchState.file((file: string) => {
+  const path = simplifyPath(file, instance.nvim.state.cwd)
   remote.getCurrentWindow().setTitle(`${path} - veonim`)
 })
 

@@ -1,6 +1,6 @@
 import { supports } from '../langserv/server-features'
 import { typeDefinition } from '../langserv/adapter'
-import nvim from '../core/neovim'
+import nvim from '../neovim/api'
 
 nvim.onAction('type-definition', async () => {
   if (!supports.typeDefinition(nvim.state.cwd, nvim.state.filetype)) return

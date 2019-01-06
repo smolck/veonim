@@ -2,13 +2,11 @@ import { VimMode, BufferType } from '../neovim/types'
 import { EventEmitter } from 'events'
 
 const state = {
-  background: '#2d2d2d',
-  foreground: '#dddddd',
-  special: '#ef5188',
   mode: VimMode.Normal,
   bufferType: BufferType.Normal,
   file: '',
   filetype: '',
+  dir: '',
   cwd: '',
   colorscheme: '',
   revision: -1,
@@ -21,7 +19,7 @@ const state = {
 
 export type NeovimState = typeof state
 type StateKeys = keyof NeovimState
-type WatchState = { [Key in StateKeys]: (fn: (value: NeovimState[Key]) => void) => void }
+type WatchState = { [Key in StateKeys]: (fn: (value: NeovimState[Key], previousValue: NeovimState[Key]) => void) => void }
 
 type OnStateValue1 = { [Key in StateKeys]: (value: NeovimState[Key], fn: () => void) => void }
 type OnStateValue2 = { [Key in StateKeys]: (value: NeovimState[Key], previousValue: NeovimState[Key], fn: () => void) => void }
@@ -46,7 +44,7 @@ export default (stateName: string) => {
   const stateChangeFns = new Set<Function>()
 
   const watchState: WatchState = new Proxy(Object.create(null), {
-    get: (_, key: string) => (fn: (value: any) => void) => watchers.on(key, fn),
+    get: (_, key: string) => (fn: (value: any, previousValue: any) => void) => watchers.on(key, fn),
   })
 
   const onStateChange = (fn: (nextState: NeovimState, key: string, value: any, previousValue: any) => void) => {
@@ -70,7 +68,7 @@ export default (stateName: string) => {
     get: (_, key: string) => ({ is: (matchValue: any, matchPreviousValue?: any) => new Promise(done => {
       const callback = (value: any, previousValue: any) => {
         const same = value === matchValue
-        const prevSame = typeof matchPreviousValue == null ? true : previousValue === matchPreviousValue
+        const prevSame = matchPreviousValue == null ? true : previousValue === matchPreviousValue
 
         if (same && prevSame) {
           done(value)

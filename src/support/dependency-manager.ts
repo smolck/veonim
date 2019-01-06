@@ -1,28 +1,20 @@
-import { configPath, readFile, exists, isOnline } from '../support/utils'
 import installExtensions from '../support/manage-extensions'
 import installPlugins from '../support/manage-plugins'
-import { watchConfig } from '../config/config-reader'
-import { join } from 'path'
-
-const vimrcPath = join(configPath, 'nvim/init.vim')
-
-const getVimrcLines = async () => (await readFile(vimrcPath))
-  .toString()
-  .split('\n')
+import { isOnline } from '../support/utils'
+import nvim from '../neovim/api'
 
 const refreshDependencies = async () => {
   const online = await isOnline('github.com')
   if (!online) return
 
-  const vimrcExists = await exists(vimrcPath)
-  if (!vimrcExists) return
+  const [ plugins, extensions ] = await Promise.all([
+    nvim.g._veonim_plugins,
+    nvim.g._veonim_extensions,
+  ])
 
-  const configLines = await getVimrcLines()
-  installExtensions(configLines)
-  installPlugins(configLines)
+  installExtensions(extensions)
+  installPlugins(plugins)
 }
 
-export default () => {
-  refreshDependencies()
-  watchConfig('nvim/init.vim', refreshDependencies)
-}
+nvim.onVimrcLoad(refreshDependencies)
+refreshDependencies()

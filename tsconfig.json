@@ -3,19 +3,19 @@
     "src/**/*.ts"
   ],
   "exclude": [
-    "node_modules",
-    "src/workers/*.ts",
-    "src/messaging/worker-client.ts"
+    "node_modules"
   ],
   "compilerOptions": {
-    "target": "es2017",
+    "target": "esnext",
     "module": "commonjs",
     "outDir": "build",
     "strict": true,
-    "lib": ["es2017", "dom"],
+    "lib": ["esnext", "dom"],
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "sourceMap": true,
-    "allowJs": true
+    "plugins": [
+      {"transform": "./tools/transform-no-dev.js"}
+    ]
   }
 }
