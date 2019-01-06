@@ -6,6 +6,11 @@ const pluginDir = join(configPath, 'nvim', 'pack', 'veonim-installed-plugins')
 const runtimeDir = resolve(__dirname, '..', 'runtime')
 const startup = FunctionGroup()
 
+// TODO: DEPRECATED REMOVE
+startup.defineFunc.VK`
+  echo "VK() map keyboard shortcuts is deprecated. please remove VK() calls from your config"
+`
+
 export const startupFuncs = () => startup.getFunctionsAsString()
 
 export const startupCmds = CmdGroup`
