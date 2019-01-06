@@ -221,6 +221,9 @@ menus. e.g. (floating windows maybe?)
 - text annotations (like git blame stuff, etc.)
   - https://github.com/neovim/neovim/pull/8180
 
+- visual UI for edit and jump lists
+  - http://vim.wikia.com/wiki/Jumping_to_previously_visited_locations
+
 ## crazy experimental ideas
 
 - investigate if we can get a nvim event indicating mode change (this is kind of an annoying pain right now to determine current nvim mode)
