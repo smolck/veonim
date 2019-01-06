@@ -35,6 +35,7 @@ requestAnimationFrame(() => {
 
   setTimeout(() => {
     require('../services/remote')
+    require('../services/app-info')
     requireDir(`${__dirname}/../components`)
 
     if (process.env.VEONIM_DEV) {
