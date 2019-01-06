@@ -74,6 +74,7 @@ const cursorShapeType = (shape?: string) => {
 const messageNotifyKindMappings = new Map([
   ['echo', NotifyKind.Info],
   ['emsg', NotifyKind.Error],
+  ['echoerr', NotifyKind.Error],
 ])
 
 // TODO: handle multi-line messages

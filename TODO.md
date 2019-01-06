@@ -88,6 +88,8 @@ menus. e.g. (floating windows maybe?)
 
 ## backlog - stuff that i want but is low priority
 
+- completion menu use seti icons for filetype items (.js file gets the JS icon, etc.)
+
 - key-transforms
   - timeouts (if i press cmd in fuzzy file picker, but change my mind)
   - support transforms per nvim mode
@@ -155,6 +157,8 @@ menus. e.g. (floating windows maybe?)
     - if jump list memory is empty, gets current word symbol references/highlight/load jumplist/etc
   - clear active reference
     - clears highlights + jump list memory + status
+
+- use LSP completionItem.detail somehow? perhaps instead of no docs?
 
 ## backlog - blocked on some other feature
 
