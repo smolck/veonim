@@ -1,5 +1,5 @@
 import { Watchers, merge, throttle } from '../support/utils'
-const robotoSizes = require('../assets/roboto-sizes.json')
+import robotoSizes from '../support/roboto-sizes'
 import * as electron from 'electron'
 import { setVar } from '../ui/css'
 
