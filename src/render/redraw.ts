@@ -9,6 +9,8 @@ import * as renderEvents from '../render/events'
 let dummyData = new Float32Array()
 let state_cursorVisible = true
 
+// TODO: console.debug temp until i figure out the redraw bug
+
 const default_colors_set = (e: any) => {
   const [ fg, bg, sp ] = e[1]
   const defaultColorsChanged = setDefaultColors(fg, bg, sp)
@@ -31,6 +33,7 @@ const hl_attr_define = (e: any) => {
 }
 
 const win_pos = (e: any) => {
+  console.debug('win_pos', e)
   const count = e.length
 
   for (let ix = 1; ix < count; ix++) {
@@ -39,9 +42,13 @@ const win_pos = (e: any) => {
   }
 }
 
-const win_hide = (e: any) => windows.hide(e.slice(1))
+const win_hide = (e: any) => {
+  console.debug('win_hide', e)
+  windows.hide(e.slice(1))
+}
 
 const grid_clear = ([ , [ gridId ] ]: any) => {
+  console.debug('grid_clear', gridId)
   if (gridId === 1) return
   if (!windows.has(gridId)) return
 
@@ -51,11 +58,13 @@ const grid_clear = ([ , [ gridId ] ]: any) => {
 }
 
 const grid_destroy = ([ , [ gridId ] ]: any) => {
+  console.debug('grid_destroy', gridId)
   if (gridId === 1) return
   windows.remove(gridId)
 }
 
 const grid_resize = (e: any) => {
+  console.debug('grid_resize', e)
   const count = e.length
 
   for (let ix = 1; ix < count; ix++) {
@@ -68,6 +77,7 @@ const grid_resize = (e: any) => {
 }
 
 const grid_cursor_goto = ([ , [ gridId, row, col ] ]: any) => {
+  console.debug('grid_cursor_goto', gridId, row, col)
   state_cursorVisible = gridId !== 1
   if (gridId === 1) return
   windows.setActiveGrid(gridId)
@@ -75,6 +85,7 @@ const grid_cursor_goto = ([ , [ gridId, row, col ] ]: any) => {
 }
 
 const grid_scroll = ([ , [ gridId, top, bottom, /*left*/, /*right*/, amount ] ]: any) => {
+  console.debug('grid_scroll', gridId, top, bottom, amount)
   if (gridId === 1) return
   // we make the assumption that left & right will always be
   // at the window edges (left == 0 && right == window.width)
