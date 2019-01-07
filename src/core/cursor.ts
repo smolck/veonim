@@ -127,8 +127,12 @@ export const moveCursor = (gridId: number, row: number, col: number) => {
   const { width } = win.getWindowSize()
 
   cursorEl.style.transform = translate(cursorPos.x, cursorPos.y)
-  cursorline.style.transform = translate(linePos.x - paddingX, linePos.y)
-  cursorline.style.width = `${width}px`
+
+  Object.assign(cursorline.style, {
+    transform: translate(linePos.x - paddingX, linePos.y),
+    width: `${width}px`,
+    height: `${cell.height}px`,
+  })
 
   updateCursorChar(gridId, row, col)
 
