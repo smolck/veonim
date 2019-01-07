@@ -77,14 +77,20 @@ export const setFont = ({ size, lineHeight, face = font.face }: SetFontParams) =
   const fontSize = !size || isNaN(size) ? font.size : size
   const fontLineHeight = !lineHeight || isNaN(lineHeight) ? font.lineHeight : lineHeight
 
+  const same = font.face === face
+    && font.size === size
+    && font.lineHeight === fontLineHeight
+
+  if (same) return false
+
   setVar('font', face)
   setVar('font-size', fontSize)
   setVar('line-height', fontLineHeight)
 
   canvas.font = `${fontSize}px ${face}`
 
-  merge(font, { size: fontSize, face, lineHeight: fontLineHeight })
-  merge(cell, {
+  Object.assign(font, { size: fontSize, face, lineHeight: fontLineHeight })
+  Object.assign(cell, {
     width: getCharWidth(face, fontSize),
     height: Math.floor(fontSize * fontLineHeight)
   })
@@ -96,6 +102,8 @@ export const setFont = ({ size, lineHeight, face = font.face }: SetFontParams) =
 
   watchers.notify('font', { ...font })
   watchers.notify('cell', { ...cell })
+
+  return true
 }
 
 export const resize = () => {

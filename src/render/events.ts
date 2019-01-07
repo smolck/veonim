@@ -154,10 +154,13 @@ const updateFont = () => {
   const size = Math.round(<any>(height || '').slice(1)-0)
   console.log('parsed font:', { face, size, lineHeight })
 
-  workspace.setFont({ face, size, lineHeight })
+  const changed = workspace.setFont({ face, size, lineHeight })
+  if (!changed) return
+
   const atlas = forceRegenerateFontAtlas()
   windows.webgl.updateFontAtlas(atlas)
   windows.webgl.updateCellSize()
+  workspace.resize()
 }
 
 export const option_set = (e: any) => {
