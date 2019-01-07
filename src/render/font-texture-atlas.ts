@@ -57,6 +57,7 @@ const regenAtlas = () => {
 
   ui.imageSmoothingEnabled = false
   ui.font = `${font.size}px ${font.face}`
+  console.log('ui.font:', ui.font)
   ui.scale(window.devicePixelRatio, window.devicePixelRatio)
   ui.textBaseline = 'top'
   ui.fillStyle = 'white'
@@ -73,6 +74,17 @@ const drawChar = (char: string, col: number, width = 1) => {
   ui.clip()
   ui.fillText(char, col * cell.width, 0, charWidth)
   ui.restore()
+}
+
+/** To be used when the workspace font has changed */
+export const forceRegenerateFontAtlas = () => {
+  regenAtlas()
+  Object.assign(canvas.style, {
+    zIndex: 9999,
+    border: '1px solid yellow',
+  })
+  document.body.appendChild(canvas)
+  return canvas
 }
 
 export default () => {

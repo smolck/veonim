@@ -145,6 +145,25 @@ export default (webgl: WebGL2) => {
     webgl.gl.drawArraysInstanced(webgl.gl.LINES, 0, 2, buffer.length / 4)
   }
 
+  const updateCellSize = () => {
+    Object.assign(quads, {
+      triangles: new Float32Array([
+        0, 0,
+        cell.width, cell.height,
+        0, cell.height,
+        cell.width, 0,
+        cell.width, cell.height,
+        0, 0,
+      ]),
+      lines: new Float32Array([
+        0, cell.height - cell.padding + 1,
+        cell.width, cell.height - cell.padding + 1,
+      ]),
+    })
+
+    webgl.gl.uniform2f(program.vars.cellSize, cell.width, cell.height)
+  }
+
   const updateColorAtlas = (colorAtlas: HTMLCanvasElement) => {
     webgl.loadCanvasTexture(colorAtlas, webgl.gl.TEXTURE0)
     webgl.gl.uniform2f(program.vars.colorAtlasResolution, colorAtlas.width, colorAtlas.height)
@@ -164,5 +183,5 @@ export default (webgl: WebGL2) => {
     webgl.gl.clear(webgl.gl.COLOR_BUFFER_BIT)
   }
 
-  return { clear, clearAll, render, resize, updateColorAtlas }
+  return { clear, clearAll, render, resize, updateColorAtlas, updateCellSize }
 }

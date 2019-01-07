@@ -1,6 +1,8 @@
 import { CursorShape, setCursorColor, setCursorShape } from '../core/cursor'
+import { forceRegenerateFontAtlas } from '../render/font-texture-atlas'
 import { getBackground } from '../render/highlight-attributes'
 import { normalizeVimMode } from '../support/neovim-utils'
+import * as windows from '../windows/window-manager'
 import * as dispatch from '../messaging/dispatch'
 import { NotifyKind } from '../protocols/veonim'
 import * as workspace from '../core/workspace'
@@ -142,6 +144,7 @@ export const mode_change = ([ , [ m ] ]: [any, [string]]) => {
 const updateFont = () => {
   const lineHeight = options.get('linespace')
   const guifont = options.get('guifont') || ''
+  console.log('guifont', guifont)
 
   if (!lineHeight && !guifont) return
 
@@ -149,8 +152,11 @@ const updateFont = () => {
   const [ face, ...settings] = font.split(':')
   const height = settings.find((s: string) => s.startsWith('h'))
   const size = Math.round(<any>(height || '').slice(1)-0)
+  console.log('parsed font:', { face, size, lineHeight })
 
   workspace.setFont({ face, size, lineHeight })
+  const atlas = forceRegenerateFontAtlas()
+  windows.webgl.updateFontAtlas(atlas)
 }
 
 export const option_set = (e: any) => {

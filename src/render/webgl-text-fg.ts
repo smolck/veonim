@@ -167,6 +167,20 @@ export default (webgl: WebGL2) => {
     webgl.gl.uniform2f(program.vars.fontAtlasResolution, width, height)
   }
 
+  const updateCellSize = () => {
+    quadBuffer.setData(new Float32Array([
+      0, 0,
+      cell.width, cell.height,
+      0, cell.height,
+      cell.width, 0,
+      cell.width, cell.height,
+      0, 0,
+    ]))
+
+    webgl.gl.uniform2f(program.vars.cellSize, cell.width, cell.height)
+    webgl.gl.uniform2f(program.vars.cellPadding, 0, cell.padding)
+  }
+
   const updateColorAtlas = (colorAtlas: HTMLCanvasElement) => {
     webgl.loadCanvasTexture(colorAtlas, webgl.gl.TEXTURE1)
     webgl.gl.uniform2f(program.vars.colorAtlasResolution, colorAtlas.width, colorAtlas.height)
@@ -182,5 +196,5 @@ export default (webgl: WebGL2) => {
     webgl.gl.clear(webgl.gl.COLOR_BUFFER_BIT)
   }
 
-  return { clear, clearAll, render, resize, updateFontAtlas, updateColorAtlas }
+  return { clear, clearAll, render, resize, updateFontAtlas, updateColorAtlas, updateCellSize }
 }
