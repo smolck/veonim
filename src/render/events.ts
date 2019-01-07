@@ -157,6 +157,7 @@ const updateFont = () => {
   workspace.setFont({ face, size, lineHeight })
   const atlas = forceRegenerateFontAtlas()
   windows.webgl.updateFontAtlas(atlas)
+  windows.webgl.updateCellSize()
 }
 
 export const option_set = (e: any) => {
