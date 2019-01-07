@@ -1,12 +1,13 @@
 import { addHighlight, generateColorLookupAtlas, setDefaultColors } from '../render/highlight-attributes'
 import { getCharIndex, getUpdatedFontAtlasMaybe } from '../render/font-texture-atlas'
-import { moveCursor, hideCursor } from '../core/cursor'
+import { moveCursor, hideCursor, showCursor } from '../core/cursor'
 import * as windows from '../windows/window-manager'
 import * as dispatch from '../messaging/dispatch'
 import { onRedraw } from '../core/master-control'
 import * as renderEvents from '../render/events'
 
 let dummyData = new Float32Array()
+let state_cursorVisible = true
 
 const default_colors_set = (e: any) => {
   const [ fg, bg, sp ] = e[1]
@@ -77,7 +78,8 @@ const grid_resize = (e: any) => {
 }
 
 const grid_cursor_goto = ([ , [ gridId, row, col ] ]: any) => {
-  if (gridId === 1) return hideCursor()
+  state_cursorVisible = gridId !== 1
+  if (gridId === 1) return
   windows.setActiveGrid(gridId)
   moveCursor(gridId, row, col)
 }
@@ -185,7 +187,6 @@ onRedraw(redrawEvents => {
   if (renderEvents.doNotUpdateCmdlineIfSame(redrawEvents[0])) return
   const eventCount = redrawEvents.length
   let winUpdates = false
-  // console.log('redrawEvents', ...redrawEvents)
 
   for (let ix = 0; ix < eventCount; ix++) {
     const ev = redrawEvents[ix]
@@ -225,6 +226,7 @@ onRedraw(redrawEvents => {
   }
 
   requestAnimationFrame(() => {
+    state_cursorVisible ? showCursor() : hideCursor()
     dispatch.pub('redraw')
     if (!winUpdates) return
     windows.disposeUnpositionedWindows()

@@ -19,7 +19,7 @@ const cursorEl = document.getElementById('cursor') as HTMLElement
 const cursorChar = document.createElement('span')
 const cursorline = document.getElementById('cursorline') as HTMLElement
 export const debugline = document.getElementById('debugline') as HTMLElement
-// let cursorRequestedToBeHidden = false
+let cursorRequestedToBeHidden = false
 let cursorEnabled = true
 
 Object.assign(cursorline.style, {
@@ -84,16 +84,18 @@ export const disableCursor = () => cursorEnabled = false
 
 export const hideCursor = () => {
   if (!cursorEnabled) return
+  if (cursorRequestedToBeHidden === true) return
 
-  // cursorRequestedToBeHidden = true
+  cursorRequestedToBeHidden = true
   cursorEl.style.display = 'none'
   cursorline.style.display = 'none'
 }
 
 export const showCursor = () => {
   if (!cursorEnabled) return
+  if (cursorRequestedToBeHidden === false) return
 
-  // cursorRequestedToBeHidden = false
+  cursorRequestedToBeHidden = false
   cursorEl.style.display = 'flex'
   cursorline.style.display = ''
 }
@@ -129,9 +131,7 @@ export const moveCursor = (gridId: number, row: number, col: number) => {
 
   updateCursorChar(gridId, row, col)
 
-  // TODO: revisit this logic, cuz we need to hide cursor on grid 1
-  // other times we need to hide cursor from components
-  // if (cursorRequestedToBeHidden) return
+  if (cursorRequestedToBeHidden) return
   showCursor()
 }
 
