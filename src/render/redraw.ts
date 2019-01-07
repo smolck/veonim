@@ -58,16 +58,6 @@ const grid_destroy = ([ , [ gridId ] ]: any) => {
 const grid_resize = (e: any) => {
   const count = e.length
 
-  // TODO: dedup resize events for the same grid.
-  // we get dups per grid, like
-  // [1, 40, 100]
-  // [1, 100, 40]
-  // [2, 40, 100]
-  // [2, 100, 40]
-  // [2, 100, 30]
-  // [2, 100, 100]
-  // only take the last resize value. resizing is kinda expensive anyhoo
-
   for (let ix = 1; ix < count; ix++) {
     const [ gridId, width, height ] = e[ix]
     if (gridId === 1) continue
