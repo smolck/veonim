@@ -185,6 +185,7 @@ onRedraw(redrawEvents => {
   if (renderEvents.doNotUpdateCmdlineIfSame(redrawEvents[0])) return
   const eventCount = redrawEvents.length
   let winUpdates = false
+  // console.log('redrawEvents', ...redrawEvents)
 
   for (let ix = 0; ix < eventCount; ix++) {
     const ev = redrawEvents[ix]
@@ -216,6 +217,10 @@ onRedraw(redrawEvents => {
     else if (e === 'wildmenu_hide') renderEvents.wildmenu_hide()
     else if (e === 'msg_show') renderEvents.msg_show(ev)
     else if (e === 'msg_showmode') renderEvents.msg_showmode(ev)
+    else if (e === 'msg_showcmd') renderEvents.msg_showcmd(ev)
+    else if (e === 'msg_history_show') renderEvents.msg_history_show(ev)
+    else if (e === 'msg_clear') renderEvents.msg_clear(ev)
+    else if (e === 'msg_ruler') renderEvents.msg_ruler(ev)
     else if (e === 'set_title') renderEvents.set_title(ev)
   }
 

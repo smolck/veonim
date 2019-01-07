@@ -75,6 +75,10 @@ const messageNotifyKindMappings = new Map([
   ['echo', NotifyKind.Info],
   ['emsg', NotifyKind.Error],
   ['echoerr', NotifyKind.Error],
+  ['echomsg', NotifyKind.Info],
+  ['quickfix', NotifyKind.System],
+  // TODO: handle prompts
+  ['return_prompt', NotifyKind.System],
 ])
 
 // TODO: handle multi-line messages
@@ -93,9 +97,31 @@ export const msg_show = ([ , [ kind, msgs, flag ] ]: [any, [string, MessageEvent
   msgs.forEach(([ /*hlid*/, text ]) => notify(sillyString(text), notifyKind))
 }
 
+export const msg_history_show = (m: any) => {
+  console.warn('NYI: messages', m)
+}
+
 // TODO: wat do here lol - macro msg and shit?
-export const msg_showmode = ([, [ msgs ]]: any) => {
-  msgs.forEach((m: [number, string]) => console.log('MSG_SHOWMODE:', m[0], m[1]))
+// export const msg_showmode = ([, [ msgs ]]: any) => {
+//   msgs.forEach((m: [number, string]) => console.log('MSG_SHOWMODE:', m[0], m[1]))
+// }
+
+export const msg_showmode = (m: any) => {
+  // TODO: on empty msg_showmode clear out any previous recording messages
+  // see docs for more info
+  console.warn('NYI: msg_showmode', m)
+}
+
+export const msg_showcmd = (m: any) => {
+  console.warn('NYI: msg_showcmd', m)
+}
+
+export const msg_ruler = (m: any) => {
+  console.warn('NYI: msg_ruler', m)
+}
+
+export const msg_clear = (m: any) => {
+  console.warn('NYI: msg_clear:', m)
 }
 
 export const mode_change = ([ , [ m ] ]: [any, [string]]) => {

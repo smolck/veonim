@@ -37,7 +37,7 @@
   },
   "homepage": "https://github.com/veonim/veonim#readme",
   "bindeps-darwin": {
-    "@veonim/neovim-mac": "0.4.0-alphha1",
+    "@veonim/neovim-mac": "0.4.0-alpha1",
     "@veonim/ripgrep-mac": "0.0.1",
     "all-other-unzip-libs-suck-mac": "0.0.2"
   },
