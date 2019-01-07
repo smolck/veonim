@@ -1,5 +1,6 @@
 import * as windows from '../windows/window-manager'
 import { partialFill, translate } from '../ui/css'
+import { paddingX } from '../windows/window'
 import { cell } from './workspace'
 
 export enum CursorShape {
@@ -126,7 +127,7 @@ export const moveCursor = (gridId: number, row: number, col: number) => {
   const { width } = win.getWindowSize()
 
   cursorEl.style.transform = translate(cursorPos.x, cursorPos.y)
-  cursorline.style.transform = translate(linePos.x, linePos.y)
+  cursorline.style.transform = translate(linePos.x - paddingX, linePos.y)
   cursorline.style.width = `${width}px`
 
   updateCursorChar(gridId, row, col)
