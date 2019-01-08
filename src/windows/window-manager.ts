@@ -188,3 +188,5 @@ onSwitchVim((id, lastId) => {
   const { gridTemplateRows, gridTemplateColumns } = windowSizer(wininfos)
   Object.assign(container.style, { gridTemplateRows, gridTemplateColumns })
 })
+
+api.nvim.watchState.colorscheme(() => webgl.clearAll())

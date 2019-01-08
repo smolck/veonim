@@ -88,6 +88,8 @@ menus. e.g. (floating windows maybe?)
 
 ## backlog - stuff that i want but is low priority
 
+- grep menu, show total files / results counts statistics at bottom
+
 - completion menu use seti icons for filetype items (.js file gets the JS icon, etc.)
 
 - key-transforms
