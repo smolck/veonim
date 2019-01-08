@@ -87,6 +87,9 @@ const onAction = (event: string, cb: GenericCallback) => {
   cmd(`let g:vn_cmd_completions .= "${event}\\n"`)
 }
 
+// TODO; nvim_get_color_by_name does not work yet
+// const getColorByName = (name: string) => req.core.getColorByName(name)
+const getColorByName = (name: string) => req.core.getHlByName(name, true)
 const getCurrentLine = () => req.core.getCurrentLine()
 
 const parseKeymap = (keymap: any): Keymap => keymap.reduce((res: Keymap, m: any) => {
@@ -564,7 +567,7 @@ const exportAPI = { state, watchState, onStateChange, onStateValue,
   onAction, getCurrentLine, jumpTo, jumpToProjectFile, systemAction, current,
   g, on, untilEvent, applyPatches, buffers, windows, tabs, options:
   readonlyOptions, onVimrcLoad, Buffer: fromId.buffer, Window: fromId.window,
-  Tabpage: fromId.tabpage, getKeymap }
+  Tabpage: fromId.tabpage, getKeymap, getColorByName }
 
 export default exportAPI
 export type NeovimAPI = typeof exportAPI

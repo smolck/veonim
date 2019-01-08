@@ -35,6 +35,7 @@ on.nvimCall(async (name: string, args: any[]) => Reflect.get(nvim.call, name)(..
 on.nvimCommand(async (command: string) => nvim.cmd(command))
 on.nvimGetVar(async (key: string) => Reflect.get(nvim.g, key))
 on.nvimGetKeymap(async () => nvim.getKeymap())
+on.nvimGetColorByName(async (name: string) => nvim.getColorByName(name))
 on.setNvimMode((mode: VimMode) => Object.assign(nvim.state, { mode }))
 on.getBufferInfo(async () => nvim.buffers.listWithInfo())
 on.getGitInfo(async () => git.getGitInfo())

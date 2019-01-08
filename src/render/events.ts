@@ -1,6 +1,6 @@
 import { CursorShape, setCursorColor, setCursorShape } from '../core/cursor'
 import { forceRegenerateFontAtlas } from '../render/font-texture-atlas'
-import { getBackground } from '../render/highlight-attributes'
+import { getColorById } from '../render/highlight-attributes'
 import { normalizeVimMode } from '../support/neovim-utils'
 import * as windows from '../windows/window-manager'
 import * as dispatch from '../messaging/dispatch'
@@ -133,18 +133,18 @@ export const mode_change = ([ , [ m ] ]: [any, [string]]) => {
   if (!info) return
 
   if (info.hlid) {
-    const bg = getBackground(info.hlid)
-    if (bg) setCursorColor(bg)
+    const { background } = getColorById(info.hlid)
+    if (background) setCursorColor(background)
   }
 
   setCursorShape(info.shape, info.size)
 }
 
 // TODO: this parsing logic needs to be revisited
+// needs to handle all nvim formatting options
 const updateFont = () => {
   const lineHeight = options.get('linespace')
   const guifont = options.get('guifont') || ''
-  console.log('guifont', guifont)
 
   if (!lineHeight && !guifont) return
 
@@ -152,7 +152,6 @@ const updateFont = () => {
   const [ face, ...settings] = font.split(':')
   const height = settings.find((s: string) => s.startsWith('h'))
   const size = Math.round(<any>(height || '').slice(1)-0)
-  console.log('parsed font:', { face, size, lineHeight })
 
   const changed = workspace.setFont({ face, size, lineHeight })
   if (!changed) return

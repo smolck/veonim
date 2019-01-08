@@ -1,10 +1,10 @@
-import { highlightLookupWhenExist, getBackground } from '../render/highlight-attributes'
 import { onSwitchVim, getCurrentName } from '../core/instance-manager'
+import { getColorByName } from '../render/highlight-attributes'
 import { sub, processAnyBuffered } from '../messaging/dispatch'
 import { darken, brighten, cvar } from '../ui/css'
 import { ExtContainer } from '../neovim/protocol'
-import instance from '../core/instance-api'
 import * as Icon from 'hyperapp-feather'
+import api from '../core/instance-api'
 import { colors } from '../ui/styles'
 import { h, app } from '../ui/uikit'
 import { basename } from 'path'
@@ -35,18 +35,10 @@ const state = {
   additions: 0,
   deletions: 0,
   macro: '',
-  baseColor: '#6d576a',
+  baseColor: '#4e415a',
 }
 
 type S = typeof state
-
-const refreshBaseColor = async () => {
-  const groups = await highlightLookupWhenExist('StatusLine')
-  const hlgrp = groups.find(m => m.builtinName === 'StatusLine')
-  if (!hlgrp) return
-  const background = getBackground(hlgrp.id)
-  if (background) ui.setColor(background)
-}
 
 const statusGroupStyle = {
   display: 'flex',
@@ -196,7 +188,7 @@ const view = ($: S) => h('div', {
       }, `${$.deletions}`)
     ])
 
-    ,$.runningServers.has(instance.nvim.state.cwd + $.filetype) && h('div', {
+    ,$.runningServers.has(api.nvim.state.cwd + $.filetype) && h('div', {
       style: itemStyle,
     }, [
       ,h('div', [
@@ -328,12 +320,10 @@ const view = ($: S) => h('div', {
 
 const ui = app<S, typeof actions>({ name: 'statusline', state, actions, view, element: container })
 
-sub('colorscheme.modified', refreshBaseColor)
-instance.nvim.watchState.colorscheme(refreshBaseColor)
-instance.nvim.watchState.filetype(ui.setFiletype)
-instance.nvim.watchState.line(ui.setLine)
-instance.nvim.watchState.column(ui.setColumn)
-instance.nvim.watchState.cwd((cwd: string) => {
+api.nvim.watchState.filetype(ui.setFiletype)
+api.nvim.watchState.line(ui.setLine)
+api.nvim.watchState.column(ui.setColumn)
+api.nvim.watchState.cwd((cwd: string) => {
   const next = homedir() === cwd
     ? getCurrentName()
     : basename(cwd)
@@ -347,15 +337,21 @@ sub('tabs', async ({ curtab, tabs }: { curtab: ExtContainer, tabs: Tab[] }) => {
     : ui.updateTabs({ active: -1, tabs: [] })
 })
 
-instance.git.onBranch(branch => ui.setGitBranch(branch))
-instance.git.onStatus(status => ui.setGitStatus(status))
+api.git.onBranch(branch => ui.setGitBranch(branch))
+api.git.onStatus(status => ui.setGitStatus(status))
 sub('ai:diagnostics.count', count => ui.setDiagnostics(count))
 sub('ai:start', opts => ui.aiStart(opts))
 sub('vim:macro.start', reg => ui.setMacro(reg))
 sub('vim:macro.end', () => ui.setMacro())
 onSwitchVim(() => ui.updateTabs({ active: -1, tabs: [] }))
 
-setImmediate(() => {
+api.nvim.watchState.colorscheme(async () => {
+  const { background } = await getColorByName('StatusLine')
+  if (background) ui.setColor(background)
+})
+
+setImmediate(async () => {
   processAnyBuffered('tabs')
-  refreshBaseColor()
+  const { background } = await getColorByName('StatusLine')
+  if (background) ui.setColor(background)
 })

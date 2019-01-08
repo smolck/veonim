@@ -99,6 +99,7 @@ const nvimCall: Functions = onFnCall((name, a) => getActiveInstance().request.nv
 const nvimJumpTo = (coords: HyperspaceCoordinates) => getActiveInstance().call.nvimJumpTo(coords)
 const nvimJumpToProjectFile = (coords: HyperspaceCoordinates) => getActiveInstance().call.nvimJumpToProjectFile(coords)
 const nvimGetKeymap = () => getActiveInstance().request.nvimGetKeymap()
+const nvimGetColorByName = (name: string) => getActiveInstance().request.nvimGetColorByName(name)
 const nvimSaveCursor = async () => {
   const instance = getActiveInstance()
   const position = await instance.request.nvimSaveCursor()
@@ -158,6 +159,7 @@ const api = {
     feedkeys: nvimFeedkeys,
     getKeymap: nvimGetKeymap,
     saveCursor: nvimSaveCursor,
+    getColorByName: nvimGetColorByName,
     jumpToProjectFile: nvimJumpToProjectFile,
   }
 }

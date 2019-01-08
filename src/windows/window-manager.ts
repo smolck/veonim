@@ -189,7 +189,7 @@ onSwitchVim((id, lastId) => {
   Object.assign(container.style, { gridTemplateRows, gridTemplateColumns })
 })
 
-api.nvim.watchState.colorscheme(() => {
+api.nvim.watchState.colorscheme(() => requestAnimationFrame(() => {
   webgl.clearAll()
   getInstanceWindows().forEach(w => w.redrawFromGridBuffer())
-})
+}))

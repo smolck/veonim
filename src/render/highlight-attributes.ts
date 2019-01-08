@@ -1,5 +1,6 @@
-import { asColor, MapSet, CreateTask } from '../support/utils'
+import { asColor, MapSet } from '../support/utils'
 import { pub } from '../messaging/dispatch'
+import api from '../core/instance-api'
 import { EventEmitter } from 'events'
 
 const ee = new EventEmitter()
@@ -15,6 +16,11 @@ export interface Attrs {
   undercurl?: boolean
   cterm_fg?: number
   cterm_bg?: number
+}
+
+interface Color {
+  foreground?: string
+  background?: string
 }
 
 interface HighlightGroup {
@@ -123,31 +129,36 @@ export const addHighlight = (id: number, attr: Attrs, infos: HighlightInfoEvent[
     reverse: !!attr.reverse,
   })
 
-  infos.forEach(info => highlightInfo.add(sillyString(info.hi_name), {
-    hlid: id,
-    id: info.id,
-    kind: info.kind,
-    name: sillyString(info.hi_name),
-    builtinName: sillyString(info.ui_name),
-  }))
+  infos.forEach(info => {
+    const name = sillyString(info.hi_name)
+    const builtinName = sillyString(info.ui_name)
+
+    highlightInfo.add(sillyString(info.hi_name), {
+      name,
+      builtinName,
+      hlid: id,
+      id: info.id,
+      kind: info.kind,
+    })
+  })
 
   ee.emit('highlight-info.added')
 }
 
-export const highlightLookupWhenExist = async (name: string): Promise<HighlightInfo[]> => {
-  const info = highlightInfo.get(name)
-  if (info) return [...info]
-  const lookupTask = CreateTask()
-
-  const checkIfExist = () => {
-    const info = highlightInfo.get(name)
-    if (!info) return
-    lookupTask.done([...info])
-    ee.removeListener('highlight-info.added', checkIfExist)
+export const getColorByName = async (name: string): Promise<Color> => {
+  const { foreground, background } = await api.nvim.getColorByName(name)
+  return {
+    foreground: asColor(foreground),
+    background: asColor(background),
   }
+}
 
-  ee.on('highlight-info.added', checkIfExist)
-  return lookupTask.promise as any
+export const getColorById = (id: number): Color => {
+  const hlgrp = highlights.get(id) || {} as HighlightGroup
+  return {
+    foreground: hlgrp.foreground,
+    background: hlgrp.background,
+  }
 }
 
 export const highlightLookup = (name: string): HighlightInfo[] => {
@@ -156,10 +167,6 @@ export const highlightLookup = (name: string): HighlightInfo[] => {
   return [...info]
 }
 export const getHighlight = (id: number) => highlights.get(id)
-export const getBackground = (id: number) => {
-  const { background } = highlights.get(id) || {} as HighlightGroup
-  return background || highlights.get(0)!.background
-}
 
 export const generateColorLookupAtlas = () => {
   // hlid are 0 indexed, but width starts at 1
