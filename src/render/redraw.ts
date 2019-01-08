@@ -12,8 +12,15 @@ let state_cursorVisible = true
 // TODO: console.debug temp until i figure out the redraw bug
 
 const default_colors_set = (e: any) => {
-  const [ fg, bg, sp ] = e[1]
-  const defaultColorsChanged = setDefaultColors(fg, bg, sp)
+  const count = e.length
+  let defaultColorsChanged = false
+
+  for (let ix = 1; ix < count; ix++) {
+    const [ fg, bg, sp ] = e[ix]
+    if (fg < 0 && bg < 0 && sp < 0) continue
+    defaultColorsChanged = setDefaultColors(fg, bg, sp)
+  }
+
   if (!defaultColorsChanged) return
 
   const colorAtlas = generateColorLookupAtlas()
