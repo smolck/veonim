@@ -6,9 +6,10 @@
 // end setup trace
 
 import * as instanceManager from '../core/instance-manager'
+import { requireDir, debounce } from '../support/utils'
 import { resize } from '../core/master-control'
 import * as workspace from '../core/workspace'
-import { requireDir } from '../support/utils'
+import { remote } from 'electron'
 import '../render/redraw'
 
 // TODO: do we need to sync instance nvim state to main thread? see instance-api todo note
@@ -44,3 +45,24 @@ requestAnimationFrame(() => {
     }
   }, 199)
 })
+
+const win = remote.getCurrentWindow()
+
+let cursorVisible = true
+
+const hideCursor = debounce(() => {
+  cursorVisible = false
+  document.body.style.cursor = 'none'
+}, 1500)
+
+const mouseTrap = () => {
+  if (!cursorVisible) {
+    cursorVisible = true
+    document.body.style.cursor = 'default'
+  }
+
+  hideCursor()
+}
+
+win.on('enter-full-screen', () => window.addEventListener('mousemove', mouseTrap))
+win.on('leave-full-screen', () => window.removeEventListener('mousemove', mouseTrap))
