@@ -49,7 +49,7 @@ interface HighlightInfo {
 const defaultColors = {
   background: '#2d2d2d',
   foreground: '#dddddd',
-  special: '#ef5188',
+  special: '#a966ad',
 }
 
 const _colors = { ...defaultColors }
