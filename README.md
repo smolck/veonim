@@ -10,6 +10,8 @@ veonim is still very early alpha and experimental. nothing is guaranteed. UX is 
 
 if you are feeling brave, maybe checkout the [User Guide](docs/readme.md)
 
+Discord chat: https://discord.gg/sawWpMr
+
 ## currently in progress
 - WebGL renderer (~30-60ms canvas render -> under 1ms webgl render lolololololol)
 - super fast custom msgpack decoder (faster render, less GC/memory pressure)
