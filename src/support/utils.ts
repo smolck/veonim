@@ -297,6 +297,55 @@ export class MapSet extends Map {
   }
 }
 
+export const MapMap = <A, B, C>(initial?: any[]) => {
+  const m = new Map<A, Map<B, C>>(initial)
+
+  const set = (key: A, subkey: B, value: C) => {
+    const sub = m.get(key) || new Map()
+    sub.set(subkey, value)
+  }
+
+  const updateObject = (key: A, subkey: B, objectDiff: C) => {
+    const sub = m.get(key) || new Map()
+    const previousObject = sub.get(subkey) || {}
+    if (!is.object(previousObject)) throw new Error(`MapMap: trying to update object but the current value is not an object`)
+    sub.set(subkey, Object.assign(previousObject, objectDiff))
+  }
+
+  const get = (key: A, subkey: B) => {
+    const sub = m.get(key)
+    if (!sub) return
+    return sub.get(subkey)
+  }
+
+  const has = (key: A, subkey: B) => {
+    const sub = m.get(key)
+    if (!sub) return false
+    return sub.has(subkey)
+  }
+
+  const remove = (key: A, subkey: B) => {
+    const sub = m.get(key)
+    if (!sub) return
+    sub.delete(subkey)
+  }
+
+  const forEach = (key: A, fn: (value: C, key: B) => void) => {
+    const sub = m.get(key)
+    if (!sub) return
+    sub.forEach(fn)
+  }
+
+  const size = () => m.size
+  const subsize = (key: A) => {
+    const sub = m.get(key)
+    if (!sub) return -1
+    return sub.size
+  }
+
+  return { set, get, has, remove, updateObject, forEach, size, subsize }
+}
+
 export const tryNetConnect = (path: string, interval = 500, timeout = 5e3): Promise<ReturnType<typeof createConnection>> => new Promise((done, fail) => {
   const timeoutTimer = setTimeout(fail, timeout)
 
