@@ -89,22 +89,32 @@ export default (webgl: WebGL2) => {
     size: 2,
   })
 
-  const quads = {
-    triangles: new Float32Array([
-      0, 0,
-      cell.width, cell.height,
-      0, cell.height,
-      cell.width, 0,
-      cell.width, cell.height,
-      0, 0,
-    ]),
-    lines: new Float32Array([
-      0, cell.height - cell.padding + 1,
-      cell.width, cell.height - cell.padding + 1,
-    ]),
+  const updateCellSize = (initial = false) => {
+    const next = {
+      boxes: new Float32Array([
+        0, 0,
+        cell.width, cell.height,
+        0, cell.height,
+        cell.width, 0,
+        cell.width, cell.height,
+        0, 0,
+      ]),
+      lines: new Float32Array([
+        0, cell.height - 1,
+        cell.width, cell.height,
+        0, cell.height,
+        cell.width, cell.height - 1,
+        cell.width, cell.height,
+        0, cell.height - 1,
+      ]),
+    }
+
+    webgl.gl.uniform2f(program.vars.cellSize, cell.width, cell.height)
+    if (!initial) Object.assign(quads, next)
+    return next
   }
 
-  webgl.gl.uniform2f(program.vars.cellSize, cell.width, cell.height)
+  const quads = updateCellSize(true)
 
   const resize = (width: number, height: number) => {
     webgl.resize(width, height)
@@ -135,34 +145,16 @@ export default (webgl: WebGL2) => {
     wrenderBuffer.setData(buffer)
 
     // background
-    quadBuffer.setData(quads.triangles)
+    quadBuffer.setData(quads.boxes)
     webgl.gl.uniform1f(program.vars.hlidType, 0)
     webgl.gl.drawArraysInstanced(webgl.gl.TRIANGLES, 0, 6, buffer.length / 4)
 
     // underlines
     quadBuffer.setData(quads.lines)
     webgl.gl.uniform1f(program.vars.hlidType, 2)
-    webgl.gl.drawArraysInstanced(webgl.gl.LINES, 0, 2, buffer.length / 4)
+    webgl.gl.drawArraysInstanced(webgl.gl.TRIANGLES, 0, 6, buffer.length / 4)
   }
 
-  const updateCellSize = () => {
-    Object.assign(quads, {
-      triangles: new Float32Array([
-        0, 0,
-        cell.width, cell.height,
-        0, cell.height,
-        cell.width, 0,
-        cell.width, cell.height,
-        0, 0,
-      ]),
-      lines: new Float32Array([
-        0, cell.height - cell.padding + 1,
-        cell.width, cell.height - cell.padding + 1,
-      ]),
-    })
-
-    webgl.gl.uniform2f(program.vars.cellSize, cell.width, cell.height)
-  }
 
   const updateColorAtlas = (colorAtlas: HTMLCanvasElement) => {
     webgl.loadCanvasTexture(colorAtlas, webgl.gl.TEXTURE0)
