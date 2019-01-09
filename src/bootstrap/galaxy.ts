@@ -7,7 +7,7 @@
 
 import * as instanceManager from '../core/instance-manager'
 import { requireDir, debounce } from '../support/utils'
-import { resize } from '../core/master-control'
+import * as nvim from '../core/master-control'
 import * as workspace from '../core/workspace'
 import { remote } from 'electron'
 import '../render/redraw'
@@ -21,7 +21,7 @@ import '../render/redraw'
 
 // TODO: temp rows minus 1 because it doesn't fit. we will resize windows
 // individually once we get ext_windows working
-workspace.on('resize', ({ rows, cols }) => resize(cols, rows - 1))
+workspace.onResize(({ rows, cols }) => nvim.resize(cols, rows))
 workspace.resize()
 
 requestAnimationFrame(() => {

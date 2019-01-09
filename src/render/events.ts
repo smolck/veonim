@@ -143,18 +143,15 @@ export const mode_change = ([ , [ m ] ]: [any, [string]]) => {
 // TODO: this parsing logic needs to be revisited
 // needs to handle all nvim formatting options
 const updateFont = () => {
-  const linespace = options.get('linespace')
-  const guifont = options.get('guifont') || ''
-
-  if (!linespace && !guifont) return
+  const lineSpace = options.get('linespace')
+  const guifont = options.get('guifont')
 
   const [ font ] = guifont.match(/(?:\\,|[^,])+/g) || ['']
   const [ face, ...settings] = font.split(':')
   const height = settings.find((s: string) => s.startsWith('h'))
   const size = Math.round(<any>(height || '').slice(1)-0)
-  const lineHeight = linespace / 10
 
-  const changed = workspace.setFont({ face, size, lineHeight })
+  const changed = workspace.updateEditorFont({ face, size, lineSpace })
   if (!changed) return
 
   const atlas = forceRegenerateFontAtlas()
