@@ -175,13 +175,14 @@ export const getHighlight = (id: number) => highlights.get(instances.current, id
 
 export const generateColorLookupAtlas = () => {
   // hlid are 0 indexed, but width starts at 1
-  canvas.width = Math.max(...highlights.keys(instances.current)) + 1
+  const size = highlights.subsize(instances.current)
+  canvas.width = size + 1
   canvas.height = 3
 
   const defaultColors = getCurrentDefaultColors()
   ui.imageSmoothingEnabled = false
 
-  highlights.forEach(instances.current, ([ id, hlgrp ]: any) => {
+  highlights.forEach(instances.current, (hlgrp, id) => {
     const defbg = hlgrp.reverse
       ? defaultColors.foreground
       : defaultColors.background

@@ -303,6 +303,7 @@ export const MapMap = <A, B, C>(initial?: any[]) => {
   const set = (key: A, subkey: B, value: C) => {
     const sub = m.get(key) || new Map()
     sub.set(subkey, value)
+    m.set(key, sub)
   }
 
   const updateObject = (key: A, subkey: B, objectDiff: C) => {
@@ -310,6 +311,7 @@ export const MapMap = <A, B, C>(initial?: any[]) => {
     const previousObject = sub.get(subkey) || {}
     if (!is.object(previousObject)) throw new Error(`MapMap: trying to update object but the current value is not an object`)
     sub.set(subkey, Object.assign(previousObject, objectDiff))
+    m.set(key, sub)
   }
 
   const get = (key: A, subkey: B) => {
@@ -349,7 +351,25 @@ export const MapMap = <A, B, C>(initial?: any[]) => {
     return sub.keys()
   }
 
-  return { set, get, has, remove, updateObject, forEach, size, subsize, keys }
+  const entries = (key: A) => {
+    const sub = m.get(key)
+    if (!sub) return []
+    return [...sub.entries()]
+  }
+
+  return {
+    get raw() { return m },
+    set,
+    get,
+    has,
+    remove,
+    updateObject,
+    forEach,
+    size,
+    subsize,
+    keys,
+    entries,
+  }
 }
 
 export const tryNetConnect = (path: string, interval = 500, timeout = 5e3): Promise<ReturnType<typeof createConnection>> => new Promise((done, fail) => {
