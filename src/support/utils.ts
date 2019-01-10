@@ -343,7 +343,13 @@ export const MapMap = <A, B, C>(initial?: any[]) => {
     return sub.size
   }
 
-  return { set, get, has, remove, updateObject, forEach, size, subsize }
+  const keys = (key: A) => {
+    const sub = m.get(key)
+    if (!sub) return []
+    return sub.keys()
+  }
+
+  return { set, get, has, remove, updateObject, forEach, size, subsize, keys }
 }
 
 export const tryNetConnect = (path: string, interval = 500, timeout = 5e3): Promise<ReturnType<typeof createConnection>> => new Promise((done, fail) => {

@@ -1,5 +1,5 @@
-import { asColor, MapSet, MapMap } from '../support/utils'
 import { instances } from '../core/instance-manager'
+import { asColor, MapMap } from '../support/utils'
 import { pub } from '../messaging/dispatch'
 import api from '../core/instance-api'
 import { EventEmitter } from 'events'
@@ -60,20 +60,10 @@ const defaultAppColors = {
 }
 
 const defaultColors = new Map<number, DefaultColors>()
-
-const getCurrentDefaultColors = (): DefaultColors => {
-  const colors = defaultColors.get(instances.current)
-  if (colors) return colors
-  console.error(`could not get default colors for instance: ${instances.current}`)
-  return defaultAppColors
-}
+const getCurrentDefaultColors = () => defaultColors.get(instances.current) || defaultAppColors
 
 export const colors: DefaultColors = new Proxy(Object.create(null), {
-  set: () => true,
-  get: (_: any, key: string) => {
-    const defaultColors = getCurrentDefaultColors()
-    return Reflect.get(defaultColors, key)
-  },
+  get: (_: any, key: string) => Reflect.get(getCurrentDefaultColors(), key),
 })
 
 // because we skip allocating 1-char strings in msgpack decode. so if we have a 1-char
@@ -81,24 +71,19 @@ export const colors: DefaultColors = new Proxy(Object.create(null), {
 // msgpack-decoder for more info on how this works.
 const sillyString = (s: any): string => typeof s === 'number' ? String.fromCodePoint(s) : s
 
-// TODO: make instance based
-const highlightInfo = new MapSet()
+const highlightInfo = MapMap<number, string, any>()
 const canvas = document.createElement('canvas')
 const ui = canvas.getContext('2d', { alpha: true }) as CanvasRenderingContext2D
-// TODO: make instance based
 
-const highlights = MapMap<number, number, HighlightGroup>()
-
-// TODO: do we need this here?
-// const highlights = new Map<number, HighlightGroup>([
-//   [0, {
-//     background: defaultColors.background,
-//     foreground: defaultColors.foreground,
-//     special: defaultColors.special,
-//     underline: false,
-//     reverse: false,
-//   }]
-// ])
+const highlights = MapMap<number, number, HighlightGroup>([
+  [0, {
+    background: defaultColors.background,
+    foreground: defaultColors.foreground,
+    special: defaultColors.special,
+    underline: false,
+    reverse: false,
+  }]
+])
 
 export const setDefaultColors = (fg: number, bg: number, sp: number) => {
   const defaultColors = getCurrentDefaultColors()
@@ -153,7 +138,7 @@ export const addHighlight = (id: number, attr: Attrs, infos: HighlightInfoEvent[
     const name = sillyString(info.hi_name)
     const builtinName = sillyString(info.ui_name)
 
-    highlightInfo.add(sillyString(info.hi_name), {
+    highlightInfo.set(instances.current, sillyString(info.hi_name), {
       name,
       builtinName,
       hlid: id,
@@ -182,7 +167,7 @@ export const getColorById = (id: number): Color => {
 }
 
 export const highlightLookup = (name: string): HighlightInfo[] => {
-  const info = highlightInfo.get(name)
+  const info = highlightInfo.get(instances.current, name)
   if (!info) return (console.error('highlight info does not exist for:', name), [])
   return [...info]
 }
@@ -190,13 +175,13 @@ export const getHighlight = (id: number) => highlights.get(instances.current, id
 
 export const generateColorLookupAtlas = () => {
   // hlid are 0 indexed, but width starts at 1
-  canvas.width = Math.max(...highlights.keys()) + 1
+  canvas.width = Math.max(...highlights.keys(instances.current)) + 1
   canvas.height = 3
 
   const defaultColors = getCurrentDefaultColors()
   ui.imageSmoothingEnabled = false
 
-  highlights.forEach(instances.current, ([ id, hlgrp ]) => {
+  highlights.forEach(instances.current, ([ id, hlgrp ]: any) => {
     const defbg = hlgrp.reverse
       ? defaultColors.foreground
       : defaultColors.background
