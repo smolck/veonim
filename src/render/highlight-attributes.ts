@@ -64,7 +64,7 @@ const defaultColors = new Map<number, DefaultColors>()
 const getCurrentDefaultColors = (): DefaultColors => {
   const colors = defaultColors.get(instances.current)
   if (colors) return colors
-  console.error(`could not get default colors for instance: ${instances.current}`)
+  // console.error(`could not get default colors for instance: ${instances.current}`)
   return defaultAppColors
 }
 
@@ -190,13 +190,14 @@ export const getHighlight = (id: number) => highlights.get(instances.current, id
 
 export const generateColorLookupAtlas = () => {
   // hlid are 0 indexed, but width starts at 1
-  canvas.width = Math.max(...highlights.keys()) + 1
+  const size = highlights.subsize(instances.current)
+  canvas.width = size + 1
   canvas.height = 3
 
   const defaultColors = getCurrentDefaultColors()
   ui.imageSmoothingEnabled = false
 
-  highlights.forEach(instances.current, ([ id, hlgrp ]) => {
+  highlights.forEach(instances.current, (hlgrp, id) => {
     const defbg = hlgrp.reverse
       ? defaultColors.foreground
       : defaultColors.background

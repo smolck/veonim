@@ -40,7 +40,11 @@ onCreateVim(info => {
     isActive() && ee.emit(`ai.${namespace}.on${pascalCase(method)}`, ...args)
   })
 
-  instance.on.getDefaultColors(async () => ({ ...colors }))
+  instance.on.getDefaultColors(async () => ({
+    background: colors.background,
+    foreground: colors.foreground,
+    special: colors.special,
+  }))
 
   instance.on.clipboardRead(async () => clipboard.readText())
   instance.on.clipboardWrite((text: string) => clipboard.writeText(text))
