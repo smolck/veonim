@@ -45,7 +45,7 @@ const win_pos = (e: any) => {
 
   for (let ix = 1; ix < count; ix++) {
     const [ gridId, windowId, row, col, width, height ] = e[ix]
-    windows.set(windowId, gridId, row, col, width, height)
+    windows.set(windowId, gridId, row, col, width, height, true)
   }
 }
 
@@ -78,7 +78,7 @@ const grid_resize = (e: any) => {
     const [ gridId, width, height ] = e[ix]
     if (gridId === 1) continue
     // grid events show up before win events
-    if (!windows.has(gridId)) windows.set(-1, gridId, 0, 0, width, height)
+    if (!windows.has(gridId)) windows.set(-1, gridId, -1, -1, width, height)
     windows.get(gridId).resizeWindow(width, height)
   }
 }
@@ -237,7 +237,7 @@ onRedraw(redrawEvents => {
     state_cursorVisible ? showCursor() : hideCursor()
     dispatch.pub('redraw')
     if (!winUpdates) return
-    windows.disposeUnpositionedWindows()
+    windows.disposeInvalidWindows()
     windows.layout()
   })
 

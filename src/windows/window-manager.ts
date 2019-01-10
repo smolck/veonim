@@ -11,10 +11,16 @@ export const size = { width: 0, height: 0 }
 export const webgl = CreateWebGLRenderer()
 const windows = new Map<string, Window>()
 const windowsById = new Map<string, Window>()
-const unpositionedWindows = new Set<string>()
+const invalidWindows = new Set<string>()
 const state = { activeGrid: '', activeInstanceGrid: 1 }
 const container = document.getElementById('windows') as HTMLElement
 const webglContainer = document.getElementById('webgl') as HTMLElement
+
+const windowExistsAtPosition = (id: string, row: number, col: number) => {
+  let duplicate = false
+  windows.forEach(win => duplicate = win.id !== id && win.row === row && win.col === col)
+  return duplicate
+}
 
 const superid = (id: number) => `i${instances.current}-${id}`
 
@@ -45,33 +51,45 @@ export const getActive = () => {
   return win
 }
 
-export const set = (id: number, gridId: number, row: number, col: number, width: number, height: number) => {
+export const set = (id: number, gridId: number, row: number, col: number, width: number, height: number, windowPosition = false) => {
   const wid = superid(id)
   const gid = superid(gridId)
   const win = windows.get(gid) || CreateWindow()
   win.setWindowInfo({ id: wid, gridId: gid, row, col, width, height, visible: true })
+
   if (!windows.has(gid)) windows.set(gid, win)
   if (!windowsById.has(wid)) windowsById.set(wid, win)
-  // we only want to add grids that have valid window positions
-  // this happens rarely and i think it might be a nvim bug?
-  if (id < 0) return unpositionedWindows.add(gid)
+
+  // we only want to add grids that have valid window positions and do not
+  // overlap coordinates with other windows. this happens rarely (in term
+  // buffers) and i think it might be a nvim bug maybe...?
+
+  // behavior 1: multiple "win_pos" events reported with the same row,col (e.g. 0,0)
+  if (windowPosition && windowExistsAtPosition(wid, row, col)) return invalidWindows.add(gid)
+
+  // behavior 2: receive "grid_resize" events (gridId > 1) but no followup "win_pos" events
+  if (id < 0) return invalidWindows.add(gid)
+
   container.appendChild(win.element)
-  unpositionedWindows.delete(gid)
+  invalidWindows.delete(gid)
 }
 
 // i made the assumption that a grid_resize event was always going to follow up
 // with a win_pos event. i think however there are grids that never get
 // positioned, so we need to make sure they do not get rendered
-export const disposeUnpositionedWindows = () => {
-  unpositionedWindows.forEach(gid => {
+//
+// we also win_pos events that overlap on the same start_col,start_row indexes
+// this should not happen on ext_multigrid, maybe floating windows but not here
+export const disposeInvalidWindows = () => {
+  invalidWindows.forEach(gid => {
     const win = windows.get(gid)
     if (!win) throw new Error(`window grid does not exist ${gid}`)
     windows.delete(gid)
     windowsById.delete(win.id)
-    unpositionedWindows.delete(gid)
+    invalidWindows.delete(gid)
   })
 
-  unpositionedWindows.delete(superid(-1))
+  invalidWindows.delete(superid(-1))
 }
 
 export const remove = (gridId: number) => {
@@ -82,7 +100,6 @@ export const remove = (gridId: number) => {
   // this helps a bit with flickering
   requestAnimationFrame(() => {
     win.element.remove()
-    // if (container.contains(win.element)) container.removeChild(win.element)
     windowsById.delete(win.getWindowInfo().id)
     windows.delete(superid(gridId))
   })
