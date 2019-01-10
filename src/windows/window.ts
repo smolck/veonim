@@ -60,6 +60,8 @@ export interface Editor {
 export interface Window {
   id: string
   gridId: string
+  row: number
+  col: number
   webgl: WebGLView
   element: HTMLElement
   editor: Editor
@@ -141,6 +143,8 @@ export default () => {
   const api = {
     get id() { return wininfo.id },
     get gridId() { return wininfo.gridId },
+    get row() { return wininfo.row },
+    get col() { return wininfo.col },
     get rows() { return wininfo.height },
     get cols() { return wininfo.width },
     get webgl() { return webgl },
