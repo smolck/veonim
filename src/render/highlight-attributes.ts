@@ -77,9 +77,9 @@ const ui = canvas.getContext('2d', { alpha: true }) as CanvasRenderingContext2D
 
 const highlights = MapMap<number, number, HighlightGroup>([
   [0, {
-    background: defaultColors.background,
-    foreground: defaultColors.foreground,
-    special: defaultColors.special,
+    background: colors.background,
+    foreground: colors.foreground,
+    special: colors.special,
     underline: false,
     reverse: false,
   }]
