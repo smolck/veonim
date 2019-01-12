@@ -59,8 +59,8 @@ const defaultAppColors = {
   special: '#a966ad',
 }
 
-const defaultColors = new Map<number, DefaultColors>()
-const getCurrentDefaultColors = () => defaultColors.get(instances.current) || defaultAppColors
+const defaultColorsMap = new Map<number, DefaultColors>()
+const getCurrentDefaultColors = () => defaultColorsMap.get(instances.current) || defaultAppColors
 
 export const colors: DefaultColors = new Proxy(Object.create(null), {
   get: (_: any, key: string) => Reflect.get(getCurrentDefaultColors(), key),
@@ -74,19 +74,10 @@ const sillyString = (s: any): string => typeof s === 'number' ? String.fromCodeP
 const highlightInfo = MapMap<number, string, any>()
 const canvas = document.createElement('canvas')
 const ui = canvas.getContext('2d', { alpha: true }) as CanvasRenderingContext2D
-
-const highlights = MapMap<number, number, HighlightGroup>([
-  [0, {
-    background: colors.background,
-    foreground: colors.foreground,
-    special: colors.special,
-    underline: false,
-    reverse: false,
-  }]
-])
+const highlights = MapMap<number, number, HighlightGroup>()
 
 export const setDefaultColors = (fg: number, bg: number, sp: number) => {
-  const defaultColors = getCurrentDefaultColors()
+  const defaultColors = defaultColorsMap.get(instances.current) || {} as DefaultColors
 
   const foreground = fg >= 0 ? asColor(fg) : defaultColors.foreground
   const background = bg >= 0 ? asColor(bg) : defaultColors.background
@@ -99,6 +90,7 @@ export const setDefaultColors = (fg: number, bg: number, sp: number) => {
   if (same) return false
 
   Object.assign(defaultColors, { foreground, background, special })
+  defaultColorsMap.set(instances.current, defaultColors)
 
   pub('colors-changed', {
     fg: defaultColors.foreground,
