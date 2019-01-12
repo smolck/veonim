@@ -413,7 +413,6 @@ autocmd.InsertEnter(() => watchers.events.emit('insertEnter'))
 autocmd.InsertLeave(() => watchers.events.emit('insertLeave'))
 autocmd.OptionSet((name: string, value: any) => options.set(name, value))
 autocmd.FileType((_, filetype: string) => watchers.events.emit('filetype', filetype))
-autocmd.SourcePre(sourcedFile => watchers.events.emit('vimrcLoad', sourcedFile))
 
 autocmd.TextChanged(revision => {
   state.revision = revision-0
@@ -427,8 +426,6 @@ autocmd.TextChangedI(revision => {
 
 // TODO: i think we should just determine this from render events
 autocmd.WinEnter((id: number) => watchers.events.emit('winEnter', id))
-
-const onVimrcLoad = (fn: (file: string) => void) => watchers.events.on('vimrcLoad', fn)
 
 const fromId = {
   buffer: (id: number): Buffer => Buffer(id),
@@ -566,7 +563,7 @@ const exportAPI = { state, watchState, onStateChange, onStateValue,
   untilStateValue, cmd, cmdOut, expr, call, feedkeys, normal, callAtomic,
   onAction, getCurrentLine, jumpTo, jumpToProjectFile, systemAction, current,
   g, on, untilEvent, applyPatches, buffers, windows, tabs, options:
-  readonlyOptions, onVimrcLoad, Buffer: fromId.buffer, Window: fromId.window,
+  readonlyOptions, Buffer: fromId.buffer, Window: fromId.window,
   Tabpage: fromId.tabpage, getKeymap, getColorByName }
 
 export default exportAPI

@@ -76,7 +76,6 @@ const autocmds = {
   OptionSet: `expand('<amatch>'), v:option_new, v:option_old`,
   FileType: `bufnr(expand('<afile>')), expand('<amatch>')`,
   WinEnter: `win_getid()`,
-  SourcePre: `expand('<afile>')`,
 }
 
 export type Autocmd = typeof autocmds

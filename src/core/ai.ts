@@ -20,9 +20,10 @@ nvim.watchState.colorscheme((color: string) => colorizer.call.setColorScheme(col
 
 let completionEnabled = true
 nvim.options.completefunc.then(func => completionEnabled = func === 'VeonimComplete')
-nvim.onVimrcLoad(() => {
-  nvim.options.completefunc.then(func => completionEnabled = func === 'VeonimComplete')
-})
+// TODO: how to detect change on vimrc
+// nvim.onVimrcLoad(() => {
+//   nvim.options.completefunc.then(func => completionEnabled = func === 'VeonimComplete')
+// })
 
 nvim.on.cursorMoveInsert(async () => {
   // tried to get the line contents from the render grid buffer, but it appears
