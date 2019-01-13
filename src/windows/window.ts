@@ -63,6 +63,7 @@ export interface Window {
   row: number
   col: number
   webgl: WebGLView
+  visible: boolean
   element: HTMLElement
   editor: Editor
   rows: number
@@ -147,6 +148,7 @@ export default () => {
     get col() { return wininfo.col },
     get rows() { return wininfo.height },
     get cols() { return wininfo.width },
+    get visible() { return wininfo.visible },
     get webgl() { return webgl },
     get element() { return container },
   } as Window

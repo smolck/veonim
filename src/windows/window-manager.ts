@@ -18,7 +18,10 @@ const webglContainer = document.getElementById('webgl') as HTMLElement
 
 const windowExistsAtPosition = (id: string, row: number, col: number) => {
   let duplicate = false
-  windows.forEach(win => duplicate = win.id !== id && win.row === row && win.col === col)
+  windows.forEach(win => duplicate = win.id !== id
+    && win.visible
+    && win.row === row
+    && win.col === col)
   return duplicate
 }
 
