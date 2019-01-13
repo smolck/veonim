@@ -83,7 +83,10 @@ nvim.on.cursorMove(async () => {
 
 export const runCodeAction = (action: Command) => executeCommand(nvim.state, action)
 
-nvim.onAction('code-action', () => ui.codeAction.show(nvim.current.cursor.row, nvim.current.cursor.col, cache.actions))
+nvim.onAction('code-action', async () => {
+  const { row, col } = await nvim.getCursorPosition()
+  ui.codeAction.show(row, col, cache.actions)
+})
 
 onDiagnostics(({ diagnostics }) => {
   cache.problems = diagnostics
