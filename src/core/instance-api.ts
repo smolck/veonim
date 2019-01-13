@@ -46,6 +46,11 @@ onCreateVim(info => {
     special: colors.special,
   }))
 
+  instance.on.getCursorPosition(async () => {
+    const { cursor: { row, col } } = require('../core/cursor')
+    return { row, col }
+  })
+
   instance.on.clipboardRead(async () => clipboard.readText())
   instance.on.clipboardWrite((text: string) => clipboard.writeText(text))
 })

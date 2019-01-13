@@ -40,10 +40,13 @@ const cache: Cache = {
   activeCompletion: '',
 }
 
-const calcMenuPosition = (startIndex: number, column: number) => ({
-  row: nvim.current.cursor.row,
-  col: nvim.current.cursor.col - (column - Math.max(0, startIndex)),
-})
+const calcMenuPosition = async (startIndex: number, column: number) => {
+  const cursorPosition = await nvim.getCursorPosition()
+  return {
+    row: cursorPosition.row,
+    col: cursorPosition.col - (column - Math.max(0, startIndex)),
+  }
+}
 
 const orderCompletions = (m: CompletionOption[], query: string) => m
   .slice()
@@ -140,8 +143,10 @@ const showCompletionsRaw = (column: number, query: string, startIndex: number, l
     const options = orderCompletions(transformedCompletions, query)
     nvim.g.veonim_completions = options.map(m => m.insertText)
     nvim.g.veonim_complete_pos = startIndex
-    const { row, col } = calcMenuPosition(startIndex, column)
-    ui.completions.show({ row, col, options })
+
+    calcMenuPosition(startIndex, column).then(({ row, col }) => {
+      ui.completions.show({ row, col, options })
+    })
   }
 
 // TODO: merge global semanticCompletions with keywords?

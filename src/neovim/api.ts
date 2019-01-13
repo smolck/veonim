@@ -1,9 +1,9 @@
 import { VimOption, BufferEvent, HyperspaceCoordinates, BufferType, BufferHide, BufferOption, Buffer, Window, Tabpage, GenericCallback, BufferInfo, Keymap } from '../neovim/types'
 import { Api, ExtContainer, Prefixes, Buffer as IBuffer, Window as IWindow, Tabpage as ITabpage } from '../neovim/protocol'
 import { is, onFnCall, onProp, prefixWith, uuid, simplifyPath } from '../support/utils'
+import { workerData, request as requestFromUI } from '../messaging/worker-client'
 import ConnectMsgpackRPC from '../messaging/msgpack-transport'
 import { normalizeVimMode} from '../support/neovim-utils'
-import { workerData } from '../messaging/worker-client'
 import { Functions } from '../neovim/function-types'
 import { Autocmds } from '../neovim/startup'
 import CreateVimState from '../neovim/state'
@@ -242,13 +242,9 @@ const tabs = {
 
 const isFunc = (m: any) => is.function(m) || is.asyncfunction(m)
 
+const getCursorPosition = () => requestFromUI.getCursorPosition()
+
 const current = {
-  get cursor() {
-    return {
-      row: state.line - state.editorTopLine + 1,
-      col: state.column
-    }
-  },
   get buffer(): Buffer {
     const promise = as.buf(req.core.getCurrentBuf())
 
@@ -564,7 +560,7 @@ const exportAPI = { state, watchState, onStateChange, onStateValue,
   onAction, getCurrentLine, jumpTo, jumpToProjectFile, systemAction, current,
   g, on, untilEvent, applyPatches, buffers, windows, tabs, options:
   readonlyOptions, Buffer: fromId.buffer, Window: fromId.window,
-  Tabpage: fromId.tabpage, getKeymap, getColorByName }
+  Tabpage: fromId.tabpage, getKeymap, getColorByName, getCursorPosition }
 
 export default exportAPI
 export type NeovimAPI = typeof exportAPI

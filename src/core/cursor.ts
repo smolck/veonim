@@ -1,7 +1,7 @@
 import * as windows from '../windows/window-manager'
 import { partialFill, translate } from '../ui/css'
 import { paddingX } from '../windows/window'
-import { cell } from './workspace'
+import { cell } from '../core/workspace'
 
 export enum CursorShape {
   block,
