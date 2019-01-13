@@ -45,7 +45,7 @@ const win_pos = (e: any) => {
 
   for (let ix = 1; ix < count; ix++) {
     const [ gridId, windowId, row, col, width, height ] = e[ix]
-    windows.set(windowId, gridId, row, col, width, height, true)
+    windows.set(windowId, gridId, row, col, width, height)
   }
 }
 

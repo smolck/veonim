@@ -16,15 +16,6 @@ const state = { activeGrid: '', activeInstanceGrid: 1 }
 const container = document.getElementById('windows') as HTMLElement
 const webglContainer = document.getElementById('webgl') as HTMLElement
 
-const windowExistsAtPosition = (id: string, row: number, col: number) => {
-  let duplicate = false
-  windows.forEach(win => duplicate = win.id !== id
-    && win.visible
-    && win.row === row
-    && win.col === col)
-  return duplicate
-}
-
 const superid = (id: number) => `i${instances.current}-${id}`
 
 const getWindowById = (windowId: number) => {
@@ -54,7 +45,7 @@ export const getActive = () => {
   return win
 }
 
-export const set = (id: number, gridId: number, row: number, col: number, width: number, height: number, windowPosition = false) => {
+export const set = (id: number, gridId: number, row: number, col: number, width: number, height: number) => {
   const wid = superid(id)
   const gid = superid(gridId)
   const win = windows.get(gid) || CreateWindow()
@@ -68,7 +59,8 @@ export const set = (id: number, gridId: number, row: number, col: number, width:
   // buffers) and i think it might be a nvim bug maybe...?
 
   // behavior 1: multiple "win_pos" events reported with the same row,col (e.g. 0,0)
-  if (windowPosition && windowExistsAtPosition(wid, row, col)) return invalidWindows.add(gid)
+  // TODO: this is broken. need to check at the redraw level
+  // if (windowPosition && windowExistsAtPosition(wid, row, col)) return invalidWindows.add(gid)
 
   // behavior 2: receive "grid_resize" events (gridId > 1) but no followup "win_pos" events
   if (id < 0) return invalidWindows.add(gid)
