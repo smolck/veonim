@@ -52,6 +52,7 @@
     "all-other-unzip-libs-suck-linux": "0.0.2"
   },
   "dependencies": {
+    "diff-match-patch": "1.0.4",
     "fuzzaldrin-plus": "0.4.1",
     "hyperapp": "1.2.9",
     "hyperapp-feather": "0.4.0",
@@ -62,6 +63,7 @@
   "devDependencies": {
     "@deomitrus/hyperapp-redux-devtools": "1.2.0",
     "@medv/finder": "1.1.0",
+    "@types/diff-match-patch": "1.0.32",
     "@types/fuzzaldrin-plus": "0.0.1",
     "@types/node": "9.4.0",
     "@types/webgl2": "0.0.4",
