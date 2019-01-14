@@ -1,6 +1,6 @@
 {
   "name": "veonim",
-  "version": "0.20.0-alpha.1",
+  "version": "0.20.0-alpha.2",
   "description": "simple modal IDE built on neovim",
   "main": "build/bootstrap/main.js",
   "scripts": {
@@ -37,7 +37,7 @@
   },
   "homepage": "https://github.com/veonim/veonim#readme",
   "bindeps-darwin": {
-    "@veonim/neovim-mac": "0.0.0-alpha.92",
+    "@veonim/neovim-mac": "0.4.0-alpha1",
     "@veonim/ripgrep-mac": "0.0.1",
     "all-other-unzip-libs-suck-mac": "0.0.2"
   },
@@ -52,6 +52,7 @@
     "all-other-unzip-libs-suck-linux": "0.0.2"
   },
   "dependencies": {
+    "diff-match-patch": "1.0.4",
     "fuzzaldrin-plus": "0.4.1",
     "hyperapp": "1.2.9",
     "hyperapp-feather": "0.4.0",
@@ -62,6 +63,7 @@
   "devDependencies": {
     "@deomitrus/hyperapp-redux-devtools": "1.2.0",
     "@medv/finder": "1.1.0",
+    "@types/diff-match-patch": "1.0.32",
     "@types/fuzzaldrin-plus": "0.0.1",
     "@types/node": "9.4.0",
     "@types/webgl2": "0.0.4",

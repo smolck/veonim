@@ -1,11 +1,15 @@
 import TextDocumentManager from '../neovim/text-document-manager'
 import { filter as fuzzy } from 'fuzzaldrin-plus'
 import { on } from '../messaging/worker-client'
+import { patchAllTexts } from '../support/diff'
 import nvim from '../neovim/api'
 
 const tdm = TextDocumentManager(nvim)
 const keywords = new Map<string, string[]>()
-const last = { file: '', changedLine: '' }
+const insertChanges = {
+  file: '',
+  changes: [] as string[],
+}
 let isInsertMode = false
 
 const addKeywords = (file: string, words: string[]) => {
@@ -17,21 +21,9 @@ const addKeywords = (file: string, words: string[]) => {
 }
 
 const harvestInsertMode = (file: string, textLines: string[]) => {
-  const lastLine = textLines[textLines.length - 1]
-  const lastChar = lastLine[lastLine.length - 1]
-  Object.assign(last, { file, changedLine: lastLine })
-
-  const lastCharIsWord = /\w/.test(lastChar)
-  const linesWithWords = textLines.map(line => line.match(/\w+/g) || [])
-
-  const lastLineWithWords = linesWithWords[linesWithWords.length - 1]
-
-  if (lastCharIsWord) lastLineWithWords.pop()
-
-  const words = [...new Set(...linesWithWords)]
-  const sizeableWords = words.filter(w => w.length > 2)
-
-  addKeywords(file, sizeableWords)
+  const changedText = textLines.join('\n')
+  insertChanges.file = file
+  insertChanges.changes.push(changedText)
 }
 
 const harvest = (file: string, textLines: string[]) => {
@@ -57,8 +49,10 @@ const harvest = (file: string, textLines: string[]) => {
 nvim.on.insertEnter(() => isInsertMode = true)
 nvim.on.insertLeave(async () => {
   isInsertMode = false
-  const words = last.changedLine.match(/\w+/g) || []
-  addKeywords(last.file, words)
+  const changedText = patchAllTexts(insertChanges.changes)
+  const words = changedText.match(/\w+/g) || []
+  addKeywords(insertChanges.file, words)
+  insertChanges.changes = []
 })
 
 tdm.on.didOpen(({ name, textLines }) => harvest(name, textLines))

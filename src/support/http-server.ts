@@ -22,6 +22,7 @@ const attemptStart = (port = 8001, srv = createServer()): Promise<HttpServer> =>
     port: srv.address().port,
     onRequest: cb => srv.on('request', cb),
     onJsonRequest: cb => srv.on('request', (req: IncomingMessage, res: ServerResponse) => {
+      if (req.headers.host !== `localhost:${port}`) return console.warn(`blocked request with invalid host header`)
       let buf = ''
       req.on('data', m => buf += m)
       req.on('end', () => { try { cb(JSON.parse(buf), reply(res)) } catch (e) {} })

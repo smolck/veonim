@@ -1,5 +1,7 @@
-import { asColor, MapSet, CreateTask } from '../support/utils'
+import { instances } from '../core/instance-manager'
+import { asColor, MapMap } from '../support/utils'
 import { pub } from '../messaging/dispatch'
+import api from '../core/instance-api'
 import { EventEmitter } from 'events'
 
 const ee = new EventEmitter()
@@ -15,6 +17,11 @@ export interface Attrs {
   undercurl?: boolean
   cterm_fg?: number
   cterm_bg?: number
+}
+
+interface Color {
+  foreground?: string
+  background?: string
 }
 
 interface HighlightGroup {
@@ -40,16 +47,23 @@ interface HighlightInfo {
   hlid: number
 }
 
-const defaultColors = {
-  background: '#2d2d2d',
-  foreground: '#dddddd',
-  special: '#ef5188',
+interface DefaultColors {
+  background: string
+  foreground: string
+  special: string
 }
 
-const _colors = { ...defaultColors }
-export const colors = new Proxy(_colors, {
-  set: () => true,
-  get: (_: any, key: string) => Reflect.get(_colors, key),
+const defaultAppColors = {
+  background: '#2d2d2d',
+  foreground: '#dddddd',
+  special: '#a966ad',
+}
+
+const defaultColorsMap = new Map<number, DefaultColors>()
+const getCurrentDefaultColors = () => defaultColorsMap.get(instances.current) || defaultAppColors
+
+export const colors: DefaultColors = new Proxy(Object.create(null), {
+  get: (_: any, key: string) => Reflect.get(getCurrentDefaultColors(), key),
 })
 
 // because we skip allocating 1-char strings in msgpack decode. so if we have a 1-char
@@ -57,20 +71,14 @@ export const colors = new Proxy(_colors, {
 // msgpack-decoder for more info on how this works.
 const sillyString = (s: any): string => typeof s === 'number' ? String.fromCodePoint(s) : s
 
-const highlightInfo = new MapSet()
+const highlightInfo = MapMap<number, string, any>()
 const canvas = document.createElement('canvas')
 const ui = canvas.getContext('2d', { alpha: true }) as CanvasRenderingContext2D
-const highlights = new Map<number, HighlightGroup>([
-  [0, {
-    background: defaultColors.background,
-    foreground: defaultColors.foreground,
-    special: defaultColors.special,
-    underline: false,
-    reverse: false,
-  }]
-])
+const highlights = MapMap<number, number, HighlightGroup>()
 
 export const setDefaultColors = (fg: number, bg: number, sp: number) => {
+  const defaultColors = defaultColorsMap.get(instances.current) || {} as DefaultColors
+
   const foreground = fg >= 0 ? asColor(fg) : defaultColors.foreground
   const background = bg >= 0 ? asColor(bg) : defaultColors.background
   const special = sp >= 0 ? asColor(sp) : defaultColors.special
@@ -82,20 +90,15 @@ export const setDefaultColors = (fg: number, bg: number, sp: number) => {
   if (same) return false
 
   Object.assign(defaultColors, { foreground, background, special })
-
-  Object.assign(_colors, {
-    foreground: defaultColors.foreground,
-    background: defaultColors.background,
-    special: defaultColors.special,
-  })
+  defaultColorsMap.set(instances.current, defaultColors)
 
   pub('colors-changed', {
-    fg: _colors.foreground,
-    bg: _colors.background,
+    fg: defaultColors.foreground,
+    bg: defaultColors.background,
   })
 
   // hlid 0 -> default highlight group
-  highlights.set(0, {
+  highlights.set(instances.current, 0, {
     foreground,
     background,
     special,
@@ -115,7 +118,7 @@ export const addHighlight = (id: number, attr: Attrs, infos: HighlightInfoEvent[
     ? asColor(attr.foreground)
     : asColor(attr.background)
 
-  highlights.set(id, {
+  highlights.set(instances.current, id, {
     foreground,
     background,
     special: asColor(attr.special),
@@ -123,52 +126,55 @@ export const addHighlight = (id: number, attr: Attrs, infos: HighlightInfoEvent[
     reverse: !!attr.reverse,
   })
 
-  infos.forEach(info => highlightInfo.add(sillyString(info.hi_name), {
-    hlid: id,
-    id: info.id,
-    kind: info.kind,
-    name: sillyString(info.hi_name),
-    builtinName: sillyString(info.ui_name),
-  }))
+  infos.forEach(info => {
+    const name = sillyString(info.hi_name)
+    const builtinName = sillyString(info.ui_name)
+
+    highlightInfo.set(instances.current, sillyString(info.hi_name), {
+      name,
+      builtinName,
+      hlid: id,
+      id: info.id,
+      kind: info.kind,
+    })
+  })
 
   ee.emit('highlight-info.added')
 }
 
-export const highlightLookupWhenExist = async (name: string): Promise<HighlightInfo[]> => {
-  const info = highlightInfo.get(name)
-  if (info) return [...info]
-  const lookupTask = CreateTask()
-
-  const checkIfExist = () => {
-    const info = highlightInfo.get(name)
-    if (!info) return
-    lookupTask.done([...info])
-    ee.removeListener('highlight-info.added', checkIfExist)
+export const getColorByName = async (name: string): Promise<Color> => {
+  const { foreground, background } = await api.nvim.getColorByName(name)
+  return {
+    foreground: asColor(foreground),
+    background: asColor(background),
   }
+}
 
-  ee.on('highlight-info.added', checkIfExist)
-  return lookupTask.promise as any
+export const getColorById = (id: number): Color => {
+  const hlgrp = highlights.get(instances.current, id) || {} as HighlightGroup
+  return {
+    foreground: hlgrp.foreground,
+    background: hlgrp.background,
+  }
 }
 
 export const highlightLookup = (name: string): HighlightInfo[] => {
-  const info = highlightInfo.get(name)
+  const info = highlightInfo.get(instances.current, name)
   if (!info) return (console.error('highlight info does not exist for:', name), [])
   return [...info]
 }
-export const getHighlight = (id: number) => highlights.get(id)
-export const getBackground = (id: number) => {
-  const { background } = highlights.get(id) || {} as HighlightGroup
-  return background || highlights.get(0)!.background
-}
+export const getHighlight = (id: number) => highlights.get(instances.current, id)
 
 export const generateColorLookupAtlas = () => {
   // hlid are 0 indexed, but width starts at 1
-  canvas.width = Math.max(...highlights.keys()) + 1
+  const size = highlights.subsize(instances.current)
+  canvas.width = size + 1
   canvas.height = 3
 
+  const defaultColors = getCurrentDefaultColors()
   ui.imageSmoothingEnabled = false
 
-  ;[...highlights.entries()].forEach(([ id, hlgrp ]) => {
+  highlights.forEach(instances.current, (hlgrp, id) => {
     const defbg = hlgrp.reverse
       ? defaultColors.foreground
       : defaultColors.background

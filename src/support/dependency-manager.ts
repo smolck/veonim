@@ -16,5 +16,6 @@ const refreshDependencies = async () => {
   installPlugins(plugins)
 }
 
-nvim.onVimrcLoad(refreshDependencies)
+// TODO: how to detect change on vimrc?
+// nvim.onVimrcLoad(refreshDependencies)
 refreshDependencies()

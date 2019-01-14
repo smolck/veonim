@@ -1,16 +1,26 @@
 import { addHighlight, generateColorLookupAtlas, setDefaultColors } from '../render/highlight-attributes'
 import { getCharIndex, getUpdatedFontAtlasMaybe } from '../render/font-texture-atlas'
-import { moveCursor, hideCursor } from '../core/cursor'
+import { moveCursor, hideCursor, showCursor } from '../core/cursor'
 import * as windows from '../windows/window-manager'
 import * as dispatch from '../messaging/dispatch'
 import { onRedraw } from '../core/master-control'
 import * as renderEvents from '../render/events'
 
 let dummyData = new Float32Array()
+let state_cursorVisible = true
+
+// TODO: console.debug temp until i figure out the redraw bug
 
 const default_colors_set = (e: any) => {
-  const [ fg, bg, sp ] = e[1]
-  const defaultColorsChanged = setDefaultColors(fg, bg, sp)
+  const count = e.length
+  let defaultColorsChanged = false
+
+  for (let ix = 1; ix < count; ix++) {
+    const [ fg, bg, sp ] = e[ix]
+    if (fg < 0 && bg < 0 && sp < 0) continue
+    defaultColorsChanged = setDefaultColors(fg, bg, sp)
+  }
+
   if (!defaultColorsChanged) return
 
   const colorAtlas = generateColorLookupAtlas()
@@ -30,6 +40,7 @@ const hl_attr_define = (e: any) => {
 }
 
 const win_pos = (e: any) => {
+  console.debug('win_pos', e)
   const count = e.length
 
   for (let ix = 1; ix < count; ix++) {
@@ -38,9 +49,13 @@ const win_pos = (e: any) => {
   }
 }
 
-const win_hide = (e: any) => windows.hide(e.slice(1))
+const win_hide = (e: any) => {
+  console.debug('win_hide', e)
+  windows.hide(e.slice(1))
+}
 
 const grid_clear = ([ , [ gridId ] ]: any) => {
+  console.debug('grid_clear', gridId)
   if (gridId === 1) return
   if (!windows.has(gridId)) return
 
@@ -50,39 +65,34 @@ const grid_clear = ([ , [ gridId ] ]: any) => {
 }
 
 const grid_destroy = ([ , [ gridId ] ]: any) => {
+  console.debug('grid_destroy', gridId)
   if (gridId === 1) return
   windows.remove(gridId)
 }
 
 const grid_resize = (e: any) => {
+  console.debug('grid_resize', e)
   const count = e.length
-
-  // TODO: dedup resize events for the same grid.
-  // we get dups per grid, like
-  // [1, 40, 100]
-  // [1, 100, 40]
-  // [2, 40, 100]
-  // [2, 100, 40]
-  // [2, 100, 30]
-  // [2, 100, 100]
-  // only take the last resize value. resizing is kinda expensive anyhoo
 
   for (let ix = 1; ix < count; ix++) {
     const [ gridId, width, height ] = e[ix]
     if (gridId === 1) continue
     // grid events show up before win events
-    if (!windows.has(gridId)) windows.set(-1, gridId, 0, 0, width, height)
+    if (!windows.has(gridId)) windows.set(-1, gridId, -1, -1, width, height)
     windows.get(gridId).resizeWindow(width, height)
   }
 }
 
 const grid_cursor_goto = ([ , [ gridId, row, col ] ]: any) => {
-  if (gridId === 1) return hideCursor()
+  console.debug('grid_cursor_goto', gridId, row, col)
+  state_cursorVisible = gridId !== 1
+  if (gridId === 1) return
   windows.setActiveGrid(gridId)
   moveCursor(gridId, row, col)
 }
 
 const grid_scroll = ([ , [ gridId, top, bottom, /*left*/, /*right*/, amount ] ]: any) => {
+  console.debug('grid_scroll', gridId, top, bottom, amount)
   if (gridId === 1) return
   // we make the assumption that left & right will always be
   // at the window edges (left == 0 && right == window.width)
@@ -216,13 +226,18 @@ onRedraw(redrawEvents => {
     else if (e === 'wildmenu_hide') renderEvents.wildmenu_hide()
     else if (e === 'msg_show') renderEvents.msg_show(ev)
     else if (e === 'msg_showmode') renderEvents.msg_showmode(ev)
+    else if (e === 'msg_showcmd') renderEvents.msg_showcmd(ev)
+    else if (e === 'msg_history_show') renderEvents.msg_history_show(ev)
+    else if (e === 'msg_clear') renderEvents.msg_clear(ev)
+    else if (e === 'msg_ruler') renderEvents.msg_ruler(ev)
     else if (e === 'set_title') renderEvents.set_title(ev)
   }
 
   requestAnimationFrame(() => {
+    state_cursorVisible ? showCursor() : hideCursor()
     dispatch.pub('redraw')
     if (!winUpdates) return
-    windows.disposeUnpositionedWindows()
+    windows.disposeInvalidWindows()
     windows.layout()
   })
 

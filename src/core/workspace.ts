@@ -1,12 +1,12 @@
-import { Watchers, merge, throttle } from '../support/utils'
+import { merge, throttle } from '../support/utils'
 import robotoSizes from '../support/roboto-sizes'
-import * as electron from 'electron'
+import { EventEmitter } from 'events'
 import { setVar } from '../ui/css'
 
-export interface SetFontParams {
+interface UpdateEditorFontParams {
   face?: string,
   size?: number,
-  lineHeight?: number,
+  lineSpace?: number,
 }
 
 export interface Cell {
@@ -18,7 +18,7 @@ export interface Cell {
 export interface Font {
   face: string
   size: number
-  lineHeight: number
+  lineSpace: number
 }
 
 export interface Pad {
@@ -26,10 +26,13 @@ export interface Pad {
   y: number
 }
 
-const watchers = new Watchers()
+const ee = new EventEmitter()
 const container = document.getElementById('workspace') as HTMLElement
 const sandboxCanvas = document.createElement('canvas')
 const canvas = sandboxCanvas.getContext('2d', { alpha: false }) as CanvasRenderingContext2D
+const DEFAULT_FONT = 'Roboto Mono Builtin'
+const DEFAULT_FONT_SIZE = 14
+const DEFAULT_LINESPACE = 14 / 2
 
 merge(container.style, {
   display: 'flex',
@@ -39,9 +42,9 @@ merge(container.style, {
 })
 
 export const font: Font = {
-  face: 'Roboto Mono Builtin',
-  size: 14,
-  lineHeight: 1.5,
+  face: DEFAULT_FONT,
+  size: DEFAULT_FONT_SIZE,
+  lineSpace: DEFAULT_LINESPACE,
 }
 
 export const pad: Pad = {
@@ -67,35 +70,48 @@ const getCharWidth = (font: string, size: number): number => {
   const possibleSize = Math.floor(canvas.measureText('m').width)
   // roboto mono is built-in. because font-loading is a bit slow,
   // we have precomputed most common font sizes in advance
-  if (font !== 'Roboto Mono Builtin' && (size > 3 || size < 54)) return possibleSize
+  if (font !== DEFAULT_FONT && (size > 3 || size < 54)) return possibleSize
 
   const floatWidth = Reflect.get(robotoSizes, size + '')
   return floatWidth || possibleSize
 }
 
-export const setFont = ({ size, lineHeight, face = font.face }: SetFontParams) => {
-  const fontSize = !size || isNaN(size) ? font.size : size
-  const fontLineHeight = !lineHeight || isNaN(lineHeight) ? font.lineHeight : lineHeight
-
+const setFont = (face: string, size: number, lineSpace: number) => {
   setVar('font', face)
-  setVar('font-size', fontSize)
-  setVar('line-height', fontLineHeight)
+  setVar('font-size', size)
+  setVar('line-height', lineSpace / size)
 
-  canvas.font = `${fontSize}px ${face}`
+  canvas.font = `${size}px ${face}`
 
-  merge(font, { size: fontSize, face, lineHeight: fontLineHeight })
-  merge(cell, {
-    width: getCharWidth(face, fontSize),
-    height: Math.floor(fontSize * fontLineHeight)
+  Object.assign(font, { face, size, lineSpace })
+
+  Object.assign(cell, {
+    width: getCharWidth(face, size),
+    height: Math.floor(size + lineSpace)
   })
 
   pad.x = Math.round(cell.width / 2)
   pad.y = pad.x + 4
 
   cell.padding = Math.floor((cell.height - font.size) / 2)
+}
 
-  watchers.notify('font', { ...font })
-  watchers.notify('cell', { ...cell })
+export const updateEditorFont = ({ size, lineSpace, face }: UpdateEditorFontParams) => {
+  const fontFace = face || DEFAULT_FONT
+  const fontSize = !size || isNaN(size)
+    ? face ? font.size : DEFAULT_FONT_SIZE
+    : size
+  const fontLineSpace = !lineSpace || isNaN(lineSpace)
+    ? DEFAULT_LINESPACE
+    : lineSpace
+
+  const same = font.face === fontFace
+    && font.size === fontSize
+    && font.lineSpace === fontLineSpace
+
+  if (same) return false
+  setFont(fontFace, fontSize, fontLineSpace)
+  return true
 }
 
 export const resize = () => {
@@ -107,24 +123,17 @@ export const resize = () => {
     cols: Math.floor(width / cell.width) - 2,
   })
 
-  watchers.notify('resize', size)
+  ee.emit('resize', size)
 }
 
 export const redoResize = (rows: number, cols: number) => {
   merge(size, { rows, cols })
-  watchers.notify('resize', size)
+  ee.emit('resize', size)
 }
 
-export const on = (event: string, handler: (data: any) => void) => watchers.add(event, handler)
+export const onResize = (fn: (size: { rows: number, cols: number }) => void) => ee.on('resize', fn)
 
-setFont({})
+setFont(DEFAULT_FONT, DEFAULT_FONT_SIZE, font.lineSpace)
 setImmediate(() => resize())
 
 window.addEventListener('resize', throttle(() => resize(), 150))
-window.matchMedia('screen and (min-resolution: 2dppx)').addListener(() => {
-  resize()
-  watchers.notify('device-pixel-ratio-changed')
-})
-electron.screen.on('display-added', () => resize())
-electron.screen.on('display-removed', () => resize())
-electron.screen.on('display-metrics-changed', () => resize())

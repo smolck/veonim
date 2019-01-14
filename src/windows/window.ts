@@ -39,7 +39,8 @@ export interface WindowOverlay {
 }
 
 interface PosOpts {
-  within: boolean
+  within?: boolean
+  padding?: boolean
 }
 
 interface HighlightCell {
@@ -59,7 +60,10 @@ export interface Editor {
 export interface Window {
   id: string
   gridId: string
+  row: number
+  col: number
   webgl: WebGLView
+  visible: boolean
   element: HTMLElement
   editor: Editor
   rows: number
@@ -95,8 +99,8 @@ const edgeDetection = (el: HTMLElement) => {
   return edges
 }
 
-const paddingX = 5
-const paddingY = 4
+export const paddingX = 5
+export const paddingY = 4
 
 export default () => {
   const wininfo: WindowInfo = { id: '0', gridId: '0', row: 0, col: 0, width: 0, height: 0, visible: true }
@@ -140,8 +144,11 @@ export default () => {
   const api = {
     get id() { return wininfo.id },
     get gridId() { return wininfo.gridId },
+    get row() { return wininfo.row },
+    get col() { return wininfo.col },
     get rows() { return wininfo.height },
     get cols() { return wininfo.width },
+    get visible() { return wininfo.visible },
     get webgl() { return webgl },
     get element() { return container },
   } as Window
@@ -165,13 +172,19 @@ export default () => {
   api.getWindowInfo = () => ({ ...wininfo })
 
   api.positionToWorkspacePixels = (row, col, fuckTypescript) => {
-    const { within = false } = fuckTypescript || {} as PosOpts
-    const winX = Math.floor(col * cell.width) + paddingX
-    const winY = Math.floor(row * cell.height) + paddingY
-    return {
-      x: (within ? 0 : layout.x) + winX,
-      y: (within ? 0 : layout.y) + winY,
-    }
+    const { within = false, padding = true } = fuckTypescript || {} as PosOpts
+    const winX = Math.floor(col * cell.width)
+    const winY = Math.floor(row * cell.height)
+
+    const x = winX
+      + (padding ? paddingX : 0)
+      + (within ? 0 : layout.x)
+
+    const y = winY
+      + (padding ? paddingY : 0)
+      + (within ? 0 : layout.y)
+
+    return { x, y }
   }
 
   api.getWindowSize = () => ({
@@ -282,14 +295,20 @@ export default () => {
       return results
     },
     positionToEditorPixels: (line, col, fuckTypescript) => {
-      const { within = false } = fuckTypescript || {} as PosOpts
+      const { within = false, padding = true } = fuckTypescript || {} as PosOpts
       const row = line - instanceAPI.nvim.state.editorTopLine
-      const winX = Math.floor(col * cell.width) + paddingX
-      const winY = Math.floor(row * cell.height) + paddingY
-      return {
-        x: (within ? 0 : layout.x) + winX,
-        y: (within ? 0 : layout.y) + winY,
-      }
+      const winX = Math.floor(col * cell.width)
+      const winY = Math.floor(row * cell.height)
+
+      const x = winX
+        + (padding ? paddingX : 0)
+        + (within ? 0 : layout.x)
+
+      const y = winY
+        + (padding ? paddingY : 0)
+        + (within ? 0 : layout.y)
+
+      return { x, y }
     },
   }
 

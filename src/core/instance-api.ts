@@ -40,7 +40,16 @@ onCreateVim(info => {
     isActive() && ee.emit(`ai.${namespace}.on${pascalCase(method)}`, ...args)
   })
 
-  instance.on.getDefaultColors(async () => ({ ...colors }))
+  instance.on.getDefaultColors(async () => ({
+    background: colors.background,
+    foreground: colors.foreground,
+    special: colors.special,
+  }))
+
+  instance.on.getCursorPosition(async () => {
+    const { cursor: { row, col } } = require('../core/cursor')
+    return { row, col }
+  })
 
   instance.on.clipboardRead(async () => clipboard.readText())
   instance.on.clipboardWrite((text: string) => clipboard.writeText(text))
@@ -99,6 +108,7 @@ const nvimCall: Functions = onFnCall((name, a) => getActiveInstance().request.nv
 const nvimJumpTo = (coords: HyperspaceCoordinates) => getActiveInstance().call.nvimJumpTo(coords)
 const nvimJumpToProjectFile = (coords: HyperspaceCoordinates) => getActiveInstance().call.nvimJumpToProjectFile(coords)
 const nvimGetKeymap = () => getActiveInstance().request.nvimGetKeymap()
+const nvimGetColorByName = (name: string) => getActiveInstance().request.nvimGetColorByName(name)
 const nvimSaveCursor = async () => {
   const instance = getActiveInstance()
   const position = await instance.request.nvimSaveCursor()
@@ -158,6 +168,7 @@ const api = {
     feedkeys: nvimFeedkeys,
     getKeymap: nvimGetKeymap,
     saveCursor: nvimSaveCursor,
+    getColorByName: nvimGetColorByName,
     jumpToProjectFile: nvimJumpToProjectFile,
   }
 }

@@ -23,13 +23,6 @@
   - other invalid keys pressed, what do? nothing? show error? escape menu?
 
 
-## planned - upcoming
-
-- webgl renderer
-
-- optimized msgpack parser for redraw output + maybe input serializer?
-
-
 ## backlog - stuff that i really want
 
 - image overlay (press key to open image url under cursor in a floating image overlay)
@@ -95,6 +88,14 @@ menus. e.g. (floating windows maybe?)
 
 ## backlog - stuff that i want but is low priority
 
+- grep menu, show total files / results counts statistics at bottom
+
+- completion menu use seti icons for filetype items (.js file gets the JS icon, etc.)
+
+- key-transforms
+  - timeouts (if i press cmd in fuzzy file picker, but change my mind)
+  - support transforms per nvim mode
+
 - tweak the colors.important to bee lesss saturated. can we derive from colorscheme?
 
 - grep: i don't like the large/small icon unaligned padding/margins in query/filter inputs
@@ -126,6 +127,9 @@ menus. e.g. (floating windows maybe?)
       to reveal the characters typed. when editing finished, a key shortcut will change focus
       to the floating window to be able to edit the macro.
   - where record keys from? veonim key events? what if neovim remaps?
+  - say i record a macro (using the fancy visual record UI). once i'm done i can name the macro a descriptive name.
+  - then i can hit a keybind (Q maybe?) and it shows an overlay with all the recorded macros, and the trigger keys of the register the macro is recorded in. pressing the next key will run the macro in that register.
+  - aka Qr --> @r and Qe --> @e
 
 - auto add to quick fix list (to allow :cdo commands):
   - references
@@ -137,6 +141,26 @@ menus. e.g. (floating windows maybe?)
   - at one point in time i thought it would be neat to try to do the completions menu with a canvas renderer
   - canvas makes it tricky to do html rendering of markdown documentation (maybe a hybrid)
 
+- color picker support editing hsla and rgba values
+
+- improve find references
+  - problem: once i start find-references and i close the overlay ui, i have no way to jump to the next reference in the list (without starting 'find-references' again from one of the symbols). this happens in the workflow of jumping through references and editing text which may remove the symbol (which could be used as an anchor to call 'find-references' again) from the current location/viewport
+
+  - maybe we can make some sort of status that indicates the current symbol that has been loaded into a symbols jump list. then we can create next/prev keybinds that will jump to next prev symbol. this can replace `;n` to jump to next symbol of current word. perhaps we can even combine document/highlights
+
+  - thus we might have the following commands:
+  - find all references overlay (ui + filtering)
+    - also highlights all referenced symbols?
+  - find all references (silent, load into memory)
+    - also highlights all references
+    - shows status somewhere of the current symbol loaded in jump list memory
+  - goto next/prev reference
+    - jumps to next/prev reference if jump list memory loaded
+    - if jump list memory is empty, gets current word symbol references/highlight/load jumplist/etc
+  - clear active reference
+    - clears highlights + jump list memory + status
+
+- use LSP completionItem.detail somehow? perhaps instead of no docs?
 
 ## backlog - blocked on some other feature
 
@@ -227,6 +251,18 @@ menus. e.g. (floating windows maybe?)
 
 - text annotations (like git blame stuff, etc.)
   - https://github.com/neovim/neovim/pull/8180
+
+- visual UI for edit and jump lists
+  - http://vim.wikia.com/wiki/Jumping_to_previously_visited_locations
+
+- visual UI for extensions
+  - veonim knows what extensions are loaded, but there is no way to get to that information as a user. this is not a critical piece of functionality - it's a nice to have.
+  - categorize by lang serv/debug adapter
+  - show the parent extension name that is defined in init.vim
+  - config path folder location
+  - activationEvents for a particular extension (so as a user i can understand that css-lang-server only activates when i have css files open)
+  - show 'active' status
+  - for language servers it would be good to know what language features are supported. an user can then understand why certain features work or not
 
 ## crazy experimental ideas
 

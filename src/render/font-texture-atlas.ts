@@ -75,6 +75,12 @@ const drawChar = (char: string, col: number, width = 1) => {
   ui.restore()
 }
 
+/** To be used when the workspace font has changed */
+export const forceRegenerateFontAtlas = () => {
+  regenAtlas()
+  return canvas
+}
+
 export default () => {
   if (needToRegenAtlas) regenAtlas()
   return canvas

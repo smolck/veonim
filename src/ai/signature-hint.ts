@@ -24,11 +24,6 @@ const shouldCloseSignatureHint = (totalParams: number, currentParam: number, tri
     || (leftChar === ']' && triggers.has('['))
 }
 
-const cursorPos = () => ({
-  row: nvim.current.cursor.row,
-  col: nvim.current.cursor.col,
-})
-
 const parseDocs = async (docs?: string | MarkupContent): Promise<string | undefined> => {
   if (!docs) return
 
@@ -41,7 +36,8 @@ const showSignature = async (signatures: SignatureInformation[], which?: number 
   const { label = '', documentation = '', parameters = [] } = signatures[which || 0]
   const activeParameter = param || 0
 
-  const baseOpts = { ...cursorPos(), totalSignatures: signatures.length }
+  const cursorPosition = await nvim.getCursorPosition()
+  const baseOpts = { ...cursorPosition, totalSignatures: signatures.length }
 
   if (activeParameter < parameters.length) {
     const { label: currentParam = '', documentation: paramDoc } = parameters[activeParameter]

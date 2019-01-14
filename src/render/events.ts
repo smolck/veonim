@@ -1,6 +1,8 @@
 import { CursorShape, setCursorColor, setCursorShape } from '../core/cursor'
-import { getBackground } from '../render/highlight-attributes'
+import { forceRegenerateFontAtlas } from '../render/font-texture-atlas'
+import { getColorById } from '../render/highlight-attributes'
 import { normalizeVimMode } from '../support/neovim-utils'
+import * as windows from '../windows/window-manager'
 import * as dispatch from '../messaging/dispatch'
 import { NotifyKind } from '../protocols/veonim'
 import * as workspace from '../core/workspace'
@@ -74,6 +76,11 @@ const cursorShapeType = (shape?: string) => {
 const messageNotifyKindMappings = new Map([
   ['echo', NotifyKind.Info],
   ['emsg', NotifyKind.Error],
+  ['echoerr', NotifyKind.Error],
+  ['echomsg', NotifyKind.Info],
+  ['quickfix', NotifyKind.System],
+  // TODO: handle prompts
+  ['return_prompt', NotifyKind.System],
 ])
 
 // TODO: handle multi-line messages
@@ -92,9 +99,31 @@ export const msg_show = ([ , [ kind, msgs, flag ] ]: [any, [string, MessageEvent
   msgs.forEach(([ /*hlid*/, text ]) => notify(sillyString(text), notifyKind))
 }
 
+export const msg_history_show = (m: any) => {
+  console.warn('NYI: messages', m)
+}
+
 // TODO: wat do here lol - macro msg and shit?
-export const msg_showmode = ([, [ msgs ]]: any) => {
-  msgs.forEach((m: [number, string]) => console.log('MSG_SHOWMODE:', m[0], m[1]))
+// export const msg_showmode = ([, [ msgs ]]: any) => {
+//   msgs.forEach((m: [number, string]) => console.log('MSG_SHOWMODE:', m[0], m[1]))
+// }
+
+export const msg_showmode = (m: any) => {
+  // TODO: on empty msg_showmode clear out any previous recording messages
+  // see docs for more info
+  console.warn('NYI: msg_showmode', m)
+}
+
+export const msg_showcmd = (m: any) => {
+  console.warn('NYI: msg_showcmd', m)
+}
+
+export const msg_ruler = (m: any) => {
+  console.warn('NYI: msg_ruler', m)
+}
+
+export const msg_clear = (m: any) => {
+  console.warn('NYI: msg_clear:', m)
 }
 
 export const mode_change = ([ , [ m ] ]: [any, [string]]) => {
@@ -104,26 +133,31 @@ export const mode_change = ([ , [ m ] ]: [any, [string]]) => {
   if (!info) return
 
   if (info.hlid) {
-    const bg = getBackground(info.hlid)
-    if (bg) setCursorColor(bg)
+    const { background } = getColorById(info.hlid)
+    if (background) setCursorColor(background)
   }
 
   setCursorShape(info.shape, info.size)
 }
 
 // TODO: this parsing logic needs to be revisited
+// needs to handle all nvim formatting options
 const updateFont = () => {
-  const lineHeight = options.get('linespace')
-  const guifont = options.get('guifont') || ''
-
-  if (!lineHeight && !guifont) return
+  const lineSpace = options.get('linespace')
+  const guifont = options.get('guifont')
 
   const [ font ] = guifont.match(/(?:\\,|[^,])+/g) || ['']
   const [ face, ...settings] = font.split(':')
   const height = settings.find((s: string) => s.startsWith('h'))
   const size = Math.round(<any>(height || '').slice(1)-0)
 
-  workspace.setFont({ face, size, lineHeight })
+  const changed = workspace.updateEditorFont({ face, size, lineSpace })
+  if (!changed) return
+
+  const atlas = forceRegenerateFontAtlas()
+  windows.webgl.updateFontAtlas(atlas)
+  windows.webgl.updateCellSize()
+  workspace.resize()
 }
 
 export const option_set = (e: any) => {

@@ -224,10 +224,11 @@ const view = ($: S, a: A) => Plugin($.vis, [
 
 const ui = app({ name: 'explorer', state, actions, view })
 
-api.onAction('explorer', async () => {
+api.onAction('explorer', async (customDir?: string) => {
   const { cwd, bufferType } = api.nvim.state
   const isTerminal = bufferType === BufferType.Terminal
-  const path = isTerminal ? cwd : api.nvim.state.dir
+  const currentDir = isTerminal ? cwd : api.nvim.state.dir
+  const path = customDir || currentDir
 
   const paths = sortDirFiles(await getDirFiles(path))
   ui.show({ cwd, path, paths })

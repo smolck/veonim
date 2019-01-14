@@ -1,9 +1,9 @@
 import { VimOption, BufferEvent, HyperspaceCoordinates, BufferType, BufferHide, BufferOption, Buffer, Window, Tabpage, GenericCallback, BufferInfo, Keymap } from '../neovim/types'
 import { Api, ExtContainer, Prefixes, Buffer as IBuffer, Window as IWindow, Tabpage as ITabpage } from '../neovim/protocol'
 import { is, onFnCall, onProp, prefixWith, uuid, simplifyPath } from '../support/utils'
+import { workerData, request as requestFromUI } from '../messaging/worker-client'
 import ConnectMsgpackRPC from '../messaging/msgpack-transport'
 import { normalizeVimMode} from '../support/neovim-utils'
-import { workerData } from '../messaging/worker-client'
 import { Functions } from '../neovim/function-types'
 import { Autocmds } from '../neovim/startup'
 import CreateVimState from '../neovim/state'
@@ -87,6 +87,9 @@ const onAction = (event: string, cb: GenericCallback) => {
   cmd(`let g:vn_cmd_completions .= "${event}\\n"`)
 }
 
+// TODO; nvim_get_color_by_name does not work yet
+// const getColorByName = (name: string) => req.core.getColorByName(name)
+const getColorByName = (name: string) => req.core.getHlByName(name, true)
 const getCurrentLine = () => req.core.getCurrentLine()
 
 const parseKeymap = (keymap: any): Keymap => keymap.reduce((res: Keymap, m: any) => {
@@ -239,13 +242,9 @@ const tabs = {
 
 const isFunc = (m: any) => is.function(m) || is.asyncfunction(m)
 
+const getCursorPosition = () => requestFromUI.getCursorPosition()
+
 const current = {
-  get cursor() {
-    return {
-      row: state.line - state.editorTopLine + 1,
-      col: state.column
-    }
-  },
   get buffer(): Buffer {
     const promise = as.buf(req.core.getCurrentBuf())
 
@@ -410,7 +409,6 @@ autocmd.InsertEnter(() => watchers.events.emit('insertEnter'))
 autocmd.InsertLeave(() => watchers.events.emit('insertLeave'))
 autocmd.OptionSet((name: string, value: any) => options.set(name, value))
 autocmd.FileType((_, filetype: string) => watchers.events.emit('filetype', filetype))
-autocmd.SourcePre(sourcedFile => watchers.events.emit('vimrcLoad', sourcedFile))
 
 autocmd.TextChanged(revision => {
   state.revision = revision-0
@@ -424,8 +422,6 @@ autocmd.TextChangedI(revision => {
 
 // TODO: i think we should just determine this from render events
 autocmd.WinEnter((id: number) => watchers.events.emit('winEnter', id))
-
-const onVimrcLoad = (fn: (file: string) => void) => watchers.events.on('vimrcLoad', fn)
 
 const fromId = {
   buffer: (id: number): Buffer => Buffer(id),
@@ -563,8 +559,8 @@ const exportAPI = { state, watchState, onStateChange, onStateValue,
   untilStateValue, cmd, cmdOut, expr, call, feedkeys, normal, callAtomic,
   onAction, getCurrentLine, jumpTo, jumpToProjectFile, systemAction, current,
   g, on, untilEvent, applyPatches, buffers, windows, tabs, options:
-  readonlyOptions, onVimrcLoad, Buffer: fromId.buffer, Window: fromId.window,
-  Tabpage: fromId.tabpage, getKeymap }
+  readonlyOptions, Buffer: fromId.buffer, Window: fromId.window,
+  Tabpage: fromId.tabpage, getKeymap, getColorByName, getCursorPosition }
 
 export default exportAPI
 export type NeovimAPI = typeof exportAPI

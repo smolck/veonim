@@ -1,6 +1,6 @@
 import { merge, simplifyPath } from '../support/utils'
 import * as dispatch from '../messaging/dispatch'
-import instance from '../core/instance-api'
+import api from '../core/instance-api'
 import * as workspace from './workspace'
 import { remote } from 'electron'
 
@@ -55,14 +55,14 @@ if (macos) {
     dispatch.pub('window.change')
   })
 
-  instance.nvim.watchState.file((file: string) => {
-    const path = simplifyPath(file, instance.nvim.state.cwd)
+  api.nvim.watchState.file((file: string) => {
+    const path = simplifyPath(file, api.nvim.state.cwd)
     ;(title as HTMLElement).innerText = `${path} - veonim`
   })
 }
 
-else instance.nvim.watchState.file((file: string) => {
-  const path = simplifyPath(file, instance.nvim.state.cwd)
+else api.nvim.watchState.file((file: string) => {
+  const path = simplifyPath(file, api.nvim.state.cwd)
   remote.getCurrentWindow().setTitle(`${path} - veonim`)
 })
 

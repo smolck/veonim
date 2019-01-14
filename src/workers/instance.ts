@@ -20,9 +20,10 @@ const state = {
 export const isInstanceActive = () => state.instanceIsActive
 
 nvim.onStateChange(nextState => call.nvimStateUpdate(nextState))
-nvim.onVimrcLoad(sourcedFile => call.vimrcLoaded(sourcedFile))
 git.onStatus((status: GitStatus) => call.gitStatus(status))
 git.onBranch((onBranch: string) => call.gitBranch(onBranch))
+// TODO: need another way to fix this
+// nvim.onVimrcLoad(sourcedFile => call.vimrcLoaded(sourcedFile))
 
 on.instanceActiveStatus((instanceIsActive: boolean) => Object.assign(state, { instanceIsActive }))
 on.bufferSearch(async (file: string, query: string) => bufferSearch.fuzzy(file, query))
@@ -35,6 +36,7 @@ on.nvimCall(async (name: string, args: any[]) => Reflect.get(nvim.call, name)(..
 on.nvimCommand(async (command: string) => nvim.cmd(command))
 on.nvimGetVar(async (key: string) => Reflect.get(nvim.g, key))
 on.nvimGetKeymap(async () => nvim.getKeymap())
+on.nvimGetColorByName(async (name: string) => nvim.getColorByName(name))
 on.setNvimMode((mode: VimMode) => Object.assign(nvim.state, { mode }))
 on.getBufferInfo(async () => nvim.buffers.listWithInfo())
 on.getGitInfo(async () => git.getGitInfo())

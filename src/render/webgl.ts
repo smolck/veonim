@@ -35,6 +35,11 @@ const nutella = () => {
     textFGRenderer.updateFontAtlas(fontAtlas)
   }
 
+  const updateCellSize = () => {
+    textBGRenderer.updateCellSize()
+    textFGRenderer.updateCellSize()
+  }
+
   const updateColorAtlas = (colorAtlas: HTMLCanvasElement) => {
     textBGRenderer.updateColorAtlas(colorAtlas)
     textFGRenderer.updateColorAtlas(colorAtlas)
@@ -133,6 +138,7 @@ const nutella = () => {
     clearAll,
     createView,
     resizeCanvas,
+    updateCellSize,
     updateFontAtlas,
     updateColorAtlas,
     foregroundElement: foregroundGL.canvasElement,
