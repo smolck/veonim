@@ -61,7 +61,7 @@ require.main === module && go(async () => {
   $`cleaning build folder`
   await fs.emptyDir(fromRoot('build'))
 
-  await run('ttsc -p tsconfig.json')
+  await run('ttsc -p src/tsconfig.json')
   await unfuckTypescript()
 
   await Promise.all([
