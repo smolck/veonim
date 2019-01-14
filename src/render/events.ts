@@ -86,15 +86,11 @@ const messageNotifyKindMappings = new Map([
 // TODO: handle multi-line messages
 type MessageEvent = [number, string]
 export const msg_show = ([ , [ kind, msgs, flag ] ]: [any, [string, MessageEvent[], boolean]]) => {
-  // TODO: map message kind to err/warn/info/etc
   // TODO: what is flag?
   console.log('MSG OF:', kind, flag)
-  const skind = sillyString(kind)
-  // TODO: i think no msg kind means we don't show it??? or do we??
-  if (!skind) return
 
-  const notifyKind = messageNotifyKindMappings.get(skind)
-  if (!notifyKind) console.warn('PLS MAP msg kind:', JSON.stringify(skind))
+  const messageKind = sillyString(kind)
+  const notifyKind = messageNotifyKindMappings.get(messageKind) || NotifyKind.System
   // TODO: do something with hlid or ignore?
   msgs.forEach(([ /*hlid*/, text ]) => notify(sillyString(text), notifyKind))
 }
