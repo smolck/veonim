@@ -23,7 +23,7 @@ go(async () => {
 
   const tsc = createTask()
 
-  run('tsc -p src/tsconfig.json --watch --preserveWatchOutput --extendedDiagnostics', {
+  run('tsc -p src/tsconfig.json --watch --preserveWatchOutput', {
     outputMatch: 'compilation complete',
     onOutputMatch: async () => {
       await unfuckTypescript()

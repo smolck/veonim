@@ -89,7 +89,12 @@ export const setDefaultColors = (fg: number, bg: number, sp: number) => {
 
   if (same) return false
 
-  Object.assign(defaultColors, { foreground, background, special })
+  Object.assign(defaultColors, {
+    foreground,
+    background,
+    special: special || defaultAppColors.special,
+  })
+
   defaultColorsMap.set(instances.current, defaultColors)
 
   pub('colors-changed', {
@@ -189,7 +194,8 @@ export const generateColorLookupAtlas = () => {
 
     if (!hlgrp.underline) return
 
-    ui.fillStyle = hlgrp.special || defaultColors.special
+    const color = hlgrp.special || defaultColors.special
+    ui.fillStyle = color
     ui.fillRect(id, 2, 1, 1)
   })
 
