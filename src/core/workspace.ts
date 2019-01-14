@@ -1,7 +1,6 @@
 import { merge, throttle } from '../support/utils'
 import robotoSizes from '../support/roboto-sizes'
 import { EventEmitter } from 'events'
-import * as electron from 'electron'
 import { setVar } from '../ui/css'
 
 interface UpdateEditorFontParams {
@@ -138,7 +137,3 @@ setFont(DEFAULT_FONT, DEFAULT_FONT_SIZE, font.lineSpace)
 setImmediate(() => resize())
 
 window.addEventListener('resize', throttle(() => resize(), 150))
-window.matchMedia('screen and (min-resolution: 2dppx)').addListener(() => resize())
-electron.screen.on('display-added', () => resize())
-electron.screen.on('display-removed', () => resize())
-electron.screen.on('display-metrics-changed', () => resize())

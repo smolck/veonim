@@ -11,6 +11,7 @@ import * as nvim from '../core/master-control'
 import * as workspace from '../core/workspace'
 import { remote } from 'electron'
 import '../render/redraw'
+import '../core/screen-events'
 
 // TODO: do we need to sync instance nvim state to main thread? see instance-api todo note
 // TODO: webgl line width
