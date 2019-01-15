@@ -1,8 +1,10 @@
+import { generateColorLookupAtlas } from '../render/highlight-attributes'
 import { onSwitchVim, instances } from '../core/instance-manager'
 import CreateWindow, { Window } from '../windows/window'
 import { cursor, moveCursor } from '../core/cursor'
 import CreateWebGLRenderer from '../render/webgl'
 import { onElementResize } from '../ui/vanilla'
+import * as workspace from '../core/workspace'
 import { throttle } from '../support/utils'
 import windowSizer from '../windows/sizer'
 import api from '../core/instance-api'
@@ -199,6 +201,14 @@ onSwitchVim((id, lastId) => {
   const wininfos = getInstanceWindows(id).map(w => ({ ...w.getWindowInfo() }))
   const { gridTemplateRows, gridTemplateColumns } = windowSizer(wininfos)
   Object.assign(container.style, { gridTemplateRows, gridTemplateColumns })
+
+  // it's possible that the highlights may be different between nvim instances
+  // even if they are using the same colorscheme. i have personally experienced
+  // this, so we will force update the color atlas to make sure we have
+  // accurate colors for this nvim instance
+  const colorAtlas = generateColorLookupAtlas()
+  webgl.updateColorAtlas(colorAtlas)
+  workspace.resize()
 })
 
 api.nvim.watchState.colorscheme(() => requestAnimationFrame(() => {
