@@ -20,6 +20,12 @@ interface TabInfo {
   name: string,
 }
 
+interface TabView {
+  id: number
+  label: number
+  active: boolean
+}
+
 const state = {
   tabs: [] as TabInfo[],
   active: -1,
@@ -83,8 +89,23 @@ const actions = {
   aiStart: ({ cwd, filetype }: any) => (s: S) => ({ runningServers: new Set([...s.runningServers, cwd + filetype]) }),
 }
 
-
 const iconStyle = { style: { fontSize: '1.15rem' } }
+
+const Tab = ({ id, label, active }: TabView) => h('div', {
+  key: id,
+  style: {
+    ...itemStyle,
+    paddingLeft: '20px',
+    paddingRight: '20px',
+    marginRight: '-10px',
+    clipPath: 'polygon(15px 0, 100% 0, calc(100% - 15px) 100%, 0 100%)',
+    color: cvar('foreground-40'),
+    ...(active ? {
+      background: cvar('background-10'),
+      color: cvar('foreground'),
+    }: undefined)
+  },
+}, label)
 
 const view = ($: S) => h('div', {
   style: {
@@ -278,11 +299,11 @@ const view = ($: S) => h('div', {
       style: {
         ...itemStyle,
         paddingLeft: '30px',
-        paddingRight: '20px',
+        paddingRight: '30px',
         color: brighten($.baseColor, 60),
         background: darken($.baseColor, 30),
-        marginRight: '-20px',
-        clipPath: 'polygon(15px 0, 100% 0, 100% 100%, 0 100%)',
+        marginRight: '-15px',
+        clipPath: 'polygon(15px 0, 100% 0, calc(100% - 15px) 100%, 0 100%)',
       }
     }, [
       ,h('div', `${$.line + 1}:${$.column + 1}`)
@@ -290,28 +311,15 @@ const view = ($: S) => h('div', {
 
     ,h('div', {
       style: {
-        ...itemStyle,
-        paddingRight: '0',
-        //clipPath: 'polygon(15px 0, 100% 0, 100% 100%, 0 100%)',
+        display: 'flex',
+        height: '100%',
       }
     }, [
-      ,$.tabs.map(({ id }, ix) => h('div', {
-        // TODO: also display name if config declares it to
-        key: id,
-        style: {
-          display: 'flex',
-          alignItems: 'center',
-          paddingLeft: '8px',
-          paddingRight: '8px',
-          paddingTop: '4px',
-          paddingBottom: '4px',
-          color: cvar('foreground-40'),
-          ...($.active === id ? {
-            background: cvar('background-10'),
-            color: cvar('foreground'),
-          }: undefined)
-        }
-      }, ix + 1))
+      ,$.tabs.map(({ id }, ix) => Tab({
+        id,
+        label: ix + 1,
+        active: $.active === id,
+      }))
     ])
 
   ])
