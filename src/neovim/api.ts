@@ -488,8 +488,8 @@ const Buffer = (id: any) => ({
     const lines = await req.buf.getLines(id, startLine, endLine, false)
     const updatedLines = TextEditPatch.replace({
       lines,
-      start: { line: startLine, column: startColumn },
-      end: { line: endLine, column: endColumn },
+      start: { line: 0, column: startColumn },
+      end: { line: endLine - startLine, column: endColumn },
       text
     })
     req.buf.setLines(id, startLine, endLine, false, updatedLines)
@@ -498,8 +498,8 @@ const Buffer = (id: any) => ({
     const lines = await req.buf.getLines(id, startLine, endLine, false)
     const updatedLines = TextEditPatch.replace({
       lines,
-      start: { line: startLine, column: startColumn },
-      end: { line: endLine, column: endColumn },
+      start: { line: 0, column: startColumn },
+      end: { line: endLine - startLine, column: endColumn },
     })
     req.buf.setLines(id, startLine, endLine, false, updatedLines)
   },
