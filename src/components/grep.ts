@@ -166,7 +166,10 @@ const actions = {
     elref.scrollTop -= Math.floor(height * SCROLL_AMOUNT)
   },
 
-  loadingDone: () => ({ loading: false }),
+  loadingDone: ({ empty }: any) => (s: S) => ({
+    loading: false,
+    results: empty ? [] : s.results,
+  }),
 }
 
 const view = ($: S, a: typeof actions) => PluginRight($.visible, [

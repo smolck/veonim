@@ -80,7 +80,7 @@ const searchFiles = ({ query, cwd }: Request) => {
     alive = false
     clearInterval(timer)
     sendResults()
-    call.done()
+    call.done({ empty: !results.length })
   })
 
   const stop = () => {
