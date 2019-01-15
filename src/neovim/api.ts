@@ -4,6 +4,7 @@ import { is, onFnCall, onProp, prefixWith, uuid, simplifyPath } from '../support
 import { workerData, request as requestFromUI } from '../messaging/worker-client'
 import ConnectMsgpackRPC from '../messaging/msgpack-transport'
 import { normalizeVimMode} from '../support/neovim-utils'
+import TextEditPatch from '../neovim/text-edit-patch'
 import { Functions } from '../neovim/function-types'
 import { Autocmds } from '../neovim/startup'
 import CreateVimState from '../neovim/state'
@@ -479,22 +480,28 @@ const Buffer = (id: any) => ({
   setLines: (start, end, lines) => api.buf.setLines(id, start, end, true, lines),
   delete: start => api.buf.setLines(id, start, start + 1, true, []),
   appendRange: async (line, column, text) => {
-    console.warn('NYI: appendRange', line, column, text)
-    return
-    // const lines = text.split(/\r?\n/)
-    // const [ currentLine, ...belowLines ] = await req.buf.getLines(id, line, -1, false)
-
-    // if (text.includes('\n'))
-    // if (text.includes('\n')) return Buffer(id).append(line, text.split('\n'))
-    // const pieces = ((this.buffer != null ? this.buffer : '') + chunk).split
-
+    const lines = await req.buf.getLines(id, line, -1, false)
+    const updatedLines = TextEditPatch.append({ lines, column, text })
+    req.buf.setLines(id, line, line + updatedLines.length, false, updatedLines)
   },
-  replaceRange: (startLine, startColumn, endLine, endColumn, text) => {
-    console.warn('NYI: replaceRange:', startLine, startColumn, endLine, endColumn, text)
+  replaceRange: async (startLine, startColumn, endLine, endColumn, text) => {
+    const lines = await req.buf.getLines(id, startLine, endLine, false)
+    const updatedLines = TextEditPatch.replace({
+      lines,
+      start: { line: startLine, column: startColumn },
+      end: { line: endLine, column: endColumn },
+      text
+    })
+    req.buf.setLines(id, startLine, endLine, false, updatedLines)
   },
-  deleteRange: (startLine, startColumn, endLine, endColumn) => {
-    console.warn('NYI: deleteRange:', startLine, startColumn, endLine, endColumn)
-
+  deleteRange: async (startLine, startColumn, endLine, endColumn) => {
+    const lines = await req.buf.getLines(id, startLine, endLine, false)
+    const updatedLines = TextEditPatch.replace({
+      lines,
+      start: { line: startLine, column: startColumn },
+      end: { line: endLine, column: endColumn },
+    })
+    req.buf.setLines(id, startLine, endLine, false, updatedLines)
   },
   replace: (start, line) => api.buf.setLines(id, start, start + 1, false, [ line ]),
   getVar: name => req.buf.getVar(id, name),
