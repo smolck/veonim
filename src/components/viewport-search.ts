@@ -26,7 +26,10 @@ const state = { value: '', focus: false }
 type S = typeof state
 
 const searchInBuffer = async (results = [] as FilterResult[]) => {
-  if (!results.length) return api.nvim.cmd('noh')
+  if (!results.length) {
+    api.nvim.call.matchdelete(42)
+    return api.nvim.cmd('noh')
+  }
 
   const parts = results
     .map(m => m.line.slice(m.start.column, m.end.column + 1))
@@ -37,7 +40,10 @@ const searchInBuffer = async (results = [] as FilterResult[]) => {
   const pattern = parts.join('\\|')
   if (!pattern) return api.nvim.cmd('noh')
 
-  api.nvim.cmd(`/\\%>${api.nvim.state.editorTopLine - 1}l\\%<${api.nvim.state.editorBottomLine + 1}l${pattern}`)
+  // TODO: this works better, but we need to atomic call
+  // so we do not allow renders between
+  api.nvim.call.matchdelete(42)
+  api.nvim.call.matchadd('Search', pattern, 0, 42)
 }
 
 let winOverlay: WindowOverlay

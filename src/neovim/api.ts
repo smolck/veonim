@@ -88,6 +88,14 @@ const onAction = (event: string, cb: GenericCallback) => {
   cmd(`let g:vn_cmd_completions .= "${event}\\n"`)
 }
 
+const highlightSearchPattern = async (pattern: string, id?: number) => {
+  const calls = [
+    ['nvim_call_function', ['matchadd', []]]
+  ]
+  if (id) calls.unshift(['nvim_call_function', ['matchdelete', [ id ]]])
+  const results = await callAtomic(calls)
+}
+
 // TODO; nvim_get_color_by_name does not work yet
 // const getColorByName = (name: string) => req.core.getColorByName(name)
 const getColorByName = (name: string) => req.core.getHlByName(name, true)
@@ -523,6 +531,9 @@ const Buffer = (id: any) => ({
     // TODO: set highlight groups in the chunks arr
     api.buf.setVirtualText(id, -1, line, [ text ])
   },
+  highlightSearchPattern: (pattern, id) => callAtomic([
+    ['nvim_call_function', ['matchadd', []]],
+  ]),
 } as Buffer)
 
 const Window = (id: any) => ({

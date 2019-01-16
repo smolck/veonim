@@ -65,4 +65,6 @@ export interface Functions {
   termopen(cmd: string, options: object): void
   jobpid(jobId: number): Promise<number>
   chansend(id: number, data: string | string[]): Promise<number>
+  matchadd(hlgrp: string, pattern: string, priority?: number, id?: number): Promise<number>
+  matchdelete(id: number): Promise<number>
 }
