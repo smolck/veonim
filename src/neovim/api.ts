@@ -3,8 +3,8 @@ import { Api, ExtContainer, Prefixes, Buffer as IBuffer, Window as IWindow, Tabp
 import { is, onFnCall, onProp, prefixWith, uuid, simplifyPath } from '../support/utils'
 import { workerData, request as requestFromUI } from '../messaging/worker-client'
 import ConnectMsgpackRPC from '../messaging/msgpack-transport'
+import * as TextEditPatch from '../neovim/text-edit-patch'
 import { normalizeVimMode} from '../support/neovim-utils'
-import TextEditPatch from '../neovim/text-edit-patch'
 import { Functions } from '../neovim/function-types'
 import { Autocmds } from '../neovim/startup'
 import CreateVimState from '../neovim/state'
@@ -496,7 +496,7 @@ const Buffer = (id: any) => ({
   },
   deleteRange: async (startLine, startColumn, endLine, endColumn) => {
     const lines = await req.buf.getLines(id, startLine, endLine, false)
-    const updatedLines = TextEditPatch.replace({
+    const updatedLines = TextEditPatch.remove({
       lines,
       start: { line: 0, column: startColumn },
       end: { line: endLine - startLine, column: endColumn },

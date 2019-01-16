@@ -9,7 +9,7 @@ describe('text edit patch', () => {
         'you were supposed to destroy the sith',
         'not join them',
       ],
-      column: 12,
+      column: 13,
       text: 'JEDI ',
     }
 
@@ -28,7 +28,7 @@ describe('text edit patch', () => {
         'you were supposed to destroy the sith',
         'not join them',
       ],
-      column: 12,
+      column: 13,
       text: 'JEDI\nonly a sith\ndeals in absolutes\n',
     }
 
@@ -50,12 +50,12 @@ describe('text edit patch', () => {
         'you were supposed to destroy the sith',
         'not join them',
       ],
-      start: { line: 1, column: 4 },
-      end: { line: 1, column: 20 },
+      start: { line: 1, column: 5 },
+      end: { line: 1, column: 21 },
       text: 'hello there',
     }
 
-    const patch = append(req)
+    const patch = replace(req)
     same(patch, [
       'you were the chosen one',
       'you hello there destroy the sith',
@@ -70,12 +70,12 @@ describe('text edit patch', () => {
         'you were supposed to destroy the sith',
         'not join them',
       ],
-      start: { line: 1, column: 4 },
-      end: { line: 2, column: 3 },
+      start: { line: 1, column: 5 },
+      end: { line: 2, column: 5 },
       text: 'general kenobi',
     }
 
-    const patch = append(req)
+    const patch = replace(req)
     same(patch, [
       'you were the chosen one',
       'you general kenobi join them',
@@ -89,12 +89,12 @@ describe('text edit patch', () => {
         'you were supposed to destroy the sith',
         'not join them',
       ],
-      start: { line: 1, column: 4 },
-      end: { line: 2, column: 3 },
+      start: { line: 1, column: 5 },
+      end: { line: 2, column: 6 },
       text: `did you ever hear\nthe tragedy of darth plagueis the wise\nit's not a story\nthe jedi would tell you\n`,
     }
 
-    const patch = append(req)
+    const patch = replace(req)
     same(patch, [
       'you were the chosen one',
       'you did you ever hear',
@@ -112,14 +112,14 @@ describe('text edit patch', () => {
         'you were supposed to destroy the sith',
         'not join them',
       ],
-      start: { line: 1, column: 2 },
+      start: { line: 1, column: 5 },
       end: { line: 2, column: 2 },
     }
 
-    const patch = append(req)
+    const patch = remove(req)
     same(patch, [
       'you were the chosen one',
-      'yo join them',
+      'you not join them',
     ])
   })
 })
