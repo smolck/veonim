@@ -88,12 +88,35 @@ const onAction = (event: string, cb: GenericCallback) => {
   cmd(`let g:vn_cmd_completions .= "${event}\\n"`)
 }
 
+const highlightedIds = new Set<number>()
+
+const removeHighlightSearch = (id: number) => {
+  const idExistsAndShouldBeRemoved = highlightedIds.has(id)
+  highlightedIds.delete(id)
+  if (idExistsAndShouldBeRemoved) return !call.matchdelete(id)
+  return true
+}
+
 const highlightSearchPattern = async (pattern: string, id?: number) => {
+  const addArgs = ['Search', pattern, 0]
+  if (id) addArgs.push(id)
+
   const calls = [
-    ['nvim_call_function', ['matchadd', []]]
+    ['nvim_call_function', ['matchadd', addArgs]],
   ]
-  if (id) calls.unshift(['nvim_call_function', ['matchdelete', [ id ]]])
-  const results = await callAtomic(calls)
+
+  if (id && highlightedIds.has(id)) {
+    calls.unshift(['nvim_call_function', ['matchdelete', [ id ]]])
+  }
+
+  const [ results, errors ] = await callAtomic(calls)
+  if (errors && errors.length) {
+    return console.error('neovim-api.highlightSearchPattern error:', errors)
+  }
+
+  const matchAddResult = results[results.length - 1]
+  highlightedIds.add(matchAddResult)
+  return matchAddResult
 }
 
 // TODO; nvim_get_color_by_name does not work yet
@@ -531,9 +554,6 @@ const Buffer = (id: any) => ({
     // TODO: set highlight groups in the chunks arr
     api.buf.setVirtualText(id, -1, line, [ text ])
   },
-  highlightSearchPattern: (pattern, id) => callAtomic([
-    ['nvim_call_function', ['matchadd', []]],
-  ]),
 } as Buffer)
 
 const Window = (id: any) => ({
@@ -578,7 +598,8 @@ const exportAPI = { state, watchState, onStateChange, onStateValue,
   onAction, getCurrentLine, jumpTo, jumpToProjectFile, systemAction, current,
   g, on, untilEvent, applyPatches, buffers, windows, tabs, options:
   readonlyOptions, Buffer: fromId.buffer, Window: fromId.window,
-  Tabpage: fromId.tabpage, getKeymap, getColorByName, getCursorPosition }
+  Tabpage: fromId.tabpage, getKeymap, getColorByName, getCursorPosition,
+  highlightSearchPattern, removeHighlightSearch }
 
 export default exportAPI
 export type NeovimAPI = typeof exportAPI

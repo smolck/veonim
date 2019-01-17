@@ -22,12 +22,13 @@ interface FilterResult {
 
 let displayTargetJumps = true
 const state = { value: '', focus: false }
+let hlid: number
 
 type S = typeof state
 
 const searchInBuffer = async (results = [] as FilterResult[]) => {
   if (!results.length) {
-    api.nvim.call.matchdelete(42)
+    if (hlid) api.nvim.removeHighlightSearch(hlid)
     return api.nvim.cmd('noh')
   }
 
@@ -40,10 +41,8 @@ const searchInBuffer = async (results = [] as FilterResult[]) => {
   const pattern = parts.join('\\|')
   if (!pattern) return api.nvim.cmd('noh')
 
-  // TODO: this works better, but we need to atomic call
-  // so we do not allow renders between
-  api.nvim.call.matchdelete(42)
-  api.nvim.call.matchadd('Search', pattern, 0, 42)
+  const id = await api.nvim.highlightSearchPattern(pattern, hlid)
+  if (!hlid) hlid = id
 }
 
 let winOverlay: WindowOverlay

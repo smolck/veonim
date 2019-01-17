@@ -1,7 +1,7 @@
 import { getActiveInstance, onSwitchVim, onCreateVim, instances } from '../core/instance-manager'
 import { VimMode, BufferInfo, HyperspaceCoordinates } from '../neovim/types'
 import { CompletionItem, Command } from 'vscode-languageserver-protocol'
-import { onFnCall, pascalCase } from '../support/utils'
+import { onFnCall, pascalCase, is } from '../support/utils'
 import { colors } from '../render/highlight-attributes'
 import { Functions } from '../neovim/function-types'
 import { WindowMetadata } from '../windows/metadata'
@@ -115,6 +115,16 @@ const nvimSaveCursor = async () => {
   return () => instance.call.nvimRestoreCursor(position)
 }
 
+const nvimHighlightSearchPattern = async (pattern: string, id?: number): Promise<number> => {
+  const res = await getActiveInstance().request.nvimHighlightSearchPattern(pattern, id)
+  // TODO: undefined gets converted to an empty array in the rpc layer??
+  return is.array(res) ? undefined : res
+}
+
+const nvimRemoveHighlightSearch = async (id: number): Promise<boolean> => {
+  return getActiveInstance().request.nvimRemoveHighlightSearch(id)
+}
+
 const manualAI = {
   completions: {
     getDetail: (item: CompletionItem): Promise<CompletionItem> => {
@@ -170,6 +180,8 @@ const api = {
     saveCursor: nvimSaveCursor,
     getColorByName: nvimGetColorByName,
     jumpToProjectFile: nvimJumpToProjectFile,
+    removeHighlightSearch: nvimRemoveHighlightSearch,
+    highlightSearchPattern: nvimHighlightSearchPattern,
   }
 }
 
