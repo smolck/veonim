@@ -1,7 +1,6 @@
 import { Position, Range, Selection, TextEditorLineNumbersStyle, ViewColumn, EndOfLine } from '../vscode/types'
 import TextDocument from '../vscode/text-document'
 import nvimSync from '../neovim/sync-api-client'
-import { BufferOption } from '../neovim/types'
 import { CreateTask } from '../support/utils'
 import nvim from '../neovim/api'
 import * as vsc from 'vscode'
@@ -139,7 +138,7 @@ export default (winid: number): vsc.TextEditor => ({
       setEndOfLine: eol => {
         if (transactionComplete) return
         const fileformat = eol === EndOfLine.LF ? 'unix' : 'dos'
-        nvim.current.buffer.setOption(BufferOption.FileFormat, fileformat)
+        nvim.current.buffer.setOption('fileformat', fileformat)
         fin()
       },
     }

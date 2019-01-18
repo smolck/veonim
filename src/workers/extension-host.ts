@@ -273,6 +273,8 @@ const activate = {
   language: async (language: string) => {
     // TODO: handle extension dependencies
     const subscriptions = await activateExtensionForLanguage(language)
+    console.log('language', language)
+    console.log('subscriptions', subscriptions)
     if (!subscriptions.length) return
 
     // TODO: potentially other subscriptions disposables
@@ -280,9 +282,9 @@ const activate = {
     // would like to double check the typings in vscode
     const [ serverActivator ] = subscriptions as any[]
 
+    // TODO: i don't think extensions need to return the langserv??
     if (!is.promise(serverActivator)) {
-      console.error(`server activator function not valid or did not return a promise for ${language}`)
-      return
+      console.warn(`server activator function not valid or did not return a promise for ${language}`)
     }
 
     const proc: ChildProcess = await serverActivator

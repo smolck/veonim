@@ -36,8 +36,11 @@ const workspace: typeof vsc.workspace = {
     return bufferIds.map(id => TextDocument(id))
   },
   getWorkspaceFolder: uri => {
-    if (uri.path !== nvim.state.cwd) return
-    return WorkspaceFolder(uri.path)
+    if (!uri.path.startsWith(nvim.state.cwd)) {
+      console.error('given uri is not part of cwd', uri.path, nvim.state.cwd)
+      return undefined
+    }
+    return WorkspaceFolder(nvim.state.cwd)
   },
   asRelativePath: pathOrUri => {
     const path = pathOrUri instanceof URI ? pathOrUri.path : pathOrUri as string

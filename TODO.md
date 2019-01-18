@@ -1,3 +1,9 @@
+## notes
+- rust ext errors on vscode LanguageClient
+- why did we create our own LangaugeClient?
+- can we just use the real thing?
+- rust ext: how to get access to actual language server to hookup to rpc?
+
 ## in progress
 
 - mru buffer navigation

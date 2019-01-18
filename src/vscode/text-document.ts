@@ -1,7 +1,6 @@
 import filetypeToVSCLanguage from '../langserv/vsc-languages'
 import { Position, Range } from '../vscode/types'
 import nvimSync from '../neovim/sync-api-client'
-import { BufferOption } from '../neovim/types'
 import TextLine from '../vscode/text-line'
 import { is } from '../support/utils'
 import { URI } from '../vscode/uri'
@@ -25,7 +24,7 @@ export default (bufid: number): SuperTextDocument => ({
   },
   get languageId() {
     const filetype: string = nvimSync((nvim, id) => {
-      return nvim.Buffer(id).getOption(BufferOption.Filetype)
+      return nvim.Buffer(id).getOption('filetype')
     }).call(bufid)
 
     return filetypeToVSCLanguage(filetype)
@@ -35,7 +34,7 @@ export default (bufid: number): SuperTextDocument => ({
   },
   get isDirty() {
     return !!nvimSync((nvim, id) => {
-      return nvim.Buffer(id).getOption(BufferOption.Modified)
+      return nvim.Buffer(id).getOption('modified')
     }).call(bufid)
   },
   get isClosed() {
@@ -46,7 +45,7 @@ export default (bufid: number): SuperTextDocument => ({
   },
   get eol() {
     const fileFormat = nvimSync((nvim, id) => {
-      return nvim.Buffer(id).getOption(BufferOption.FileFormat)
+      return nvim.Buffer(id).getOption('fileformat')
     }).call(bufid)
 
     // numbers correspond to enum values 'vsc.EndOfLine'

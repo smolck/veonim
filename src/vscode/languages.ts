@@ -1,6 +1,5 @@
 import { vscLanguageToFiletypes } from '../langserv/vsc-languages'
 import { SuperTextDocument } from '../vscode/text-document'
-import { BufferOption } from '../neovim/types'
 import { Watcher } from '../support/utils'
 import nvim from '../neovim/api'
 import * as vsc from 'vscode'
@@ -18,7 +17,7 @@ const languages = {
   // @ts-ignore
   setTextDocumentLanguage: async (document, languageId) => {
     const filetype = vscLanguageToFiletypes(languageId)
-    nvim.Buffer((document as SuperTextDocument)._nvimBufferId).setOption(BufferOption.Filetype, filetype)
+    nvim.Buffer((document as SuperTextDocument)._nvimBufferId).setOption('filetype', filetype)
     return document
   },
   match: () => {
@@ -33,6 +32,11 @@ const languages = {
   },
   createDiagnosticCollection: () => {
     console.warn('NYI: languages.createDiagnosticCollection')
+  },
+  // @ts-ignore
+  setLanguageConfiguration: (language, configuration) => {
+    console.warn('NYI: languages.setLanguageConfiguration', language, configuration)
+    return { dispose: () => {} }
   },
 }
 
