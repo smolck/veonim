@@ -22,11 +22,16 @@ interface FilterResult {
 
 let displayTargetJumps = true
 const state = { value: '', focus: false }
+let hlid: number
+let pattern = ''
 
 type S = typeof state
 
 const searchInBuffer = async (results = [] as FilterResult[]) => {
-  if (!results.length) return api.nvim.cmd('noh')
+  if (!results.length) {
+    if (hlid) api.nvim.removeHighlightSearch(hlid)
+    return api.nvim.cmd('nohlsearch')
+  }
 
   const parts = results
     .map(m => m.line.slice(m.start.column, m.end.column + 1))
@@ -34,10 +39,11 @@ const searchInBuffer = async (results = [] as FilterResult[]) => {
     .filter(m => m)
     .map(m => m.replace(/[\*\/\^\$\.\~\&]/g, '\\$&'))
 
-  const pattern = parts.join('\\|')
-  if (!pattern) return api.nvim.cmd('noh')
+  pattern = parts.join('\\|')
+  if (!pattern) return api.nvim.cmd('nohlsearch')
 
-  api.nvim.cmd(`/\\%>${api.nvim.state.editorTopLine - 1}l\\%<${api.nvim.state.editorBottomLine + 1}l${pattern}`)
+  const id = await api.nvim.highlightSearchPattern(pattern, hlid)
+  if (!hlid) hlid = id
 }
 
 let winOverlay: WindowOverlay
@@ -53,19 +59,28 @@ const actions = {
     if (winOverlay) winOverlay.remove()
     return { value: '', focus: false }
   },
-  change: (value: string) => {
+  change: (value: string) => (s: S) => {
     api.bufferSearchVisible(value).then((results: FilterResult[]) => {
       displayTargetJumps = results.length > 2
       searchInBuffer(results)
     })
 
+    if (!s.value && value) api.nvim.cmd('nohlsearch')
+
     return { value }
   },
-  select: () => {
+  select: () => (s: S) => {
     vimFocus()
+
+    if (s.value) {
+      const patternCommand = `/\\%>${api.nvim.state.editorTopLine - 1}l\\%<${api.nvim.state.editorBottomLine + 1}l${pattern}`
+      api.nvim.removeHighlightSearch(hlid, patternCommand)
+    }
+
     if (winOverlay) winOverlay.remove()
     if (displayTargetJumps) divinationSearch()
-    else api.nvim.feedkeys('n', 'n')
+    else api.nvim.cmd(`norm! n`)
+
     return { value: '', focus: false }
   },
 }

@@ -1,5 +1,5 @@
+import { asColor, MapMap, MapSet } from '../support/utils'
 import { instances } from '../core/instance-manager'
-import { asColor, MapMap } from '../support/utils'
 import { pub } from '../messaging/dispatch'
 import api from '../core/instance-api'
 import { EventEmitter } from 'events'
@@ -71,7 +71,7 @@ export const colors: DefaultColors = new Proxy(Object.create(null), {
 // msgpack-decoder for more info on how this works.
 const sillyString = (s: any): string => typeof s === 'number' ? String.fromCodePoint(s) : s
 
-const highlightInfo = MapMap<number, string, any>()
+const highlightInfo = MapSet<number, string, HighlightInfo>()
 const canvas = document.createElement('canvas')
 const ui = canvas.getContext('2d', { alpha: true }) as CanvasRenderingContext2D
 const highlights = MapMap<number, number, HighlightGroup>()

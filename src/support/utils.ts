@@ -290,13 +290,6 @@ export class NewlineSplitter extends Transform {
   }
 }
 
-export class MapSet extends Map {
-  add(key: any, value: any) {
-    const s = this.get(key) || new Set()
-    this.set(key, s.add(value))
-  }
-}
-
 export const MapMap = <A, B, C>(initial?: any[]) => {
   const m = new Map<A, Map<B, C>>(initial)
 
@@ -364,6 +357,79 @@ export const MapMap = <A, B, C>(initial?: any[]) => {
     has,
     remove,
     updateObject,
+    forEach,
+    size,
+    subsize,
+    keys,
+    entries,
+  }
+}
+
+class MapSetter<A, B> extends Map<A, Set<B>> {
+  add(key: A, value: B) {
+    const s = this.get(key) || new Set()
+    this.set(key, s.add(value))
+  }
+}
+
+export const MapSet = <A, B, C>(initial?: any[]) => {
+  const m = new Map<A, MapSetter<B, C>>(initial)
+
+  const set = (key: A, subkey: B, value: C) => {
+    const sub = m.get(key) || new MapSetter()
+    sub.add(subkey, value)
+    m.set(key, sub)
+  }
+
+  const get = (key: A, subkey: B) => {
+    const sub = m.get(key)
+    if (!sub) return
+    return sub.get(subkey)
+  }
+
+  const has = (key: A, subkey: B) => {
+    const sub = m.get(key)
+    if (!sub) return false
+    return sub.has(subkey)
+  }
+
+  const remove = (key: A, subkey: B) => {
+    const sub = m.get(key)
+    if (!sub) return
+    sub.delete(subkey)
+  }
+
+  const forEach = (key: A, fn: (value: Set<C>, key: B) => void) => {
+    const sub = m.get(key)
+    if (!sub) return
+    sub.forEach(fn)
+  }
+
+  const size = () => m.size
+  const subsize = (key: A) => {
+    const sub = m.get(key)
+    if (!sub) return -1
+    return sub.size
+  }
+
+  const keys = (key: A) => {
+    const sub = m.get(key)
+    if (!sub) return []
+    return sub.keys()
+  }
+
+  const entries = (key: A) => {
+    const sub = m.get(key)
+    if (!sub) return []
+    return [...sub.entries()]
+  }
+
+  return {
+    get raw() { return m },
+    set,
+    get,
+    has,
+    remove,
     forEach,
     size,
     subsize,
