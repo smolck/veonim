@@ -90,11 +90,24 @@ const onAction = (event: string, cb: GenericCallback) => {
 
 const highlightedIds = new Set<number>()
 
-const removeHighlightSearch = (id: number) => {
+const removeHighlightSearch = async (id: number, pattern?: string) => {
   const idExistsAndShouldBeRemoved = highlightedIds.has(id)
   highlightedIds.delete(id)
-  if (idExistsAndShouldBeRemoved) return !call.matchdelete(id)
-  return true
+  if (!idExistsAndShouldBeRemoved) return true
+
+  const calls = [
+    ['nvim_call_function', ['matchdelete', [id]]],
+  ]
+
+  if (pattern) calls.push(['nvim_command', [pattern]])
+
+  const [ results, errors ] = await callAtomic(calls)
+  if (errors && errors.length) {
+    console.error('neovim-api.removeHighlightSearch error:', errors)
+    return false
+  }
+
+  return !results[0]
 }
 
 const highlightSearchPattern = async (pattern: string, id?: number) => {

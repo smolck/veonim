@@ -121,8 +121,8 @@ const nvimHighlightSearchPattern = async (pattern: string, id?: number): Promise
   return is.array(res) ? undefined : res
 }
 
-const nvimRemoveHighlightSearch = async (id: number): Promise<boolean> => {
-  return getActiveInstance().request.nvimRemoveHighlightSearch(id)
+const nvimRemoveHighlightSearch = async (id: number, pattern?: string): Promise<boolean> => {
+  return getActiveInstance().request.nvimRemoveHighlightSearch(id, pattern)
 }
 
 const manualAI = {
