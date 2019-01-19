@@ -284,7 +284,7 @@ const activate = {
 
     // TODO: i don't think extensions need to return the langserv??
     if (!is.promise(serverActivator)) {
-      console.warn(`server activator function not valid or did not return a promise for ${language}`)
+      return console.error(`server activator function not valid or did not return a promise for ${language}`)
     }
 
     const proc: ChildProcess = await serverActivator

@@ -3,8 +3,9 @@ import { objDeepGet } from '../support/utils'
 import * as vsc from 'vscode'
 
 export default (section?: string): vsc.WorkspaceConfiguration => {
-  const vscodeConfig = nvimSync(nvim => nvim.g.vscode_config)
-  const store = section ? objDeepGet(vscodeConfig)(section) : vscodeConfig
+  const vscodeConfig = nvimSync(nvim => nvim.g.vscode_config).call() || {}
+  const possiblyObject = section ? objDeepGet(vscodeConfig)(section) : vscodeConfig
+  const store = possiblyObject || {}
 
   const get = (section: string, defaultValue?: any) => {
     const result = objDeepGet(store)(section)

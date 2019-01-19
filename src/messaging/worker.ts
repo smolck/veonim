@@ -32,7 +32,9 @@ export default (name: string, opts = {} as WorkerOptions) => {
   const wakeThread = () => Atomics.notify(sharedArray, 0)
 
   const writeSharedArray = (id: number, data: any) => {
-    const jsonString = JSON.stringify(data)
+    // need to handle undefined result. gonna use null
+    // instead since json does not have undefined
+    const jsonString = JSON.stringify(data) || 'null'
     const buffer = Buffer.from(jsonString)
     const length = buffer.byteLength
     for (let ix = 0; ix < length; ix++) Atomics.store(sharedArray, ix + 2, buffer[ix])

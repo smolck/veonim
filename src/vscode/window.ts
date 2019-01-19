@@ -1,3 +1,4 @@
+import OutputChannel from '../vscode/output-channel'
 import { call } from '../messaging/worker-client'
 import { NotifyKind } from '../protocols/veonim'
 import nvimSync from '../neovim/sync-api-client'
@@ -28,7 +29,7 @@ interface UnifiedMessage {
 
 const unifyMessage = ([ message, optionsOrItems, itemsMaybe ]: any[]): UnifiedMessage => {
   const isModal: boolean = is.object(optionsOrItems) ? <any>optionsOrItems.modal : false
-  const items: string[] = is.array(optionsOrItems) ? optionsOrItems : itemsMaybe
+  const items: string[] = is.array(optionsOrItems) ? optionsOrItems : itemsMaybe || []
   const actionItems: string[] = items.map((item: any) => item.title || item)
   return { message, isModal, actionItems }
 }
@@ -125,10 +126,7 @@ const window: typeof vsc.window = {
   createQuickPick: () => {
     console.warn('NYI: window.createQuickPick')
   },
-  // @ts-ignore
-  createOutputChannel: () => {
-    console.warn('NYI: window.createOutputChannel')
-  },
+  createOutputChannel: name => OutputChannel(name),
   // @ts-ignore
   createWebviewPanel: () => {
     console.warn('NYI: window.createWebviewPanel')

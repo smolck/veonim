@@ -1,4 +1,4 @@
-import { vscLanguageToFiletypes } from '../langserv/vsc-languages'
+import filetypeToVscLanguage, { vscLanguageToFiletypes } from '../langserv/vsc-languages'
 import { SuperTextDocument } from '../vscode/text-document'
 import { Watcher } from '../support/utils'
 import nvim from '../neovim/api'
@@ -12,8 +12,10 @@ const events = Watcher<Events>()
 
 const languages = {
 // const languages: typeof vsc.languages = {
-  // TODO: sorry, but where do we get 'all known languages' from??
-  getLanguages: async () => [],
+  getLanguages: async () => {
+    const filetypes = await nvim.call.getcompletion('', 'filetype')
+    return filetypes.map(ft => filetypeToVscLanguage(ft))
+  },
   // @ts-ignore
   setTextDocumentLanguage: async (document, languageId) => {
     const filetype = vscLanguageToFiletypes(languageId)
