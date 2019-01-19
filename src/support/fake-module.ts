@@ -4,9 +4,21 @@ const Module = require('module')
 const originalLoader = Module._load
 const fakeModules = new Map()
 
-Module._load = (request: string, ...args: any[]) => fakeModules.has(request)
-  ? fakeModules.get(request)
-  : originalLoader(request, ...args)
+// Module._load = (request: string, ...args: any[]) => fakeModules.has(request)
+//   ? fakeModules.get(request)
+//   : originalLoader(request, ...args)
+
+
+// TODO: this version of the loader is temporary because i fucked up the
+// vscode-languageclient setup in the extensions (see vscode-shim.ts
+// for more info)
+Module._load = (request: string, ...args: any[]) => {
+  try {
+    return originalLoader(request, ...args)
+  } catch (_) {
+    return fakeModules.get(request)
+  }
+}
 
 export default (moduleName: string, fakeImplementation: any, onMissing?: (name: string, path: string) => void) => {
   const getFake = objDeepGet(fakeImplementation)

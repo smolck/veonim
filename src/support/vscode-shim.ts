@@ -29,6 +29,16 @@ const LanguageClient = class LanguageClient {
 
 fakeModule('vscode', vscode, logMissingModuleApiDuringDevelopment)
 
+// TODO: i don't remember why we had to fake out this module
+// but it looks like extensions bring in vscode-languageclient via
+// npm package. so we should just let extensions use the real thing
+
+// because we have a number of extensions right now that do not
+// bring in the 'vscode-languageclient' dependency via npm, we will
+// maintain backwards compatibility by trying to load the real thing
+// and then falling back to our shim.
+//
+// we should patch the extensions and remove this shim
 fakeModule('vscode-languageclient', {
   LanguageClient,
 }, logMissingModuleApiDuringDevelopment)
