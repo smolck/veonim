@@ -41,7 +41,8 @@ const languages: typeof vsc.languages = {
   },
   registerCompletionItemProvider: (selector, provider, ...triggerCharacters) => {
     const filetypes = selectorToFiletypes(selector)
-    providers.provideCompletionItems.addMultiple(filetypes, provider)
+    providers.provideCompletionItems.addMultiple(filetypes, provider.provideCompletionItems)
+    providers.resolveCompletionItem.addMultiple(filetypes, provider.resolveCompletionItem)
 
     if (is.array(triggerCharacters)) triggerCharacters.forEach(char => {
       providers.completionTriggerCharacters.addMultiple(filetypes, char)
@@ -49,15 +50,25 @@ const languages: typeof vsc.languages = {
 
     return {
       dispose: () => {
-        providers.provideCompletionItems.removeMultipleFromSet(filetypes, provider)
+        providers.provideCompletionItems.removeMultipleFromSet(filetypes, provider.provideCompletionItems)
+        providers.resolveCompletionItem.removeMultipleFromSet(filetypes, provider.resolveCompletionItem)
+
         if (is.array(triggerCharacters)) triggerCharacters.forEach(char => {
           providers.completionTriggerCharacters.removeMultipleFromSet(filetypes, char)
         })
-      }
+      },
     }
   },
-  // registerCodeActionsProvider: (selector, provider, metadata) => {
-  // },
+  registerCodeActionsProvider: (selector, provider, metadata) => {
+    console.warn(`NYI: languages.registerCodeActionsProvider metadata not supported:`, metadata)
+
+    const filetypes = selectorToFiletypes(selector)
+    providers.provideCodeActions.addMultiple(filetypes, provider)
+
+    return {
+      dispose: () => providers.provideCodeActions.removeMultipleFromSet(filetypes, provider),
+    }
+  },
 }
 
 const registerEvent = (name: keyof Events, fn: any) => ({ dispose: events.on(name, fn) })

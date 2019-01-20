@@ -1,6 +1,6 @@
 import { makeCancelToken, cancelTokenById } from '../vscode/tools'
 import TextDocument from '../vscode/text-document'
-import { Position } from '../vscode/types'
+import { Position, Range } from '../vscode/types'
 import { on } from '../messaging/worker-client'
 import { MapSetter } from '../support/utils'
 import nvim from '../neovim/api'
@@ -11,7 +11,8 @@ const Flask = () => new MapSetter<string, any>()
 export const providers = {
   provideCompletionItems: Flask(),
   resolveCompletionItem: Flask(),
-  completionTriggerCharacters: new MapSetter<string, string>()
+  completionTriggerCharacters: new MapSetter<string, string>(),
+  provideCodeActions: Flask(),
 }
 
 const api = {
@@ -23,14 +24,31 @@ const api = {
     const cancelToken = makeCancelToken(tokenId)
     const document = TextDocument(nvim.current.buffer.id)
     const position = new Position(nvim.state.line, nvim.state.column)
-    const requests = [...filetypeProviders].map((fn: Function) => {
-      return fn(document, position, cancelToken, context)
+    type FN = vsc.CompletionItemProvider['provideCompletionItems']
+    const requests = [...filetypeProviders].map((fn: FN) => {
+      return fn(document, position, cancelToken.token, context)
     })
 
     return Promise.all(requests)
   },
   resolveCompletionItem: async (tokenId: string, item: vsc.CompletionItem) => {
     console.warn('NYI resolveCompletionItem:', tokenId, item)
+  },
+  provideCodeActions: async (tokenId: string, context: vsc.CodeActionContext) => {
+    const filetypeProviders = providers.provideCodeActions.get(nvim.state.filetype)
+    if (!filetypeProviders) return
+
+    const cancelToken = makeCancelToken(tokenId)
+    const document = TextDocument(nvim.current.buffer.id)
+    const position = new Position(nvim.state.line, nvim.state.column)
+    const range = new Range(position, position)
+
+    type FN = vsc.CodeActionProvider['provideCodeActions']
+    const requests = [...filetypeProviders].map((fn: FN) => {
+      return fn(document, range, context, cancelToken.token)
+    })
+
+    return Promise.all(requests)
   },
 }
 
