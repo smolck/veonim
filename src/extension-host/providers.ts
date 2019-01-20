@@ -20,6 +20,21 @@ export const providers = {
   provideTypeDefinition: Flask(),
   provideDeclaration: Flask(),
   provideHover: Flask(),
+  provideDocumentHighlights: Flask(),
+  provideDocumentSymbols: Flask(),
+  provideWorkspaceSymbols: new Set(),
+  resolveWorkspaceSymbol: new Set(),
+  provideReferences: Flask(),
+  prepareRename: Flask(),
+  provideRenameEdits: Flask(),
+  provideDocumentFormattingEdits: Flask(),
+  provideDocumentRangeFormattingEdits: Flask(),
+  provideOnTypeFormattingEdits: Flask(),
+  provideSignatureHelp: Flask(),
+  provideDocumentLinks: Flask(),
+  resolveDocumentLink: Flask(),
+  provideColorPresentations: Flask(),
+  provideFoldingRanges: Flask(),
 }
 
 const api = {
@@ -90,6 +105,18 @@ const api = {
   },
   provideHover: async () => {
     type FN = vsc.HoverProvider['provideHover']
+  },
+  provideDocumentHighlights: async () => {
+    type FN = vsc.DocumentHighlightProvider['provideDocumentHighlights']
+  },
+  provideDocumentSymbols: async () => {
+    type FN = vsc.DocumentSymbolProvider['provideDocumentSymbols']
+  },
+  provideWorkspaceSymbols: async (query: string, tokenId: string) => {
+    type FN = vsc.WorkspaceSymbolProvider['provideWorkspaceSymbols']
+  },
+  resolveWorkspaceSymbol: async (symbol: vsc.SymbolInformation, tokenId: string) => {
+    type FN = vsc.WorkspaceSymbolProvider['resolveWorkspaceSymbol']
   },
 }
 

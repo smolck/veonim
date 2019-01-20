@@ -59,8 +59,21 @@ const languages: typeof vsc.languages = {
       },
     }
   },
+  // TODO: NEED provider.FNS
+  // TODO: NEED provider.FNS
+  // TODO: NEED provider.FNS
+  // TODO: NEED provider.FNS
+  // TODO: NEED provider.FNS
+  // TODO: NEED provider.FNS
+  // TODO: NEED provider.FNS
+  // TODO: NEED provider.FNS
+  // TODO: NEED provider.FNS
+  // TODO: NEED provider.FNS
   registerCodeActionsProvider: (selector, provider, metadata) => {
-    console.warn(`NYI: languages.registerCodeActionsProvider metadata not supported:`, metadata)
+    if (metadata) {
+      console.warn('NYI: languages.registerCodeActionsProvider metadata not supported:', metadata)
+    }
+
     const filetypes = selectorToFiletypes(selector)
     const dispose = providers.provideCodeActions.addMultiple(filetypes, provider)
     return { dispose }
@@ -97,6 +110,52 @@ const languages: typeof vsc.languages = {
     return { dispose }
   },
   registerDocumentHighlightProvider: (selector, provider) => {
+    const filetypes = selectorToFiletypes(selector)
+    const dispose = providers.provideDocumentHighlights.addMultiple(filestypes, provider)
+    return { dispose }
+  },
+  registerDocumentSymbolProvider: (selector, provider, metadata) => {
+    if (metadata) {
+      console.warn('NYI: languages.registerDocumentSymbolProvider metadata not supported:', metadata)
+    }
+
+    const filetypes = selectorToFiletypes(selector)
+    const dispose = providers.provideDocumentSymbols.addMultiple(filetypes, provider)
+    return { dispose }
+  },
+  registerWorkspaceSymbolProvider: provider => {
+    providers.provideWorkspaceSymbols.add(provider.provideWorkspaceSymbols)
+    providers.resolveWorkspaceSymbol.add(provider.resolveWorkspaceSymbol)
+    return { dispose: () => {
+      providers.provideWorkspaceSymbols.delete(provider.provideWorkspaceSymbols)
+      providers.resolveWorkspaceSymbol.delete(provider.resolveWorkspaceSymbol)
+    }}
+  },
+  registerReferenceProvider: (selector, provider) => {
+
+  },
+  registerRenameProvider: (selector, provider) => {
+
+  },
+  registerDocumentFormattingEditProvider: (selector, provider) => {
+
+  },
+  registerDocumentRangeFormattingEditProvider: (selector, provider) => {
+
+  },
+  registerOnTypeFormattingEditProvider: (selector, provider, ...triggerCharacters) => {
+
+  },
+  registerSignatureHelpProvider: (selector, provider, firstTriggerCharOrMetadata, ...moreTriggerChars) => {
+
+  },
+  registerDocumentLinkProvider: (selector, provider) => {
+
+  },
+  registerColorProvider: (selector, provider) => {
+
+  },
+  registerFoldingRangeProvider: (selector, provider) => {
 
   },
 }
