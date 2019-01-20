@@ -26,7 +26,6 @@ nvim.watchState.cwd((cwd, previousCwd) => events.emit('didChangeWorkspaceFolders
 }))
 
 const workspace: typeof vsc.workspace = {
-// const workspace: any = {
   get rootPath() { return nvim.state.cwd },
   get workspaceFolders() { return [ WorkspaceFolder(nvim.state.cwd) ] },
   get name() { return basename(nvim.state.cwd) },

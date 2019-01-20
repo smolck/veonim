@@ -365,10 +365,24 @@ export const MapMap = <A, B, C>(initial?: any[]) => {
   }
 }
 
-class MapSetter<A, B> extends Map<A, Set<B>> {
+export class MapSetter<A, B> extends Map<A, Set<B>> {
   add(key: A, value: B) {
     const s = this.get(key) || new Set()
     this.set(key, s.add(value))
+  }
+
+  addMultiple(keys: A[], value: B) {
+    keys.forEach(key => this.add(key, value))
+  }
+
+  removeFromSet(key: A, value: B) {
+    const s = this.get(key)
+    if (!s) return false
+    return s.delete(value)
+  }
+
+  removeMultipleFromSet(keys: A[], value: B) {
+    keys.forEach(key => this.removeFromSet(key, value))
   }
 }
 
