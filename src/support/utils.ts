@@ -369,22 +369,27 @@ export class MapSetter<A, B> extends Map<A, Set<B>> {
   add(key: A, value: B) {
     const s = this.get(key) || new Set()
     this.set(key, s.add(value))
-    return () => this.removeFromSet(key, value)
+    return () => this.remove(key, value)
   }
 
   addMultiple(keys: A[], value: B) {
     keys.forEach(key => this.add(key, value))
-    return () => this.removeMultipleFromSet(keys, value)
+    return () => this.removeMultiple(keys, value)
   }
 
-  removeFromSet(key: A, value: B) {
+  addMultipleValues(keys: A[], values: B[]) {
+    const removalFuncs = values.forEach(value => this.addMultiple(value))
+    return () => removalFuncs.forEach(fn => fn())
+  }
+
+  remove(key: A, value: B) {
     const s = this.get(key)
     if (!s) return false
     return s.delete(value)
   }
 
-  removeMultipleFromSet(keys: A[], value: B) {
-    keys.forEach(key => this.removeFromSet(key, value))
+  removeMultiple(keys: A[], value: B) {
+    keys.forEach(key => this.remove(key, value))
   }
 }
 

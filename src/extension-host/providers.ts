@@ -36,6 +36,8 @@ export const providers = {
   provideColorPresentations: Flask(),
   provideDocumentColors: Flask(),
   provideFoldingRanges: Flask(),
+  signatureHelpTriggerCharacters: new MapSetter<string, string>(),
+  onTypeFormattingTriggerCharacters: new MapSetter<string, string>(),
 }
 
 const api = {

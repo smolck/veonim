@@ -43,21 +43,8 @@ const languages: typeof vsc.languages = {
     const filetypes = selectorToFiletypes(selector)
     const d1 = providers.provideCompletionItems.addMultiple(filetypes, provider.provideCompletionItems)
     const d2 = providers.resolveCompletionItem.addMultiple(filetypes, provider.resolveCompletionItem)
-
-    if (is.array(triggerCharacters)) triggerCharacters.forEach(char => {
-      providers.completionTriggerCharacters.addMultiple(filetypes, char)
-    })
-
-    return {
-      dispose: () => {
-        d1()
-        d2()
-
-        if (is.array(triggerCharacters)) triggerCharacters.forEach(char => {
-          providers.completionTriggerCharacters.removeMultipleFromSet(filetypes, char)
-        })
-      },
-    }
+    const d3 = providers.completionTriggerCharacters.addMultipleValues(filetypes, triggerCharacters)
+    return { dispose: () => (d1(), d2(), d3()), }
   },
   registerCodeActionsProvider: (selector, provider, metadata) => {
     if (metadata) {
@@ -145,13 +132,28 @@ const languages: typeof vsc.languages = {
   },
   registerOnTypeFormattingEditProvider: (selector, provider, ...triggerCharacters) => {
     const filetypes = selectorToFiletypes(selector)
-    const d1 = providers.provideOnTypeFormattingEdits.addMultiple(filetypes, provider.provideOnTypeFormattingEdits)
-    return { dispose: () => (d1())}
+    const disposeProvider = providers.provideOnTypeFormattingEdits.addMultiple(filetypes, provider.provideOnTypeFormattingEdits)
+    const disposeTriggers = providers.onTypeFormattingTriggerCharacters.addMultipleValues(filetypes, triggerCharacters)
+    return { dispose: () => (disposeProvider(), disposeTriggers()) }
   },
-  registerSignatureHelpProvider: (selector: vsc.DocumentSelector, provider: vsc.SignatureHelpProvider, firstTriggerCharOrMetadata, ...moreTriggerChars) => {
+  registerSignatureHelpProvider: (selector: vsc.DocumentSelector, provider: vsc.SignatureHelpProvider, firstTriggerCharOrMetadata: string | vsc.SignatureHelpProviderMetadata, ...moreTriggerChars: string[]) => {
     const filetypes = selectorToFiletypes(selector)
-    const d1 = providers.provideSignatureHelp.addMultiple(filetypes, provider.provideSignatureHelp)
-    return { dispose: () => (d1())}
+    const disposeProvider = providers.provideSignatureHelp.addMultiple(filetypes, provider.provideSignatureHelp)
+    let triggerCharacters: string[] = []
+
+    if (is.object(firstTriggerCharOrMetadata)) {
+      const o = (firstTriggerCharOrMetadata as vsc.SignatureHelpProviderMetadata)
+      triggerCharacters = [...o.triggerCharacters, ...o.retriggerCharacters]
+    }
+    else triggerCharacters = [(firstTriggerCharOrMetadata as string), ...moreTriggerChars]
+
+    triggerCharacters.forEach(char => {
+      providers.signatureHelpTriggerCharacters.addMultiple(filetypes, char)
+    })
+
+    const disposeTriggers = providers.signatureHelpTriggerCharacters.addMultipleValues(filetypes, triggerCharacters)
+
+    return { dispose: () => (disposeProvider(), disposeTriggers()) }
   },
   registerDocumentLinkProvider: (selector, provider) => {
     const filetypes = selectorToFiletypes(selector)
