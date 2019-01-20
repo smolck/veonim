@@ -6,13 +6,13 @@ import { Watcher, is } from '../support/utils'
 import nvim from '../neovim/api'
 import * as vsc from 'vscode'
 
+// TODO: call these events
 interface Events {
   didChangeDiagnostics: vsc.DiagnosticChangeEvent
 }
 
 const events = Watcher<Events>()
 
-// const languages = {
 const languages: typeof vsc.languages = {
   getLanguages: async () => {
     const filetypes = await nvim.call.getcompletion('', 'filetype')
@@ -41,8 +41,8 @@ const languages: typeof vsc.languages = {
   },
   registerCompletionItemProvider: (selector, provider, ...triggerCharacters) => {
     const filetypes = selectorToFiletypes(selector)
-    const disposeProvideC = providers.provideCompletionItems.addMultiple(filetypes, provider.provideCompletionItems)
-    const disposeResolveC = providers.resolveCompletionItem.addMultiple(filetypes, provider.resolveCompletionItem)
+    const d1 = providers.provideCompletionItems.addMultiple(filetypes, provider.provideCompletionItems)
+    const d2 = providers.resolveCompletionItem.addMultiple(filetypes, provider.resolveCompletionItem)
 
     if (is.array(triggerCharacters)) triggerCharacters.forEach(char => {
       providers.completionTriggerCharacters.addMultiple(filetypes, char)
@@ -50,8 +50,8 @@ const languages: typeof vsc.languages = {
 
     return {
       dispose: () => {
-        disposeProvideC()
-        disposeResolveC()
+        d1()
+        d2()
 
         if (is.array(triggerCharacters)) triggerCharacters.forEach(char => {
           providers.completionTriggerCharacters.removeMultipleFromSet(filetypes, char)
@@ -59,59 +59,50 @@ const languages: typeof vsc.languages = {
       },
     }
   },
-  // TODO: NEED provider.FNS
-  // TODO: NEED provider.FNS
-  // TODO: NEED provider.FNS
-  // TODO: NEED provider.FNS
-  // TODO: NEED provider.FNS
-  // TODO: NEED provider.FNS
-  // TODO: NEED provider.FNS
-  // TODO: NEED provider.FNS
-  // TODO: NEED provider.FNS
-  // TODO: NEED provider.FNS
   registerCodeActionsProvider: (selector, provider, metadata) => {
     if (metadata) {
       console.warn('NYI: languages.registerCodeActionsProvider metadata not supported:', metadata)
     }
 
     const filetypes = selectorToFiletypes(selector)
-    const dispose = providers.provideCodeActions.addMultiple(filetypes, provider)
+    const dispose = providers.provideCodeActions.addMultiple(filetypes, provider.provideCodeActions)
     return { dispose }
   },
   registerCodeLensProvider: (selector, provider) => {
     // TODO: handle provider.onDidChangeCodeLenses event?
     const filetypes = selectorToFiletypes(selector)
-    const dispose = providers.provideCodeLenses.addMultiple(filetypes, provider)
-    return { dispose }
+    const d1 = providers.provideCodeLenses.addMultiple(filetypes, provider.provideCodeLenses)
+    const d2 = providers.resolveCodeLens.addMultiple(filetypes, provider.resolveCodeLens)
+    return { dispose: () => (d1(), d2()) }
   },
   registerDefinitionProvider: (selector, provider) => {
     const filetypes = selectorToFiletypes(selector)
-    const dispose = providers.provideDefinition.addMultiple(filetypes, provider)
+    const dispose = providers.provideDefinition.addMultiple(filetypes, provider.provideDefinition)
     return { dispose }
   },
   registerImplementationProvider: (selector, provider) => {
     const filetypes = selectorToFiletypes(selector)
-    const dispose = providers.provideImplementation.addMultiple(filetypes, provider)
+    const dispose = providers.provideImplementation.addMultiple(filetypes, provider.provideImplementation)
     return { dispose }
   },
   registerTypeDefinitionProvider: (selector, provider) => {
     const filetypes = selectorToFiletypes(selector)
-    const dispose = providers.provideTypeDefinition.addMultiple(filetypes, provider)
+    const dispose = providers.provideTypeDefinition.addMultiple(filetypes, provider.provideTypeDefinition)
     return { dispose }
   },
   registerDeclarationProvider: (selector, provider) => {
     const filetypes = selectorToFiletypes(selector)
-    const dispose = providers.provideDeclaration.addMultiple(filetypes, provider)
+    const dispose = providers.provideDeclaration.addMultiple(filetypes, provider.provideDeclaration)
     return { dispose }
   },
   registerHoverProvider: (selector, provider) => {
     const filetypes = selectorToFiletypes(selector)
-    const dispose = providers.provideHover.addMultiple(filetypes, provider)
+    const dispose = providers.provideHover.addMultiple(filetypes, provider.provideHover)
     return { dispose }
   },
   registerDocumentHighlightProvider: (selector, provider) => {
     const filetypes = selectorToFiletypes(selector)
-    const dispose = providers.provideDocumentHighlights.addMultiple(filestypes, provider)
+    const dispose = providers.provideDocumentHighlights.addMultiple(filetypes, provider.provideDocumentHighlights)
     return { dispose }
   },
   registerDocumentSymbolProvider: (selector, provider, metadata) => {
@@ -120,7 +111,7 @@ const languages: typeof vsc.languages = {
     }
 
     const filetypes = selectorToFiletypes(selector)
-    const dispose = providers.provideDocumentSymbols.addMultiple(filetypes, provider)
+    const dispose = providers.provideDocumentSymbols.addMultiple(filetypes, provider.provideDocumentSymbols)
     return { dispose }
   },
   registerWorkspaceSymbolProvider: provider => {
@@ -132,31 +123,52 @@ const languages: typeof vsc.languages = {
     }}
   },
   registerReferenceProvider: (selector, provider) => {
-
+    const filetypes = selectorToFiletypes(selector)
+    const dispose = providers.provideReferences.addMultiple(filetypes, provider.provideReferences)
+    return { dispose }
   },
   registerRenameProvider: (selector, provider) => {
-
+    const filetypes = selectorToFiletypes(selector)
+    const d1 = providers.provideRenameEdits.addMultiple(filetypes, provider.provideRenameEdits)
+    const d2 = providers.prepareRename.addMultiple(filetypes, provider.prepareRename)
+    return { dispose: () => (d1(), d2())}
   },
   registerDocumentFormattingEditProvider: (selector, provider) => {
-
+    const filetypes = selectorToFiletypes(selector)
+    const dispose = providers.provideDocumentFormattingEdits.addMultiple(filetypes, provider.provideDocumentFormattingEdits)
+    return { dispose }
   },
   registerDocumentRangeFormattingEditProvider: (selector, provider) => {
-
+    const filetypes = selectorToFiletypes(selector)
+    const dispose = providers.provideDocumentRangeFormattingEdits.addMultiple(filetypes, provider.provideDocumentRangeFormattingEdits)
+    return { dispose }
   },
   registerOnTypeFormattingEditProvider: (selector, provider, ...triggerCharacters) => {
-
+    const filetypes = selectorToFiletypes(selector)
+    const d1 = providers.provideOnTypeFormattingEdits.addMultiple(filetypes, provider.provideOnTypeFormattingEdits)
+    return { dispose: () => (d1())}
   },
-  registerSignatureHelpProvider: (selector, provider, firstTriggerCharOrMetadata, ...moreTriggerChars) => {
-
+  registerSignatureHelpProvider: (selector: vsc.DocumentSelector, provider: vsc.SignatureHelpProvider, firstTriggerCharOrMetadata, ...moreTriggerChars) => {
+    const filetypes = selectorToFiletypes(selector)
+    const d1 = providers.provideSignatureHelp.addMultiple(filetypes, provider.provideSignatureHelp)
+    return { dispose: () => (d1())}
   },
   registerDocumentLinkProvider: (selector, provider) => {
-
+    const filetypes = selectorToFiletypes(selector)
+    const d1 = providers.provideDocumentLinks.addMultiple(filetypes, provider.provideDocumentLinks)
+    const d2 = providers.resolveDocumentLink.addMultiple(filetypes, provider.resolveDocumentLink)
+    return { dispose: () => (d1(), d2())}
   },
   registerColorProvider: (selector, provider) => {
-
+    const filetypes = selectorToFiletypes(selector)
+    const d1 = providers.provideColorPresentations.addMultiple(filetypes, provider.provideColorPresentations)
+    const d2 = providers.provideDocumentColors.addMultiple(filetypes, provider.provideDocumentColors)
+    return { dispose: () => (d1(), d2())}
   },
   registerFoldingRangeProvider: (selector, provider) => {
-
+    const filetypes = selectorToFiletypes(selector)
+    const dispose = providers.provideFoldingRanges.addMultiple(filetypes, provider.provideFoldingRanges)
+    return { dispose }
   },
 }
 

@@ -34,6 +34,7 @@ export const providers = {
   provideDocumentLinks: Flask(),
   resolveDocumentLink: Flask(),
   provideColorPresentations: Flask(),
+  provideDocumentColors: Flask(),
   provideFoldingRanges: Flask(),
 }
 
