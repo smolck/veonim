@@ -369,10 +369,12 @@ export class MapSetter<A, B> extends Map<A, Set<B>> {
   add(key: A, value: B) {
     const s = this.get(key) || new Set()
     this.set(key, s.add(value))
+    return () => this.removeFromSet(key, value)
   }
 
   addMultiple(keys: A[], value: B) {
     keys.forEach(key => this.add(key, value))
+    return () => this.removeMultipleFromSet(keys, value)
   }
 
   removeFromSet(key: A, value: B) {

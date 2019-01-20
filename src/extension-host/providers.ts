@@ -13,11 +13,18 @@ export const providers = {
   resolveCompletionItem: Flask(),
   completionTriggerCharacters: new MapSetter<string, string>(),
   provideCodeActions: Flask(),
+  provideCodeLenses: Flask(),
+  resolveCodeLens: Flask(),
+  provideDefinition: Flask(),
+  provideImplementation: Flask(),
+  provideTypeDefinition: Flask(),
+  provideDeclaration: Flask(),
+  provideHover: Flask(),
 }
 
 const api = {
   cancelRequest: (tokenId: string) => cancelTokenById(tokenId),
-  provideCompletionItems: async (tokenId: string, context: vsc.CompletionContext) => {
+  provideCompletionItems: async (context: vsc.CompletionContext, tokenId: string) => {
     const filetypeProviders = providers.provideCompletionItems.get(nvim.state.filetype)
     if (!filetypeProviders) return
 
@@ -31,7 +38,7 @@ const api = {
 
     return Promise.all(requests)
   },
-  resolveCompletionItem: async (tokenId: string, item: vsc.CompletionItem) => {
+  resolveCompletionItem: async (item: vsc.CompletionItem, tokenId: string) => {
     const filetypeProviders = providers.resolveCompletionItem.get(nvim.state.filetype)
     if (!filetypeProviders) return
 
@@ -43,7 +50,7 @@ const api = {
 
     return Promise.all(requests)
   },
-  provideCodeActions: async (tokenId: string, context: vsc.CodeActionContext) => {
+  provideCodeActions: async (context: vsc.CodeActionContext, tokenId: string) => {
     const filetypeProviders = providers.provideCodeActions.get(nvim.state.filetype)
     if (!filetypeProviders) return
 
@@ -58,6 +65,31 @@ const api = {
     })
 
     return Promise.all(requests)
+  },
+  provideCodeLenses: async (tokenId: string) => {
+
+    type FN = vsc.CodeLensProvider['provideCodeLenses']
+
+  },
+  resolveCodeLens: async (codeLens: vsc.CodeLens, tokenId: string) => {
+
+    type FN = vsc.CodeLensProvider['resolveCodeLens']
+
+  },
+  provideDefinition: async () => {
+    type FN = vsc.DefinitionProvider['provideDefinition']
+  },
+  provideImplementation: async () => {
+    type FN = vsc.ImplementationProvider['provideImplementation']
+  },
+  provideTypeDefinition: async () => {
+    type FN = vsc.TypeDefinitionProvider['provideTypeDefinition']
+  },
+  provideDeclaration: async () => {
+    type FN = vsc.DeclarationProvider['provideDeclaration']
+  },
+  provideHover: async () => {
+    type FN = vsc.HoverProvider['provideHover']
   },
 }
 

@@ -41,8 +41,8 @@ const languages: typeof vsc.languages = {
   },
   registerCompletionItemProvider: (selector, provider, ...triggerCharacters) => {
     const filetypes = selectorToFiletypes(selector)
-    providers.provideCompletionItems.addMultiple(filetypes, provider.provideCompletionItems)
-    providers.resolveCompletionItem.addMultiple(filetypes, provider.resolveCompletionItem)
+    const disposeProvideC = providers.provideCompletionItems.addMultiple(filetypes, provider.provideCompletionItems)
+    const disposeResolveC = providers.resolveCompletionItem.addMultiple(filetypes, provider.resolveCompletionItem)
 
     if (is.array(triggerCharacters)) triggerCharacters.forEach(char => {
       providers.completionTriggerCharacters.addMultiple(filetypes, char)
@@ -50,8 +50,8 @@ const languages: typeof vsc.languages = {
 
     return {
       dispose: () => {
-        providers.provideCompletionItems.removeMultipleFromSet(filetypes, provider.provideCompletionItems)
-        providers.resolveCompletionItem.removeMultipleFromSet(filetypes, provider.resolveCompletionItem)
+        disposeProvideC()
+        disposeResolveC()
 
         if (is.array(triggerCharacters)) triggerCharacters.forEach(char => {
           providers.completionTriggerCharacters.removeMultipleFromSet(filetypes, char)
@@ -61,13 +61,43 @@ const languages: typeof vsc.languages = {
   },
   registerCodeActionsProvider: (selector, provider, metadata) => {
     console.warn(`NYI: languages.registerCodeActionsProvider metadata not supported:`, metadata)
-
     const filetypes = selectorToFiletypes(selector)
-    providers.provideCodeActions.addMultiple(filetypes, provider)
+    const dispose = providers.provideCodeActions.addMultiple(filetypes, provider)
+    return { dispose }
+  },
+  registerCodeLensProvider: (selector, provider) => {
+    // TODO: handle provider.onDidChangeCodeLenses event?
+    const filetypes = selectorToFiletypes(selector)
+    const dispose = providers.provideCodeLenses.addMultiple(filetypes, provider)
+    return { dispose }
+  },
+  registerDefinitionProvider: (selector, provider) => {
+    const filetypes = selectorToFiletypes(selector)
+    const dispose = providers.provideDefinition.addMultiple(filetypes, provider)
+    return { dispose }
+  },
+  registerImplementationProvider: (selector, provider) => {
+    const filetypes = selectorToFiletypes(selector)
+    const dispose = providers.provideImplementation.addMultiple(filetypes, provider)
+    return { dispose }
+  },
+  registerTypeDefinitionProvider: (selector, provider) => {
+    const filetypes = selectorToFiletypes(selector)
+    const dispose = providers.provideTypeDefinition.addMultiple(filetypes, provider)
+    return { dispose }
+  },
+  registerDeclarationProvider: (selector, provider) => {
+    const filetypes = selectorToFiletypes(selector)
+    const dispose = providers.provideDeclaration.addMultiple(filetypes, provider)
+    return { dispose }
+  },
+  registerHoverProvider: (selector, provider) => {
+    const filetypes = selectorToFiletypes(selector)
+    const dispose = providers.provideHover.addMultiple(filetypes, provider)
+    return { dispose }
+  },
+  registerDocumentHighlightProvider: (selector, provider) => {
 
-    return {
-      dispose: () => providers.provideCodeActions.removeMultipleFromSet(filetypes, provider),
-    }
   },
 }
 
