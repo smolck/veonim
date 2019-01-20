@@ -32,7 +32,16 @@ const api = {
     return Promise.all(requests)
   },
   resolveCompletionItem: async (tokenId: string, item: vsc.CompletionItem) => {
-    console.warn('NYI resolveCompletionItem:', tokenId, item)
+    const filetypeProviders = providers.resolveCompletionItem.get(nvim.state.filetype)
+    if (!filetypeProviders) return
+
+    const cancelToken = makeCancelToken(tokenId)
+    type FN = vsc.CompletionItemProvider['resolveCompletionItem']
+    const requests = [...filetypeProviders].map((fn: FN) => {
+      return fn(item, cancelToken.token)
+    })
+
+    return Promise.all(requests)
   },
   provideCodeActions: async (tokenId: string, context: vsc.CodeActionContext) => {
     const filetypeProviders = providers.provideCodeActions.get(nvim.state.filetype)
