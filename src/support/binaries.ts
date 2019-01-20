@@ -18,7 +18,7 @@ interface INeovim {
   path: string,
 }
 
-const NVIM_PATH = dirname(require.resolve(`@veonim/neovim-${os}`))
+const NVIM_PATH = process.env.VEONIM_NVIM_PATH || dirname(require.resolve(`@veonim/neovim-${os}`))
 
 const binary = os === 'win' ? 'nvim.exe' : 'nvim'
 const binPath = join(NVIM_PATH, 'bin', binary)
