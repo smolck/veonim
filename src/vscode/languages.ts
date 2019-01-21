@@ -1,4 +1,5 @@
 import filetypeToVscLanguage, { vscLanguageToFiletypes } from '../langserv/vsc-languages'
+import DiagnosticCollection from '../vscode/diagnostic-collection'
 import { SuperTextDocument } from '../vscode/text-document'
 import { providers } from '../extension-host/providers'
 import { selectorToFiletypes } from '../vscode/tools'
@@ -32,9 +33,7 @@ const languages: typeof vsc.languages = {
     console.warn('NYI: languages.getDiagnostics')
     return []
   },
-  createDiagnosticCollection: () => {
-    console.warn('NYI: languages.createDiagnosticCollection')
-  },
+  createDiagnosticCollection: name => DiagnosticCollection(name),
   setLanguageConfiguration: (language, configuration) => {
     console.warn('NYI: languages.setLanguageConfiguration', language, configuration)
     return { dispose: () => {} }
