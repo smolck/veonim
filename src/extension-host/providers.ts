@@ -41,15 +41,15 @@ export const providers = {
 }
 
 const getFormattingOptions = async (): Promise<vsc.FormattingOptions> => {
-    const [ tabstop, expandtab ] = await Promise.all([
-      nvim.options.tabstop,
-      nvim.options.expandtab,
-    ])
+  const [ tabstop, expandtab ] = await Promise.all([
+    nvim.options.tabstop,
+    nvim.options.expandtab,
+  ])
 
-    return {
-      tabSize: tabstop,
-      insertSpaces: !!expandtab,
-    }
+  return {
+    tabSize: tabstop,
+    insertSpaces: !!expandtab,
+  }
 }
 
 const api = {
