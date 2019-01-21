@@ -130,7 +130,7 @@ const languages: typeof vsc.languages = {
     const dispose = providers.provideDocumentRangeFormattingEdits.addMultiple(filetypes, provider.provideDocumentRangeFormattingEdits)
     return { dispose }
   },
-  registerOnTypeFormattingEditProvider: (selector, provider, ...triggerCharacters) => {
+  registerOnTypeFormattingEditProvider: (selector, provider, ...triggerCharacters: string[]) => {
     const filetypes = selectorToFiletypes(selector)
     const disposeProvider = providers.provideOnTypeFormattingEdits.addMultiple(filetypes, provider.provideOnTypeFormattingEdits)
     const disposeTriggers = providers.onTypeFormattingTriggerCharacters.addMultipleValues(filetypes, triggerCharacters)

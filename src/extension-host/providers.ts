@@ -60,6 +60,9 @@ const api = {
 
     return Promise.all([...funcs].map(fn => fn && fn(item, token)))
   },
+  getCompletionTriggerCharacters: () => {
+    return [...providers.completionTriggerCharacters.get(nvim.state.filetype) || []]
+  },
   provideCodeActions: async (context: vsc.CodeActionContext, tokenId: string) => {
     const funcs = providers.provideCodeActions.get(nvim.state.filetype)
     if (!funcs) return
@@ -149,14 +152,13 @@ const api = {
     return Promise.all([...funcs].map(fn => fn(document, position, token)))
   },
   provideDocumentSymbols: async (tokenId: string) => {
-    const funcs = providers.provideHover.get(nvim.state.filetype)
+    const funcs = providers.provideDocumentSymbols.get(nvim.state.filetype)
     if (!funcs) return
 
     const { token } = makeCancelToken(tokenId)
     const document = TextDocument(nvim.current.buffer.id)
-    const position = new Position(nvim.state.line, nvim.state.column)
 
-    return Promise.all([...funcs].map(fn => fn(document, position, token)))
+    return Promise.all([...funcs].map(fn => fn(document, token)))
   },
   provideWorkspaceSymbols: async (query: string, tokenId: string) => {
     const funcs = providers.provideWorkspaceSymbols
@@ -169,6 +171,85 @@ const api = {
     const { token } = makeCancelToken(tokenId)
 
     return Promise.all([...funcs].map(fn => fn && fn(symbol, token)))
+  },
+  provideReferences: async (tokenId: string) => {
+    const funcs = providers.provideReferences.get(nvim.state.filetype)
+    if (!funcs) return
+
+    const { token } = makeCancelToken(tokenId)
+    const document = TextDocument(nvim.current.buffer.id)
+    const position = new Position(nvim.state.line, nvim.state.column)
+    const context: vsc.ReferenceContext = { includeDeclaration: true }
+
+    return Promise.all([...funcs].map(fn => fn(document, position, context, token)))
+  },
+  prepareRename: async (tokenId: string) => {
+    const funcs = providers.prepareRename.get(nvim.state.filetype)
+    if (!funcs) return
+
+    const { token } = makeCancelToken(tokenId)
+    const document = TextDocument(nvim.current.buffer.id)
+    const position = new Position(nvim.state.line, nvim.state.column)
+
+    return Promise.all([...funcs].map(fn => fn && fn(document, position, token)))
+  },
+  provideRenameEdits: async (newName: string, tokenId: string) => {
+    const funcs = providers.provideRenameEdits.get(nvim.state.filetype)
+    if (!funcs) return
+
+    const { token } = makeCancelToken(tokenId)
+    const document = TextDocument(nvim.current.buffer.id)
+    const position = new Position(nvim.state.line, nvim.state.column)
+
+    return Promise.all([...funcs].map(fn => fn && fn(document, position, newName, token)))
+  },
+  provideDocumentFormattingEdits: async (tokenId: string) => {
+    const funcs = providers.provideDocumentFormattingEdits.get(nvim.state.filetype)
+    if (!funcs) return
+
+    const { token } = makeCancelToken(tokenId)
+    const document = TextDocument(nvim.current.buffer.id)
+    const [ tabstop, expandtab ] = await Promise.all([
+      nvim.options.tabstop,
+      nvim.options.expandtab,
+    ])
+
+    const options: vsc.FormattingOptions = {
+      tabSize: tabstop,
+      insertSpaces: !!expandtab,
+    }
+
+    return Promise.all([...funcs].map(fn => fn && fn(document, options, token)))
+  },
+  provideDocumentRangeFormattingEdits: async (tokenId: string) => {
+
+  },
+  provideOnTypeFormattingEdits: async (tokenId: string) => {
+
+  },
+  provideSignatureHelp: async (tokenId: string) => {
+
+  },
+  provideDocumentLinks: async (tokenId: string) => {
+
+  },
+  resolveDocumentLink: async (tokenId: string) => {
+
+  },
+  provideColorPresentations: async (tokenId: string) => {
+
+  },
+  provideDocumentColors: async (tokenId: string) => {
+
+  },
+  provideFoldingRanges: async (tokenId: string) => {
+
+  },
+  getSignatureHelpTriggerCharacters: () => {
+    return [...providers.signatureHelpTriggerCharacters.get(nvim.state.filetype) || []]
+  },
+  getOnTypeFormattingTriggerCharacters: () => {
+    return [...providers.onTypeFormattingTriggerCharacters.get(nvim.state.filetype) || []]
   },
 }
 
