@@ -378,7 +378,7 @@ export class MapSetter<A, B> extends Map<A, Set<B>> {
   }
 
   addMultipleValues(keys: A[], values: B[]) {
-    const removalFuncs = values.forEach(value => this.addMultiple(value))
+    const removalFuncs = values.map(value => this.addMultiple(keys, value))
     return () => removalFuncs.forEach(fn => fn())
   }
 
