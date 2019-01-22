@@ -47,7 +47,7 @@
     "all-other-unzip-libs-suck-win": "0.0.2"
   },
   "bindeps-linux": {
-    "@veonim/neovim-linux": "0.3.2-3",
+    "@veonim/neovim-linux": "0.4.0-alpha1",
     "@veonim/ripgrep-linux": "0.0.1",
     "all-other-unzip-libs-suck-linux": "0.0.2"
   },
