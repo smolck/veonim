@@ -38,13 +38,13 @@ export default (webgl: WebGL2) => {
       float posy = posFloat.y * -2.0 + 1.0;
       gl_Position = vec4(posx, posy, 0, 1);
 
-      vec2 colorPosition = vec2(${v.hlid}, ${v.hlidType}) / ${v.colorAtlasResolution};
+      vec2 colorPosition = vec2(${v.hlid} + 0.0001, ${v.hlidType} + 0.0001) / ${v.colorAtlasResolution};
       o_color = texture(${v.colorAtlasTextureId}, colorPosition);
     }
   `)
 
   program.setFragmentShader(() => `
-    precision highp float;
+    precision mediump float;
 
     in vec4 o_color;
     out vec4 outColor;
