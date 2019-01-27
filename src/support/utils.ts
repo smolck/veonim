@@ -365,11 +365,28 @@ export const MapMap = <A, B, C>(initial?: any[]) => {
   }
 }
 
+export class MapList<A, B> extends Map<A, B[]> {
+  add(key: A, values: B[]) {
+    const list = this.get(key) || []
+    list.push(...values)
+    this.set(key, list)
+  }
+
+  replace(key: A, values: B[]) {
+    const list = [...values]
+    this.set(key, list)
+  }
+}
+
 export class MapSetter<A, B> extends Map<A, Set<B>> {
   add(key: A, value: B) {
     const s = this.get(key) || new Set()
     this.set(key, s.add(value))
     return () => this.remove(key, value)
+  }
+
+  addMany(key: A, values: B[]) {
+    return values.map(val => this.add(key, val))
   }
 
   addMultiple(keys: A[], value: B) {
@@ -380,6 +397,19 @@ export class MapSetter<A, B> extends Map<A, Set<B>> {
   addMultipleValues(keys: A[], values: B[]) {
     const removalFuncs = values.map(value => this.addMultiple(keys, value))
     return () => removalFuncs.forEach(fn => fn())
+  }
+
+  replace(key: A, value: B) {
+    const s = this.get(key) || new Set()
+    s.clear()
+    this.set(key, s.add(value))
+    return () => this.remove(key, value)
+  }
+
+  replaceMany(key: A, values: B[]) {
+    const s = this.get(key) || new Set()
+    s.clear()
+    return values.map(val => this.add(key, val))
   }
 
   remove(key: A, value: B) {
