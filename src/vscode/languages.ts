@@ -7,12 +7,13 @@ import { Watcher, is } from '../support/utils'
 import nvim from '../neovim/api'
 import * as vsc from 'vscode'
 
-// TODO: call these events
 interface Events {
   didChangeDiagnostics: vsc.DiagnosticChangeEvent
 }
 
 const events = Watcher<Events>()
+
+export const emitDidChangeDiagnostics = (uris: vsc.Uri[]) => events.emit('didChangeDiagnostics', uris)
 
 const languages: typeof vsc.languages = {
   getLanguages: async () => {
