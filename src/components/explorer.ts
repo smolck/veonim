@@ -206,7 +206,7 @@ const view = ($: S, a: A) => Plugin($.vis, [
   })
 
   ,h('div', {
-    ref: (e: HTMLElement) => listElRef = e,
+    oncreate: (e: HTMLElement) => listElRef = e,
     style: {
       maxHeight: '50vh',
       overflowY: 'hidden',
