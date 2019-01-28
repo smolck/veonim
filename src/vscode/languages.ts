@@ -1,9 +1,9 @@
 import filetypeToVscLanguage, { vscLanguageToFiletypes } from '../langserv/vsc-languages'
 import DiagnosticCollection from '../vscode/diagnostic-collection'
+import { Watcher, is, uuid, MapSetter } from '../support/utils'
 import { SuperTextDocument } from '../vscode/text-document'
 import { providers } from '../extension-host/providers'
 import { selectorToFiletypes } from '../vscode/tools'
-import { Watcher, is } from '../support/utils'
 import nvim from '../neovim/api'
 import * as vsc from 'vscode'
 
@@ -14,8 +14,38 @@ interface Events {
 const events = Watcher<Events>()
 
 export const emitDidChangeDiagnostics = (uris: vsc.Uri[]) => events.emit('didChangeDiagnostics', uris)
+const diagnosticCollectionRepository = new Map<string, vsc.DiagnosticCollection>()
+
+type AM_I_STUPID = {
+  (resource: vsc.Uri): vsc.Diagnostic[]
+  (): [vsc.Uri, vsc.Diagnostic[]][]
+}
+
+const getDiagnostics_TYPESCRIPT_Y_U_DO_DIS = (resource?: vsc.Uri) => {
+  const collections = [...diagnosticCollectionRepository.values()]
+
+  if (resource) return collections.reduce((res, collection) => {
+    const diagnostics = collection.get(resource as vsc.Uri)
+    return diagnostics ? [...res, ...diagnostics] : res
+  }, [] as vsc.Diagnostic[])
+
+  const diagnosticsMapSet = collections.reduce((res, collection) => {
+    collection.forEach((uri, diagnostics) => res.addMany(uri, diagnostics))
+    return res
+  }, new MapSetter<vsc.Uri, vsc.Diagnostic>())
+
+  return [...diagnosticsMapSet.entries()].reduce((res, [uri, diagset]) => {
+    const diagnostics = [...diagset]
+    // typescript sucks lolwtf
+    const next = [uri, diagnostics] as [vsc.Uri, vsc.Diagnostic[]]
+    return [...res, next]
+  }, [] as [vsc.Uri, vsc.Diagnostic[]][])
+}
+
+const PROGRAMMING_SUCKS_YAY = getDiagnostics_TYPESCRIPT_Y_U_DO_DIS as AM_I_STUPID
 
 const languages: typeof vsc.languages = {
+  getDiagnostics: PROGRAMMING_SUCKS_YAY,
   getLanguages: async () => {
     const filetypes = await nvim.call.getcompletion('', 'filetype')
     return filetypes.map(ft => filetypeToVscLanguage(ft))
@@ -30,11 +60,13 @@ const languages: typeof vsc.languages = {
     return 0
   },
   onDidChangeDiagnostics: fn => registerEvent('didChangeDiagnostics', fn),
-  getDiagnostics: () => {
-    console.warn('NYI: languages.getDiagnostics')
-    return []
+  createDiagnosticCollection: name => {
+    // TODO: what does vscode do if no name is provided?
+    const key = name || uuid()
+    const collection = DiagnosticCollection(key)
+    diagnosticCollectionRepository.set(key, collection)
+    return collection
   },
-  createDiagnosticCollection: name => DiagnosticCollection(name),
   setLanguageConfiguration: (language, configuration) => {
     console.warn('NYI: languages.setLanguageConfiguration', language, configuration)
     return { dispose: () => {} }
