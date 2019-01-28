@@ -5,6 +5,7 @@ import { NeovimAPI } from '../neovim/api'
 import { EventEmitter } from 'events'
 
 interface Doc {
+  id: number
   uri: string
   name: string
 }
@@ -76,6 +77,7 @@ const api = (nvim: NeovimAPI, onlyFiletypeBuffers?: string[]) => {
       watchers.emit('didOpen', {
         name,
         filetype,
+        id: buffer.id,
         version: changedTick,
         uri: `file://${name}`,
         languageId: filetypeToLanguageID(filetype),
@@ -95,6 +97,7 @@ const api = (nvim: NeovimAPI, onlyFiletypeBuffers?: string[]) => {
         firstLine,
         lastLine,
         textLines,
+        id: buffer.id,
         uri: `file://${name}`,
         languageId: filetypeToLanguageID(filetype),
         contentChanges: nvimChangeToLSPChange(change),
@@ -119,6 +122,7 @@ const api = (nvim: NeovimAPI, onlyFiletypeBuffers?: string[]) => {
       attachedBuffers.delete(buffer)
       watchers.emit('didClose', {
         name,
+        id: buffer.id,
         uri: `file://${name}`,
       } as Doc)
     })
@@ -154,12 +158,14 @@ const api = (nvim: NeovimAPI, onlyFiletypeBuffers?: string[]) => {
 
     watchers.emit('didClose', {
       name,
+      id: buffer.id,
       uri: `file://${name}`,
     } as Doc)
 
     watchers.emit('didOpen', {
       name,
       filetype,
+      id: buffer.id,
       version: revision,
       uri: `file://${name}`,
       languageId: filetypeToLanguageID(filetype),
@@ -175,17 +181,19 @@ const api = (nvim: NeovimAPI, onlyFiletypeBuffers?: string[]) => {
     subscribeToBufferChanges(nvim.current.buffer, nvim.state.absoluteFilepath)
   }))
 
-  dsp.add(nvim.on.bufWritePre(() => {
+  dsp.add(nvim.on.bufWritePre(buffer => {
     if (invalidFiletype(nvim.state.filetype)) return
     watchers.emit('willSave', {
+      id: buffer.id,
       name: nvim.state.absoluteFilepath,
       uri: `file://${nvim.state.absoluteFilepath}`,
     } as Doc)
   }))
 
-  dsp.add(nvim.on.bufWrite(() => {
+  dsp.add(nvim.on.bufWrite(buffer => {
     if (invalidFiletype(nvim.state.filetype)) return
     watchers.emit('didSave', {
+      id: buffer.id,
       name: nvim.state.absoluteFilepath,
       uri: `file://${nvim.state.absoluteFilepath}`,
     } as Doc)
