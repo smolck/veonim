@@ -1,6 +1,6 @@
 import WorkspaceConfiguration from '../vscode/workspace-configuration'
+import TextDocumentManager from '../neovim/text-document-manager'
 import { Watcher, pathRelativeToCwd } from '../support/utils'
-import DocumentSyncManager from '../vscode/doc-sync-manager'
 import TextDocument from '../vscode/text-document'
 import nvimSync from '../neovim/sync-api-client'
 import { URI } from '../vscode/uri'
@@ -21,14 +21,29 @@ interface Events {
 }
 
 const events = Watcher<Events>()
-export type WorkspaceWatcher = typeof events
-
-DocumentSyncManager(events)
+const tdm = TextDocumentManager(nvim)
 
 nvim.watchState.cwd((cwd, previousCwd) => events.emit('didChangeWorkspaceFolders', {
   added: [ WorkspaceFolder(cwd) ],
   removed: [ WorkspaceFolder(previousCwd) ],
 }))
+
+tdm.on.didOpen(({ id }) => events.emit('didOpenTextDocument', TextDocument(id)))
+
+tdm.on.didChange(({ id, contentChanges }) => events.emit('didChangeTextDocument', {
+  contentChanges,
+  document: TextDocument(id),
+} as vsc.TextDocumentChangeEvent))
+
+tdm.on.willSave(({ id }) => events.emit('willSaveTextDocument', {
+  document: TextDocument(id),
+  reason: vsc.TextDocumentSaveReason.Manual,
+  waitUntil: () => console.warn('willSave event waitUntil() not supported'),
+} as vsc.TextDocumentWillSaveEvent))
+
+tdm.on.didSave(({ id }) => events.emit('didSaveTextDocument', TextDocument(id)))
+
+tdm.on.didClose(({ id }) => events.emit('didCloseTextDocument', TextDocument(id)))
 
 const workspace: typeof vsc.workspace = {
   get rootPath() { return nvim.state.cwd },
