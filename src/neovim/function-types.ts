@@ -60,6 +60,7 @@ export interface Functions {
   getqflist(): Promise<QuickFixList[]>
   cursor(line: number, column: number): Promise<void>
   bufname(expr: string | number): Promise<string>
+  bufnr(expr: string, create?: number): Promise<number>
   getbufline(expr: string | number, startLine: number, endLine?: number | string): Promise<string[]>
   getbufvar(expr: string | number, varname?: string, defaultValue?: any): Promise<any>
   termopen(cmd: string, options: object): void

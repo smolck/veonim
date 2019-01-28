@@ -206,6 +206,14 @@ const jumpToProjectFile = async ({ line, column, path }: HyperspaceCoordinates) 
 const systemAction = (event: string, cb: GenericCallback) => watchers.actions.on(event, cb)
 
 const buffers = {
+  create: async ({ filetype = '', content = '' } = {}) => {
+    const bufid = await call.bufnr('[No Name]', 420)
+    cmd(`b ${bufid}`)
+    const buffer = Buffer(bufid)
+    if (filetype) buffer.setOption(BufferOption.Filetype, filetype)
+    if (content) buffer.append(0, content.split('\n'))
+    return buffer
+  },
   list: () => as.bufl(req.core.listBufs()),
   open: async (file: string) => {
     const loaded = await loadBuffer(file)
