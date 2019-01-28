@@ -61,8 +61,8 @@ const languages: typeof vsc.languages = {
   },
   onDidChangeDiagnostics: fn => registerEvent('didChangeDiagnostics', fn),
   createDiagnosticCollection: name => {
-    // TODO: what does vscode do if no name is provided?
-    const key = name || uuid()
+    const id = name || uuid()
+    const key = diagnosticCollectionRepository.has(id) ? uuid() : id
     const collection = DiagnosticCollection(key)
     diagnosticCollectionRepository.set(key, collection)
     return collection
