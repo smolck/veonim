@@ -90,7 +90,7 @@ const view = ($: S, a: typeof actions) => h('div', {
   })
 
   ,h('div', {
-    ref: (e: HTMLElement) => {
+    oncreate: (e: HTMLElement) => {
       if (e) elref = e
     },
     style: { overflowY: 'hidden' }
