@@ -97,8 +97,8 @@ const workspace: typeof vsc.workspace = {
       return TextDocument(buffer.id)
     }
 
-    console.warn('NYI: workspace.openTextDocument open an untitled document')
-    return TextDocument(-1)
+    const buffer = await nvim.buffers.create(arg)
+    return TextDocument(buffer.id)
   },
   registerTextDocumentContentProvider: () => {
     console.warn('NYI: workspace.registerTextDocumentContentProvider')
