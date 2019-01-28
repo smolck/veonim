@@ -174,7 +174,7 @@ const loadBuffer = async (file: string): Promise<boolean> => {
   const targetBuffer = await buffers.find(file)
   if (!targetBuffer) return false
 
-  api.core.setCurrentBuf(targetBuffer.id)
+  api.core.setCurrentBuf(targetBuffer.id as any)
   return true
 }
 
@@ -219,7 +219,7 @@ const buffers = {
     // it appears that buffers name will have a fullpath, like
     // `/Users/anna/${name}` so we will try to substring match 
     // the end of the name
-    const found = buffers.find(b => b.name.endsWith(name)) || {} as any
+    const found = buffers.find(b => b.name.endsWith(name)) || { buffer: dummy.buf }
     return found.buffer
   },
   add: async (name: string) => {

@@ -1,6 +1,6 @@
 import WorkspaceConfiguration from '../vscode/workspace-configuration'
 import TextDocumentManager from '../neovim/text-document-manager'
-import { Watcher, pathRelativeToCwd } from '../support/utils'
+import { Watcher, pathRelativeToCwd, is } from '../support/utils'
 import TextDocument from '../vscode/text-document'
 import nvimSync from '../neovim/sync-api-client'
 import { URI } from '../vscode/uri'
@@ -86,9 +86,18 @@ const workspace: typeof vsc.workspace = {
     console.warn('NYI: workspace.applyEdit')
     return false
   },
-  openTextDocument: async () => {
-    console.warn('NYI: workspace.openTextDocument')
-    // TODO: lolnope
+  openTextDocument: async (arg: any) => {
+    if (is.object(arg) && arg.path) {
+      const buffer = await nvim.buffers.add((arg as vsc.Uri).path)
+      return TextDocument(buffer.id)
+    }
+
+    if (is.string(arg)) {
+      const buffer = await nvim.buffers.add(arg as string)
+      return TextDocument(buffer.id)
+    }
+
+    console.warn('NYI: workspace.openTextDocument open an untitled document')
     return TextDocument(-1)
   },
   registerTextDocumentContentProvider: () => {
