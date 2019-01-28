@@ -78,7 +78,7 @@ const workspace: typeof vsc.workspace = {
   // TODO: nvim does not provide a save buffers in background option yet
   saveAll: () => Promise.resolve(false),
   findFiles: async () => {
-    // TODO: i don't want to bring in a glob library, wtf
+    // TODO: vscode has a glob module built-in. we have it in veonim src
     console.warn('NYI: workspace.findFiles')
     return []
   },

@@ -1,8 +1,10 @@
 import { DebugAdapterConnection } from '../messaging/debug-protocol'
 import { traceLANGSERV as log } from '../support/trace'
 import { workerData } from '../messaging/worker-client'
+import { Providers } from '../extension-host/providers'
 import nvimSyncApiHandler from '../neovim/sync-api'
 import Worker from '../messaging/worker'
+import { uuid } from '../support/utils'
 
 // TODO: move to shared place
 interface DebugConfiguration {
@@ -41,6 +43,27 @@ onContextHandler(nvimSyncApiHandler)
 
 on.clipboardRead(request.clipboardRead)
 on.clipboardWrite(call.clipboardWrite)
+
+type ProviderMethods = keyof Providers
+type ProviderRequest = {
+  [Method in ProviderMethods]: (...args: Parameters<Providers[Method]>) => {
+    cancel: () => void
+    request: ReturnType<Providers[Method]>
+  }
+}
+
+const vscodeProvidersBridge: ProviderRequest = new Proxy(Object.create(null), {
+  get: (_: any, method: string) => (...args: any[]) => {
+    const id = uuid()
+    const req = request.vscode_provider_request(method, id, args)
+    const cancel = request.vscode_provider_request('cancelRequest', id)
+    return { cancel, request: req }
+  }
+})
+
+export const vscode = {
+  providers: vscodeProvidersBridge,
+}
 
 const bridgeServer = (serverId: string): RPCServer => {
   const api = {} as RPCServer

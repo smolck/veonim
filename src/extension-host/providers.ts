@@ -314,8 +314,8 @@ const api = {
 
 export type Providers = typeof api
 
-on.ai_language_request(async (method: string, tokenId: string, ...args: any[]) => {
+on.vscode_provider_request(async (method: string, tokenId: string, args: any[]) => {
   const func = Reflect.get(api, method)
   if (!func) return console.error('no language provider registered for:', method)
-  return func(tokenId, ...args)
+  return func(...args, tokenId)
 })
