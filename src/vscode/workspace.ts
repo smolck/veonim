@@ -1,5 +1,6 @@
 import WorkspaceConfiguration from '../vscode/workspace-configuration'
 import { Watcher, pathRelativeToCwd } from '../support/utils'
+import DocumentSyncManager from '../vscode/doc-sync-manager'
 import TextDocument from '../vscode/text-document'
 import nvimSync from '../neovim/sync-api-client'
 import { URI } from '../vscode/uri'
@@ -15,10 +16,14 @@ interface Events {
   didChangeTextDocument: vsc.TextDocumentChangeEvent
   willSaveTextDocument: vsc.TextDocumentWillSaveEvent
   didSaveTextDocument: vsc.TextDocument
+  // TODO: no didChangeConfig emitters yet
   didChangeConfiguration: vsc.ConfigurationChangeEvent
 }
 
 const events = Watcher<Events>()
+export type WorkspaceWatcher = typeof events
+
+DocumentSyncManager(events)
 
 nvim.watchState.cwd((cwd, previousCwd) => events.emit('didChangeWorkspaceFolders', {
   added: [ WorkspaceFolder(cwd) ],
@@ -77,6 +82,7 @@ const workspace: typeof vsc.workspace = {
   },
   // TODO: i'm not sure what the resource is used for?
   getConfiguration: (section, resource) => {
+    // TODO: we should load configuration (somewhere) provided in package.json
     if (resource) console.warn('NYI: workspace.getConfiguration - resource param not used:', resource)
     return WorkspaceConfiguration(section)
   },
