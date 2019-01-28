@@ -8,6 +8,7 @@ import { normalizeVimMode} from '../support/neovim-utils'
 import { Functions } from '../neovim/function-types'
 import { Autocmds } from '../neovim/startup'
 import CreateVimState from '../neovim/state'
+import { Position } from '../vscode/types'
 import { Patch } from '../langserv/patch'
 import { basename, dirname } from 'path'
 import { EventEmitter } from 'events'
@@ -532,8 +533,8 @@ const Buffer = (id: any) => ({
     const lines = await req.buf.getLines(id, startLine, endLine, false)
     const updatedLines = TextEditPatch.replace({
       lines,
-      start: { line: 0, column: startColumn },
-      end: { line: endLine - startLine, column: endColumn },
+      start: new Position(0, startColumn),
+      end: new Position(endLine - startLine, endColumn),
       text
     })
     req.buf.setLines(id, startLine, endLine, false, updatedLines)
@@ -542,8 +543,8 @@ const Buffer = (id: any) => ({
     const lines = await req.buf.getLines(id, startLine, endLine, false)
     const updatedLines = TextEditPatch.remove({
       lines,
-      start: { line: 0, column: startColumn },
-      end: { line: endLine - startLine, column: endColumn },
+      start: new Position(0, startColumn),
+      end: new Position(endLine - startLine, endColumn),
     })
     req.buf.setLines(id, startLine, endLine, false, updatedLines)
   },

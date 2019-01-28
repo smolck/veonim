@@ -1,6 +1,8 @@
-import { TextDocumentContentChangeEvent } from 'vscode-languageserver-protocol'
+import { positionToOffset } from '../neovim/text-edit-patch'
 import filetypeToLanguageID from '../langserv/vsc-languages'
 import { BufferChangeEvent, Buffer } from '../neovim/types'
+import { TextDocumentContentChangeEvent } from 'vscode'
+import { Range, Position } from '../vscode/types'
 import { NeovimAPI } from '../neovim/api'
 import { EventEmitter } from 'events'
 
@@ -30,30 +32,36 @@ interface DidChange extends DocInfo {
 
 type On<T> = (params: T) => void
 
+const positionsToRangeData = (startLine: number, startColumn: number, endLine: number, endColumn: number, lineData: string[]) => {
+  const start = new Position(startLine, startColumn)
+  const end = new Position(endLine, endColumn)
+  const range = new Range(start, end)
+  const rangeOffset = positionToOffset(lineData, start)
+  const rangeOffsetEnd = positionToOffset(lineData, end)
+  const rangeLength = rangeOffsetEnd - rangeOffset
+  return { range, rangeLength, rangeOffset }
+}
+
 const nvimChangeToLSPChange = ({ firstLine, lastLine, lineData }: BufferChangeEvent): TextDocumentContentChangeEvent[] => {
   const isEmpty = !lineData.length
-  const range = {
-    start: { line: firstLine, character: 0 },
-    end: { line: lastLine, character: 0 },
-  }
 
-  if (isEmpty) return [{ range, text: '' }]
+  if (isEmpty) return [{
+    ...positionsToRangeData(firstLine, 0, lastLine, 0, lineData),
+    text: ''
+  }]
 
   const replaceOP = !isEmpty && lastLine - firstLine === 1
 
   if (replaceOP) return [{
-    range,
+    ...positionsToRangeData(firstLine, 0, lastLine, 0, lineData),
     text: '',
   }, {
-    range: {
-      start: { line: firstLine, character: 0 },
-      end: { line: firstLine, character: 0 },
-    },
+    ...positionsToRangeData(firstLine, 0, firstLine, 0, lineData),
     text: lineData.map(line => `${line}\n`).join(''),
   }]
 
   return [{
-    range,
+    ...positionsToRangeData(firstLine, 0, lastLine, 0, lineData),
     text: lineData.map(line => `${line}\n`).join(''),
   }]
 }
