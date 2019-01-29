@@ -194,7 +194,7 @@ export const brighten = (color: string, amount: number) => shadeColor(color, (am
 export const darken = (color: string, amount: number) => shadeColor(color, -(amount / 100))
 
 // chrome does not support .finished property on animate()
-export const animate = (element: HTMLElement, keyframes: AnimationKeyFrame[], options = {} as any): Promise<void> => {
+export const animate = (element: HTMLElement, keyframes: Keyframe[], options = {} as any): Promise<void> => {
   if (options.duration) {
     element.animate(keyframes, options)
     return new Promise(fin => setTimeout(fin, options.duration - 25))

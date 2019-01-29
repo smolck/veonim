@@ -34,7 +34,7 @@ export const merge = Object.assign
 export const cc = (...a: any[]) => Promise.all(a)
 export const delay = (t: number) => new Promise(d => setTimeout(d, t))
 export const ID = (val = 0) => ({ next: () => (val++, val) })
-export const $ = (...fns: Function[]) => (...a: any[]) => fns.reduce((res, fn, ix) => ix ? fn(res) : fn(...res), a)
+export const $ = <T>(...fns: Function[]) => (...a: any[]) => fns.reduce((res, fn, ix) => ix ? fn(res) : fn(...res), a) as unknown as T
 export const is = new Proxy<Types>({} as Types, { get: (_, key) => (val: any) => type(val) === key })
 export const onProp = <T>(cb: (name: PropertyKey) => void): T => new Proxy({}, { get: (_, name) => cb(name) }) as T
 export const onFnCall = <T>(cb: (name: string, args: any[]) => void): T => new Proxy({}, { get: (_, name) => (...args: any[]) => cb(name as string, args) }) as T
@@ -248,26 +248,27 @@ export type GenericEvent = { [index: string]: any }
 export const Watcher = <T>() => {
   const ee = new EventEmitter()
 
-  const on = <K extends keyof T>(event: K, handler: (value: T[K]) => void) => {
+  const on = <K extends keyof T>(event: K & string, handler: (value: T[K]) => void) => {
     ee.on(event, handler)
     return () => ee.removeListener(event, handler)
   }
 
-  const once = <K extends keyof T>(event: K, handler: (...args: any[]) => void) => {
+  const once = <K extends keyof T>(event: K & string, handler: (...args: any[]) => void) => {
     ee.once(event, handler)
   }
 
   // TODO: how do we make "value" arg require OR optional based on T[K]?
-  type Emit1 = <K extends keyof T>(event: K) => void
-  type Emit2 = <K extends keyof T>(event: K, value: T[K]) => void
-  type Emit3 = <K extends keyof T>(event: K, ...args: any[]) => void
-  type Emit = Emit1 & Emit2 & Emit3
+  type Emit = {
+    <K extends keyof T>(event: K): void
+    <K extends keyof T>(event: K, value: T[K]): void
+    <K extends keyof T>(event: K, ...args: any[]): void
+  }
 
   const emit: Emit = (event: string, ...args: any[]) => {
     ee.emit(event, ...args)
   }
 
-  const remove = (event: keyof T) => {
+  const remove = (event: keyof T & string) => {
     ee.removeAllListeners(event)
   }
 

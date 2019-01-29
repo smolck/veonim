@@ -251,7 +251,7 @@ const doIntenvory = async () => {
 
   const validLayerKeybinds = new Set(inventoryLayers.map(m => m.keybind))
 
-  const reset = (actionFn?: Function) => {
+  const reset = (actionFn?: () => void) => {
     restoreInput()
     ui.hide()
 
