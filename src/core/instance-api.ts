@@ -1,7 +1,7 @@
 import { getActiveInstance, onSwitchVim, onCreateVim, instances } from '../core/instance-manager'
 import { VimMode, BufferInfo, HyperspaceCoordinates } from '../neovim/types'
 import { CompletionItem, Command } from 'vscode-languageserver-protocol'
-import { onFnCall, pascalCase, is } from '../support/utils'
+import { onFnCall, pascalCase } from '../support/utils'
 import { colors } from '../render/highlight-attributes'
 import { Functions } from '../neovim/function-types'
 import { WindowMetadata } from '../windows/metadata'
@@ -116,9 +116,7 @@ const nvimSaveCursor = async () => {
 }
 
 const nvimHighlightSearchPattern = async (pattern: string, id?: number): Promise<number> => {
-  const res = await getActiveInstance().request.nvimHighlightSearchPattern(pattern, id)
-  // TODO: undefined gets converted to an empty array in the rpc layer??
-  return is.array(res) ? undefined : res
+  return getActiveInstance().request.nvimHighlightSearchPattern(pattern, id)
 }
 
 const nvimRemoveHighlightSearch = async (id: number, pattern?: string): Promise<boolean> => {

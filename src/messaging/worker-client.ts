@@ -22,7 +22,7 @@ const readSharedArray = (id: number) => {
   return fromJSON(jsonString).or({})
 }
 
-onmessage = async ({ data: [e, data = [], id] }: MessageEvent) => {
+onmessage = async ({ data: [e, data, id] }: MessageEvent) => {
   if (e === '@@sab') {
     sharedArray = new Int32Array(data[0])
     return
