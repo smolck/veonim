@@ -46,18 +46,16 @@ on.clipboardWrite(call.clipboardWrite)
 
 type ProviderMethods = keyof Providers
 type ProviderRequest = {
-  [Method in ProviderMethods]: (...args: Parameters<Providers[Method]>) => {
-    cancel: () => void
-    request: ReturnType<Providers[Method]>
-  }
+  [Method in ProviderMethods]: Providers[Method]
 }
 
 const vscodeProvidersBridge: ProviderRequest = new Proxy(Object.create(null), {
   get: (_: any, method: string) => (...args: any[]) => {
     const id = uuid()
-    const req = request.vscode_provider_request(method, id, args)
-    const cancel = request.vscode_provider_request('cancelRequest', id)
-    return { cancel, request: req }
+    return {
+      cancel: () => call.vscode_provider_request('cancelRequest', id),
+      promise: request.vscode_provider_request(method, args, id),
+    }
   }
 })
 
