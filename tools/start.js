@@ -24,7 +24,7 @@ go(async () => {
   const tsc = createTask()
 
   run('tsc -p src/tsconfig.json --watch --preserveWatchOutput', {
-    outputMatch: 'compilation complete',
+    outputMatch: 'watching for file changes',
     onOutputMatch: async () => {
       await unfuckTypescript()
       copy.index()
