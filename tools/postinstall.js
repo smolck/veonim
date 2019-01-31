@@ -19,8 +19,9 @@ const binaryDependencies = async () => {
 
 const vscodeTypings = () => new Promise(async (done, fail) => {
   const vscodeApiVersion = Reflect.get(pkg, 'vscode-api-version')
+  $`fetching vscode api ${vscodeApiVersion}`
   const modulePath = 'node_modules/@types/vscode'
-const vscodeTypingsUrl = version => `https://raw.githubusercontent.com/Microsoft/vscode/${version}/src/vs/vscode.d.ts`
+  const vscodeTypingsUrl = version => `https://raw.githubusercontent.com/Microsoft/vscode/${version}/src/vs/vscode.d.ts`
 
   await fs.ensureDir(fromRoot(modulePath))
   await fs.writeFile(fromRoot(modulePath, 'package.json'), `{

@@ -37,7 +37,7 @@ tdm.on.didChange(({ id, contentChanges }) => events.emit('didChangeTextDocument'
 
 tdm.on.willSave(({ id }) => events.emit('willSaveTextDocument', {
   document: TextDocument(id),
-  reason: vsc.TextDocumentSaveReason.Manual,
+  reason: 1, // TextDocumentSaveReason.Manual
   waitUntil: () => console.warn('willSave event waitUntil() not supported'),
 } as vsc.TextDocumentWillSaveEvent))
 
