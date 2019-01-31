@@ -1,6 +1,7 @@
 import { TextEditorCursorStyle, OverviewRulerLane, IndentAction } from '../vscode/enums'
 import { CancellationTokenSource } from '../vscode/cancellation'
 import { Emitter as EventEmitter } from '../vscode/event'
+import packageInfo from '../support/package-info'
 import * as vscodeTypes from '../vscode/types'
 import extensions from '../vscode/extensions'
 import languages from '../vscode/languages'
@@ -22,8 +23,7 @@ export enum FileType {
 }
 
 const api: typeof vsc = {
-  // TODO: get this from package.json
-  version: '1.30.2',
+  version: packageInfo['vscode-api-version'],
   ...vscodeTypes,
   CancellationTokenSource,
   TextEditorCursorStyle,
