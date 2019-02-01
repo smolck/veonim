@@ -1,7 +1,7 @@
+import { LanguageFeatures, LanguageTriggerCharacters } from '../extension-host/language-features'
 import { DebugAdapterConnection } from '../messaging/debug-protocol'
 import { traceLANGSERV as log } from '../support/trace'
 import { workerData } from '../messaging/worker-client'
-import { Providers } from '../extension-host/providers'
 import nvimSyncApiHandler from '../neovim/sync-api'
 import Worker from '../messaging/worker'
 import { uuid } from '../support/utils'
@@ -44,23 +44,23 @@ onContextHandler(nvimSyncApiHandler)
 on.clipboardRead(request.clipboardRead)
 on.clipboardWrite(call.clipboardWrite)
 
-type ProviderMethods = keyof Providers
-type ProviderRequest = {
-  [Method in ProviderMethods]: Providers[Method]
-}
-
-const vscodeProvidersBridge: ProviderRequest = new Proxy(Object.create(null), {
+const languageBridge: LanguageFeatures = new Proxy(Object.create(null), {
   get: (_: any, method: string) => (...args: any[]) => {
     const id = uuid()
     return {
-      cancel: () => call.vscode_provider_request('cancelRequest', id),
-      promise: request.vscode_provider_request(method, args, id),
+      cancel: () => call.language_feature_cancel('cancelRequest', id),
+      promise: request.language_feature(method, args, id),
     }
   }
 })
 
+const languageTriggerCharsBridge: LanguageTriggerCharacters = new Proxy(Object.create(null), {
+  get: (_: any, method: string) => () => request.language_trigger_characters(method),
+})
+
 export const vscode = {
-  providers: vscodeProvidersBridge,
+  language: languageBridge,
+  triggerCharacters: languageTriggerCharsBridge,
 }
 
 const bridgeServer = (serverId: string): RPCServer => {
