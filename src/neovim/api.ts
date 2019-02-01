@@ -298,11 +298,20 @@ const isFunc = (m: any) => is.function(m) || is.asyncfunction(m)
 
 const getCursorPosition = () => requestFromUI.getCursorPosition()
 
+interface CurrentCache {
+  buffer?: Buffer
+}
+
+const _currentCache: CurrentCache = {
+  buffer: undefined,
+}
+
 const current = {
   get buffer(): Buffer {
     const promise = as.buf(req.core.getCurrentBuf())
 
     return onProp<Buffer>(prop => {
+      if (prop === 'id' && _currentCache.buffer) return _currentCache.buffer.id
       const testValue = Reflect.get(dummy.buf, prop)
       if (testValue == null) throw new TypeError(`${prop as string} does not exist on Neovim.Buffer`)
       return isFunc(testValue)
@@ -476,6 +485,8 @@ autocmd.TextChangedI(revision => {
 
 // TODO: i think we should just determine this from render events
 autocmd.WinEnter((id: number) => watchers.events.emit('winEnter', id))
+
+on.bufLoad(buffer => Object.assign(_currentCache, { buffer }))
 
 const fromId = {
   buffer: (id: number): Buffer => Buffer(id),
