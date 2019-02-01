@@ -1,9 +1,11 @@
 import filetypeToVscLanguage, { vscLanguageToFiletypes } from '../langserv/vsc-languages'
 import DiagnosticCollection from '../vscode/diagnostic-collection'
+import { languageSelectorFrom } from '../vscode/type-converters'
 import { Watcher, is, uuid, MapSetter } from '../support/utils'
 import { SuperTextDocument } from '../vscode/text-document'
 import { providers } from '../extension-host/providers'
 import { selectorToFiletypes } from '../vscode/tools'
+import { score } from '../vscode/language-selector'
 import nvim from '../neovim/api'
 import * as vsc from 'vscode'
 
@@ -55,9 +57,13 @@ const languages: typeof vsc.languages = {
     nvim.Buffer((document as SuperTextDocument)._nvimBufferId).setOption('filetype', filetype)
     return document
   },
-  match: () => {
-    console.warn('NYI: languages.match')
-    return 0
+  match: (selector, document) => {
+    // vscode type checking is not as strict as ours. the language selector does return undefined
+    // which is not allowed according to the return signature. however it seems to be okay because
+    // score() handles undefined (even though the signature does not permit undefined).
+    // damn good job! damn good bloody good damn good job!
+    const languageSelector = languageSelectorFrom(selector)!
+    return score(languageSelector, document.uri, document.languageId, true)
   },
   onDidChangeDiagnostics: fn => registerEvent('didChangeDiagnostics', fn),
   createDiagnosticCollection: name => {
