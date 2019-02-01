@@ -4,8 +4,10 @@ import { vscode } from '../core/extensions-api'
 import nvim from '../neovim/api'
 
 const doVscodeDefintion = async () => {
-  const req = vscode.providers.provideDefinition()
-  console.log('vscode defintion', req)
+  const { cancel, promise } = vscode.providers.provideDefinition()
+  console.log('vscode definition cancel token', cancel)
+  const result = await promise
+  console.log('result', result)
 }
 
 const doDefinition = async () => {

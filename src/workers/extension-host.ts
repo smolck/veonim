@@ -269,30 +269,17 @@ const activateExtensionForLanguage = async (language: string) => {
   return activateExtension(extension)
 }
 
+// TODO: we should build a new activation mechanism that relies on
+// filetypes. it should have no interaction with instance thread
 const activate = {
   language: async (language: string) => {
     // TODO: handle extension dependencies
-    const subscriptions = await activateExtensionForLanguage(language)
+    const extensionDisposables = await activateExtensionForLanguage(language)
+    // TODO: need to call these disposables when extension deactivates
+    // TODO: when do extensions deactivate?
+    console.log('extensionDisposables', extensionDisposables)
     console.log('language', language)
-    console.log('subscriptions', subscriptions)
-    if (!subscriptions.length) return
-
-    // TODO: potentially other subscriptions disposables
-    // how can subs be both disposables and promises that return child processes?
-    // would like to double check the typings in vscode
-    const [ serverActivator ] = subscriptions as any[]
-
-    // TODO: i don't think extensions need to return the langserv??
-    if (!is.promise(serverActivator)) {
-      return console.error(`server activator function not valid or did not return a promise for ${language}`)
-    }
-
-    const proc: ChildProcess = await serverActivator
-    const serverId = connectRPCServer(proc)
-    // TODO: register updater dispose and call it when langserv is gone.
-    console.log('activate language:', language)
-    updateLanguageServersWithTextDocuments(getServer(serverId), language)
-    return serverId
+    return ''
   },
 }
 
