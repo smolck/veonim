@@ -55,7 +55,7 @@ export default {
   cancelRequest: (tokenId: string) => cancelTokenById(tokenId),
   provideCompletionItems: (context: vsc.CompletionContext, tokenId: string) => {
     const funcs = providers.provideCompletionItems.get(nvim.state.filetype)
-    if (!funcs) return
+    if (!funcs) return []
 
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
@@ -65,7 +65,7 @@ export default {
   },
   resolveCompletionItem: (item: vsc.CompletionItem, tokenId: string) => {
     const funcs = providers.resolveCompletionItem.get(nvim.state.filetype)
-    if (!funcs) return
+    if (!funcs) return []
 
     const { token } = makeCancelToken(tokenId!)
 
@@ -76,7 +76,7 @@ export default {
   },
   provideCodeActions: (context: vsc.CodeActionContext, tokenId: string) => {
     const funcs = providers.provideCodeActions.get(nvim.state.filetype)
-    if (!funcs) return
+    if (!funcs) return []
 
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
@@ -87,7 +87,7 @@ export default {
   },
   provideCodeLenses: (tokenId: string) => {
     const funcs = providers.provideCodeLenses.get(nvim.state.filetype)
-    if (!funcs) return
+    if (!funcs) return []
 
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
@@ -96,7 +96,7 @@ export default {
   },
   resolveCodeLens: (codeLens: vsc.CodeLens, tokenId: string) => {
     const funcs = providers.resolveCodeLens.get(nvim.state.filetype)
-    if (!funcs) return
+    if (!funcs) return []
 
     const { token } = makeCancelToken(tokenId!)
 
@@ -104,7 +104,7 @@ export default {
   },
   provideDefinition: (tokenId: string) => {
     const funcs = providers.provideDefinition.get(nvim.state.filetype)
-    if (!funcs) return
+    if (!funcs) return []
 
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
@@ -114,7 +114,7 @@ export default {
   },
   provideImplementation: (tokenId: string) => {
     const funcs = providers.provideImplementation.get(nvim.state.filetype)
-    if (!funcs) return
+    if (!funcs) return []
 
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
@@ -124,7 +124,7 @@ export default {
   },
   provideTypeDefinition: (tokenId: string) => {
     const funcs = providers.provideTypeDefinition.get(nvim.state.filetype)
-    if (!funcs) return
+    if (!funcs) return []
 
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
@@ -134,7 +134,7 @@ export default {
   },
   provideDeclaration: (tokenId: string) => {
     const funcs = providers.provideDeclaration.get(nvim.state.filetype)
-    if (!funcs) return
+    if (!funcs) return []
 
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
@@ -144,7 +144,7 @@ export default {
   },
   provideHover: (tokenId: string) => {
     const funcs = providers.provideHover.get(nvim.state.filetype)
-    if (!funcs) return
+    if (!funcs) return []
 
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
@@ -154,7 +154,7 @@ export default {
   },
   provideDocumentHighlights: (tokenId: string) => {
     const funcs = providers.provideDocumentHighlights.get(nvim.state.filetype)
-    if (!funcs) return
+    if (!funcs) return []
 
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
@@ -164,7 +164,7 @@ export default {
   },
   provideDocumentSymbols: (tokenId: string) => {
     const funcs = providers.provideDocumentSymbols.get(nvim.state.filetype)
-    if (!funcs) return
+    if (!funcs) return []
 
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
@@ -185,7 +185,7 @@ export default {
   },
   provideReferences: (tokenId: string) => {
     const funcs = providers.provideReferences.get(nvim.state.filetype)
-    if (!funcs) return
+    if (!funcs) return []
 
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
@@ -196,7 +196,7 @@ export default {
   },
   prepareRename: (tokenId: string) => {
     const funcs = providers.prepareRename.get(nvim.state.filetype)
-    if (!funcs) return
+    if (!funcs) return []
 
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
@@ -206,7 +206,7 @@ export default {
   },
   provideRenameEdits: (newName: string, tokenId: string) => {
     const funcs = providers.provideRenameEdits.get(nvim.state.filetype)
-    if (!funcs) return
+    if (!funcs) return []
 
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
@@ -216,7 +216,7 @@ export default {
   },
   provideDocumentFormattingEdits: async (tokenId: string) => {
     const funcs = providers.provideDocumentFormattingEdits.get(nvim.state.filetype)
-    if (!funcs) return
+    if (!funcs) return []
 
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
@@ -226,7 +226,7 @@ export default {
   },
   provideDocumentRangeFormattingEdits: async (range: Range, tokenId: string) => {
     const funcs = providers.provideDocumentRangeFormattingEdits.get(nvim.state.filetype)
-    if (!funcs) return
+    if (!funcs) return []
 
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
@@ -236,7 +236,7 @@ export default {
   },
   provideOnTypeFormattingEdits: async (character: string, tokenId: string) => {
     const funcs = providers.provideOnTypeFormattingEdits.get(nvim.state.filetype)
-    if (!funcs) return
+    if (!funcs) return []
 
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
@@ -247,7 +247,7 @@ export default {
   },
   provideSignatureHelp: (context: vsc.SignatureHelpContext, tokenId: string) => {
     const funcs = providers.provideSignatureHelp.get(nvim.state.filetype)
-    if (!funcs) return
+    if (!funcs) return []
 
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
@@ -257,7 +257,7 @@ export default {
   },
   provideDocumentLinks: (tokenId: string) => {
     const funcs = providers.provideDocumentLinks.get(nvim.state.filetype)
-    if (!funcs) return
+    if (!funcs) return []
 
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
@@ -266,7 +266,7 @@ export default {
   },
   resolveDocumentLink: (link: vsc.DocumentLink, tokenId: string) => {
     const funcs = providers.resolveDocumentLink.get(nvim.state.filetype)
-    if (!funcs) return
+    if (!funcs) return []
 
     const { token } = makeCancelToken(tokenId!)
 
@@ -274,7 +274,7 @@ export default {
   },
   provideColorPresentations: (color: vsc.Color, range: Range, tokenId: string) => {
     const funcs = providers.provideColorPresentations.get(nvim.state.filetype)
-    if (!funcs) return
+    if (!funcs) return []
 
     const { token } = makeCancelToken(tokenId!)
     const context = {
@@ -286,7 +286,7 @@ export default {
   },
   provideDocumentColors: (tokenId: string) => {
     const funcs = providers.provideDocumentColors.get(nvim.state.filetype)
-    if (!funcs) return
+    if (!funcs) return []
 
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
@@ -295,7 +295,7 @@ export default {
   },
   provideFoldingRanges: (tokenId: string) => {
     const funcs = providers.provideFoldingRanges.get(nvim.state.filetype)
-    if (!funcs) return
+    if (!funcs) return []
 
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)

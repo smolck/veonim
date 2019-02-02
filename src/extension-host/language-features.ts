@@ -7,6 +7,9 @@ const cancel = () => {}
 
 // tokenId is optional only for generating the interface. it will be for
 // sure passed along by the client thread proxy api
+
+// TODO: we should score multiple results and choose the best one
+// do that here or in the providers?
 const api = {
   completion: (context: vsc.CompletionContext, tokenId?: string) => ({ cancel, promise: async () => {
 
@@ -21,11 +24,10 @@ const api = {
 
   }}),
   definition: (tokenId?: string) => ({ cancel, promise: async () => {
-    const results = await providers.provideDefinition(tokenId!)
-    if (!results) return
-    const [ first ] = results
-    if (!first) return
-    const location = Array.isArray(first) ? first[0] : first
+    const [ locations ] = await providers.provideDefinition(tokenId!)
+    // TODO: dont choose just the locations one - need to score from multiple providers... how does vscode do this?
+    if (!locations) return
+    const location = Array.isArray(locations) ? locations[0] : locations
     return {
       path: ((location as vsc.Location).uri || (location as vsc.LocationLink).targetUri).path,
       line: ((location as vsc.Location).range || (location as vsc.LocationLink).targetRange).start.line,
@@ -33,11 +35,9 @@ const api = {
     }
   }}),
   implementation: (tokenId?: string) => ({ cancel, promise: async () => {
-    const results = await providers.provideImplementation(tokenId!)
-    if (!results) return
-    const [ first ] = results
-    if (!first) return
-    const location = Array.isArray(first) ? first[0] : first
+    const [ locations ] = await providers.provideImplementation(tokenId!)
+    if (!locations) return
+    const location = Array.isArray(locations) ? locations[0] : locations
     return {
       path: ((location as vsc.Location).uri || (location as vsc.LocationLink).targetUri).path,
       line: ((location as vsc.Location).range || (location as vsc.LocationLink).targetRange).start.line,
@@ -45,11 +45,9 @@ const api = {
     }
   }}),
   typeDefinition: (tokenId?: string) => ({ cancel, promise: async () => {
-    const results = await providers.provideTypeDefinition(tokenId!)
-    if (!results) return
-    const [ first ] = results
-    if (!first) return
-    const location = Array.isArray(first) ? first[0] : first
+    const [ locations ] = await providers.provideTypeDefinition(tokenId!)
+    if (!locations) return
+    const location = Array.isArray(locations) ? locations[0] : locations
     return {
       path: ((location as vsc.Location).uri || (location as vsc.LocationLink).targetUri).path,
       line: ((location as vsc.Location).range || (location as vsc.LocationLink).targetRange).start.line,
@@ -57,11 +55,9 @@ const api = {
     }
   }}),
   declaration: (tokenId?: string) => ({ cancel, promise: async () => {
-    const results = await providers.provideDeclaration(tokenId!)
-    if (!results) return
-    const [ first ] = results
-    if (!first) return
-    const location = Array.isArray(first) ? first[0] : first
+    const [ locations ] = await providers.provideDeclaration(tokenId!)
+    if (!locations) return
+    const location = Array.isArray(locations) ? locations[0] : locations
     return {
       path: ((location as vsc.Location).uri || (location as vsc.LocationLink).targetUri).path,
       line: ((location as vsc.Location).range || (location as vsc.LocationLink).targetRange).start.line,
@@ -69,9 +65,7 @@ const api = {
     }
   }}),
   hover: (tokenId?: string) => ({ cancel, promise: async () => {
-    const results = await providers.provideHover(tokenId!)
-    if (!results) return
-    const [ hover ] = results
+    const [ hover ] = await providers.provideHover(tokenId!)
     if (!hover) return
     return hover.contents.reduce((res, markedString) => {
       const text = typeof markedString === 'string' ? markedString : markedString.value
@@ -79,6 +73,12 @@ const api = {
     }, [] as string[])
   }}),
   documentHighlights: (tokenId?: string) => ({ cancel, promise: async () => {
+    const results = await providers.provideDocumentHighlights(tokenId!)
+    if (!results) return
+    return results.filter(m => m).map(m => ({
+      // line: m!.
+
+    }))
 
   }}),
   documentSymbols: (tokenId?: string) => ({ cancel, promise: async () => {
