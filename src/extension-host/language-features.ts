@@ -6,6 +6,20 @@ import * as vsc from 'vscode'
 // this is used only to construct the typings interface
 const cancel = () => {}
 
+// the Range object has getters for the value (start, start.line, etc.)
+// the getters do not get transferred between threads
+const asRange = (range: vsc.Range) => ({
+  start: {
+    line: range.start.line,
+    character: range.start.character,
+  },
+  end: {
+    line: range.end.line,
+    character: range.end.character,
+  },
+})
+
+
 // tokenId is optional only for generating the interface. it will be for
 // sure passed along by the client thread proxy api
 
@@ -24,7 +38,7 @@ const cancel = () => {}
 // - single -> ask user to choose (definition, implementation, etc.)
 // - what about non-user ones, like resolving things or hover, signhelp?
 const api = {
-  completion: (context: vsc.CompletionContext, tokenId?: string) => ({ cancel, promise: async () => {
+  completion: (context: vsc.CompletionContext, tokenId?: string) => ({ cancel, promise: (async () => {
     const completions = await providers.provideCompletionItems(context, tokenId!)
     const incomplete = completions.some(m => !!(m as vsc.CompletionList).isIncomplete)
     return {
@@ -38,11 +52,11 @@ const api = {
         return [...res, ...next]
       }, [] as vsc.CompletionItem[])
     }
-  }}),
-  resolveCompletion: (item: vsc.CompletionItem, tokenId?: string) => ({ cancel, promise: async () => {
+  })()}),
+  resolveCompletion: (item: vsc.CompletionItem, tokenId?: string) => ({ cancel, promise: (async () => {
     return (await providers.resolveCompletionItem(item, tokenId!))[0]
-  }}),
-  codeActions: (context: vsc.CodeActionContext, tokenId?: string) => ({ cancel, promise: async () => {
+  })()}),
+  codeActions: (context: vsc.CodeActionContext, tokenId?: string) => ({ cancel, promise: (async () => {
     // TODO: dedup
     const actions = await providers.provideCodeActions(context, tokenId!)
     return actions
@@ -52,56 +66,56 @@ const api = {
     //   const act = m as vsc.CodeAction
     //   return Object.assign(m, m.command)
     // })
-  }}),
-  codeLens: (tokenId?: string) => ({ cancel, promise: async () => {
+  })()}),
+  codeLens: (tokenId?: string) => ({ cancel, promise: (async () => {
     // TODO: dedup?
     return providers.provideCodeLenses(tokenId!)
-  }}),
-  definition: (tokenId?: string) => ({ cancel, promise: async () => {
+  })()}),
+  definition: (tokenId?: string) => ({ cancel, promise: (async () => {
     const [ location ] = await providers.provideDefinition(tokenId!)
     if (!location) return
     return {
       path: ((location as vsc.Location).uri || (location as vsc.LocationLink).targetUri).path,
-      range: ((location as vsc.Location).range || (location as vsc.LocationLink).targetRange),
+      range: asRange((location as vsc.Location).range || (location as vsc.LocationLink).targetRange),
     }
-  }}),
-  implementation: (tokenId?: string) => ({ cancel, promise: async () => {
+  })()}),
+  implementation: (tokenId?: string) => ({ cancel, promise: (async () => {
     const [ location ] = await providers.provideImplementation(tokenId!)
     if (!location) return
     return {
       path: ((location as vsc.Location).uri || (location as vsc.LocationLink).targetUri).path,
-      range: ((location as vsc.Location).range || (location as vsc.LocationLink).targetRange),
+      range: asRange((location as vsc.Location).range || (location as vsc.LocationLink).targetRange),
     }
-  }}),
-  typeDefinition: (tokenId?: string) => ({ cancel, promise: async () => {
+  })()}),
+  typeDefinition: (tokenId?: string) => ({ cancel, promise: (async () => {
     const [ location ] = await providers.provideTypeDefinition(tokenId!)
     if (!location) return
     return {
       path: ((location as vsc.Location).uri || (location as vsc.LocationLink).targetUri).path,
-      range: ((location as vsc.Location).range || (location as vsc.LocationLink).targetRange),
+      range: asRange((location as vsc.Location).range || (location as vsc.LocationLink).targetRange),
     }
-  }}),
-  declaration: (tokenId?: string) => ({ cancel, promise: async () => {
+  })()}),
+  declaration: (tokenId?: string) => ({ cancel, promise: (async () => {
     const [ location ] = await providers.provideDeclaration(tokenId!)
     if (!location) return
     return {
       path: ((location as vsc.Location).uri || (location as vsc.LocationLink).targetUri).path,
-      range: ((location as vsc.Location).range || (location as vsc.LocationLink).targetRange),
+      range: asRange((location as vsc.Location).range || (location as vsc.LocationLink).targetRange),
     }
-  }}),
-  hover: (tokenId?: string) => ({ cancel, promise: async () => {
+  })()}),
+  hover: (tokenId?: string) => ({ cancel, promise: (async () => {
     const [ hover ] = await providers.provideHover(tokenId!)
-    if (!hover) return
+    if (!hover) return []
     return hover.contents.reduce((res, markedString) => {
       const text = typeof markedString === 'string' ? markedString : markedString.value
       return [...res, text]
     }, [] as string[])
-  }}),
-  documentHighlights: (tokenId?: string) => ({ cancel, promise: async () => {
+  })()}),
+  documentHighlights: (tokenId?: string) => ({ cancel, promise: (async () => {
     // TODO: dedup
     return providers.provideDocumentHighlights(tokenId!)
-  }}),
-  documentSymbols: (tokenId?: string) => ({ cancel, promise: async () => {
+  })()}),
+  documentSymbols: (tokenId?: string) => ({ cancel, promise: (async () => {
     // TODO: dedup
     const symbols = await providers.provideDocumentSymbols(tokenId!)
     return symbols.map(m => {
@@ -117,64 +131,64 @@ const api = {
         selectionRange: maybe(docsym.selectionRange),
       }
     })
-  }}),
-  workspaceSymbols: (query: string, tokenId?: string) => ({ cancel, promise: async () => {
+  })()}),
+  workspaceSymbols: (query: string, tokenId?: string) => ({ cancel, promise: (async () => {
     // TODO: dedup
     return providers.provideWorkspaceSymbols(query, tokenId!)
-  }}),
-  resolveWorkspaceSymbols: (symbol: vsc.SymbolInformation, tokenId?: string) => ({ cancel, promise: async () => {
+  })()}),
+  resolveWorkspaceSymbols: (symbol: vsc.SymbolInformation, tokenId?: string) => ({ cancel, promise: (async () => {
     return (await providers.resolveWorkspaceSymbol(symbol, tokenId!))[0]
-  }}),
-  prepareRename: (tokenId?: string) => ({ cancel, promise: async () => {
+  })()}),
+  prepareRename: (tokenId?: string) => ({ cancel, promise: (async () => {
     const res = (await providers.prepareRename(tokenId!))[0]
     return ((res as any).range || res) as vsc.Range
-  }}),
-  rename: (newName: string, tokenId?: string) => ({ cancel, promise: async () => {
+  })()}),
+  rename: (newName: string, tokenId?: string) => ({ cancel, promise: (async () => {
     // TODO: dedup edits
     const edits = await providers.provideRenameEdits(newName, tokenId!)
     return edits
-  }}),
-  documentFormattingEdits: (tokenId?: string) => ({ cancel, promise: async () => {
+  })()}),
+  documentFormattingEdits: (tokenId?: string) => ({ cancel, promise: (async () => {
     // TODO: dedup
     const edits = await providers.provideDocumentFormattingEdits(tokenId!)
     return edits
-  }}),
-  documentRangeFormattingEdits: (range: vsc.Range, tokenId?: string) => ({ cancel, promise: async () => {
+  })()}),
+  documentRangeFormattingEdits: (range: vsc.Range, tokenId?: string) => ({ cancel, promise: (async () => {
     // TODO: dedup
     const edits = await providers.provideDocumentRangeFormattingEdits(range, tokenId!)
     return edits
-  }}),
-  onTypeFormattingEdits: (character: string, tokenId?: string) => ({ cancel, promise: async () => {
+  })()}),
+  onTypeFormattingEdits: (character: string, tokenId?: string) => ({ cancel, promise: (async () => {
     // TODO: dedup
     const edits = await providers.provideOnTypeFormattingEdits(character, tokenId!)
     return edits
-  }}),
-  signatureHelp: (context: vsc.SignatureHelpContext, tokenId?: string) => ({ cancel, promise: async () => {
+  })()}),
+  signatureHelp: (context: vsc.SignatureHelpContext, tokenId?: string) => ({ cancel, promise: (async () => {
     return (await providers.provideSignatureHelp(context, tokenId!))[0]
-  }}),
-  documentLinks: (tokenId?: string) => ({ cancel, promise: async () => {
+  })()}),
+  documentLinks: (tokenId?: string) => ({ cancel, promise: (async () => {
     // TODO: dedup
     const links = await providers.provideDocumentLinks(tokenId!)
     return links
-  }}),
-  resolveDocumentLink: (link: vsc.DocumentLink, tokenId?: string) => ({ cancel, promise: async () => {
+  })()}),
+  resolveDocumentLink: (link: vsc.DocumentLink, tokenId?: string) => ({ cancel, promise: (async () => {
     return (await providers.resolveDocumentLink(link, tokenId!))[0]
-  }}),
-  colorPresentations: (color: vsc.Color, range: vsc.Range, tokenId?: string) => ({ cancel, promise: async () => {
+  })()}),
+  colorPresentations: (color: vsc.Color, range: vsc.Range, tokenId?: string) => ({ cancel, promise: (async () => {
     const colors = await providers.provideColorPresentations(color, range, tokenId!)
     // TODO: dedup
     return colors
-  }}),
-  documentColors: (tokenId?: string) => ({ cancel, promise: async () => {
+  })()}),
+  documentColors: (tokenId?: string) => ({ cancel, promise: (async () => {
     const colors = await providers.provideDocumentColors(tokenId!)
     // TODO: dedup
     return colors
-  }}),
-  foldingRanges: (tokenId?: string) => ({ cancel, promise: async () => {
+  })()}),
+  foldingRanges: (tokenId?: string) => ({ cancel, promise: (async () => {
     const ranges = await providers.provideFoldingRanges(tokenId!)
     // TODO: dedup
     return ranges
-  }}),
+  })()}),
 }
 
 const triggerCharacters = {

@@ -5,17 +5,20 @@ import nvim from '../neovim/api'
 
 const doVscodeDefintion = async () => {
   const { cancel, promise } = vscode.language.definition()
-  console.log('vscode definition cancel token', cancel)
-  const results = await promise
-  if (!results) return
-  const [ locations ] = results
-  if (!locations) return
-  if (Array.isArray(locations)) {
-    const loc = locations[0]
-    console.log('locations[0]', loc)
-  } else {
-    console.log('single location', locations)
-  }
+  // TODO: this is cute but doesn't work correctly
+  // need to only call cancelRequest if the timeout
+  // if timeout reached, we need to return from this func
+  const result = await Promise.race([
+    promise,
+    new Promise(fin => setTimeout(fin, 5e3)).then(cancel),
+  ])
+  if (!result) return
+  console.log('DEFINITION (path)', result.path, '(range)', result.range)
+  nvim.jumpTo({
+    path: result.path,
+    line: result.range.start.line,
+    column: result.range.start.character,
+  })
 }
 
 const doDefinition = async () => {
