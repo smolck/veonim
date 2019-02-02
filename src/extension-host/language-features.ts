@@ -10,27 +10,52 @@ const cancel = () => {}
 // sure passed along by the client thread proxy api
 
 // TODO: currently we extract only the first item, but we should be more intelligent
-// about how we extract multiple provider results
+// about how we extract multiple provider results.
+// or if we are supposed to get a list then we may
+// have duplicates from multiple providers. need to dedup
+// but before that need to score priority of providers
+// i think the scoring is based on how closely the
+// DocumentSelector matches the current filetype?
 const api = {
   completion: (context: vsc.CompletionContext, tokenId?: string) => ({ cancel, promise: async () => {
-
+    const completions = await providers.provideCompletionItems(context, tokenId!)
+    const incomplete = completions.some(m => !!(m as vsc.CompletionList).isIncomplete)
+    return {
+      incomplete,
+      // TODO: we should probably dedup completion items
+      // from multiple providers. do that here or in the provider?
+      items: completions.reduce((res, item) => {
+        const next = (item as vsc.CompletionList).items
+          ? (item as vsc.CompletionList).items
+          : [item as vsc.CompletionItem]
+        return [...res, ...next]
+      }, [] as vsc.CompletionItem[])
+    }
   }}),
   resolveCompletion: (item: vsc.CompletionItem, tokenId?: string) => ({ cancel, promise: async () => {
-
+    // TODO: which one? first?
+    const [ resolve ] = await providers.resolveCompletionItem(item, tokenId!)
+    return resolve
   }}),
-  codeActions: (tokenId?: string) => ({ cancel, promise: async () => {
-
+  codeActions: (context: vsc.CodeActionContext, tokenId?: string) => ({ cancel, promise: async () => {
+    const actions = await providers.provideCodeActions(context, tokenId!)
+    return actions
+    // TODO: this is hard
+    // return actions.map(m => {
+    //   const cmd = m as vsc.Command
+    //   const act = m as vsc.CodeAction
+    //   return Object.assign(m, m.command)
+    // })
   }}),
   codeLens: (tokenId?: string) => ({ cancel, promise: async () => {
-
+    return providers.provideCodeLenses(tokenId!)
   }}),
   definition: (tokenId?: string) => ({ cancel, promise: async () => {
     const [ location ] = await providers.provideDefinition(tokenId!)
     if (!location) return
     return {
       path: ((location as vsc.Location).uri || (location as vsc.LocationLink).targetUri).path,
-      line: ((location as vsc.Location).range || (location as vsc.LocationLink).targetRange).start.line,
-      column: ((location as vsc.Location).range || (location as vsc.LocationLink).targetRange).start.character,
+      range: ((location as vsc.Location).range || (location as vsc.LocationLink).targetRange),
     }
   }}),
   implementation: (tokenId?: string) => ({ cancel, promise: async () => {
@@ -38,8 +63,7 @@ const api = {
     if (!location) return
     return {
       path: ((location as vsc.Location).uri || (location as vsc.LocationLink).targetUri).path,
-      line: ((location as vsc.Location).range || (location as vsc.LocationLink).targetRange).start.line,
-      column: ((location as vsc.Location).range || (location as vsc.LocationLink).targetRange).start.character,
+      range: ((location as vsc.Location).range || (location as vsc.LocationLink).targetRange),
     }
   }}),
   typeDefinition: (tokenId?: string) => ({ cancel, promise: async () => {
@@ -47,8 +71,7 @@ const api = {
     if (!location) return
     return {
       path: ((location as vsc.Location).uri || (location as vsc.LocationLink).targetUri).path,
-      line: ((location as vsc.Location).range || (location as vsc.LocationLink).targetRange).start.line,
-      column: ((location as vsc.Location).range || (location as vsc.LocationLink).targetRange).start.character,
+      range: ((location as vsc.Location).range || (location as vsc.LocationLink).targetRange),
     }
   }}),
   declaration: (tokenId?: string) => ({ cancel, promise: async () => {
@@ -56,8 +79,7 @@ const api = {
     if (!location) return
     return {
       path: ((location as vsc.Location).uri || (location as vsc.LocationLink).targetUri).path,
-      line: ((location as vsc.Location).range || (location as vsc.LocationLink).targetRange).start.line,
-      column: ((location as vsc.Location).range || (location as vsc.LocationLink).targetRange).start.character,
+      range: ((location as vsc.Location).range || (location as vsc.LocationLink).targetRange),
     }
   }}),
   hover: (tokenId?: string) => ({ cancel, promise: async () => {
@@ -69,13 +91,7 @@ const api = {
     }, [] as string[])
   }}),
   documentHighlights: (tokenId?: string) => ({ cancel, promise: async () => {
-    const highlights = await providers.provideDocumentHighlights(tokenId!)
-    return highlights.map(({ range: { start, end } }) => ({
-      line: start.line,
-      column: start.character,
-      endLine: end.line,
-      endColumn: end.character,
-    }))
+    return providers.provideDocumentHighlights(tokenId!)
   }}),
   documentSymbols: (tokenId?: string) => ({ cancel, promise: async () => {
     const symbols = await providers.provideDocumentSymbols(tokenId!)
@@ -85,13 +101,12 @@ const api = {
       return {
         name: m.name,
         kind: m.kind,
-        containerName: info.containerName,
+        range: info.location ? info.location.range : docsym.range,
+        containerName: maybe(info.containerName),
         detail: maybe(docsym.detail),
         children: maybe(docsym.children),
-        range: info.location ? info.location.range : docsym.range,
         selectionRange: maybe(docsym.selectionRange),
       }
-
     })
   }}),
   resolveDocumentSymbols: (tokenId?: string) => ({ cancel, promise: async () => {
