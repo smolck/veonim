@@ -1,5 +1,6 @@
 import providers from '../extension-host/providers'
 import { on } from '../messaging/worker-client'
+import { maybe } from '../support/types'
 import * as vsc from 'vscode'
 
 // this is used only to construct the typings interface
@@ -69,15 +70,29 @@ const api = {
   }}),
   documentHighlights: (tokenId?: string) => ({ cancel, promise: async () => {
     const highlights = await providers.provideDocumentHighlights(tokenId!)
-    return highlights.map(hi => ({
-      line: hi.range.start.line,
-      column: hi.range.start.character,
-      endLine: hi.range.end.line,
-      endColumn: hi.range.end.character,
+    return highlights.map(({ range: { start, end } }) => ({
+      line: start.line,
+      column: start.character,
+      endLine: end.line,
+      endColumn: end.character,
     }))
   }}),
   documentSymbols: (tokenId?: string) => ({ cancel, promise: async () => {
+    const symbols = await providers.provideDocumentSymbols(tokenId!)
+    return symbols.map(m => {
+      const info = m as vsc.SymbolInformation
+      const docsym = m as vsc.DocumentSymbol
+      return {
+        name: m.name,
+        kind: m.kind,
+        containerName: info.containerName,
+        detail: maybe(docsym.detail),
+        children: maybe(docsym.children),
+        range: info.location ? info.location.range : docsym.range,
+        selectionRange: maybe(docsym.selectionRange),
+      }
 
+    })
   }}),
   resolveDocumentSymbols: (tokenId?: string) => ({ cancel, promise: async () => {
 
