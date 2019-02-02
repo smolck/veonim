@@ -16,6 +16,13 @@ const cancel = () => {}
 // but before that need to score priority of providers
 // i think the scoring is based on how closely the
 // DocumentSelector matches the current filetype?
+
+// ACKCHYUALLY...
+// for multiple results:
+// - list -> merge together (completions, symbols, codeActions, etc.)
+//   - TODO: does vscode rank certain provider's completions higher than others?
+// - single -> ask user to choose (definition, implementation, etc.)
+// - what about non-user ones, like resolving things or hover, signhelp?
 const api = {
   completion: (context: vsc.CompletionContext, tokenId?: string) => ({ cancel, promise: async () => {
     const completions = await providers.provideCompletionItems(context, tokenId!)
@@ -33,11 +40,10 @@ const api = {
     }
   }}),
   resolveCompletion: (item: vsc.CompletionItem, tokenId?: string) => ({ cancel, promise: async () => {
-    // TODO: which one? first?
-    const [ resolve ] = await providers.resolveCompletionItem(item, tokenId!)
-    return resolve
+    return (await providers.resolveCompletionItem(item, tokenId!))[0]
   }}),
   codeActions: (context: vsc.CodeActionContext, tokenId?: string) => ({ cancel, promise: async () => {
+    // TODO: dedup
     const actions = await providers.provideCodeActions(context, tokenId!)
     return actions
     // TODO: this is hard
@@ -48,6 +54,7 @@ const api = {
     // })
   }}),
   codeLens: (tokenId?: string) => ({ cancel, promise: async () => {
+    // TODO: dedup?
     return providers.provideCodeLenses(tokenId!)
   }}),
   definition: (tokenId?: string) => ({ cancel, promise: async () => {
@@ -91,9 +98,11 @@ const api = {
     }, [] as string[])
   }}),
   documentHighlights: (tokenId?: string) => ({ cancel, promise: async () => {
+    // TODO: dedup
     return providers.provideDocumentHighlights(tokenId!)
   }}),
   documentSymbols: (tokenId?: string) => ({ cancel, promise: async () => {
+    // TODO: dedup
     const symbols = await providers.provideDocumentSymbols(tokenId!)
     return symbols.map(m => {
       const info = m as vsc.SymbolInformation
@@ -109,41 +118,62 @@ const api = {
       }
     })
   }}),
-  resolveDocumentSymbols: (tokenId?: string) => ({ cancel, promise: async () => {
-
+  workspaceSymbols: (query: string, tokenId?: string) => ({ cancel, promise: async () => {
+    // TODO: dedup
+    return providers.provideWorkspaceSymbols(query, tokenId!)
+  }}),
+  resolveWorkspaceSymbols: (symbol: vsc.SymbolInformation, tokenId?: string) => ({ cancel, promise: async () => {
+    return (await providers.resolveWorkspaceSymbol(symbol, tokenId!))[0]
   }}),
   prepareRename: (tokenId?: string) => ({ cancel, promise: async () => {
-
+    const res = (await providers.prepareRename(tokenId!))[0]
+    return ((res as any).range || res) as vsc.Range
   }}),
-  rename: (tokenId?: string) => ({ cancel, promise: async () => {
-
+  rename: (newName: string, tokenId?: string) => ({ cancel, promise: async () => {
+    // TODO: dedup edits
+    const edits = await providers.provideRenameEdits(newName, tokenId!)
+    return edits
   }}),
   documentFormattingEdits: (tokenId?: string) => ({ cancel, promise: async () => {
-
+    // TODO: dedup
+    const edits = await providers.provideDocumentFormattingEdits(tokenId!)
+    return edits
   }}),
-  documentRangeFormattingEdits: (tokenId?: string) => ({ cancel, promise: async () => {
-
+  documentRangeFormattingEdits: (range: vsc.Range, tokenId?: string) => ({ cancel, promise: async () => {
+    // TODO: dedup
+    const edits = await providers.provideDocumentRangeFormattingEdits(range, tokenId!)
+    return edits
   }}),
-  onTypeFormattingEdits: (tokenId?: string) => ({ cancel, promise: async () => {
-
+  onTypeFormattingEdits: (character: string, tokenId?: string) => ({ cancel, promise: async () => {
+    // TODO: dedup
+    const edits = await providers.provideOnTypeFormattingEdits(character, tokenId!)
+    return edits
   }}),
-  signatureHelp: (tokenId?: string) => ({ cancel, promise: async () => {
-
+  signatureHelp: (context: vsc.SignatureHelpContext, tokenId?: string) => ({ cancel, promise: async () => {
+    return (await providers.provideSignatureHelp(context, tokenId!))[0]
   }}),
   documentLinks: (tokenId?: string) => ({ cancel, promise: async () => {
-
+    // TODO: dedup
+    const links = await providers.provideDocumentLinks(tokenId!)
+    return links
   }}),
-  resolveDocumentLink: (tokenId?: string) => ({ cancel, promise: async () => {
-
+  resolveDocumentLink: (link: vsc.DocumentLink, tokenId?: string) => ({ cancel, promise: async () => {
+    return (await providers.resolveDocumentLink(link, tokenId!))[0]
   }}),
-  colorPresentations: (tokenId?: string) => ({ cancel, promise: async () => {
-
+  colorPresentations: (color: vsc.Color, range: vsc.Range, tokenId?: string) => ({ cancel, promise: async () => {
+    const colors = await providers.provideColorPresentations(color, range, tokenId!)
+    // TODO: dedup
+    return colors
   }}),
   documentColors: (tokenId?: string) => ({ cancel, promise: async () => {
-
+    const colors = await providers.provideDocumentColors(tokenId!)
+    // TODO: dedup
+    return colors
   }}),
   foldingRanges: (tokenId?: string) => ({ cancel, promise: async () => {
-
+    const ranges = await providers.provideFoldingRanges(tokenId!)
+    // TODO: dedup
+    return ranges
   }}),
 }
 
