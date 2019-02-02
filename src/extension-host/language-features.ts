@@ -69,7 +69,14 @@ const api = {
     }
   }}),
   hover: (tokenId?: string) => ({ cancel, promise: async () => {
-
+    const results = await providers.provideHover(tokenId!)
+    if (!results) return
+    const [ hover ] = results
+    if (!hover) return
+    return hover.contents.reduce((res, markedString) => {
+      const text = typeof markedString === 'string' ? markedString : markedString.value
+      return [...res, text]
+    }, [] as string[])
   }}),
   documentHighlights: (tokenId?: string) => ({ cancel, promise: async () => {
 
