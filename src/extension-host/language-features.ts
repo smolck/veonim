@@ -33,13 +33,40 @@ const api = {
     }
   }}),
   implementation: (tokenId?: string) => ({ cancel, promise: async () => {
-
+    const results = await providers.provideImplementation(tokenId!)
+    if (!results) return
+    const [ first ] = results
+    if (!first) return
+    const location = Array.isArray(first) ? first[0] : first
+    return {
+      path: ((location as vsc.Location).uri || (location as vsc.LocationLink).targetUri).path,
+      line: ((location as vsc.Location).range || (location as vsc.LocationLink).targetRange).start.line,
+      column: ((location as vsc.Location).range || (location as vsc.LocationLink).targetRange).start.character,
+    }
   }}),
   typeDefinition: (tokenId?: string) => ({ cancel, promise: async () => {
-
+    const results = await providers.provideTypeDefinition(tokenId!)
+    if (!results) return
+    const [ first ] = results
+    if (!first) return
+    const location = Array.isArray(first) ? first[0] : first
+    return {
+      path: ((location as vsc.Location).uri || (location as vsc.LocationLink).targetUri).path,
+      line: ((location as vsc.Location).range || (location as vsc.LocationLink).targetRange).start.line,
+      column: ((location as vsc.Location).range || (location as vsc.LocationLink).targetRange).start.character,
+    }
   }}),
   declaration: (tokenId?: string) => ({ cancel, promise: async () => {
-
+    const results = await providers.provideDeclaration(tokenId!)
+    if (!results) return
+    const [ first ] = results
+    if (!first) return
+    const location = Array.isArray(first) ? first[0] : first
+    return {
+      path: ((location as vsc.Location).uri || (location as vsc.LocationLink).targetUri).path,
+      line: ((location as vsc.Location).range || (location as vsc.LocationLink).targetRange).start.line,
+      column: ((location as vsc.Location).range || (location as vsc.LocationLink).targetRange).start.character,
+    }
   }}),
   hover: (tokenId?: string) => ({ cancel, promise: async () => {
 
