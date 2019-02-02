@@ -2,6 +2,7 @@ import { makeCancelToken, cancelTokenById } from '../vscode/tools'
 import TextDocument from '../vscode/text-document'
 import { Position, Range } from '../vscode/types'
 import { MapSetter } from '../support/utils'
+import { Unpacked } from '../support/types'
 import nvim from '../neovim/api'
 import * as vsc from 'vscode'
 
@@ -51,9 +52,15 @@ const getFormattingOptions = async (): Promise<vsc.FormattingOptions> => {
   }
 }
 
+const coalesce = <T extends any[]>(results: T): NonNullable<Unpacked<Unpacked<T>>>[] => results.reduce((res, item) => {
+  if (!item) return res
+  const next = Array.isArray(item) ? item : [item]
+  return [...res, ...next]
+}, [])
+
 export default {
-  cancelRequest: (tokenId: string) => cancelTokenById(tokenId),
-  provideCompletionItems: (context: vsc.CompletionContext, tokenId: string) => {
+  cancelRequest: async (tokenId: string) => cancelTokenById(tokenId),
+  provideCompletionItems: async (context: vsc.CompletionContext, tokenId: string) => {
     const funcs = providers.provideCompletionItems.get(nvim.state.filetype)
     if (!funcs) return []
 
@@ -61,20 +68,20 @@ export default {
     const document = TextDocument(nvim.current.buffer.id)
     const position = new Position(nvim.state.line, nvim.state.column)
 
-    return Promise.all([...funcs].map(fn => fn(document, position, token, context)))
+    return Promise.all([...funcs].map(fn => fn(document, position, token, context))).then(coalesce)
   },
-  resolveCompletionItem: (item: vsc.CompletionItem, tokenId: string) => {
+  resolveCompletionItem: async (item: vsc.CompletionItem, tokenId: string) => {
     const funcs = providers.resolveCompletionItem.get(nvim.state.filetype)
     if (!funcs) return []
 
     const { token } = makeCancelToken(tokenId!)
 
-    return Promise.all([...funcs].map(fn => fn && fn(item, token)))
+    return Promise.all([...funcs].map(fn => fn && fn(item, token))).then(coalesce)
   },
-  getCompletionTriggerCharacters: () => {
+  getCompletionTriggerCharacters: async () => {
     return [...providers.completionTriggerCharacters.get(nvim.state.filetype) || []]
   },
-  provideCodeActions: (context: vsc.CodeActionContext, tokenId: string) => {
+  provideCodeActions: async (context: vsc.CodeActionContext, tokenId: string) => {
     const funcs = providers.provideCodeActions.get(nvim.state.filetype)
     if (!funcs) return []
 
@@ -83,26 +90,26 @@ export default {
     const position = new Position(nvim.state.line, nvim.state.column)
     const range = new Range(position, position)
 
-    return Promise.all([...funcs].map(fn => fn(document, range, context, token)))
+    return Promise.all([...funcs].map(fn => fn(document, range, context, token))).then(coalesce)
   },
-  provideCodeLenses: (tokenId: string) => {
+  provideCodeLenses: async (tokenId: string) => {
     const funcs = providers.provideCodeLenses.get(nvim.state.filetype)
     if (!funcs) return []
 
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
 
-    return Promise.all([...funcs].map(fn => fn(document, token)))
+    return Promise.all([...funcs].map(fn => fn(document, token))).then(coalesce)
   },
-  resolveCodeLens: (codeLens: vsc.CodeLens, tokenId: string) => {
+  resolveCodeLens: async (codeLens: vsc.CodeLens, tokenId: string) => {
     const funcs = providers.resolveCodeLens.get(nvim.state.filetype)
     if (!funcs) return []
 
     const { token } = makeCancelToken(tokenId!)
 
-    return Promise.all([...funcs].map(fn => fn && fn(codeLens, token)))
+    return Promise.all([...funcs].map(fn => fn && fn(codeLens, token))).then(coalesce).then(coalesce)
   },
-  provideDefinition: (tokenId: string) => {
+  provideDefinition: async (tokenId: string) => {
     const funcs = providers.provideDefinition.get(nvim.state.filetype)
     if (!funcs) return []
 
@@ -110,9 +117,9 @@ export default {
     const document = TextDocument(nvim.current.buffer.id)
     const position = new Position(nvim.state.line, nvim.state.column)
 
-    return Promise.all([...funcs].map(fn => fn(document, position, token)))
+    return Promise.all([...funcs].map(fn => fn(document, position, token))).then(coalesce)
   },
-  provideImplementation: (tokenId: string) => {
+  provideImplementation: async (tokenId: string) => {
     const funcs = providers.provideImplementation.get(nvim.state.filetype)
     if (!funcs) return []
 
@@ -120,9 +127,9 @@ export default {
     const document = TextDocument(nvim.current.buffer.id)
     const position = new Position(nvim.state.line, nvim.state.column)
 
-    return Promise.all([...funcs].map(fn => fn(document, position, token)))
+    return Promise.all([...funcs].map(fn => fn(document, position, token))).then(coalesce)
   },
-  provideTypeDefinition: (tokenId: string) => {
+  provideTypeDefinition: async (tokenId: string) => {
     const funcs = providers.provideTypeDefinition.get(nvim.state.filetype)
     if (!funcs) return []
 
@@ -130,9 +137,9 @@ export default {
     const document = TextDocument(nvim.current.buffer.id)
     const position = new Position(nvim.state.line, nvim.state.column)
 
-    return Promise.all([...funcs].map(fn => fn(document, position, token)))
+    return Promise.all([...funcs].map(fn => fn(document, position, token))).then(coalesce)
   },
-  provideDeclaration: (tokenId: string) => {
+  provideDeclaration: async (tokenId: string) => {
     const funcs = providers.provideDeclaration.get(nvim.state.filetype)
     if (!funcs) return []
 
@@ -140,9 +147,9 @@ export default {
     const document = TextDocument(nvim.current.buffer.id)
     const position = new Position(nvim.state.line, nvim.state.column)
 
-    return Promise.all([...funcs].map(fn => fn(document, position, token)))
+    return Promise.all([...funcs].map(fn => fn(document, position, token))).then(coalesce)
   },
-  provideHover: (tokenId: string) => {
+  provideHover: async (tokenId: string) => {
     const funcs = providers.provideHover.get(nvim.state.filetype)
     if (!funcs) return []
 
@@ -150,9 +157,9 @@ export default {
     const document = TextDocument(nvim.current.buffer.id)
     const position = new Position(nvim.state.line, nvim.state.column)
 
-    return Promise.all([...funcs].map(fn => fn(document, position, token)))
+    return Promise.all([...funcs].map(fn => fn(document, position, token))).then(coalesce)
   },
-  provideDocumentHighlights: (tokenId: string) => {
+  provideDocumentHighlights: async (tokenId: string) => {
     const funcs = providers.provideDocumentHighlights.get(nvim.state.filetype)
     if (!funcs) return []
 
@@ -160,30 +167,30 @@ export default {
     const document = TextDocument(nvim.current.buffer.id)
     const position = new Position(nvim.state.line, nvim.state.column)
 
-    return Promise.all([...funcs].map(fn => fn(document, position, token)))
+    return Promise.all([...funcs].map(fn => fn(document, position, token))).then(coalesce)
   },
-  provideDocumentSymbols: (tokenId: string) => {
+  provideDocumentSymbols: async (tokenId: string) => {
     const funcs = providers.provideDocumentSymbols.get(nvim.state.filetype)
     if (!funcs) return []
 
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
 
-    return Promise.all([...funcs].map(fn => fn(document, token)))
+    return Promise.all([...funcs].map(fn => fn(document, token))).then(coalesce)
   },
-  provideWorkspaceSymbols: (query: string, tokenId: string) => {
+  provideWorkspaceSymbols: async (query: string, tokenId: string) => {
     const funcs = providers.provideWorkspaceSymbols
     const { token } = makeCancelToken(tokenId!)
 
-    return Promise.all([...funcs].map(fn => fn(query, token)))
+    return Promise.all([...funcs].map(fn => fn(query, token))).then(coalesce)
   },
-  resolveWorkspaceSymbol: (symbol: vsc.SymbolInformation, tokenId: string) => {
+  resolveWorkspaceSymbol: async (symbol: vsc.SymbolInformation, tokenId: string) => {
     const funcs = providers.resolveWorkspaceSymbol
     const { token } = makeCancelToken(tokenId!)
 
-    return Promise.all([...funcs].map(fn => fn && fn(symbol, token)))
+    return Promise.all([...funcs].map(fn => fn && fn(symbol, token))).then(coalesce)
   },
-  provideReferences: (tokenId: string) => {
+  provideReferences: async (tokenId: string) => {
     const funcs = providers.provideReferences.get(nvim.state.filetype)
     if (!funcs) return []
 
@@ -192,9 +199,9 @@ export default {
     const position = new Position(nvim.state.line, nvim.state.column)
     const context: vsc.ReferenceContext = { includeDeclaration: true }
 
-    return Promise.all([...funcs].map(fn => fn(document, position, context, token)))
+    return Promise.all([...funcs].map(fn => fn(document, position, context, token))).then(coalesce)
   },
-  prepareRename: (tokenId: string) => {
+  prepareRename: async (tokenId: string) => {
     const funcs = providers.prepareRename.get(nvim.state.filetype)
     if (!funcs) return []
 
@@ -202,9 +209,9 @@ export default {
     const document = TextDocument(nvim.current.buffer.id)
     const position = new Position(nvim.state.line, nvim.state.column)
 
-    return Promise.all([...funcs].map(fn => fn && fn(document, position, token)))
+    return Promise.all([...funcs].map(fn => fn && fn(document, position, token))).then(coalesce)
   },
-  provideRenameEdits: (newName: string, tokenId: string) => {
+  provideRenameEdits: async (newName: string, tokenId: string) => {
     const funcs = providers.provideRenameEdits.get(nvim.state.filetype)
     if (!funcs) return []
 
@@ -212,7 +219,7 @@ export default {
     const document = TextDocument(nvim.current.buffer.id)
     const position = new Position(nvim.state.line, nvim.state.column)
 
-    return Promise.all([...funcs].map(fn => fn && fn(document, position, newName, token)))
+    return Promise.all([...funcs].map(fn => fn && fn(document, position, newName, token))).then(coalesce)
   },
   provideDocumentFormattingEdits: async (tokenId: string) => {
     const funcs = providers.provideDocumentFormattingEdits.get(nvim.state.filetype)
@@ -222,7 +229,7 @@ export default {
     const document = TextDocument(nvim.current.buffer.id)
 
     const options = await getFormattingOptions()
-    return Promise.all([...funcs].map(fn => fn && fn(document, options, token)))
+    return Promise.all([...funcs].map(fn => fn && fn(document, options, token))).then(coalesce)
   },
   provideDocumentRangeFormattingEdits: async (range: Range, tokenId: string) => {
     const funcs = providers.provideDocumentRangeFormattingEdits.get(nvim.state.filetype)
@@ -232,7 +239,7 @@ export default {
     const document = TextDocument(nvim.current.buffer.id)
     const options = await getFormattingOptions()
 
-    return Promise.all([...funcs].map(fn => fn && fn(document, range, options, token)))
+    return Promise.all([...funcs].map(fn => fn && fn(document, range, options, token))).then(coalesce)
   },
   provideOnTypeFormattingEdits: async (character: string, tokenId: string) => {
     const funcs = providers.provideOnTypeFormattingEdits.get(nvim.state.filetype)
@@ -243,9 +250,9 @@ export default {
     const position = new Position(nvim.state.line, nvim.state.column)
     const options = await getFormattingOptions()
 
-    return Promise.all([...funcs].map(fn => fn && fn(document, position, character, options, token)))
+    return Promise.all([...funcs].map(fn => fn && fn(document, position, character, options, token))).then(coalesce)
   },
-  provideSignatureHelp: (context: vsc.SignatureHelpContext, tokenId: string) => {
+  provideSignatureHelp: async (context: vsc.SignatureHelpContext, tokenId: string) => {
     const funcs = providers.provideSignatureHelp.get(nvim.state.filetype)
     if (!funcs) return []
 
@@ -253,26 +260,26 @@ export default {
     const document = TextDocument(nvim.current.buffer.id)
     const position = new Position(nvim.state.line, nvim.state.column)
 
-    return Promise.all([...funcs].map(fn => fn(document, position, token, context)))
+    return Promise.all([...funcs].map(fn => fn(document, position, token, context))).then(coalesce)
   },
-  provideDocumentLinks: (tokenId: string) => {
+  provideDocumentLinks: async (tokenId: string) => {
     const funcs = providers.provideDocumentLinks.get(nvim.state.filetype)
     if (!funcs) return []
 
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
 
-    return Promise.all([...funcs].map(fn => fn(document, token)))
+    return Promise.all([...funcs].map(fn => fn(document, token))).then(coalesce)
   },
-  resolveDocumentLink: (link: vsc.DocumentLink, tokenId: string) => {
+  resolveDocumentLink: async (link: vsc.DocumentLink, tokenId: string) => {
     const funcs = providers.resolveDocumentLink.get(nvim.state.filetype)
     if (!funcs) return []
 
     const { token } = makeCancelToken(tokenId!)
 
-    return Promise.all([...funcs].map(fn => fn && fn(link, token)))
+    return Promise.all([...funcs].map(fn => fn && fn(link, token))).then(coalesce)
   },
-  provideColorPresentations: (color: vsc.Color, range: Range, tokenId: string) => {
+  provideColorPresentations: async (color: vsc.Color, range: Range, tokenId: string) => {
     const funcs = providers.provideColorPresentations.get(nvim.state.filetype)
     if (!funcs) return []
 
@@ -282,18 +289,18 @@ export default {
       document: TextDocument(nvim.current.buffer.id),
     }
 
-    return Promise.all([...funcs].map(fn => fn(color, context, token)))
+    return Promise.all([...funcs].map(fn => fn(color, context, token))).then(coalesce)
   },
-  provideDocumentColors: (tokenId: string) => {
+  provideDocumentColors: async (tokenId: string) => {
     const funcs = providers.provideDocumentColors.get(nvim.state.filetype)
     if (!funcs) return []
 
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
 
-    return Promise.all([...funcs].map(fn => fn(document, token)))
+    return Promise.all([...funcs].map(fn => fn(document, token))).then(coalesce)
   },
-  provideFoldingRanges: (tokenId: string) => {
+  provideFoldingRanges: async (tokenId: string) => {
     const funcs = providers.provideFoldingRanges.get(nvim.state.filetype)
     if (!funcs) return []
 
@@ -301,12 +308,12 @@ export default {
     const document = TextDocument(nvim.current.buffer.id)
     const options: vsc.FoldingContext = {}
 
-    return Promise.all([...funcs].map(fn => fn(document, options, token)))
+    return Promise.all([...funcs].map(fn => fn(document, options, token))).then(coalesce)
   },
-  getSignatureHelpTriggerCharacters: () => {
+  getSignatureHelpTriggerCharacters: async () => {
     return [...providers.signatureHelpTriggerCharacters.get(nvim.state.filetype) || []]
   },
-  getOnTypeFormattingTriggerCharacters: () => {
+  getOnTypeFormattingTriggerCharacters: async () => {
     return [...providers.onTypeFormattingTriggerCharacters.get(nvim.state.filetype) || []]
   },
 }
