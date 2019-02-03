@@ -210,6 +210,15 @@ export const objDeepGet = (obj: object) => (givenPath: string | string[]) => {
   return dive(obj)
 }
 
+export const dedupOn = <T>(list: T[], comparator: (value: T) => any): T[] => list.filter((m, ix) => {
+  const item = comparator(m)
+  return ix === list.findIndex(s => comparator(s) === item)
+})
+
+export const dedupOnCompare = <T>(list: T[], comparator: (a: T, b: T) => boolean): T[] => list.filter((m, ix) => {
+  return ix === list.findIndex(s => comparator(m, s))
+})
+
 // TODO: deprecate this and use native Events.EventEmitter
 export class Watchers extends Map<string, Set<Function>> {
   constructor() {

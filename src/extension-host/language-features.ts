@@ -1,3 +1,4 @@
+import { dedupOn, dedupOnCompare } from '../support/utils'
 import providers from '../extension-host/providers'
 import { on } from '../messaging/worker-client'
 import { maybe } from '../support/types'
@@ -19,6 +20,13 @@ const asRange = (range: vsc.Range) => ({
   },
 })
 
+const rangesEqual = (a: vsc.Range, b: vsc.Range): boolean => {
+  const sameStart = a.start.line === b.start.line
+    && a.start.character === b.start.character
+  const sameEnd = a.end.line === b.end.line
+    && a.end.character === b.end.character
+  return sameStart && sameEnd
+}
 
 // tokenId is optional only for generating the interface. it will be for
 // sure passed along by the client thread proxy api
@@ -39,27 +47,26 @@ const asRange = (range: vsc.Range) => ({
 // - what about non-user ones, like resolving things or hover, signhelp?
 const api = {
   completion: (context: vsc.CompletionContext, tokenId?: string) => ({ cancel, promise: (async () => {
-    const completions = await providers.provideCompletionItems(context, tokenId!)
-    const incomplete = completions.some(m => !!(m as vsc.CompletionList).isIncomplete)
-    return {
-      incomplete,
-      // TODO: we should probably dedup completion items
-      // from multiple providers. do that here or in the provider?
-      items: completions.reduce((res, item) => {
-        const next = (item as vsc.CompletionList).items
-          ? (item as vsc.CompletionList).items
-          : [item as vsc.CompletionItem]
-        return [...res, ...next]
-      }, [] as vsc.CompletionItem[])
-    }
+    const results = await providers.provideCompletionItems(context, tokenId!)
+
+    const allCompletions = results.reduce((res, item) => {
+      const next = (item as vsc.CompletionList).items
+        ? (item as vsc.CompletionList).items
+        : [item as vsc.CompletionItem]
+      return [...res, ...next]
+    }, [] as vsc.CompletionItem[])
+
+    const completions = dedupOn(allCompletions, m => m.label)
+    const incomplete = results.some(m => !!(m as vsc.CompletionList).isIncomplete)
+
+    return { incomplete, completions }
   })()}),
   resolveCompletion: (item: vsc.CompletionItem, tokenId?: string) => ({ cancel, promise: (async () => {
     return (await providers.resolveCompletionItem(item, tokenId!))[0]
   })()}),
   codeActions: (context: vsc.CodeActionContext, tokenId?: string) => ({ cancel, promise: (async () => {
-    // TODO: dedup
     const actions = await providers.provideCodeActions(context, tokenId!)
-    return actions
+    return dedupOn(actions, m => m.title)
     // TODO: this is hard
     // return actions.map(m => {
     //   const cmd = m as vsc.Command
@@ -112,8 +119,8 @@ const api = {
     }, [] as string[])
   })()}),
   documentHighlights: (tokenId?: string) => ({ cancel, promise: (async () => {
-    // TODO: dedup
-    return providers.provideDocumentHighlights(tokenId!)
+    const highlights = await providers.provideDocumentHighlights(tokenId!)
+    return dedupOnCompare(highlights, (a, b) => rangesEqual(a.range, b.range))
   })()}),
   documentSymbols: (tokenId?: string) => ({ cancel, promise: (async () => {
     // TODO: dedup
