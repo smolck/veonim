@@ -7,9 +7,20 @@ import * as vsc from 'vscode'
 // this is used only to construct the typings interface
 const cancel = () => {}
 
+interface RangeSubset {
+  start: {
+    line: number
+    character: number
+  }
+  end: {
+    line: number
+    character: number
+  }
+}
+
 // the Range object has getters for the value (start, start.line, etc.)
 // the getters do not get transferred between threads
-const asRange = (range: vsc.Range) => ({
+const asRange = (range: vsc.Range): RangeSubset => ({
   start: {
     line: range.start.line,
     character: range.start.character,
@@ -20,7 +31,7 @@ const asRange = (range: vsc.Range) => ({
   },
 })
 
-const rangesEqual = (a: vsc.Range, b: vsc.Range): boolean => {
+const rangesEqual = (a: vsc.Range | RangeSubset, b: vsc.Range | RangeSubset): boolean => {
   const sameStart = a.start.line === b.start.line
     && a.start.character === b.start.character
   const sameEnd = a.end.line === b.end.line
@@ -123,41 +134,53 @@ const api = {
     return dedupOnCompare(highlights, (a, b) => rangesEqual(a.range, b.range))
   })()}),
   documentSymbols: (tokenId?: string) => ({ cancel, promise: (async () => {
-    // TODO: dedup
-    const symbols = await providers.provideDocumentSymbols(tokenId!)
-    return symbols.map(m => {
+    const results = await providers.provideDocumentSymbols(tokenId!)
+    const symbols = results.map(m => {
       const info = m as vsc.SymbolInformation
       const docsym = m as vsc.DocumentSymbol
       return {
         name: m.name,
         kind: m.kind,
-        range: info.location ? info.location.range : docsym.range,
+        range: asRange(info.location ? info.location.range : docsym.range),
         containerName: maybe(info.containerName),
         detail: maybe(docsym.detail),
         children: maybe(docsym.children),
         selectionRange: maybe(docsym.selectionRange),
       }
     })
+
+    return dedupOnCompare(symbols, (a, b) => a.name === b.name && rangesEqual(a.range, b.range))
   })()}),
   workspaceSymbols: (query: string, tokenId?: string) => ({ cancel, promise: (async () => {
-    // TODO: dedup
-    return providers.provideWorkspaceSymbols(query, tokenId!)
+    const results = await providers.provideWorkspaceSymbols(query, tokenId!)
+    const symbols = results.map(m => ({
+      name: m.name,
+      containerName: m.containerName,
+      kind: m.kind,
+      path: m.location.uri.path,
+      range: asRange(m.location.range)
+    }))
+
+    return dedupOnCompare(symbols, (a, b) => a.name === b.name && rangesEqual(a.range, b.range))
   })()}),
   resolveWorkspaceSymbols: (symbol: vsc.SymbolInformation, tokenId?: string) => ({ cancel, promise: (async () => {
     return (await providers.resolveWorkspaceSymbol(symbol, tokenId!))[0]
   })()}),
   prepareRename: (tokenId?: string) => ({ cancel, promise: (async () => {
     const res = (await providers.prepareRename(tokenId!))[0]
-    return ((res as any).range || res) as vsc.Range
+    const range = ((res as any).range || res) as vsc.Range
+    return asRange(range)
   })()}),
   rename: (newName: string, tokenId?: string) => ({ cancel, promise: (async () => {
     // TODO: dedup edits
     const edits = await providers.provideRenameEdits(newName, tokenId!)
+    // TODO: map edits
     return edits
   })()}),
   documentFormattingEdits: (tokenId?: string) => ({ cancel, promise: (async () => {
     // TODO: dedup
     const edits = await providers.provideDocumentFormattingEdits(tokenId!)
+    // TODO: map edits
     return edits
   })()}),
   documentRangeFormattingEdits: (range: vsc.Range, tokenId?: string) => ({ cancel, promise: (async () => {
@@ -174,22 +197,34 @@ const api = {
     return (await providers.provideSignatureHelp(context, tokenId!))[0]
   })()}),
   documentLinks: (tokenId?: string) => ({ cancel, promise: (async () => {
-    // TODO: dedup
-    const links = await providers.provideDocumentLinks(tokenId!)
-    return links
+    const results = await providers.provideDocumentLinks(tokenId!)
+    const links = results.map(m => ({
+      range: asRange(m.range),
+      path: m.target ? m.target.path : '',
+    }))
+
+    return dedupOnCompare(links, (a, b) => rangesEqual(a, b))
   })()}),
   resolveDocumentLink: (link: vsc.DocumentLink, tokenId?: string) => ({ cancel, promise: (async () => {
     return (await providers.resolveDocumentLink(link, tokenId!))[0]
   })()}),
   colorPresentations: (color: vsc.Color, range: vsc.Range, tokenId?: string) => ({ cancel, promise: (async () => {
     const colors = await providers.provideColorPresentations(color, range, tokenId!)
-    // TODO: dedup
+    // TODO: dedup & map
     return colors
   })()}),
   documentColors: (tokenId?: string) => ({ cancel, promise: (async () => {
-    const colors = await providers.provideDocumentColors(tokenId!)
-    // TODO: dedup
-    return colors
+    const results = await providers.provideDocumentColors(tokenId!)
+    const colors = results.map(m => ({
+      range: asRange(m.range),
+      color: { ...m.color },
+    }))
+
+    return dedupOnCompare(colors, (a, b) => rangesEqual(a.range, b.range)
+      && a.color.alpha === b.color.alpha
+      && a.color.red === b.color.red
+      && a.color.green === b.color.green
+      && a.color.blue === b.color.blue)
   })()}),
   foldingRanges: (tokenId?: string) => ({ cancel, promise: (async () => {
     const ranges = await providers.provideFoldingRanges(tokenId!)
