@@ -76,18 +76,27 @@ const api = {
     return (await providers.resolveCompletionItem(item, tokenId!))[0]
   })()}),
   codeActions: (context: vsc.CodeActionContext, tokenId?: string) => ({ cancel, promise: (async () => {
-    const actions = await providers.provideCodeActions(context, tokenId!)
-    return dedupOn(actions, m => m.title)
-    // TODO: this is hard
-    // return actions.map(m => {
-    //   const cmd = m as vsc.Command
-    //   const act = m as vsc.CodeAction
-    //   return Object.assign(m, m.command)
-    // })
+    const results = await providers.provideCodeActions(context, tokenId!)
+    const actions = results.map(m => {
+      const cmd = m as vsc.Command
+      const act = m as vsc.CodeAction
+      const res = { command: act.command || cmd, }
+      // TODO: will thhese deep objects survive transport?
+      return act.command ? Object.assign(res, { ...act }) : res
+    })
+
+    return dedupOn(actions, m => m.command.title)
   })()}),
   codeLens: (tokenId?: string) => ({ cancel, promise: (async () => {
-    // TODO: dedup?
-    return providers.provideCodeLenses(tokenId!)
+    const results = await providers.provideCodeLenses(tokenId!)
+    const lenses = results.map(m => ({
+      isResolved: m.isResolved,
+      range: asRange(m.range),
+      // TODO: will command survive across threads?
+      command: m.command,
+    }))
+
+    return dedupOnCompare(lenses, (a, b) => rangesEqual(a.range, b.range))
   })()}),
   definition: (tokenId?: string) => ({ cancel, promise: (async () => {
     const [ location ] = await providers.provideDefinition(tokenId!)
@@ -144,6 +153,7 @@ const api = {
         range: asRange(info.location ? info.location.range : docsym.range),
         containerName: maybe(info.containerName),
         detail: maybe(docsym.detail),
+        // TODO: will these object survive across threads?
         children: maybe(docsym.children),
         selectionRange: maybe(docsym.selectionRange),
       }
@@ -203,7 +213,7 @@ const api = {
       path: m.target ? m.target.path : '',
     }))
 
-    return dedupOnCompare(links, (a, b) => rangesEqual(a, b))
+    return dedupOnCompare(links, (a, b) => rangesEqual(a.range, b.range))
   })()}),
   resolveDocumentLink: (link: vsc.DocumentLink, tokenId?: string) => ({ cancel, promise: (async () => {
     return (await providers.resolveDocumentLink(link, tokenId!))[0]
@@ -217,7 +227,8 @@ const api = {
     const results = await providers.provideDocumentColors(tokenId!)
     const colors = results.map(m => ({
       range: asRange(m.range),
-      color: { ...m.color },
+      // TODO: will color survive across threads?
+      color: m.color,
     }))
 
     return dedupOnCompare(colors, (a, b) => rangesEqual(a.range, b.range)
@@ -228,8 +239,7 @@ const api = {
   })()}),
   foldingRanges: (tokenId?: string) => ({ cancel, promise: (async () => {
     const ranges = await providers.provideFoldingRanges(tokenId!)
-    // TODO: dedup
-    return ranges
+    return dedupOnCompare(ranges, (a, b) => a.start === b.start && a.end === b.end)
   })()}),
 }
 
