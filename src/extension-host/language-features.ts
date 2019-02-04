@@ -1,4 +1,4 @@
-import { dedupOn, dedupOnCompare } from '../support/utils'
+import { dedupOn, dedupOnCompare, threadSafeObject } from '../support/utils'
 import providers from '../extension-host/providers'
 import { on } from '../messaging/worker-client'
 import { maybe } from '../support/types'
@@ -7,31 +7,7 @@ import * as vsc from 'vscode'
 // this is used only to construct the typings interface
 const cancel = () => {}
 
-interface RangeSubset {
-  start: {
-    line: number
-    character: number
-  }
-  end: {
-    line: number
-    character: number
-  }
-}
-
-// the Range object has getters for the value (start, start.line, etc.)
-// the getters do not get transferred between threads
-const asRange = (range: vsc.Range): RangeSubset => ({
-  start: {
-    line: range.start.line,
-    character: range.start.character,
-  },
-  end: {
-    line: range.end.line,
-    character: range.end.character,
-  },
-})
-
-const rangesEqual = (a: vsc.Range | RangeSubset, b: vsc.Range | RangeSubset): boolean => {
+const rangesEqual = (a: vsc.Range, b: vsc.Range): boolean => {
   const sameStart = a.start.line === b.start.line
     && a.start.character === b.start.character
   const sameEnd = a.end.line === b.end.line
@@ -73,7 +49,8 @@ const api = {
     return { incomplete, completions }
   })()}),
   resolveCompletion: (item: vsc.CompletionItem, tokenId?: string) => ({ cancel, promise: (async () => {
-    return (await providers.resolveCompletionItem(item, tokenId!))[0]
+    const [ result ] = await providers.resolveCompletionItem(item, tokenId!)
+    return result
   })()}),
   codeActions: (context: vsc.CodeActionContext, tokenId?: string) => ({ cancel, promise: (async () => {
     const results = await providers.provideCodeActions(context, tokenId!)
@@ -81,21 +58,13 @@ const api = {
       const cmd = m as vsc.Command
       const act = m as vsc.CodeAction
       const res = { command: act.command || cmd, }
-      // TODO: will thhese deep objects survive transport?
       return act.command ? Object.assign(res, { ...act }) : res
     })
 
     return dedupOn(actions, m => m.command.title)
   })()}),
   codeLens: (tokenId?: string) => ({ cancel, promise: (async () => {
-    const results = await providers.provideCodeLenses(tokenId!)
-    const lenses = results.map(m => ({
-      isResolved: m.isResolved,
-      range: asRange(m.range),
-      // TODO: will command survive across threads?
-      command: m.command,
-    }))
-
+    const lenses = await providers.provideCodeLenses(tokenId!)
     return dedupOnCompare(lenses, (a, b) => rangesEqual(a.range, b.range))
   })()}),
   definition: (tokenId?: string) => ({ cancel, promise: (async () => {
@@ -103,7 +72,7 @@ const api = {
     if (!location) return
     return {
       path: ((location as vsc.Location).uri || (location as vsc.LocationLink).targetUri).path,
-      range: asRange((location as vsc.Location).range || (location as vsc.LocationLink).targetRange),
+      range: (location as vsc.Location).range || (location as vsc.LocationLink).targetRange,
     }
   })()}),
   implementation: (tokenId?: string) => ({ cancel, promise: (async () => {
@@ -111,7 +80,7 @@ const api = {
     if (!location) return
     return {
       path: ((location as vsc.Location).uri || (location as vsc.LocationLink).targetUri).path,
-      range: asRange((location as vsc.Location).range || (location as vsc.LocationLink).targetRange),
+      range: (location as vsc.Location).range || (location as vsc.LocationLink).targetRange,
     }
   })()}),
   typeDefinition: (tokenId?: string) => ({ cancel, promise: (async () => {
@@ -119,7 +88,7 @@ const api = {
     if (!location) return
     return {
       path: ((location as vsc.Location).uri || (location as vsc.LocationLink).targetUri).path,
-      range: asRange((location as vsc.Location).range || (location as vsc.LocationLink).targetRange),
+      range: (location as vsc.Location).range || (location as vsc.LocationLink).targetRange,
     }
   })()}),
   declaration: (tokenId?: string) => ({ cancel, promise: (async () => {
@@ -127,7 +96,7 @@ const api = {
     if (!location) return
     return {
       path: ((location as vsc.Location).uri || (location as vsc.LocationLink).targetUri).path,
-      range: asRange((location as vsc.Location).range || (location as vsc.LocationLink).targetRange),
+      range: (location as vsc.Location).range || (location as vsc.LocationLink).targetRange,
     }
   })()}),
   hover: (tokenId?: string) => ({ cancel, promise: (async () => {
@@ -150,10 +119,9 @@ const api = {
       return {
         name: m.name,
         kind: m.kind,
-        range: asRange(info.location ? info.location.range : docsym.range),
+        range: info.location ? info.location.range : docsym.range,
         containerName: maybe(info.containerName),
         detail: maybe(docsym.detail),
-        // TODO: will these object survive across threads?
         children: maybe(docsym.children),
         selectionRange: maybe(docsym.selectionRange),
       }
@@ -168,18 +136,18 @@ const api = {
       containerName: m.containerName,
       kind: m.kind,
       path: m.location.uri.path,
-      range: asRange(m.location.range)
+      range: m.location.range,
     }))
 
     return dedupOnCompare(symbols, (a, b) => a.name === b.name && rangesEqual(a.range, b.range))
   })()}),
   resolveWorkspaceSymbols: (symbol: vsc.SymbolInformation, tokenId?: string) => ({ cancel, promise: (async () => {
-    return (await providers.resolveWorkspaceSymbol(symbol, tokenId!))[0]
+    const [ result ] = await providers.resolveWorkspaceSymbol(symbol, tokenId!)
+    return result
   })()}),
   prepareRename: (tokenId?: string) => ({ cancel, promise: (async () => {
     const res = (await providers.prepareRename(tokenId!))[0]
-    const range = ((res as any).range || res) as vsc.Range
-    return asRange(range)
+    return ((res as any).range || res) as vsc.Range
   })()}),
   rename: (newName: string, tokenId?: string) => ({ cancel, promise: (async () => {
     // TODO: dedup edits
@@ -204,13 +172,14 @@ const api = {
     return edits
   })()}),
   signatureHelp: (context: vsc.SignatureHelpContext, tokenId?: string) => ({ cancel, promise: (async () => {
-    return (await providers.provideSignatureHelp(context, tokenId!))[0]
+    const [ result ] = await providers.provideSignatureHelp(context, tokenId!)
+    return result
   })()}),
   documentLinks: (tokenId?: string) => ({ cancel, promise: (async () => {
     const results = await providers.provideDocumentLinks(tokenId!)
     const links = results.map(m => ({
-      range: asRange(m.range),
-      path: m.target ? m.target.path : '',
+      range: m.range,
+      path: m.target ? m.target.path : undefined,
     }))
 
     return dedupOnCompare(links, (a, b) => rangesEqual(a.range, b.range))
@@ -257,7 +226,7 @@ on.language_feature_cancel((tokenId: string) => providers.cancelRequest(tokenId)
 on.language_feature(async (method: string, args: any[], tokenId: string) => {
   const func = Reflect.get(api, method)
   if (!func) return console.error('no language feature available for:', method)
-  return func(...args, tokenId).promise
+  return func(...args, tokenId).promise.then(threadSafeObject)
 })
 
 on.language_trigger_characters(async (method: string) => {

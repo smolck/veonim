@@ -219,6 +219,36 @@ export const dedupOnCompare = <T>(list: T[], comparator: (a: T, b: T) => boolean
   return ix === list.findIndex(s => comparator(m, s))
 })
 
+const defaultProtoKeys = Object.keys(Object.getOwnPropertyDescriptors(Object.getPrototypeOf({})))
+
+export const threadSafeObject = <T>(obj: T): T => {
+  // @ts-ignore
+  if (!is.object(obj)) return Array.isArray(obj) ? obj.map(v => threadSafeObject(v)) : obj
+
+  const proto = Object.getPrototypeOf(obj)
+  const mainDesc = Object.entries(Object.getOwnPropertyDescriptors(obj))
+  const protoDesc = Object.entries(Object.getOwnPropertyDescriptors(proto))
+
+  const collectValues = ((res: any, [ key, desc ]: any) => {
+    if (defaultProtoKeys.includes(key)) return res
+    if (typeof desc.value === 'function') return res
+
+    // @ts-ignore
+    const value = obj[key]
+    const threadSafeValue = Array.isArray(value)
+      ? value.map(v => threadSafeObject(v))
+      : threadSafeObject(value)
+
+    Reflect.set(res, key, threadSafeValue)
+    return res
+  })
+
+  const part1 = protoDesc.reduce(collectValues, {})
+  const part2 = mainDesc.reduce(collectValues, {})
+
+  return { ...part1, ...part2 }
+}
+
 // TODO: deprecate this and use native Events.EventEmitter
 export class Watchers extends Map<string, Set<Function>> {
   constructor() {
