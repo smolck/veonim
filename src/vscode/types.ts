@@ -930,16 +930,17 @@ export class SymbolInformation {
 	}
 
 	name: string;
-  // @ts-ignore
+	// @ts-ignore
 	location: Location;
 	kind: SymbolKind;
-	containerName: string | undefined;
+	containerName: string;
 
 	constructor(name: string, kind: SymbolKind, containerName: string, location: Location);
 	constructor(name: string, kind: SymbolKind, range: Range, uri?: URI, containerName?: string);
 	constructor(name: string, kind: SymbolKind, rangeOrContainer: string | Range, locationOrUri?: Location | URI, containerName?: string) {
 		this.name = name;
 		this.kind = kind;
+		// @ts-ignore
 		this.containerName = containerName;
 
 		if (typeof rangeOrContainer === 'string') {

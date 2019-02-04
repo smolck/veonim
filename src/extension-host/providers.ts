@@ -231,7 +231,7 @@ export default {
     const options = await getFormattingOptions()
     return Promise.all([...funcs].map(fn => fn && fn(document, options, token))).then(coalesce)
   },
-  provideDocumentRangeFormattingEdits: async (range: Range, tokenId: string) => {
+  provideDocumentRangeFormattingEdits: async (range: vsc.Range, tokenId: string) => {
     const funcs = providers.provideDocumentRangeFormattingEdits.get(nvim.state.filetype)
     if (!funcs) return []
 
@@ -279,7 +279,7 @@ export default {
 
     return Promise.all([...funcs].map(fn => fn && fn(link, token))).then(coalesce)
   },
-  provideColorPresentations: async (color: vsc.Color, range: Range, tokenId: string) => {
+  provideColorPresentations: async (color: vsc.Color, range: vsc.Range, tokenId: string) => {
     const funcs = providers.provideColorPresentations.get(nvim.state.filetype)
     if (!funcs) return []
 

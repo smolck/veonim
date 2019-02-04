@@ -193,12 +193,7 @@ const api = {
     return colors
   })()}),
   documentColors: (tokenId?: string) => ({ cancel, promise: (async () => {
-    const results = await providers.provideDocumentColors(tokenId!)
-    const colors = results.map(m => ({
-      range: asRange(m.range),
-      // TODO: will color survive across threads?
-      color: m.color,
-    }))
+    const colors = await providers.provideDocumentColors(tokenId!)
 
     return dedupOnCompare(colors, (a, b) => rangesEqual(a.range, b.range)
       && a.color.alpha === b.color.alpha
