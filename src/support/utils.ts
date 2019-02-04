@@ -543,3 +543,39 @@ export const tryNetConnect = (path: string, interval = 500, timeout = 5e3): Prom
 
   attemptConnection()
 })
+
+export const PromiseBoss = () => {
+  interface CancelPromise<T> {
+    promise: Promise<T>
+    cancel: () => any
+  }
+
+  interface Options {
+    timeout?: number
+  }
+
+  const $cancel = Symbol('cancel')
+  type CancelFn = () => any
+  let previousCancel: CancelFn | null
+
+  const schedule = <T>(task: CancelPromise<T>, options: Options): Promise<T> => new Promise(async (ok, no) => {
+    previousCancel && previousCancel()
+    previousCancel = task.cancel
+
+    const result = await Promise.race([
+      task.promise,
+      new Promise(fin => setTimeout(fin, options.timeout || 1e3)).then(() => $cancel),
+    ]).catch(no)
+
+    if (result === $cancel) {
+      previousCancel = null
+      task.cancel()
+      return
+    }
+
+    previousCancel = null
+    ok(result as T)
+  }) as Promise<T>
+
+  return { schedule }
+}
