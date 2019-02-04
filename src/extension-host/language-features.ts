@@ -1,8 +1,12 @@
-import { dedupOn, dedupOnCompare, threadSafeObject } from '../support/utils'
+import { dedupOn, threadSafeObject } from '../support/utils'
 import providers from '../extension-host/providers'
 import { on } from '../messaging/worker-client'
 import { maybe } from '../support/types'
 import * as vsc from 'vscode'
+
+interface WorkspaceEdit extends vsc.TextEdit {
+  path: string
+}
 
 // this is used only to construct the typings interface
 const cancel = () => {}
@@ -43,7 +47,7 @@ const api = {
       return [...res, ...next]
     }, [] as vsc.CompletionItem[])
 
-    const completions = dedupOn(allCompletions, m => m.label)
+    const completions = dedupOn(allCompletions, (a, b) => a.label === b.label)
     const incomplete = results.some(m => !!(m as vsc.CompletionList).isIncomplete)
 
     return { incomplete, completions }
@@ -61,15 +65,16 @@ const api = {
       return act.command ? Object.assign(res, { ...act }) : res
     })
 
-    return dedupOn(actions, m => m.command.title)
+    return dedupOn(actions, (a, b) => a.command.title === b.command.title)
   })()}),
   codeLens: (tokenId?: string) => ({ cancel, promise: (async () => {
     const lenses = await providers.provideCodeLenses(tokenId!)
-    return dedupOnCompare(lenses, (a, b) => rangesEqual(a.range, b.range))
+    return dedupOn(lenses, (a, b) => rangesEqual(a.range, b.range))
   })()}),
   definition: (tokenId?: string) => ({ cancel, promise: (async () => {
     const [ location ] = await providers.provideDefinition(tokenId!)
     if (!location) return
+
     return {
       path: ((location as vsc.Location).uri || (location as vsc.LocationLink).targetUri).path,
       range: (location as vsc.Location).range || (location as vsc.LocationLink).targetRange,
@@ -78,6 +83,7 @@ const api = {
   implementation: (tokenId?: string) => ({ cancel, promise: (async () => {
     const [ location ] = await providers.provideImplementation(tokenId!)
     if (!location) return
+
     return {
       path: ((location as vsc.Location).uri || (location as vsc.LocationLink).targetUri).path,
       range: (location as vsc.Location).range || (location as vsc.LocationLink).targetRange,
@@ -86,6 +92,7 @@ const api = {
   typeDefinition: (tokenId?: string) => ({ cancel, promise: (async () => {
     const [ location ] = await providers.provideTypeDefinition(tokenId!)
     if (!location) return
+
     return {
       path: ((location as vsc.Location).uri || (location as vsc.LocationLink).targetUri).path,
       range: (location as vsc.Location).range || (location as vsc.LocationLink).targetRange,
@@ -94,6 +101,7 @@ const api = {
   declaration: (tokenId?: string) => ({ cancel, promise: (async () => {
     const [ location ] = await providers.provideDeclaration(tokenId!)
     if (!location) return
+
     return {
       path: ((location as vsc.Location).uri || (location as vsc.LocationLink).targetUri).path,
       range: (location as vsc.Location).range || (location as vsc.LocationLink).targetRange,
@@ -102,6 +110,7 @@ const api = {
   hover: (tokenId?: string) => ({ cancel, promise: (async () => {
     const [ hover ] = await providers.provideHover(tokenId!)
     if (!hover) return []
+
     return hover.contents.reduce((res, markedString) => {
       const text = typeof markedString === 'string' ? markedString : markedString.value
       return [...res, text]
@@ -109,7 +118,7 @@ const api = {
   })()}),
   documentHighlights: (tokenId?: string) => ({ cancel, promise: (async () => {
     const highlights = await providers.provideDocumentHighlights(tokenId!)
-    return dedupOnCompare(highlights, (a, b) => rangesEqual(a.range, b.range))
+    return dedupOn(highlights, (a, b) => rangesEqual(a.range, b.range))
   })()}),
   documentSymbols: (tokenId?: string) => ({ cancel, promise: (async () => {
     const results = await providers.provideDocumentSymbols(tokenId!)
@@ -127,7 +136,7 @@ const api = {
       }
     })
 
-    return dedupOnCompare(symbols, (a, b) => a.name === b.name && rangesEqual(a.range, b.range))
+    return dedupOn(symbols, (a, b) => a.name === b.name && rangesEqual(a.range, b.range))
   })()}),
   workspaceSymbols: (query: string, tokenId?: string) => ({ cancel, promise: (async () => {
     const results = await providers.provideWorkspaceSymbols(query, tokenId!)
@@ -139,7 +148,7 @@ const api = {
       range: m.location.range,
     }))
 
-    return dedupOnCompare(symbols, (a, b) => a.name === b.name && rangesEqual(a.range, b.range))
+    return dedupOn(symbols, (a, b) => a.name === b.name && rangesEqual(a.range, b.range))
   })()}),
   resolveWorkspaceSymbols: (symbol: vsc.SymbolInformation, tokenId?: string) => ({ cancel, promise: (async () => {
     const [ result ] = await providers.resolveWorkspaceSymbol(symbol, tokenId!)
@@ -150,26 +159,27 @@ const api = {
     return ((res as any).range || res) as vsc.Range
   })()}),
   rename: (newName: string, tokenId?: string) => ({ cancel, promise: (async () => {
-    // TODO: dedup edits
-    const edits = await providers.provideRenameEdits(newName, tokenId!)
-    // TODO: map edits
-    return edits
+    const results = await providers.provideRenameEdits(newName, tokenId!)
+    const workspaceEdits = results.reduce((list, workspaceEdit) => {
+      return workspaceEdit.entries().reduce((res, [ uri, edits ]) => {
+        const next = edits.map(e => ({ ...e, path: uri.path }))
+        return [...res, ...next]
+      }, list)
+    }, [] as WorkspaceEdit[])
+
+    return dedupOn(workspaceEdits, (a, b) => a.path === b.path && rangesEqual(a.range, b.range))
   })()}),
   documentFormattingEdits: (tokenId?: string) => ({ cancel, promise: (async () => {
-    // TODO: dedup
     const edits = await providers.provideDocumentFormattingEdits(tokenId!)
-    // TODO: map edits
-    return edits
+    return dedupOn(edits, (a, b) => rangesEqual(a.range, b.range))
   })()}),
   documentRangeFormattingEdits: (range: vsc.Range, tokenId?: string) => ({ cancel, promise: (async () => {
-    // TODO: dedup
     const edits = await providers.provideDocumentRangeFormattingEdits(range, tokenId!)
-    return edits
+    return dedupOn(edits, (a, b) => rangesEqual(a.range, b.range))
   })()}),
   onTypeFormattingEdits: (character: string, tokenId?: string) => ({ cancel, promise: (async () => {
-    // TODO: dedup
     const edits = await providers.provideOnTypeFormattingEdits(character, tokenId!)
-    return edits
+    return dedupOn(edits, (a, b) => rangesEqual(a.range, b.range))
   })()}),
   signatureHelp: (context: vsc.SignatureHelpContext, tokenId?: string) => ({ cancel, promise: (async () => {
     const [ result ] = await providers.provideSignatureHelp(context, tokenId!)
@@ -182,20 +192,20 @@ const api = {
       path: m.target ? m.target.path : undefined,
     }))
 
-    return dedupOnCompare(links, (a, b) => rangesEqual(a.range, b.range))
+    return dedupOn(links, (a, b) => rangesEqual(a.range, b.range))
   })()}),
   resolveDocumentLink: (link: vsc.DocumentLink, tokenId?: string) => ({ cancel, promise: (async () => {
-    return (await providers.resolveDocumentLink(link, tokenId!))[0]
+    const [ result ] = await providers.resolveDocumentLink(link, tokenId!)
+    return result
   })()}),
   colorPresentations: (color: vsc.Color, range: vsc.Range, tokenId?: string) => ({ cancel, promise: (async () => {
     const colors = await providers.provideColorPresentations(color, range, tokenId!)
-    // TODO: dedup & map
-    return colors
+    return dedupOn(colors, (a, b) => a.label === b.label)
   })()}),
   documentColors: (tokenId?: string) => ({ cancel, promise: (async () => {
     const colors = await providers.provideDocumentColors(tokenId!)
 
-    return dedupOnCompare(colors, (a, b) => rangesEqual(a.range, b.range)
+    return dedupOn(colors, (a, b) => rangesEqual(a.range, b.range)
       && a.color.alpha === b.color.alpha
       && a.color.red === b.color.red
       && a.color.green === b.color.green
@@ -203,7 +213,7 @@ const api = {
   })()}),
   foldingRanges: (tokenId?: string) => ({ cancel, promise: (async () => {
     const ranges = await providers.provideFoldingRanges(tokenId!)
-    return dedupOnCompare(ranges, (a, b) => a.start === b.start && a.end === b.end)
+    return dedupOn(ranges, (a, b) => a.start === b.start && a.end === b.end)
   })()}),
 }
 
