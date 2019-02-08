@@ -5,8 +5,7 @@ import nvim from '../neovim/api'
 const boss = PromiseBoss()
 
 const doDefinition = async () => {
-  const result = await boss.schedule(vscode.language.definition(), { timeout: 3e3 })
-
+  const result = await boss.schedule(vscode.language.provideDefinition(), { timeout: 3e3 })
   if (!result) return
 
   nvim.jumpTo({
