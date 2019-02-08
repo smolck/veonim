@@ -117,3 +117,51 @@ describe('thread safe object', () => {
     ])
   })
 })
+
+describe('promise boss', () => {
+  it('resolves no cancel', async () => {
+    const boss = m.PromiseBoss()
+    const calls = []
+    const cancel = () => calls.push('cancel')
+    const promise = new Promise(fin => setTimeout(() => fin('TACOS'), 2))
+    const res = await boss.schedule({ cancel, promise }, { timeout: 10 })
+
+    same(calls.length, 0, 'cancel calls count')
+    same(res, 'TACOS')
+  })
+
+  it('cancels because of timeout', done => {
+    const boss = m.PromiseBoss()
+    const calls = []
+    const cancel = () => {
+      calls.push('cancel')
+      same(calls, ['cancel'], 'cancel calls')
+      done()
+    }
+    const promise = new Promise(fin => setTimeout(() => fin('TACOS'), 10))
+    boss.schedule({ cancel, promise }, { timeout: 2 }).then(() => calls.push('res'))
+  })
+
+  it('cancels previous & resolves current because a new request', done => {
+    const boss = m.PromiseBoss()
+    const calls = []
+    const cancel = () => calls.push('cancel')
+    const promise1 = new Promise(fin => setTimeout(() => fin('BURRITOS'), 100))
+
+    const huh = () => {
+      same(calls, ['cancel', 'TACOS'], 'cancel calls')
+      done()
+    }
+
+    boss.schedule({ cancel, promise: promise1 }, { timeout: 50 }).then(res => {
+      calls.push(res)
+      huh()
+    })
+
+    const promise2 = new Promise(fin => setTimeout(() => fin('TACOS'), 2))
+    boss.schedule({ cancel, promise: promise2 }, { timeout: 50 }).then(res => {
+      calls.push(res)
+      huh()
+    })
+  })
+})
