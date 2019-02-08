@@ -61,7 +61,7 @@ const coalesce = <T extends any[]>(results: T): NonNullable<Unpacked<Unpacked<T>
   if (!item) return res
   const next = Array.isArray(item) ? item : [item]
   return [...res, ...next]
-})
+}, [])
 
 const rangesEqual = (a: vsc.Range, b: vsc.Range): boolean => {
   const sameStart = a.start.line === b.start.line
@@ -244,7 +244,7 @@ const api = {
     return hover.contents.reduce((res, markedString) => {
       const text = typeof markedString === 'string' ? markedString : markedString.value
       return [...res, text]
-    }, [] as string[])
+    }, [] as string[]).filter(m => m)
   })()}),
   provideDocumentHighlights: (tokenId?: string) => ({ cancel, promise: (async () => {
     const funcs = providers.provideDocumentHighlights.get(nvim.state.filetype)

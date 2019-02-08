@@ -1,7 +1,7 @@
 import colorizer, { ColorData } from '../services/colorizer'
-import { supports } from '../langserv/server-features'
 import * as markdown from '../support/markdown'
-import { hover } from '../langserv/adapter'
+import { vscode } from '../core/extensions-api'
+import { PromiseBoss } from '../support/utils'
 import nvim from '../neovim/api'
 import { ui } from '../core/ai'
 
@@ -11,11 +11,12 @@ const textByWord = (data: ColorData[]): ColorData[] => data.reduce((res, item) =
   return [...res, ...items]
 }, [] as ColorData[])
 
-nvim.onAction('hover', async () => {
-  if (!supports.hover(nvim.state.cwd, nvim.state.filetype)) return
+const boss = PromiseBoss()
 
-  const { value, doc } = await hover(nvim.state)
-  if (!value) return
+nvim.onAction('hover', async () => {
+  const result = await boss.schedule(vscode.language.provideHover(), { timeout: 3e3 })
+  if (!result) return
+  const [ value, doc ] = result
 
   const cleanData = markdown.remove(value)
   const coloredLines: ColorData[][] = await colorizer.request.colorize(cleanData, nvim.state.filetype)

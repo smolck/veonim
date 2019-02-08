@@ -558,6 +558,7 @@ export const PromiseBoss = () => {
   type CancelFn = () => any
   let previousCancel: CancelFn | null
 
+  /** Schedule a cancellable promise which can be cancelled by next invocation or timeout */
   const schedule = <T>(task: CancelPromise<T>, options: Options): Promise<T> => new Promise(async (ok, no) => {
     previousCancel && previousCancel()
     previousCancel = task.cancel
