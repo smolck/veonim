@@ -7,11 +7,12 @@ const boss = PromiseBoss()
 const doDefinition = async () => {
   const result = await boss.schedule(vscode.language.provideDefinition(), { timeout: 3e3 })
   if (!result) return
+  const { path, range: { start } } = result
 
   nvim.jumpTo({
-    path: result.path,
-    line: result.range.start.line,
-    column: result.range.start.character,
+    path,
+    line: start.line,
+    column: start.character,
   })
 }
 
