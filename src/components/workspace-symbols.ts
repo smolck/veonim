@@ -2,17 +2,17 @@ import { getSymbolIcon, getSymbolDescription } from '../components/symbol-info'
 import { Plugin } from '../components/plugin-container'
 import { RowNormal } from '../components/row-container'
 import { h, app, vimBlur, vimFocus } from '../ui/uikit'
+import { WorkspaceSymbol } from '../ai/protocol'
 import Input from '../components/text-input'
 import { filter } from 'fuzzaldrin-plus'
 import * as Icon from 'hyperapp-feather'
-import { Symbol } from '../ai/protocol'
 import api from '../core/instance-api'
 
 const state = {
   loading: false,
   value: '',
-  symbols: [] as Symbol[],
-  cache: [] as Symbol[],
+  symbols: [] as WorkspaceSymbol[],
+  cache: [] as WorkspaceSymbol[],
   visible: false,
   index: 0,
 }
@@ -24,12 +24,12 @@ const pos: { container: ClientRect } = {
 }
 
 const symbolCache = (() => {
-  let cache: Symbol[] = []
+  let cache: WorkspaceSymbol[] = []
 
   const clear = () => cache = []
   const find = (query: string) => filter(cache, query, { key: 'name' })
 
-  const update = (symbols: Symbol[]) => {
+  const update = (symbols: WorkspaceSymbol[]) => {
     symbols.forEach(s => {
       const alreadyHas = cache.some(m => m.name === s.name)
       if (!alreadyHas) cache.push(s)
@@ -45,25 +45,28 @@ const actions = {
   select: () => (s: S) => {
     vimFocus()
     if (!s.symbols.length) return (symbolCache.clear(), resetState)
-    const { range: { start } } = s.symbols[s.index]
+    const { path, range: { start } } = s.symbols[s.index]
     api.nvim.jumpTo({
+      path,
       line: start.line,
       column: start.character,
     })
     return (symbolCache.clear(), resetState)
   },
 
-  change: (value: string) => (s: S) => {
-    return { value, index: 0, symbols: value
-      // TODO: DON'T TRUNCATE!
-      ? filter(s.cache, value, { key: 'name' }).slice(0, 10)
-      : s.cache.slice(0, 10)
-    } 
+  change: (value: string) => (_: S, a: A) => {
+    api.ai.workspaceSymbols.getSymbols(value).then(symbols => {
+      symbolCache.update(symbols)
+      const results = symbols.length ? symbols : symbolCache.find(value)
+      a.updateOptions(results)
+    })
+
+    return { value, loading: true }
   },
 
-  updateOptions: (symbols: Symbol[]) => ({ symbols, loading: false, index: 0 }),
+  updateOptions: (symbols: WorkspaceSymbol[]) => ({ symbols, loading: false, index: 0 }),
 
-  show: (symbols: Symbol[]) => (vimBlur(), { symbols, cache: symbols, visible: true, index: 0 }),
+  show: (symbols: WorkspaceSymbol[]) => (vimBlur(), { symbols, cache: symbols, visible: true, index: 0 }),
   hide: () => {
     symbolCache.clear()
     vimFocus()
@@ -145,4 +148,4 @@ const view = ($: S, a: A) => Plugin($.visible, [
 
 const ui = app({ name: 'symbols', state, actions, view })
 
-api.ai.symbols.onShow(ui.show)
+api.ai.workspaceSymbols.onShow(ui.show)

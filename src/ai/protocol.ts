@@ -1,7 +1,12 @@
 import { Diagnostic, Command } from 'vscode-languageserver-protocol'
-import { Symbol, Reference } from '../langserv/adapter'
+import { Providers } from '../extension-host/providers'
 import { CompletionOption } from '../ai/completions'
 import { ColorData } from '../services/colorizer'
+import { Reference } from '../langserv/adapter'
+import { UnPromisify } from '../support/types'
+
+export type Symbol = NonNullable<UnPromisify<ReturnType<Providers['provideDocumentSymbols']>['promise']>>[0]
+export type WorkspaceSymbol = NonNullable<UnPromisify<ReturnType<Providers['provideWorkspaceSymbols']>['promise']>>[0]
 
 export interface CompletionShow {
   row: number
@@ -30,11 +35,6 @@ export interface ProblemCount {
   warnings: number
 }
 
-export enum SymbolMode {
-  Buffer,
-  Workspace,
-}
-
 export type ReferenceResult = [string, Reference[]]
 
 export interface AI {
@@ -47,7 +47,10 @@ export interface AI {
     hide(): void
   }
   symbols: {
-    show(symbols: Symbol[], mode: SymbolMode): void
+    show(symbols: Symbol[]): void
+  }
+  workspaceSymbols: {
+    show(symbols: WorkspaceSymbol[]): void
   }
   references: {
     show(references: ReferenceResult[], keyword: string): void
@@ -84,6 +87,9 @@ export interface AIClient {
   }
   symbols: {
     onShow(fn: AI['symbols']['show']): void
+  }
+  workspaceSymbols: {
+    onShow(fn: AI['workspaceSymbols']['show']): void
   }
   references: {
     onShow(fn: AI['references']['show']): void

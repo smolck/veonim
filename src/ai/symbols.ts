@@ -1,18 +1,25 @@
-import { symbols, workspaceSymbols } from '../langserv/adapter'
-import { supports } from '../langserv/server-features'
-import { SymbolMode } from '../ai/protocol'
+import { vscode } from '../core/extensions-api'
+import { PromiseBoss } from '../support/utils'
 import nvim from '../neovim/api'
 import { ui } from '../core/ai'
 
-nvim.onAction('symbols', async () => {
-  if (!supports.symbols(nvim.state.cwd, nvim.state.filetype)) return
+const symbolBoss = PromiseBoss()
+const workspaceBoss = PromiseBoss()
 
-  const listOfSymbols = await symbols(nvim.state)
-  listOfSymbols && ui.symbols.show(listOfSymbols, SymbolMode.Buffer)
+nvim.onAction('symbols', async () => {
+  ui.symbols.show([])
+  // TODO: show pending spinner
+  const symbols = await symbolBoss.schedule(vscode.language.provideDocumentSymbols(), { timeout: 3e3 })
+  if (!symbols) return
+  ui.symbols.show(symbols)
 })
 
 nvim.onAction('workspace-symbols', () => {
-  if (supports.workspaceSymbols(nvim.state.cwd, nvim.state.filetype)) ui.symbols.show([], SymbolMode.Workspace)
+  // TODO: show something in the UI to indicate that we need to type
+  // perhaps we load the current document symbols as a starter?
+  ui.workspaceSymbols.show([])
 })
 
-export const getWorkspaceSymbols = (query: string) => workspaceSymbols(nvim.state, query)
+export const getWorkspaceSymbols = (query: string) => {
+  return workspaceBoss.schedule(vscode.language.provideWorkspaceSymbols(query), { timeout: 10e3 })
+}

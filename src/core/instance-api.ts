@@ -1,16 +1,15 @@
 import { getActiveInstance, onSwitchVim, onCreateVim, instances } from '../core/instance-manager'
 import { VimMode, BufferInfo, HyperspaceCoordinates } from '../neovim/types'
 import { CompletionItem, Command } from 'vscode-languageserver-protocol'
+import { AIClient, WorkspaceSymbol } from '../ai/protocol'
 import { onFnCall, pascalCase } from '../support/utils'
 import { colors } from '../render/highlight-attributes'
 import { Functions } from '../neovim/function-types'
 import { WindowMetadata } from '../windows/metadata'
 import * as dispatch from '../messaging/dispatch'
 import { NotifyKind } from '../protocols/veonim'
-import { Symbol } from '../langserv/adapter'
 import { GitStatus } from '../support/git'
 import NeovimState from '../neovim/state'
-import { AIClient } from '../ai/protocol'
 import { EventEmitter } from 'events'
 import { clipboard } from 'electron'
 
@@ -129,10 +128,10 @@ const manualAI = {
       return getActiveInstance().request.aiGetCompletionDetail(item)
     },
   },
-  symbols: {
-    getWorkspaceSymbols: (query: string): Promise<Symbol[]> => {
+  workspaceSymbols: {
+    getSymbols: (query: string): Promise<WorkspaceSymbol[]> => {
       return getActiveInstance().request.aiGetWorkspaceSymbols(query)
-    },
+    }
   },
   codeAction: {
     run: (action: Command) => getActiveInstance().call.aiRunCodeAction(action),
