@@ -1,12 +1,14 @@
 import { Diagnostic, Command } from 'vscode-languageserver-protocol'
+import { LocationResult } from '../neovim/get-line-contents'
 import { Providers } from '../extension-host/providers'
 import { CompletionOption } from '../ai/completions'
 import { ColorData } from '../services/colorizer'
-import { Reference } from '../langserv/adapter'
 import { UnPromisify } from '../support/types'
 
 export type Symbol = NonNullable<UnPromisify<ReturnType<Providers['provideDocumentSymbols']>['promise']>>[0]
 export type WorkspaceSymbol = NonNullable<UnPromisify<ReturnType<Providers['provideWorkspaceSymbols']>['promise']>>[0]
+export type Reference = NonNullable<UnPromisify<ReturnType<Providers['provideReferences']>['promise']>>[0]
+export type ReferenceResult = [string, LocationResult[]]
 
 export interface CompletionShow {
   row: number
@@ -34,8 +36,6 @@ export interface ProblemCount {
   errors: number
   warnings: number
 }
-
-export type ReferenceResult = [string, Reference[]]
 
 export interface AI {
   completions: {

@@ -313,8 +313,11 @@ const api = {
     const context: vsc.ReferenceContext = { includeDeclaration: true }
 
     const results = await Promise.all([...funcs].map(fn => fn(document, position, context, token))).then(coalesce)
-    const references = results.map(m => m)
-    return references
+    const references = results.map(m => ({
+      path: m.uri.path,
+      range: m.range,
+    }))
+    return dedupOn(references, (a, b) => rangesEqual(a.range, b.range))
   })()}),
   prepareRename: (tokenId?: string) => ({ cancel, promise: (async () => {
     const funcs = providers.prepareRename.get(nvim.state.filetype)

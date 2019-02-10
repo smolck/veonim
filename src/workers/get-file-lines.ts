@@ -2,7 +2,7 @@ import { on } from '../messaging/worker-client'
 import { exists } from '../support/utils'
 import { createReadStream } from 'fs'
 
-interface LineContents {
+export interface LineContents {
   ix: number,
   line: string,
 }

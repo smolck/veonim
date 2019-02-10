@@ -1,23 +1,31 @@
-import { references as getReferences, Reference } from '../langserv/adapter'
+import getLineContents, { LocationResult } from '../neovim/get-line-contents'
 import { findNext, findPrevious } from '../support/relative-finder'
+import { references as getReferences } from '../langserv/adapter'
+import { Reference, ReferenceResult } from '../ai/protocol'
 import { supports } from '../langserv/server-features'
-import { ReferenceResult } from '../ai/protocol'
+import { vscode } from '../core/extensions-api'
+import { PromiseBoss } from '../support/utils'
 import nvim from '../neovim/api'
 import { ui } from '../core/ai'
 
-const groupResults = (m: Reference[]): ReferenceResult[] => [...m.reduce((map, ref: Reference) => {
+const groupResults = (m: LocationResult[]): ReferenceResult[] => [...m.reduce((map, ref: LocationResult) => {
   map.has(ref.path)
     ? map.get(ref.path)!.push(ref)
     : map.set(ref.path, [ ref ])
 
   return map
-}, new Map<string, Reference[]>())]
+}, new Map<string, LocationResult[]>())]
+
+const boss = PromiseBoss()
 
 nvim.onAction('references', async () => {
-  if (!supports.references(nvim.state.cwd, nvim.state.filetype)) return
+  const results = await boss.schedule(vscode.language.provideReferences(), { timeout: 3e3 })
+  console.log('results', results)
+  if (!results) return
 
-  const { keyword, references } = await getReferences(nvim.state)
-  if (!references.length) return
+  const references = await getLineContents(results)
+  const [ ref1 ] = references
+  const keyword = ref1.lineContents.slice(ref1.range.start.character, ref1.range.end.character)
 
   const referencesForUI = groupResults(references)
   ui.references.show(referencesForUI, keyword)
