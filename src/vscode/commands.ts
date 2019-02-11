@@ -1,12 +1,14 @@
+import { on } from '../messaging/worker-client'
 import { EventEmitter } from 'events'
 import * as vsc from 'vscode'
 
 const registeredCommands = new EventEmitter()
 
 const commands: typeof vsc.commands = {
-  executeCommand: (command: string, ...args: any[]) => {
-    registeredCommands.emit(command, ...args)
-    return new Promise(() => {})
+  executeCommand: async (command: string, ...args: any[]) => {
+    const [ handler ] = registeredCommands.listeners(command)
+    if (!handler) return console.error('commands.executeCommand failed because no registered command for:', command)
+    return handler(...args)
   },
   getCommands: async (filterInternal?: boolean) => {
     const events = registeredCommands.eventNames().map(m => m.toString())
@@ -26,3 +28,5 @@ const commands: typeof vsc.commands = {
 }
 
 export default commands
+
+on.commands_execute((command: string, args: any[]) => commands.executeCommand(command, ...args))
