@@ -119,16 +119,18 @@ const workspace: typeof vsc.workspace = {
     console.warn('NYI: workspace.registerFileSystemProvider')
     return ({ dispose: () => {} })
   },
-  onDidChangeWorkspaceFolders: fn => registerEvent('didChangeWorkspaceFolders', fn),
-  onDidOpenTextDocument: fn => registerEvent('didOpenTextDocument', fn),
-  onDidCloseTextDocument: fn => registerEvent('didCloseTextDocument', fn),
-  onDidChangeTextDocument: fn => registerEvent('didChangeTextDocument', fn),
-  onWillSaveTextDocument: fn => registerEvent('willSaveTextDocument', fn),
-  onDidSaveTextDocument: fn => registerEvent('didSaveTextDocument', fn),
-  onDidChangeConfiguration: fn => registerEvent('didChangeConfiguration', fn),
+  onDidChangeWorkspaceFolders: (fn, thisArg) => registerEvent('didChangeWorkspaceFolders', fn, thisArg),
+  onDidOpenTextDocument: (fn, thisArg) => registerEvent('didOpenTextDocument', fn, thisArg),
+  onDidCloseTextDocument: (fn, thisArg) => registerEvent('didCloseTextDocument', fn, thisArg),
+  onDidChangeTextDocument: (fn, thisArg) => registerEvent('didChangeTextDocument', fn, thisArg),
+  onWillSaveTextDocument: (fn, thisArg) => registerEvent('willSaveTextDocument', fn, thisArg),
+  onDidSaveTextDocument: (fn, thisArg) => registerEvent('didSaveTextDocument', fn, thisArg),
+  onDidChangeConfiguration: (fn, thisArg) => registerEvent('didChangeConfiguration', fn, thisArg),
 }
 
-const registerEvent = (name: keyof Events, fn: any) => ({ dispose: events.on(name, fn) })
+const registerEvent = (name: keyof Events, fn: any, thisArg?: any) => ({
+  dispose: events.on(name, fn.bind(thisArg)),
+})
 
 const WorkspaceFolder = (dir: string) => ({
   uri: URI.file(dir),
