@@ -15,6 +15,7 @@ import pleaseGet from '../support/please-get'
 import { dirname, join } from 'path'
 import '../support/vscode-shim'
 import '../extension-host/language-features'
+import '../extension-host/language-events'
 
 if (process.env.VEONIM_DEV) require('../dev/ext-host-development')
 

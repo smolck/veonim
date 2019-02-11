@@ -15,7 +15,7 @@ interface Events {
 
 const events = Watcher<Events>()
 
-export const emitDidChangeDiagnostics = (uris: vsc.Uri[]) => events.emit('didChangeDiagnostics', uris)
+export const emitDidChangeDiagnostics = (uris: vsc.Uri[]) => events.emit('didChangeDiagnostics', { uris })
 const diagnosticCollectionRepository = new Map<string, vsc.DiagnosticCollection>()
 
 type AM_I_STUPID = {
@@ -65,7 +65,7 @@ const languages: typeof vsc.languages = {
     const languageSelector = languageSelectorFrom(selector)!
     return score(languageSelector, document.uri, document.languageId, true)
   },
-  onDidChangeDiagnostics: fn => registerEvent('didChangeDiagnostics', fn),
+  onDidChangeDiagnostics: (fn, thisArg) => registerEvent('didChangeDiagnostics', fn, thisArg),
   createDiagnosticCollection: name => {
     const id = name || uuid()
     const key = diagnosticCollectionRepository.has(id) ? uuid() : id
@@ -212,6 +212,8 @@ const languages: typeof vsc.languages = {
   },
 }
 
-const registerEvent = (name: keyof Events, fn: any) => ({ dispose: events.on(name, fn) })
+const registerEvent = (name: keyof Events, fn: any, thisArg?: any) => ({
+  dispose: events.on(name, fn.bind(thisArg)),
+})
 
 export default languages

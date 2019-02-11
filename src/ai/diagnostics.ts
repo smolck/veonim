@@ -1,9 +1,11 @@
-import { Command, Diagnostic, DiagnosticSeverity } from 'vscode-languageserver-protocol'
 import { LocationItem, findNext, findPrevious } from '../support/relative-finder'
 import { ProblemHighlight, Highlight, HighlightGroupId } from '../neovim/types'
 import { codeAction, onDiagnostics, executeCommand } from '../langserv/adapter'
 import { positionWithinRange } from '../support/neovim-utils'
 import { supports } from '../langserv/server-features'
+import { DiagnosticSeverity } from '../vscode/types'
+import { vscode } from '../core/extensions-api'
+import { Command, Diagnostic } from 'vscode'
 import nvim from '../neovim/api'
 import { ui } from '../core/ai'
 
@@ -14,10 +16,7 @@ const cache = {
 
 const getDiagnosticLocations = (diagnostics: Diagnostic[]): LocationItem[] => diagnostics.map(d => ({
   path: nvim.state.absoluteFilepath,
-  line: d.range.start.line,
-  column: d.range.start.character,
-  endLine: d.range.end.line,
-  endColumn: d.range.end.character,
+  range: d.range,
 }))
 
 const getProblemCount = (diagnostics: Diagnostic[]) => {
@@ -57,7 +56,11 @@ nvim.onAction('next-problem', async () => {
   const problem = findNext(diagnosticLocations, nvim.state.absoluteFilepath, nvim.state.line, nvim.state.column)
   if (!problem) return
 
-  nvim.jumpTo(problem)
+  nvim.jumpTo({
+    path: problem.path,
+    line: problem.range.start.line,
+    column: problem.range.start.character,
+  })
 })
 
 nvim.onAction('prev-problem', async () => {
@@ -65,7 +68,11 @@ nvim.onAction('prev-problem', async () => {
   const problem = findPrevious(diagnosticLocations, nvim.state.absoluteFilepath, nvim.state.line, nvim.state.column)
   if (!problem) return
 
-  nvim.jumpTo(problem)
+  nvim.jumpTo({
+    path: problem.path,
+    line: problem.range.start.line,
+    column: problem.range.start.character,
+  })
 })
 
 nvim.onAction('problems-toggle', () => ui.problems.toggle())
@@ -78,6 +85,7 @@ nvim.on.cursorMove(async () => {
     .filter(d => positionWithinRange(line, column, d.range))
 
   if (!supports.codeActions(cwd, filetype)) return
+  console.log('get code actions')
   cache.actions = await codeAction(nvim.state, relevantDiagnostics)
 })
 
@@ -88,10 +96,16 @@ nvim.onAction('code-action', async () => {
   ui.codeAction.show(row, col, cache.actions)
 })
 
-onDiagnostics(({ diagnostics }) => {
-  cache.problems = diagnostics
-  refreshProblemHighlights(diagnostics)
-  ui.problemCount.update(getProblemCount(diagnostics))
+vscode.onDiagnostics(event => {
+  // TODO: WHAT DO if we have multiple uris? i thought langserv only supported current file
+  // maybe with vscode extensions they do something more fancy and support multiple.
+  // could also be that we get diagnostics for the same uri from multiple extensions
+  // TODO: in the extension host did we check if we get duplicate uris in the event?
+  const res = event.find(m => m.path === nvim.state.absoluteFilepath)
+  if (!res) return console.error('did not receive any diagnostics for the current file')
+  cache.problems = res.diagnostics
+  refreshProblemHighlights(res.diagnostics)
+  ui.problemCount.update(getProblemCount(res.diagnostics))
   // TODO: i don't care about the problems panel right now. i will revisit
   // when we get compiler output. i never use the problems panel
   // ui.problems.update(diagnostics)

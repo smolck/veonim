@@ -1,4 +1,5 @@
 import { DebugAdapterConnection } from '../messaging/debug-protocol'
+import { DiagnosticsEvent } from '../extension-host/language-events'
 import { Providers } from '../extension-host/providers'
 import { traceLANGSERV as log } from '../support/trace'
 import { workerData } from '../messaging/worker-client'
@@ -56,6 +57,7 @@ const providerBridge: Providers = new Proxy(Object.create(null), {
 
 export const vscode = {
   language: providerBridge,
+  onDiagnostics: (fn: (event: DiagnosticsEvent[]) => void) => on.diagnostics(fn),
 }
 
 const bridgeServer = (serverId: string): RPCServer => {
