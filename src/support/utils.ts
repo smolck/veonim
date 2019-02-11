@@ -299,7 +299,11 @@ export const Watcher = <T>() => {
   }
 
   const emit: Emit = (event: string, ...args: any[]) => {
-    ee.emit(event, ...args)
+    try {
+      ee.emit(event, ...args)
+    } catch(e) {
+      console.error('Watcher emit callback threw', event, e)
+    }
   }
 
   const remove = (event: keyof T & string) => {
