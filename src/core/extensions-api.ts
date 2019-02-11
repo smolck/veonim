@@ -58,6 +58,9 @@ const providerBridge: Providers = new Proxy(Object.create(null), {
 export const vscode = {
   language: providerBridge,
   onDiagnostics: (fn: (event: DiagnosticsEvent[]) => void) => on.diagnostics(fn),
+  commands: {
+    executeCommand: (command: string, ...args: any[]) => request.commands_execute(command, args),
+  },
 }
 
 const bridgeServer = (serverId: string): RPCServer => {

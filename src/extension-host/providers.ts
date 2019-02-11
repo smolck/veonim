@@ -141,7 +141,7 @@ const api = {
     const actions = results.map(m => {
       const cmd = m as vsc.Command
       const act = m as vsc.CodeAction
-      const res = { command: act.command || cmd, }
+      const res = { command: act.command || cmd }
       return act.command ? Object.assign(res, { ...act }) : res
     })
 

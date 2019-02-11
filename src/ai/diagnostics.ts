@@ -1,13 +1,14 @@
 import { LocationItem, findNext, findPrevious } from '../support/relative-finder'
 import { ProblemHighlight, Highlight, HighlightGroupId } from '../neovim/types'
-import { codeAction, onDiagnostics, executeCommand } from '../langserv/adapter'
 import { positionWithinRange } from '../support/neovim-utils'
-import { supports } from '../langserv/server-features'
 import { DiagnosticSeverity } from '../vscode/types'
 import { vscode } from '../core/extensions-api'
+import { PromiseBoss } from '../support/utils'
 import { Command, Diagnostic } from 'vscode'
 import nvim from '../neovim/api'
 import { ui } from '../core/ai'
+
+const boss = PromiseBoss()
 
 const cache = {
   problems: [] as Diagnostic[],
@@ -79,17 +80,14 @@ nvim.onAction('problems-toggle', () => ui.problems.toggle())
 nvim.onAction('problems-focus', () => ui.problems.focus())
 
 nvim.on.cursorMove(async () => {
-  const { line, column, cwd, filetype } = nvim.state
-
-  const relevantDiagnostics = cache.problems
-    .filter(d => positionWithinRange(line, column, d.range))
-
-  if (!supports.codeActions(cwd, filetype)) return
-  console.log('get code actions')
-  cache.actions = await codeAction(nvim.state, relevantDiagnostics)
+  const { line, column } = nvim.state
+  const relevantDiagnostics = cache.problems.filter(d => positionWithinRange(line, column, d.range))
+  const actions = await boss.schedule(vscode.language.provideCodeActions({ diagnostics: relevantDiagnostics }), { timeout: 10e3 })
+  // TODO: sort this out
+  cache.actions = actions || [] as Command[]
 })
 
-export const runCodeAction = (action: Command) => executeCommand(nvim.state, action)
+export const runCodeAction = (action: Command) => vscode.commands.executeCommand(action.command, ...(action.arguments || []))
 
 nvim.onAction('code-action', async () => {
   const { row, col } = await nvim.getCursorPosition()
