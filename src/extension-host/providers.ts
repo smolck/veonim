@@ -137,15 +137,13 @@ const api = {
     const range = new Range(position, position)
 
     const results = await Promise.all([...funcs].map(fn => fn(document, range, context, token))).then(coalesce)
+    const actions = results.map(m => m.command
+      ? m as vsc.CodeAction
+      : { command: m as vsc.Command, title: m.title })
 
-    const actions = results.map(m => {
-      const cmd = m as vsc.Command
-      const act = m as vsc.CodeAction
-      const res = { command: act.command || cmd }
-      return act.command ? Object.assign(res, { ...act }) : res
-    })
-
-    return dedupOn(actions, (a, b) => a.command.title === b.command.title)
+    return dedupOn(actions, (a, b) => a.command && b.command
+      ? a.command.command === b.command.command
+      : (a as vsc.CodeAction).title === (b as vsc.CodeAction).title)
   })()}),
   provideCodeLenses: (tokenId?: string) => ({ cancel, promise: (async () => {
     const funcs = providers.provideCodeLenses.get(nvim.state.filetype)

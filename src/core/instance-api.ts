@@ -5,9 +5,9 @@ import { onFnCall, pascalCase } from '../support/utils'
 import { colors } from '../render/highlight-attributes'
 import { Functions } from '../neovim/function-types'
 import { WindowMetadata } from '../windows/metadata'
+import { CompletionItem, CodeAction } from 'vscode'
 import * as dispatch from '../messaging/dispatch'
 import { NotifyKind } from '../protocols/veonim'
-import { CompletionItem, Command } from 'vscode'
 import { GitStatus } from '../support/git'
 import NeovimState from '../neovim/state'
 import { EventEmitter } from 'events'
@@ -134,7 +134,7 @@ const manualAI = {
     }
   },
   codeAction: {
-    run: (action: Command) => getActiveInstance().call.aiRunCodeAction(action),
+    run: (action: CodeAction) => getActiveInstance().call.aiRunCodeAction(action),
   }
 }
 

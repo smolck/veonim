@@ -1,8 +1,8 @@
-import { Diagnostic, Command } from 'vscode-languageserver-protocol'
 import { LocationResult } from '../neovim/get-line-contents'
 import { Providers } from '../extension-host/providers'
 import { CompletionOption } from '../ai/completions'
 import { ColorData } from '../services/colorizer'
+import { Diagnostic, CodeAction } from 'vscode'
 import { UnPromisify } from '../support/types'
 
 export type Symbol = NonNullable<UnPromisify<ReturnType<Providers['provideDocumentSymbols']>['promise']>>[0]
@@ -64,7 +64,7 @@ export interface AI {
     hide(): void
   }
   codeAction: {
-    show(row: number, col: number, actions: Command[]): void
+    show(row: number, col: number, actions: CodeAction[]): void
   }
   problems: {
     update(problems: Diagnostic[]): void

@@ -1,4 +1,3 @@
-import { Command } from 'vscode-languageserver-protocol'
 import { RowNormal } from '../components/row-container'
 import { h, app, vimBlur, vimFocus } from '../ui/uikit'
 import * as windows from '../windows/window-manager'
@@ -7,14 +6,15 @@ import Overlay from '../components/overlay'
 import { filter } from 'fuzzaldrin-plus'
 import * as Icon from 'hyperapp-feather'
 import api from '../core/instance-api'
+import { CodeAction } from 'vscode'
 
 const state = {
   x: 0,
   y: 0,
   value: '',
   visible: false,
-  actions: [] as Command[],
-  cache: [] as Command[],
+  actions: [] as CodeAction[],
+  cache: [] as CodeAction[],
   index: 0,
 }
 
@@ -72,7 +72,7 @@ const view = ($: S, a: typeof actions) => Overlay({
     })
 
     ,h('div', $.actions.map((s, ix) => h(RowNormal, {
-      key: `${s.title}-${s.command}`,
+      key: s.title,
       active: ix === $.index,
     }, [
       ,h('span', s.title)
@@ -84,7 +84,7 @@ const view = ($: S, a: typeof actions) => Overlay({
 
 const ui = app({ name: 'code-actions', state, actions, view })
 
-api.ai.codeAction.onShow((row: number, col: number, actions: Command[]) => {
+api.ai.codeAction.onShow((row: number, col: number, actions: CodeAction[]) => {
   if (!actions.length) return
   const { x, y } = windows.pixelPosition(row + 1, col)
   ui.show({ x, y, actions })

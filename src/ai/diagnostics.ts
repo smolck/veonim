@@ -2,9 +2,9 @@ import { LocationItem, findNext, findPrevious } from '../support/relative-finder
 import { ProblemHighlight, Highlight, HighlightGroupId } from '../neovim/types'
 import { positionWithinRange } from '../support/neovim-utils'
 import { DiagnosticSeverity } from '../vscode/types'
+import { Diagnostic, CodeAction } from 'vscode'
 import { vscode } from '../core/extensions-api'
 import { PromiseBoss } from '../support/utils'
-import { Command, Diagnostic } from 'vscode'
 import nvim from '../neovim/api'
 import { ui } from '../core/ai'
 
@@ -12,7 +12,7 @@ const boss = PromiseBoss()
 
 const cache = {
   problems: [] as Diagnostic[],
-  actions: [] as Command[],
+  actions: [] as CodeAction[],
 }
 
 const getDiagnosticLocations = (diagnostics: Diagnostic[]): LocationItem[] => diagnostics.map(d => ({
@@ -83,11 +83,14 @@ nvim.on.cursorMove(async () => {
   const { line, column } = nvim.state
   const relevantDiagnostics = cache.problems.filter(d => positionWithinRange(line, column, d.range))
   const actions = await boss.schedule(vscode.language.provideCodeActions({ diagnostics: relevantDiagnostics }), { timeout: 10e3 })
-  // TODO: sort this out
-  cache.actions = actions || [] as Command[]
+  cache.actions = actions || [] as CodeAction[]
 })
 
-export const runCodeAction = (action: Command) => vscode.commands.executeCommand(action.command, ...(action.arguments || []))
+export const runCodeAction = (action: CodeAction) => {
+  if (action.command) vscode.commands.executeCommand(action.command.command, ...(action.command.arguments || []))
+  // TODO: run other kinds of code actions besides command
+  else console.warn('NYI: codeAction do other actions besides Commands')
+}
 
 nvim.onAction('code-action', async () => {
   const { row, col } = await nvim.getCursorPosition()
