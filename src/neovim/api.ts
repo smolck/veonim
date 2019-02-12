@@ -206,6 +206,13 @@ const jumpToProjectFile = async ({ line, column, path }: HyperspaceCoordinates) 
 const systemAction = (event: string, cb: GenericCallback) => watchers.actions.on(event, cb)
 
 const buffers = {
+  /** Get a buffer using a filesystem path. If buffer is not yet in buffer list it will be added to the list */
+  getBufferFromPath: async (path: string): Promise<Buffer> => {
+    const bufs = await getNamedBuffers()
+    const found = bufs.find(b => b.name === path)
+    return found ? found.buffer : buffers.add(path)
+  },
+  /** Create untitled buffer and open it up. Also optionally set filetype and initial contents */
   create: async ({ filetype = '', content = '' } = {}) => {
     const bufid = await call.bufnr('[No Name]', 420)
     cmd(`b ${bufid}`)
@@ -214,7 +221,9 @@ const buffers = {
     if (content) buffer.append(0, content.split('\n'))
     return buffer
   },
+  /** List all buffers */
   list: () => as.bufl(req.core.listBufs()),
+  /** Open a buffer from a filesystem path in the current window */
   open: async (file: string) => {
     const loaded = await loadBuffer(file)
     if (loaded) return true
@@ -222,6 +231,7 @@ const buffers = {
     cmd(`badd ${file}`)
     return loadBuffer(file)
   },
+  /** Find a buffer from a filesystem path */
   find: async (name: string) => {
     const buffers = await getNamedBuffers()
     // it appears that buffers name will have a fullpath, like
@@ -230,6 +240,7 @@ const buffers = {
     const found = buffers.find(b => b.name.endsWith(name)) || { buffer: dummy.buf }
     return found.buffer
   },
+  /** Add a new buffer to the buffer list from the given filesystem path */
   add: async (name: string) => {
     const id = uuid()
     cmd(`badd ${id}`)
@@ -247,6 +258,7 @@ const buffers = {
     cmd(`bwipeout! ${id}`)
     return buffer
   },
+  /** List all buffers with some useful metadata preloaded */
   listWithInfo: async (): Promise<BufferInfo[]> => {
     const bufs = await buffers.list()
     const currentBufferId = current.buffer.id
@@ -273,6 +285,7 @@ const buffers = {
       .map((m, ix, arr) => ({ ...m, duplicate: arr.some((n, ixf) => ixf !== ix && n.base === m.base) }))
       .map(m => ({ ...m, name: m.duplicate ? `${m.dir}/${m.base}` : m.base }))
   },
+  /** Add a shadow buffer used to render GUI elements on top of */
   addShadow: async (name: string) => {
     const buffer = await buffers.add(name)
 
