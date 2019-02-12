@@ -61,6 +61,10 @@ export const vscode = {
   commands: {
     executeCommand: (command: string, ...args: any[]) => request.commands_execute(command, args),
   },
+  textSync: {
+    pause: () => call.set_text_sync_state(false),
+    resume: () => call.set_text_sync_state(true),
+  },
 }
 
 const bridgeServer = (serverId: string): RPCServer => {

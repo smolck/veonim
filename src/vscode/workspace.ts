@@ -3,6 +3,7 @@ import TextDocumentManager from '../neovim/text-document-manager'
 import { Watcher, pathRelativeToCwd, is } from '../support/utils'
 import TextDocument from '../vscode/text-document'
 import nvimSync from '../neovim/sync-api-client'
+import { on } from '../messaging/worker-client'
 import { URI } from '../vscode/uri'
 import Tasks from '../vscode/tasks'
 import nvim from '../neovim/api'
@@ -23,6 +24,12 @@ interface Events {
 const events = Watcher<Events>()
 const tdm = TextDocumentManager(nvim)
 
+const state = {
+  textSyncEnabled: true,
+}
+
+on.set_text_sync_state((enabled: boolean) => state.textSyncEnabled = enabled)
+
 nvim.watchState.cwd((cwd, previousCwd) => events.emit('didChangeWorkspaceFolders', {
   added: [ WorkspaceFolder(cwd) ],
   removed: [ WorkspaceFolder(previousCwd) ],
@@ -30,7 +37,7 @@ nvim.watchState.cwd((cwd, previousCwd) => events.emit('didChangeWorkspaceFolders
 
 tdm.on.didOpen(({ id }) => events.emit('didOpenTextDocument', TextDocument(id)))
 
-tdm.on.didChange(({ id, contentChanges }) => events.emit('didChangeTextDocument', {
+tdm.on.didChange(({ id, contentChanges }) => state.textSyncEnabled && events.emit('didChangeTextDocument', {
   contentChanges,
   document: TextDocument(id),
 } as vsc.TextDocumentChangeEvent))
