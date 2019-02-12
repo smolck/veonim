@@ -51,13 +51,15 @@ const debug: typeof vsc.debug = {
   removeBreakpoints: () => {
     console.warn('NYI: debug.removeBreakpoints')
   },
-  onDidChangeActiveDebugSession: fn => registerEvent('didChangeActiveDebugSession', fn),
-  onDidStartDebugSession: fn => registerEvent('didStartDebugSession', fn),
-  onDidReceiveDebugSessionCustomEvent: fn => registerEvent('didReceiveDebugSessionCustomEvent', fn),
-  onDidTerminateDebugSession: fn => registerEvent('didTerminateDebugSession', fn),
-  onDidChangeBreakpoints: fn => registerEvent('didChangeBreakpoints', fn),
+  onDidChangeActiveDebugSession: (fn, thisArg) => registerEvent('didChangeActiveDebugSession', fn, thisArg),
+  onDidStartDebugSession: (fn, thisArg) => registerEvent('didStartDebugSession', fn, thisArg),
+  onDidReceiveDebugSessionCustomEvent: (fn, thisArg) => registerEvent('didReceiveDebugSessionCustomEvent', fn, thisArg),
+  onDidTerminateDebugSession: (fn, thisArg) => registerEvent('didTerminateDebugSession', fn, thisArg),
+  onDidChangeBreakpoints: (fn, thisArg) => registerEvent('didChangeBreakpoints', fn, thisArg),
 }
 
-const registerEvent = (name: keyof Events, fn: any) => ({ dispose: events.on(name, fn) })
+const registerEvent = (name: keyof Events, fn: any, thisArg?: any) => ({
+  dispose: events.on(name, fn.bind(thisArg)),
+})
 
 export default debug

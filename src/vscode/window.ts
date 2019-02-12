@@ -174,19 +174,21 @@ const window: typeof vsc.window = {
     console.warn('NYI: window.showTextDocument', documentOrUri, optionsOrColumn)
     return TextEditor(-1)
   },
-  onDidChangeWindowState: fn => registerEvent('didChangeWindowState', fn),
-  onDidChangeActiveTextEditor: fn => registerEvent('didChangeActiveTextEditor', fn),
-  onDidChangeVisibleTextEditors: fn => registerEvent('didChangeVisibleTextEditors', fn),
+  onDidChangeWindowState: (fn, thisArg) => registerEvent('didChangeWindowState', fn, thisArg),
+  onDidChangeActiveTextEditor: (fn, thisArg) => registerEvent('didChangeActiveTextEditor', fn, thisArg),
+  onDidChangeVisibleTextEditors: (fn, thisArg) => registerEvent('didChangeVisibleTextEditors', fn, thisArg),
 
-  onDidChangeTextEditorSelection: fn => registerEvent('didChangeTextEditorSelection', fn),
-  onDidChangeTextEditorVisibleRanges: fn => registerEvent('didChangeTextEditorVisibleRanges', fn),
-  onDidChangeTextEditorOptions: fn => registerEvent('didChangeTextEditorOptions', fn),
-  onDidChangeTextEditorViewColumn: fn => registerEvent('didChangeTextEditorViewColumn', fn),
-  onDidChangeActiveTerminal: fn => registerEvent('didChangeActiveTerminal', fn),
-  onDidOpenTerminal: fn => registerEvent('didOpenTerminal', fn),
-  onDidCloseTerminal: fn => registerEvent('didCloseTerminal', fn),
+  onDidChangeTextEditorSelection: (fn, thisArg) => registerEvent('didChangeTextEditorSelection', fn, thisArg),
+  onDidChangeTextEditorVisibleRanges: (fn, thisArg) => registerEvent('didChangeTextEditorVisibleRanges', fn, thisArg),
+  onDidChangeTextEditorOptions: (fn, thisArg) => registerEvent('didChangeTextEditorOptions', fn, thisArg),
+  onDidChangeTextEditorViewColumn: (fn, thisArg) => registerEvent('didChangeTextEditorViewColumn', fn, thisArg),
+  onDidChangeActiveTerminal: (fn, thisArg) => registerEvent('didChangeActiveTerminal', fn, thisArg),
+  onDidOpenTerminal: (fn, thisArg) => registerEvent('didOpenTerminal', fn, thisArg),
+  onDidCloseTerminal: (fn, thisArg) => registerEvent('didCloseTerminal', fn, thisArg),
 }
 
-const registerEvent = (name: keyof Events, fn: any) => ({ dispose: events.on(name, fn) })
+const registerEvent = (name: keyof Events, fn: any, thisArg?: any) => ({
+  dispose: events.on(name, fn.bind(thisArg)),
+})
 
 export default window

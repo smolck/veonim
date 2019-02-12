@@ -42,10 +42,10 @@ const runTask = (task: vsc.Task): vsc.TaskExecution => {
 const tasks: typeof vsc.tasks = {
   get taskExecutions() { return [...activeTasks] },
 
-  onDidStartTask: fn => ({ dispose: watchers.on('didStartTask', fn) }),
-  onDidEndTask: fn => ({ dispose: watchers.on('didEndTask', fn) }),
-  onDidStartTaskProcess: fn => ({ dispose: watchers.on('didStartTaskProcess', fn) }),
-  onDidEndTaskProcess: fn => ({ dispose: watchers.on('didEndTaskProcess', fn) }),
+  onDidStartTask: (fn, thisArg) => ({ dispose: watchers.on('didStartTask', fn.bind(thisArg)) }),
+  onDidEndTask: (fn, thisArg) => ({ dispose: watchers.on('didEndTask', fn.bind(thisArg)) }),
+  onDidStartTaskProcess: (fn, thisArg) => ({ dispose: watchers.on('didStartTaskProcess', fn.bind(thisArg)) }),
+  onDidEndTaskProcess: (fn, thisArg) => ({ dispose: watchers.on('didEndTaskProcess', fn.bind(thisArg)) }),
 
   registerTaskProvider: (type, provider) => {
     provideTasksAndRegister(type, provider)

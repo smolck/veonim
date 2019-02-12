@@ -15,14 +15,14 @@ const commands: typeof vsc.commands = {
     if (filterInternal) return events.filter(e => !e.startsWith('_'))
     return events
   },
-  registerCommand: (command: string, callback: (...args: any[]) => void) => {
-    registeredCommands.on(command, callback)
+  registerCommand: (command: string, callback: (...args: any[]) => void, thisArg?: any) => {
+    registeredCommands.on(command, callback.bind(thisArg))
     return { dispose: () => registeredCommands.removeListener(command, callback) }
   },
-  registerTextEditorCommand: (command: string, callback: Function) => {
+  registerTextEditorCommand: (command: string, callback: Function, thisArg?: any) => {
     // TODO: the callback needs to return a TextEditor object. where do we get that from?
     // TODO: are we supposed to return textEditorCommands in getCommands or executeCommand?
-    console.warn('NYI: registerTextEditorCommand', command, callback)
+    console.warn('NYI: registerTextEditorCommand', command, callback.bind(thisArg))
     return { dispose: () => console.warn('NYI: registerTextEditorCommand disposable') }
   },
 }
