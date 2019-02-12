@@ -337,20 +337,20 @@ const api = {
     const position = new Position(nvim.state.line, nvim.state.column)
 
     const [ result ] = await Promise.all([...funcs].map(fn => fn && fn(document, position, token))).then(coalesce)
+    if (!result) return
     return ((result as any).range || result) as vsc.Range
   })()}),
-  provideRenameEdits: (newName: string, tokenId?: string) => ({ cancel, promise: (async () => {
+  provideRenameEdits: (newName: string, position: Position, tokenId?: string) => ({ cancel, promise: (async () => {
     const funcs = providers.provideRenameEdits.get(nvim.state.filetype)
     if (!funcs) return
 
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
-    const position = new Position(nvim.state.line, nvim.state.column)
 
     const results = await Promise.all([...funcs].map(fn => fn && fn(document, position, newName, token))).then(coalesce)
     const workspaceEdits = results.reduce((list, workspaceEdit) => {
       return workspaceEdit.entries().reduce((res, [ uri, edits ]) => {
-        const next = edits.map(e => ({ ...e, path: uri.path }))
+        const next = edits.map(edit => ({ ...threadSafeObject(edit), path: uri.path }))
         return [...res, ...next]
       }, list)
     }, [] as WorkspaceEdit[])

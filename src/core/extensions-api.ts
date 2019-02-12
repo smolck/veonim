@@ -3,6 +3,7 @@ import { DiagnosticsEvent } from '../extension-host/language-events'
 import { Providers } from '../extension-host/providers'
 import { traceLANGSERV as log } from '../support/trace'
 import { workerData } from '../messaging/worker-client'
+import { threadSafeObject } from '../support/utils'
 import nvimSyncApiHandler from '../neovim/sync-api'
 import Worker from '../messaging/worker'
 import { uuid } from '../support/utils'
@@ -50,7 +51,7 @@ const providerBridge: Providers = new Proxy(Object.create(null), {
     const id = uuid()
     return {
       cancel: () => call.provider_cancel(id),
-      promise: request.provider(method, args, id),
+      promise: request.provider(method, args.map(threadSafeObject), id),
     }
   }
 })
