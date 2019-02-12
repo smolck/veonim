@@ -1,8 +1,8 @@
 import { MapSetter, dedupOn, threadSafeObject } from '../support/utils'
 import { makeCancelToken, cancelTokenById } from '../vscode/tools'
+import { Position, Range, CompletionItem } from '../vscode/types'
 import TextDocument from '../vscode/text-document'
 import { Unpacked, maybe } from '../support/types'
-import { Position, Range } from '../vscode/types'
 import { on } from '../messaging/worker-client'
 import nvim from '../neovim/api'
 import * as vsc from 'vscode'
@@ -91,6 +91,10 @@ const cancel = () => {}
 //   - TODO: does vscode rank certain provider's completions higher than others?
 // - single -> ask user to choose (definition, implementation, etc.)
 // - what about non-user ones, like resolving things or hover, signhelp?
+const prototypes = {
+  completionItem: Object.getPrototypeOf(new CompletionItem('derp')),
+}
+
 const api = {
   cancelRequest: (tokenId: string) => cancelTokenById(tokenId),
   provideCompletionItems: (context: vsc.CompletionContext, tokenId?: string) => ({ cancel, promise: (async () => {
@@ -113,15 +117,22 @@ const api = {
     const completions = dedupOn(allCompletions, (a, b) => a.label === b.label)
     const incomplete = results.some(m => !!(m as vsc.CompletionList).isIncomplete)
 
+    // it seems we need to maintain the prototype of the CompletionItem. I tried regen
+    // from CompletionItem and ProtocolCompletionItem (from vscode-languageclient)
+    // but it did not work. this hack of saving the prototype of one of the items
+    // seems to work... sorry
+    if (completions.length) prototypes.completionItem = Object.getPrototypeOf(completions[0])
+
     return { incomplete, completions }
   })()}),
   resolveCompletionItem: (item: vsc.CompletionItem, tokenId?: string) => ({ cancel, promise: (async () => {
     const funcs = providers.resolveCompletionItem.get(nvim.state.filetype)
     if (!funcs) return
 
+    const realItem = Object.assign(Object.create(prototypes.completionItem), item)
     const { token } = makeCancelToken(tokenId!)
 
-    const [ result ] = await Promise.all([...funcs].map(fn => fn && fn(item, token))).then(coalesce)
+    const [ result ] = await Promise.all([...funcs].map(fn => fn && fn(realItem, token))).then(coalesce)
     return result
   })()}),
   getCompletionTriggerCharacters: () => ({ cancel, promise: (async () => {
