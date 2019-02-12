@@ -89,9 +89,21 @@ const workspace: typeof vsc.workspace = {
     console.warn('NYI: workspace.findFiles')
     return []
   },
-  applyEdit: async () => {
-    console.warn('NYI: workspace.applyEdit')
-    return false
+  applyEdit: async (workspaceEdit) => {
+    const edits = [...workspaceEdit.entries()]
+    const editRequests = edits.map(async ([ uri, textEdits ]) => {
+      // TODO: double check this arguments. according to WorkspaceEdit the edits are an array of objects? but what does entries() return? 
+      const buffer = await nvim.buffers.getBufferFromPath(uri.path)
+
+      // TODO: need to handle file operations (create, rename, delete)
+      textEdits.forEach(async ({ range, newText }) => {
+        // TODO: is newText insert or append? in the docs newText is described as "INSERT"
+        // but then how are replace edits applied? should check source...
+        buffer.replaceRange(range.start.line, range.start.character, range.end.line, range.end.character, newText)
+      })
+    })
+
+    return await Promise.all(editRequests).then(() => true, () => false)
   },
   openTextDocument: async (arg: any) => {
     if (is.object(arg) && arg.path) {
