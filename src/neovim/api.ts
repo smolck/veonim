@@ -1,6 +1,6 @@
 import { VimOption, BufferEvent, HyperspaceCoordinates, BufferType, BufferHide, BufferOption, Buffer, Window, Tabpage, GenericCallback, BufferInfo, Keymap } from '../neovim/types'
 import { Api, ExtContainer, Prefixes, Buffer as IBuffer, Window as IWindow, Tabpage as ITabpage } from '../neovim/protocol'
-import { is, onFnCall, onProp, prefixWith, uuid, simplifyPath } from '../support/utils'
+import { is, onFnCall, onProp, prefixWith, uuid, simplifyPath, remove, rename } from '../support/utils'
 import { workerData, request as requestFromUI } from '../messaging/worker-client'
 import ConnectMsgpackRPC from '../messaging/msgpack-transport'
 import * as TextEditPatch from '../neovim/text-edit-patch'
@@ -263,13 +263,13 @@ const buffers = {
   /** Rename buffer and file given old and new paths. This affects the filesystem */
   rename: async (oldPath: string, newPath: string) => {
     buffers.remove(oldPath)
-    await call.rename(oldPath, newPath)
+    await rename(oldPath, newPath)
     return buffers.add(newPath)
   },
   /** Delete buffer and file at the given path. This affects the filesystem */
   delete: async (path: string) => {
     buffers.remove(path)
-    return call.delete(path)
+    remove(path)
   },
   /** List all buffers with some useful metadata preloaded */
   listWithInfo: async (): Promise<BufferInfo[]> => {
