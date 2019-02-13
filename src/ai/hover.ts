@@ -14,6 +14,7 @@ const textByWord = (data: ColorData[]): ColorData[] => data.reduce((res, item) =
 const boss = PromiseBoss()
 
 nvim.onAction('hover', async () => {
+  nvim.untilEvent.cursorMove.then(boss.cancelCurrentPromise)
   const result = await boss.schedule(vscode.language.provideHover(), { timeout: 3e3 })
   if (!result) return
   const [ value, doc ] = result
