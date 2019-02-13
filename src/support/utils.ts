@@ -144,6 +144,11 @@ export const remove = async (path: string) => {
   P(fs.rmdir)(path)
 }
 
+export const rename = async (path: string, newPath: string) => {
+  if (!(await exists(path))) throw new Error(`rename: ${path} does not exist`)
+  if ((await P(fs.stat)(path)).isFile()) return P(fs.rename)(path, newPath)
+}
+
 export const pathParts = (path: string) => {
   const properPath = normalize(path)
   const parts = properPath.split(sep)
