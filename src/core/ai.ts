@@ -1,5 +1,4 @@
 import { discoverCompletions, getCompletionDetail } from '../ai/completions'
-import { filetypeDetectedStartServerMaybe } from '../langserv/director'
 import { getSignatureHint } from '../ai/signature-hint'
 import { call, on } from '../messaging/worker-client'
 import { getWorkspaceSymbols } from '../ai/symbols'
@@ -15,7 +14,6 @@ import '../ai/highlights'
 import '../ai/rename'
 import '../ai/hover'
 
-nvim.on.filetype(filetype => filetypeDetectedStartServerMaybe(nvim.state.cwd, filetype))
 nvim.watchState.colorscheme((color: string) => colorizer.call.setColorScheme(color))
 
 let completionEnabled = true

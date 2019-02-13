@@ -1,4 +1,4 @@
-import { vscLanguageToFiletypes } from '../langserv/vsc-languages'
+import { vscLanguageToFiletypes } from '../vscode/vsc-languages'
 import { EventEmitter } from 'events'
 import { is } from '../support/utils'
 import * as vsc from 'vscode'

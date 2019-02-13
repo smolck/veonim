@@ -1,9 +1,4 @@
-// https://raw.githubusercontent.com/Microsoft/vscode/master/src/vs/base/common/charCode.ts
-/*---------------------------------------------------------------------------------------------
- *  Copyright (c) Microsoft Corporation. All rights reserved.
- *  Licensed under the MIT License. See License.txt in the project root for license information.
- *--------------------------------------------------------------------------------------------*/
-
+// stolen from: https://github.com/Microsoft/vscode/blob/master/src/vs/base/common/charCode.ts
 // Names from https://blog.codinghorror.com/ascii-pronunciation-rules-for-programmers/
 
 /**

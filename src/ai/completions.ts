@@ -1,7 +1,7 @@
 import { findIndexRight, hasUpperCase, EarlyPromise, exists, getDirFiles, resolvePath, PromiseBoss } from '../support/utils'
 import transformCompletions from '../ai/completion-transforms'
-import toVSCodeLanguage from '../langserv/vsc-languages'
 import { workerData } from '../messaging/worker-client'
+import toVSCodeLanguage from '../vscode/vsc-languages'
 import { CompletionItemKind } from '../vscode/types'
 import { vscode } from '../core/extensions-api'
 import { filter } from 'fuzzaldrin-plus'

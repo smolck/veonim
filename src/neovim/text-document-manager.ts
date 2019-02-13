@@ -1,6 +1,6 @@
 import { positionToOffset } from '../neovim/text-edit-patch'
-import filetypeToLanguageID from '../langserv/vsc-languages'
 import { BufferChangeEvent, Buffer } from '../neovim/types'
+import filetypeToLanguageID from '../vscode/vsc-languages'
 import { TextDocumentContentChangeEvent } from 'vscode'
 import { Range, Position } from '../vscode/types'
 import { NeovimAPI } from '../neovim/api'

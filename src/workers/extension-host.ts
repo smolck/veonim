@@ -6,7 +6,6 @@ import { ExtensionInfo, Extension, ActivationEventType,
   Disposable, activateExtension } from '../extensions/extensions'
 import DebugProtocolConnection, { DebugAdapterConnection } from '../messaging/debug-protocol'
 import { readFile, fromJSON, is, uuid, getDirs, getFiles, merge, CreateTask, Task, configPath } from '../support/utils'
-import updateLanguageServersWithTextDocuments from '../langserv/update-server'
 import { on, call, request } from '../messaging/worker-client'
 import { registerExtension } from '../vscode/extensions'
 import { ChildProcess, spawn } from 'child_process'
@@ -27,6 +26,9 @@ interface Debugger {
   program: string
   runtime?: 'node' | 'mono'
 }
+
+// TODO: on filetype change activate extensions
+// nvim.on.filetype(filetype => filetypeDetectedStartServerMaybe(nvim.state.cwd, filetype))
 
 // TODO: THIS LEAKS OUTSIDE OF WORKER!
 // need this flag to spawn node child processes. this will use the same node

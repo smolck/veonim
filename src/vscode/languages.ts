@@ -1,4 +1,4 @@
-import filetypeToVscLanguage, { vscLanguageToFiletypes } from '../langserv/vsc-languages'
+import filetypeToVscLanguage, { vscLanguageToFiletypes } from '../vscode/vsc-languages'
 import DiagnosticCollection from '../vscode/diagnostic-collection'
 import { languageSelectorFrom } from '../vscode/type-converters'
 import { Watcher, is, uuid, MapSetter } from '../support/utils'

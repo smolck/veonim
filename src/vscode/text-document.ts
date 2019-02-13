@@ -1,4 +1,4 @@
-import filetypeToVSCLanguage from '../langserv/vsc-languages'
+import filetypeToVSCLanguage from '../vscode/vsc-languages'
 import { Position, Range } from '../vscode/types'
 import nvimSync from '../neovim/sync-api-client'
 import TextLine from '../vscode/text-line'
