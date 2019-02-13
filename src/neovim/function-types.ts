@@ -69,4 +69,6 @@ export interface Functions {
   matchadd(hlgrp: string, pattern: string, priority?: number, id?: number): Promise<number>
   matchdelete(id: number): Promise<number>
   getcompletion(pattern: string, type: string): Promise<string[]>
+  rename(from: string, to: string): Promise<number>
+  delete(name: string): Promise<number>
 }
