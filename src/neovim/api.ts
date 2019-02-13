@@ -9,7 +9,6 @@ import { Functions } from '../neovim/function-types'
 import { Autocmds } from '../neovim/startup'
 import CreateVimState from '../neovim/state'
 import { Position } from '../vscode/types'
-import { Patch } from '../langserv/patch'
 import { basename, dirname } from 'path'
 import { EventEmitter } from 'events'
 
@@ -398,42 +397,6 @@ const untilEvent: UntilEvent = new Proxy(Object.create(null), {
   })
 })
 
-const applyPatches = async (patches: Patch[]) => {
-  const bufs = await Promise.all((await buffers.list()).map(async buffer => ({
-    buffer,
-    path: await buffer.name,
-  })))
-
-  // TODO: this assumes all missing files are in the cwd
-  // TODO: badd allows the option of specifying a line number to position the curosr
-  // when loading the buffer. might be nice to use on a rename op. see :h badd
-
-  // TODO: we should notify user that other files were changed
-  patches
-    .filter(p => bufs.some(b => b.path !== p.path))
-    .forEach(b => cmd(`badd ${b.file}`))
-
-  applyPatchesToBuffers(patches, bufs)
-}
-
-interface PathBuf { buffer: Buffer, path: string }
-const applyPatchesToBuffers = async (patches: Patch[], buffers: PathBuf[]) => buffers.forEach(({ buffer, path }) => {
-  const patch = patches.find(p => p.path === path)
-  if (!patch) return
-
-  patch.operations.forEach(async ({ op, start, end, val }, ix) => {
-    if (op === 'delete') buffer.delete(start.line)
-    else if (op === 'append') buffer.append(start.line, val)
-    else if (op === 'replace') {
-      const targetLine = await buffer.getLine(start.line)
-      const newLine = targetLine.slice(0, start.character) + val + targetLine.slice(end.character)
-      buffer.replace(start.line, newLine)
-    }
-
-    if (!ix) cmd('undojoin')
-  })
-})
-
 const refreshState = async () => {
   const nextState = await call.VeonimState()
   Object.assign(state, nextState)
@@ -657,10 +620,9 @@ const dummy = {
 const exportAPI = { state, watchState, onStateChange, onStateValue,
   untilStateValue, cmd, cmdOut, expr, call, feedkeys, normal, callAtomic,
   onAction, getCurrentLine, jumpTo, jumpToProjectFile, systemAction, current,
-  g, on, untilEvent, applyPatches, buffers, windows, tabs, options:
-  readonlyOptions, Buffer: fromId.buffer, Window: fromId.window,
-  Tabpage: fromId.tabpage, getKeymap, getColorByName, getCursorPosition,
-  highlightSearchPattern, removeHighlightSearch }
+  g, on, untilEvent, buffers, windows, tabs, options: readonlyOptions,
+  Buffer: fromId.buffer, Window: fromId.window, Tabpage: fromId.tabpage,
+  getKeymap, getColorByName, getCursorPosition, highlightSearchPattern, removeHighlightSearch }
 
 export default exportAPI
 export type NeovimAPI = typeof exportAPI
