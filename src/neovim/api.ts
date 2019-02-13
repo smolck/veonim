@@ -224,29 +224,29 @@ const buffers = {
   /** List all buffers */
   list: () => as.bufl(req.core.listBufs()),
   /** Open a buffer from a filesystem path in the current window */
-  open: async (file: string) => {
-    const loaded = await loadBuffer(file)
+  open: async (path: string) => {
+    const loaded = await loadBuffer(path)
     if (loaded) return true
 
-    cmd(`badd ${file}`)
-    return loadBuffer(file)
+    cmd(`badd ${path}`)
+    return loadBuffer(path)
   },
   /** Find a buffer from a filesystem path */
-  find: async (name: string) => {
+  find: async (path: string) => {
     const buffers = await getNamedBuffers()
     // it appears that buffers name will have a fullpath, like
     // `/Users/anna/${name}` so we will try to substring match 
     // the end of the name
-    const found = buffers.find(b => b.name.endsWith(name)) || { buffer: dummy.buf }
+    const found = buffers.find(b => b.name.endsWith(path)) || { buffer: dummy.buf }
     return found.buffer
   },
   /** Add a new buffer to the buffer list from the given filesystem path */
-  add: async (name: string) => {
+  add: async (path: string) => {
     const id = uuid()
     cmd(`badd ${id}`)
 
     const buffer = await buffers.find(id)
-    if (!buffer) throw new Error(`addBuffer: could not find buffer '${id}' added with :badd ${name}`)
+    if (!buffer) throw new Error(`addBuffer: could not find buffer '${id}' added with :badd ${path}`)
 
     // for some reason, buf.setName creates a new buffer? lolwut?
     // so it's probably still better to do the shenanigans above
@@ -254,9 +254,22 @@ const buffers = {
     // of trying to get a buffer handle by name only alone
     //
     // after a future neovim PR we might consider using 'nvim_create_buf'
-    await buffer.setName(name)
+    await buffer.setName(path)
     cmd(`bwipeout! ${id}`)
     return buffer
+  },
+  /** Remove a buffer from the buffer list */
+  remove: (path: string) => cmd(`bdelete ${path}`),
+  /** Rename buffer and file given old and new paths. This affects the filesystem */
+  rename: async (oldPath: string, newPath: string) => {
+    buffers.remove(oldPath)
+    await call.rename(oldPath, newPath)
+    return buffers.add(newPath)
+  },
+  /** Delete buffer and file at the given path. This affects the filesystem */
+  delete: async (path: string) => {
+    buffers.remove(path)
+    return call.delete(path)
   },
   /** List all buffers with some useful metadata preloaded */
   listWithInfo: async (): Promise<BufferInfo[]> => {
