@@ -4,12 +4,9 @@ import { Position, Range, CompletionItem } from '../vscode/types'
 import TextDocument from '../vscode/text-document'
 import { Unpacked, maybe } from '../support/types'
 import { on } from '../messaging/worker-client'
+import workspace from '../vscode/workspace'
 import nvim from '../neovim/api'
 import * as vsc from 'vscode'
-
-interface WorkspaceEdit extends vsc.TextEdit {
-  path: string
-}
 
 const F = <T>() => new MapSetter<string, T>()
 
@@ -340,22 +337,27 @@ const api = {
     if (!result) return
     return ((result as any).range || result) as vsc.Range
   })()}),
-  provideRenameEdits: (newName: string, position: Position, tokenId?: string) => ({ cancel, promise: (async () => {
+  renameSymbol: (position: Position, newName: string, tokenId?: string) => ({ cancel, promise: (async () => {
     const funcs = providers.provideRenameEdits.get(nvim.state.filetype)
     if (!funcs) return
 
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
 
-    const results = await Promise.all([...funcs].map(fn => fn && fn(document, position, newName, token))).then(coalesce)
-    const workspaceEdits = results.reduce((list, workspaceEdit) => {
-      return workspaceEdit.entries().reduce((res, [ uri, edits ]) => {
-        const next = edits.map(edit => ({ ...threadSafeObject(edit), path: uri.path }))
-        return [...res, ...next]
-      }, list)
-    }, [] as WorkspaceEdit[])
+    // TODO: need to cancel rename operation if it times out
+    // need to send back error status to instance thread
+    // setTimeout(() => {
+    //   api.cancelRequest(tokenId!)
+    // }, 10e3)
 
-    return dedupOn(workspaceEdits, (a, b) => a.path === b.path && rangesEqual(a.range, b.range))
+    const workspaceEdits = await Promise.all([...funcs].map(fn => fn && fn(document, position, newName, token))).then(coalesce)
+
+    // TODO: do we need to dedup WorkspaceEdit objects? This might get tricky as they are not simple objects
+    // const workspaceEdits = dedupOn(allWorkspaceEdits, (a, b) => a.path === b.path && rangesEqual(a.range, b.range))
+    workspaceEdits.forEach(workspace.applyEdit)
+
+    // TODO: return true/false on status
+    return true
   })()}),
   provideDocumentFormattingEdits: (tokenId?: string) => ({ cancel, promise: (async () => {
     const funcs = providers.provideDocumentFormattingEdits.get(nvim.state.filetype)

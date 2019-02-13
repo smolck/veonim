@@ -1,9 +1,6 @@
 import { vscode } from '../core/extensions-api'
-import { PromiseBoss } from '../support/utils'
 import { Position } from '../vscode/types'
 import nvim from '../neovim/api'
-
-const boss = PromiseBoss()
 
 // TODO: anyway to improve the glitchiness of undo/apply edit? any way to also pause render in undo
 // or maybe figure out how to diff based on the partial modification
@@ -19,12 +16,8 @@ const doRename = async () => {
   vscode.textSync.resume()
 
   if (!newName) return
-  const edits = await boss.schedule(vscode.language.provideRenameEdits(newName, position), { timeout: 10e3 })
-  // TODO: why should we apply the patches here? why not have the providers.provideRenameEdits call
-  // workspace.applyEdit directly and have that modify the documents?
-  // make sure we support undos
-  console.warn('NYI: rename edits:', edits)
-  // nvim.applyPatches(await rename({ ...nvim.state, ...editPosition, newName }))
+  const success = await vscode.language.renameSymbol(position, newName).promise
+  console.log('rename operation success?', success)
 }
 
 nvim.onAction('rename', doRename)
