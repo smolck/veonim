@@ -4,6 +4,7 @@ import { Watcher, pathRelativeToCwd, is } from '../support/utils'
 import TextDocument from '../vscode/text-document'
 import nvimSync from '../neovim/sync-api-client'
 import { on } from '../messaging/worker-client'
+import { WorkspaceEdit } from '../vscode/types'
 import { URI } from '../vscode/uri'
 import Tasks from '../vscode/tasks'
 import nvim from '../neovim/api'
@@ -89,21 +90,33 @@ const workspace: typeof vsc.workspace = {
     console.warn('NYI: workspace.findFiles')
     return []
   },
-  applyEdit: async (workspaceEdit) => {
-    const edits = [...workspaceEdit.entries()]
-    const editRequests = edits.map(async ([ uri, textEdits ]) => {
-      // TODO: double check this arguments. according to WorkspaceEdit the edits are an array of objects? but what does entries() return? 
+  applyEdit: async workspaceEdit => {
+    // vscode does the same weird hack here, so shush
+    const entries = (workspaceEdit as WorkspaceEdit)._allEntries()
+    let firstEditApplied = false
+
+    const editRequests = entries.map(async ([ arg1, arg2 ]) => {
+      // create buffer
+      if (arg1 == null && URI.isUri(arg2)) return nvim.buffers.add(arg2.path)
+      // delete buffer
+      if (URI.isUri(arg1) && arg2 == null) return nvim.buffers.delete(arg1.path)
+      // rename buffer
+      if (URI.isUri(arg1) && URI.isUri(arg2)) return nvim.buffers.rename(arg1.path, arg2.path)
+      // text edits
+      if (URI.isUri(arg1) && !Array.isArray(arg2)) throw new Error(`workspace edit entry makes no sense. expected [uri, TextEdit[]]`)
+
+      const uri = arg1 as vsc.Uri
+      const edits = arg2 as vsc.TextEdit[]
       const buffer = await nvim.buffers.getBufferFromPath(uri.path)
 
-      // TODO: need to handle file operations (create, rename, delete)
-      textEdits.forEach(async ({ range, newText }) => {
-        // TODO: is newText insert or append? in the docs newText is described as "INSERT"
-        // but then how are replace edits applied? should check source...
+      edits.forEach(({ range, newText }) => {
         buffer.replaceRange(range.start.line, range.start.character, range.end.line, range.end.character, newText)
+        if (!firstEditApplied) firstEditApplied = true
+        else nvim.cmd('undojoin')
       })
     })
 
-    return await Promise.all(editRequests).then(() => true, () => false)
+    return Promise.all(editRequests).then(() => true, () => false)
   },
   openTextDocument: async (arg: any) => {
     if (is.object(arg) && arg.path) {
