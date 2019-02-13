@@ -575,23 +575,25 @@ const Buffer = (id: any) => ({
     req.buf.setLines(id, line, line + updatedLines.length, false, updatedLines)
   },
   replaceRange: async (startLine, startColumn, endLine, endColumn, text) => {
-    const lines = await req.buf.getLines(id, startLine, endLine, false)
+    // buffer get/set lines ranges are end exclusive so we +1
+    const lines = await req.buf.getLines(id, startLine, endLine + 1, false)
     const updatedLines = TextEditPatch.replace({
       lines,
       start: new Position(0, startColumn),
       end: new Position(endLine - startLine, endColumn),
       text
     })
-    req.buf.setLines(id, startLine, endLine, false, updatedLines)
+    req.buf.setLines(id, startLine, endLine + 1, false, updatedLines)
   },
   deleteRange: async (startLine, startColumn, endLine, endColumn) => {
-    const lines = await req.buf.getLines(id, startLine, endLine, false)
+    // buffer get/set lines ranges are end exclusive so we +1
+    const lines = await req.buf.getLines(id, startLine, endLine + 1, false)
     const updatedLines = TextEditPatch.remove({
       lines,
       start: new Position(0, startColumn),
       end: new Position(endLine - startLine, endColumn),
     })
-    req.buf.setLines(id, startLine, endLine, false, updatedLines)
+    req.buf.setLines(id, startLine, endLine + 1, false, updatedLines)
   },
   replace: (start, line) => api.buf.setLines(id, start, start + 1, false, [ line ]),
   getVar: name => req.buf.getVar(id, name),
