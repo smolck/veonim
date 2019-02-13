@@ -566,20 +566,23 @@ export const PromiseBoss = () => {
   const $cancel = Symbol('cancel')
   type CancelFn = () => any
   let previousCancel: CancelFn | null
+  let externalControlTask = CreateTask()
 
   /** Schedule a cancellable promise which can be cancelled by next invocation or timeout */
-  const schedule = <T>(task: CancelPromise<T>, options: Options): Promise<T> => new Promise(async (ok, no) => {
+  const schedule = <T>(cancellablePromise: CancelPromise<T>, options: Options): Promise<T> => new Promise(async (ok, no) => {
     previousCancel && previousCancel()
-    previousCancel = task.cancel
+    previousCancel = cancellablePromise.cancel
+    externalControlTask = CreateTask()
 
     const result = await Promise.race([
-      task.promise,
+      cancellablePromise.promise,
+      externalControlTask.promise,
       new Promise(done => setTimeout(() => done($cancel), options.timeout || 1e3)),
     ]).catch(no)
 
     if (result === $cancel) {
       previousCancel = null
-      task.cancel()
+      cancellablePromise.cancel()
       return
     }
 
@@ -587,5 +590,7 @@ export const PromiseBoss = () => {
     ok(result as T)
   }) as Promise<T>
 
-  return { schedule }
+  const cancelCurrentPromise = () => externalControlTask.done($cancel)
+
+  return { schedule, cancelCurrentPromise }
 }

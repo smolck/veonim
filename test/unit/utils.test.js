@@ -164,4 +164,10 @@ describe('promise boss', () => {
       huh()
     })
   })
+
+  it('cancels promise via external control', done => {
+    const boss = m.PromiseBoss()
+    const calls = []
+
+  })
 })
