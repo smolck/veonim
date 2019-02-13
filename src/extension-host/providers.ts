@@ -339,25 +339,25 @@ const api = {
   })()}),
   renameSymbol: (position: Position, newName: string, tokenId?: string) => ({ cancel, promise: (async () => {
     const funcs = providers.provideRenameEdits.get(nvim.state.filetype)
-    if (!funcs) return
+    if (!funcs) return false
 
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
 
-    // TODO: need to cancel rename operation if it times out
-    // need to send back error status to instance thread
-    // setTimeout(() => {
-    //   api.cancelRequest(tokenId!)
-    // }, 10e3)
+    const $cancel = Symbol('cancel')
+    const result = await Promise.race([
+      Promise.all([...funcs].map(fn => fn && fn(document, position, newName, token))).then(coalesce),
+      new Promise(done => setTimeout(() => done($cancel), 10e3))
+    ])
 
-    const workspaceEdits = await Promise.all([...funcs].map(fn => fn && fn(document, position, newName, token))).then(coalesce)
+    if (result === $cancel) {
+      api.cancelRequest(tokenId!)
+      return false
+    }
 
     // TODO: do we need to dedup WorkspaceEdit objects? This might get tricky as they are not simple objects
-    // const workspaceEdits = dedupOn(allWorkspaceEdits, (a, b) => a.path === b.path && rangesEqual(a.range, b.range))
-    workspaceEdits.forEach(workspace.applyEdit)
-
-    // TODO: return true/false on status
-    return true
+    const editRequests = (result as vsc.WorkspaceEdit[]).map(workspace.applyEdit)
+    return Promise.all(editRequests).then(() => true, () => false)
   })()}),
   provideDocumentFormattingEdits: (tokenId?: string) => ({ cancel, promise: (async () => {
     const funcs = providers.provideDocumentFormattingEdits.get(nvim.state.filetype)

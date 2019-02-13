@@ -17,7 +17,8 @@ const doRename = async () => {
 
   if (!newName) return
   const success = await vscode.language.renameSymbol(position, newName).promise
-  console.log('rename operation success?', success)
+  // TODO: do we need to do any cleanup in case the rename failed? like undo?
+  if (!success) console.error('rename failed', newName)
 }
 
 nvim.onAction('rename', doRename)

@@ -574,7 +574,7 @@ export const PromiseBoss = () => {
 
     const result = await Promise.race([
       task.promise,
-      new Promise(fin => setTimeout(fin, options.timeout || 1e3)).then(() => $cancel),
+      new Promise(done => setTimeout(() => done($cancel), options.timeout || 1e3)),
     ]).catch(no)
 
     if (result === $cancel) {
