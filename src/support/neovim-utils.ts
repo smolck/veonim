@@ -1,6 +1,6 @@
-import { Range } from 'vscode-languageserver-protocol'
 import { pascalCase, onProp } from '../support/utils'
 import { VimMode } from '../neovim/types'
+import { Range } from 'vscode'
 
 type DefineFunction = { [index: string]: (fnBody: TemplateStringsArray, ...vars: any[]) => void }
 

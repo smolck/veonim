@@ -1,9 +1,10 @@
-import { Diagnostic, DiagnosticSeverity } from 'vscode-languageserver-protocol'
 import MsgpackStreamDecoder from '../messaging/msgpack-decoder'
 import MsgpackStreamEncoder from '../messaging/msgpack-encoder'
 import { prefixWith, onFnCall, is } from '../support/utils'
+import { Diagnostic, DiagnosticSeverity } from 'vscode'
 import { QuickFixList } from '../neovim/function-types'
 import { Api, Prefixes } from '../neovim/protocol'
+import { Range, Position } from '../vscode/types'
 import { on } from '../messaging/worker-client'
 import { Neovim } from '../support/binaries'
 import SetupRPC from '../messaging/rpc'
@@ -63,15 +64,13 @@ const qfTypeToSeverity = (type?: string | number): DiagnosticSeverity => {
 const qfGroup = (fixes: QuickFixList[], source = '') => fixes.reduce((map, item: QuickFixList) => {
   if (!item.filename) return map
 
+  const position = new Position(item.lnum - 1, item.col - 1)
   const diagnostic: Diagnostic = {
     source,
     code: item.nr,
     message: item.text,
     severity: qfTypeToSeverity(item.type),
-    range: {
-      start: { line: item.lnum - 1, character: item.col - 1 },
-      end: { line: item.lnum - 1, character: item.col - 1 },
-    },
+    range: new Range(position, position),
   }
 
   if (!map.has(item.filename)) return (map.set(item.filename, [ diagnostic ]), map)

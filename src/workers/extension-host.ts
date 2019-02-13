@@ -1,13 +1,12 @@
-import { TextDocumentSyncKind, StreamMessageReader, StreamMessageWriter, createProtocolConnection, ProtocolConnection } from 'vscode-languageserver-protocol'
 import { DebugConfiguration, collectDebuggersFromExtensions,
   getAvailableDebuggers, getLaunchConfigs, resolveConfigurationByProviders,
   getDebuggerConfig } from '../extensions/debuggers'
 import { ExtensionInfo, Extension, ActivationEventType,
   Disposable, activateExtension } from '../extensions/extensions'
 import DebugProtocolConnection, { DebugAdapterConnection } from '../messaging/debug-protocol'
-import { readFile, fromJSON, is, uuid, getDirs, getFiles, merge, CreateTask, Task, configPath } from '../support/utils'
-import { on, call, request } from '../messaging/worker-client'
+import { readFile, fromJSON, uuid, getDirs, getFiles, merge, configPath } from '../support/utils'
 import { registerExtension } from '../vscode/extensions'
+import { on, call } from '../messaging/worker-client'
 import { ChildProcess, spawn } from 'child_process'
 import LocalizeFile from '../support/localize'
 import pleaseGet from '../support/please-get'
@@ -37,37 +36,11 @@ interface Debugger {
 // extensions that are spawning node executables (language servers, etc.)
 process.env.ELECTRON_RUN_AS_NODE = '1'
 
-interface ActivateOpts {
-  kind: string
-  data: string
-}
-
-interface ServerBridgeParams {
-  serverId: string
-  method: string
-  params: any[]
-}
-
-interface LanguageServer extends ProtocolConnection {
-  textSyncKind: TextDocumentSyncKind
-  pauseTextSync: boolean
-  initializeTask: Task<void>
-  untilInitialized: Promise<void>
-}
-
 const extensions = new Set<Extension>()
 const languageExtensions = new Map<string, Extension>()
-const runningLangServers = new Map<string, LanguageServer>()
 const runningDebugAdapters = new Map<string, DebugAdapterConnection>()
 
 on.load(() => load())
-
-on.existsForLanguage((language: string) => Promise.resolve(languageExtensions.has(language)))
-
-on.activate(({ kind, data }: ActivateOpts) => {
-  if (kind === 'language') return activate.language(data)
-})
-
 on.listLaunchConfigs(() => getLaunchConfigs())
 on.listDebuggers(async () => {
   const debuggers = await getAvailableDebuggers()
@@ -83,57 +56,11 @@ on.startDebugWithType((folderUri: string, type: string) => startDebugWithType(fo
 // TODO: deprecate?
 on.startDebug((type: string) => start.debug(type))
 
-const getServer = (id: string) => {
-  const server = runningLangServers.get(id)
-  if (!server) throw new Error(`fail to get serv ${id}. this should not happen... ever.`)
-  return server
-}
-
 const getDebugAdapter = (id: string) => {
   const server = runningDebugAdapters.get(id)
   if (!server) throw new Error(`fail to get debug adapter ${id}. this should not happen... ever.`)
   return server
 }
-
-const getTextSyncKind = ({ capabilities: c }: any): TextDocumentSyncKind => {
-  const syncKind = pleaseGet(c).textDocumentSync()
-  if (syncKind == null) return TextDocumentSyncKind.None
-  if (is.number(syncKind)) return syncKind
-  return pleaseGet(c).textDocumentSync.change(TextDocumentSyncKind.None)
-}
-
-on.server_setTextSyncState((serverId: string, syncState: boolean) => {
-  getServer(serverId).pauseTextSync = syncState
-})
-
-on.server_sendNotification(({ serverId, method, params }: ServerBridgeParams) => {
-  const server = getServer(serverId)
-  if (method === 'initialized') server.initializeTask.done(undefined)
-  server.sendNotification(method as any, ...params)
-})
-
-on.server_sendRequest(async ({ serverId, method, params }: ServerBridgeParams) => {
-  const server = getServer(serverId)
-  const response = await server.sendRequest(method, ...params)
-  if (method === 'initialize') server.textSyncKind = getTextSyncKind(response)
-  return response
-})
-
-on.server_onNotification(({ serverId, method }: ServerBridgeParams) => {
-  getServer(serverId).onNotification(method, (...args: any[]) => call[`${serverId}:${method}`](args))
-})
-
-on.server_onRequest(({ serverId, method }: ServerBridgeParams) => {
-  getServer(serverId).onRequest(method, async (...args: any[]) => request[`${serverId}:${method}`](args))
-})
-
-on.server_onError(({ serverId }: ServerBridgeParams) => {
-  getServer(serverId).onError((err: any) => call[`${serverId}:onError`](err))
-})
-
-on.server_onClose(({ serverId }: ServerBridgeParams) => {
-  getServer(serverId).onClose(() => call[`${serverId}:onClose`]())
-})
 
 on.debug_sendRequest(({ serverId, command, args }: any) => {
   return getDebugAdapter(serverId).sendRequest(command, args)
@@ -242,54 +169,8 @@ const load = async () => {
   collectDebuggersFromExtensions(extensionsWithConfig)
 }
 
-const connectRPCServer = (proc: ChildProcess): string => {
-  const serverId = uuid()
 
-  const reader = new StreamMessageReader(proc.stdout)
-  const writer = new StreamMessageWriter(proc.stdin)
-  const conn = createProtocolConnection(reader, writer, console)
-
-  conn.listen()
-
-  const initializeTask = CreateTask()
-
-  Object.assign(conn, {
-    initializeTask,
-    pauseTextSync: false,
-    untilInitialized: initializeTask.promise,
-  })
-
-  runningLangServers.set(serverId, conn as LanguageServer)
-  return serverId
-}
-
-const activateExtensionForLanguage = async (language: string) => {
-  const extension = languageExtensions.get(language)
-  if (!extension) {
-    console.error(`extension for ${language} not found`)
-    return []
-  }
-
-  return activateExtension(extension)
-}
-
-// TODO: we should build a new activation mechanism that relies on
-// filetypes. it should have no interaction with instance thread
-const activate = {
-  language: async (language: string) => {
-    // TODO: handle extension dependencies
-    const extensionDisposables = await activateExtensionForLanguage(language)
-    // TODO: need to call these disposables when extension deactivates
-    // TODO: when do extensions deactivate?
-    console.log('extensionDisposables', extensionDisposables)
-    console.log('language', language)
-    return ''
-  },
-}
-
-/*
- * Start a debugger with a given launch.json configuration chosen by user
- */
+/** Start a debugger with a given launch.json configuration chosen by user */
 const startDebugWithConfig = async (cwd: string, config: DebugConfiguration) => {
   const launchConfig = await resolveConfigurationByProviders(cwd, config.type, config)
 
