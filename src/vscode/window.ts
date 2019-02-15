@@ -36,7 +36,9 @@ const unifyMessage = ([ message, optionsOrItems, itemsMaybe ]: any[]): UnifiedMe
 
 const events = Watcher<Events>()
 
-// TODO: actually implement and call event handlers when stuff happens
+const eventreg = (name: keyof Events) => (fn: any, thisArg?: any) => ({
+  dispose: events.on(name, fn.bind(thisArg)),
+})
 
 // @ts-ignore
 const window: typeof vsc.window = {
@@ -174,21 +176,17 @@ const window: typeof vsc.window = {
     console.warn('NYI: window.showTextDocument', documentOrUri, optionsOrColumn)
     return TextEditor(-1)
   },
-  onDidChangeWindowState: (fn, thisArg) => registerEvent('didChangeWindowState', fn, thisArg),
-  onDidChangeActiveTextEditor: (fn, thisArg) => registerEvent('didChangeActiveTextEditor', fn, thisArg),
-  onDidChangeVisibleTextEditors: (fn, thisArg) => registerEvent('didChangeVisibleTextEditors', fn, thisArg),
+  onDidChangeWindowState: eventreg('didChangeWindowState'),
+  onDidChangeActiveTextEditor: eventreg('didChangeActiveTextEditor'),
+  onDidChangeVisibleTextEditors: eventreg('didChangeVisibleTextEditors'),
 
-  onDidChangeTextEditorSelection: (fn, thisArg) => registerEvent('didChangeTextEditorSelection', fn, thisArg),
-  onDidChangeTextEditorVisibleRanges: (fn, thisArg) => registerEvent('didChangeTextEditorVisibleRanges', fn, thisArg),
-  onDidChangeTextEditorOptions: (fn, thisArg) => registerEvent('didChangeTextEditorOptions', fn, thisArg),
-  onDidChangeTextEditorViewColumn: (fn, thisArg) => registerEvent('didChangeTextEditorViewColumn', fn, thisArg),
-  onDidChangeActiveTerminal: (fn, thisArg) => registerEvent('didChangeActiveTerminal', fn, thisArg),
-  onDidOpenTerminal: (fn, thisArg) => registerEvent('didOpenTerminal', fn, thisArg),
-  onDidCloseTerminal: (fn, thisArg) => registerEvent('didCloseTerminal', fn, thisArg),
+  onDidChangeTextEditorSelection: eventreg('didChangeTextEditorSelection'),
+  onDidChangeTextEditorVisibleRanges: eventreg('didChangeTextEditorVisibleRanges'),
+  onDidChangeTextEditorOptions: eventreg('didChangeTextEditorOptions'),
+  onDidChangeTextEditorViewColumn: eventreg('didChangeTextEditorViewColumn'),
+  onDidChangeActiveTerminal: eventreg('didChangeActiveTerminal'),
+  onDidOpenTerminal: eventreg('didOpenTerminal'),
+  onDidCloseTerminal: eventreg('didCloseTerminal'),
 }
-
-const registerEvent = (name: keyof Events, fn: any, thisArg?: any) => ({
-  dispose: events.on(name, fn.bind(thisArg)),
-})
 
 export default window

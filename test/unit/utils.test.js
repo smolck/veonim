@@ -168,6 +168,22 @@ describe('promise boss', () => {
   it('cancels promise via external control', done => {
     const boss = m.PromiseBoss()
     const calls = []
+    const cancel = () => calls.push('cancel')
+    const promise = new Promise(fin => setTimeout(() => fin('AYYLMAO'), 100))
 
+    const huh = () => {
+      same(calls, ['cancel'], 'cancel calls')
+      done()
+    }
+
+    boss.schedule({ cancel, promise }, { timeout: 50 }).then(res => {
+      calls.push(res)
+      huh()
+    })
+
+    setTimeout(() => {
+      boss.cancelCurrentPromise()
+      setImmediate(huh)
+    }, 10)
   })
 })

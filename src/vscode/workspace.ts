@@ -53,6 +53,10 @@ tdm.on.didSave(({ id }) => events.emit('didSaveTextDocument', TextDocument(id)))
 
 tdm.on.didClose(({ id }) => events.emit('didCloseTextDocument', TextDocument(id)))
 
+const eventreg = (name: keyof Events) => (fn: any, thisArg?: any) => ({
+  dispose: events.on(name, fn.bind(thisArg)),
+})
+
 const workspace: typeof vsc.workspace = {
   get rootPath() { return nvim.state.cwd },
   get workspaceFolders() { return [ WorkspaceFolder(nvim.state.cwd) ] },
@@ -151,18 +155,14 @@ const workspace: typeof vsc.workspace = {
     console.warn('NYI: workspace.registerFileSystemProvider')
     return ({ dispose: () => {} })
   },
-  onDidChangeWorkspaceFolders: (fn, thisArg) => registerEvent('didChangeWorkspaceFolders', fn, thisArg),
-  onDidOpenTextDocument: (fn, thisArg) => registerEvent('didOpenTextDocument', fn, thisArg),
-  onDidCloseTextDocument: (fn, thisArg) => registerEvent('didCloseTextDocument', fn, thisArg),
-  onDidChangeTextDocument: (fn, thisArg) => registerEvent('didChangeTextDocument', fn, thisArg),
-  onWillSaveTextDocument: (fn, thisArg) => registerEvent('willSaveTextDocument', fn, thisArg),
-  onDidSaveTextDocument: (fn, thisArg) => registerEvent('didSaveTextDocument', fn, thisArg),
-  onDidChangeConfiguration: (fn, thisArg) => registerEvent('didChangeConfiguration', fn, thisArg),
+  onDidChangeWorkspaceFolders: eventreg('didChangeWorkspaceFolders'),
+  onDidOpenTextDocument: eventreg('didOpenTextDocument'),
+  onDidCloseTextDocument: eventreg('didCloseTextDocument'),
+  onDidChangeTextDocument: eventreg('didChangeTextDocument'),
+  onWillSaveTextDocument: eventreg('willSaveTextDocument'),
+  onDidSaveTextDocument: eventreg('didSaveTextDocument'),
+  onDidChangeConfiguration: eventreg('didChangeConfiguration'),
 }
-
-const registerEvent = (name: keyof Events, fn: any, thisArg?: any) => ({
-  dispose: events.on(name, fn.bind(thisArg)),
-})
 
 const WorkspaceFolder = (dir: string) => ({
   uri: URI.file(dir),

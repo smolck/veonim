@@ -12,6 +12,10 @@ interface Events {
 
 const events = Watcher<Events>()
 
+const eventreg = (name: keyof Events) => (fn: any, thisArg?: any) => ({
+  dispose: events.on(name, fn.bind(thisArg)),
+})
+
 const debug: typeof vsc.debug = {
   get activeDebugSession() {
     console.warn('NYI: debug.activeDebugSession')
@@ -51,15 +55,11 @@ const debug: typeof vsc.debug = {
   removeBreakpoints: () => {
     console.warn('NYI: debug.removeBreakpoints')
   },
-  onDidChangeActiveDebugSession: (fn, thisArg) => registerEvent('didChangeActiveDebugSession', fn, thisArg),
-  onDidStartDebugSession: (fn, thisArg) => registerEvent('didStartDebugSession', fn, thisArg),
-  onDidReceiveDebugSessionCustomEvent: (fn, thisArg) => registerEvent('didReceiveDebugSessionCustomEvent', fn, thisArg),
-  onDidTerminateDebugSession: (fn, thisArg) => registerEvent('didTerminateDebugSession', fn, thisArg),
-  onDidChangeBreakpoints: (fn, thisArg) => registerEvent('didChangeBreakpoints', fn, thisArg),
+  onDidChangeActiveDebugSession: eventreg('didChangeActiveDebugSession'),
+  onDidStartDebugSession: eventreg('didStartDebugSession'),
+  onDidReceiveDebugSessionCustomEvent: eventreg('didReceiveDebugSessionCustomEvent'),
+  onDidTerminateDebugSession: eventreg('didTerminateDebugSession'),
+  onDidChangeBreakpoints: eventreg('didChangeBreakpoints'),
 }
-
-const registerEvent = (name: keyof Events, fn: any, thisArg?: any) => ({
-  dispose: events.on(name, fn.bind(thisArg)),
-})
 
 export default debug

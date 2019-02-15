@@ -46,6 +46,10 @@ const getDiagnostics_TYPESCRIPT_Y_U_DO_DIS = (resource?: vsc.Uri) => {
 
 const PROGRAMMING_SUCKS_YAY = getDiagnostics_TYPESCRIPT_Y_U_DO_DIS as AM_I_STUPID
 
+const eventreg = (name: keyof Events) => (fn: any, thisArg?: any) => ({
+  dispose: events.on(name, fn.bind(thisArg)),
+})
+
 const languages: typeof vsc.languages = {
   getDiagnostics: PROGRAMMING_SUCKS_YAY,
   getLanguages: async () => {
@@ -65,7 +69,7 @@ const languages: typeof vsc.languages = {
     const languageSelector = languageSelectorFrom(selector)!
     return score(languageSelector, document.uri, document.languageId, true)
   },
-  onDidChangeDiagnostics: (fn, thisArg) => registerEvent('didChangeDiagnostics', fn, thisArg),
+  onDidChangeDiagnostics: eventreg('didChangeDiagnostics'),
   createDiagnosticCollection: name => {
     const id = name || uuid()
     const key = diagnosticCollectionRepository.has(id) ? uuid() : id
@@ -211,9 +215,5 @@ const languages: typeof vsc.languages = {
     return { dispose }
   },
 }
-
-const registerEvent = (name: keyof Events, fn: any, thisArg?: any) => ({
-  dispose: events.on(name, fn.bind(thisArg)),
-})
 
 export default languages
