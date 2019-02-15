@@ -143,6 +143,10 @@ startup.defineFunc.VeonimPosition`
   return m
 `
 
+startup.defineFunc.VeonimGChange`
+  call rpcnotify(0, 'veonim-g', a:2, a:3)
+`
+
 startup.defineFunc.VeonimTermReader`
   if has_key(g:vn_jobs_connected, a:1)
     call rpcnotify(0, 'veonim', 'job-output', [a:1, a:2])

@@ -30,6 +30,7 @@ const watchers = {
   events: new EventEmitter(),
   autocmds: new EventEmitter(),
   bufferEvents: new EventEmitter(),
+  internal: new EventEmitter(),
 }
 
 const req = {
@@ -74,6 +75,24 @@ const readonlyOptions: VimOption = new Proxy(Object.create(null), {
     ? Promise.resolve(options.get(key))
     : getOption(key)
 })
+
+const getOptionCurrentAndFuture = (name: string, fn: (value: any) => void) => {
+  Reflect.get(readonlyOptions, name).then(fn)
+  const key = `option-set::${name}`
+  watchers.internal.on(key, fn)
+  return () => watchers.internal.removeListener(key, fn)
+}
+
+const getVarCurrentAndFuture = (name: string, fn: (value: any) => void) => {
+  Reflect.get(g, name).then(fn)
+  cmd(`call dictwatcheradd(g:, '${name}', 'VeonimGChange')`)
+  const key = `gvar::${name}`
+  watchers.internal.on(key, fn)
+  return () => {
+    cmd(`call dictwatcherdel(g:, '${name}', 'VeonimGChange')`)
+    watchers.internal.removeListener(key, fn)
+  }
+}
 
 const cmd = (command: string) => api.core.command(command)
 const cmdOut = (command: string) => req.core.commandOutput(command)
@@ -416,6 +435,7 @@ cmd(`let g:vn_cmd_completions .= "${events}\\n"`)
 subscribe('veonim', ([ event, args = [] ]) => watchers.actions.emit(event, ...args))
 subscribe('veonim-state', ([ nextState ]) => Object.assign(state, nextState))
 subscribe('veonim-position', ([ position ]) => Object.assign(state, position))
+subscribe('veonim-g', ([ name, change = {} ]) => watchers.internal.emit(`gvar::${name}`, change.new))
 subscribe('veonim-autocmd', ([ autocmd, ...arg ]) => {
   // TODO: should really provide a way to scope autocmds to the current vim instance...
   if (autocmd === 'FileType') registerFiletype(arg[0], arg[1])
@@ -459,8 +479,11 @@ autocmd.BufWritePost(bufId => watchers.events.emit('bufWrite', Buffer(bufId-0)))
 autocmd.BufWipeout(bufId => watchers.events.emit('bufClose', Buffer(bufId-0)))
 autocmd.InsertEnter(() => watchers.events.emit('insertEnter'))
 autocmd.InsertLeave(() => watchers.events.emit('insertLeave'))
-autocmd.OptionSet((name: string, value: any) => options.set(name, value))
 autocmd.FileType((_, filetype: string) => watchers.events.emit('filetype', filetype))
+autocmd.OptionSet((name: string, value: any) => {
+  options.set(name, value)
+  watchers.internal.emit(`option-set::${name}`, value)
+})
 
 autocmd.TextChanged(revision => {
   state.revision = revision-0
@@ -622,7 +645,8 @@ const exportAPI = { state, watchState, onStateChange, onStateValue,
   onAction, getCurrentLine, jumpTo, jumpToProjectFile, systemAction, current,
   g, on, untilEvent, buffers, windows, tabs, options: readonlyOptions,
   Buffer: fromId.buffer, Window: fromId.window, Tabpage: fromId.tabpage,
-  getKeymap, getColorByName, getCursorPosition, highlightSearchPattern, removeHighlightSearch }
+  getKeymap, getColorByName, getCursorPosition, highlightSearchPattern,
+  removeHighlightSearch, getOptionCurrentAndFuture, getVarCurrentAndFuture }
 
 export default exportAPI
 export type NeovimAPI = typeof exportAPI
