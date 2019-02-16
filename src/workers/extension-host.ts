@@ -1,38 +1,5 @@
-import { DebugConfiguration, collectDebuggersFromExtensions,
-  getAvailableDebuggers, getLaunchConfigs, resolveConfigurationByProviders,
-  getDebuggerConfig } from '../extensions/debuggers'
-import { ExtensionInfo, Extension, ActivationEventType,
-  Disposable, activateExtension } from '../extensions/extensions'
-import DebugProtocolConnection, { DebugAdapterConnection } from '../messaging/debug-protocol'
-import { readFile, fromJSON, uuid, getDirs, getFiles, merge, configPath } from '../support/utils'
-import { registerExtension } from '../vscode/extensions'
-import { on, call } from '../messaging/worker-client'
-import { ChildProcess, spawn } from 'child_process'
-import LocalizeFile from '../support/localize'
-import pleaseGet from '../support/please-get'
-import { dirname, join } from 'path'
 import '../support/vscode-shim'
-// TODO: this is missing? where did it go??? do we need it?
-import '../extension-host/language-features'
 import '../extension-host/language-events'
-import installExtensions from '../extension-host/extension-discovery'
-
-// TODO: remove install extensions from dependency manager. that path is now deprecated
-on.installExtensions(installExtensions)
-
-if (process.env.VEONIM_DEV) require('../dev/ext-host-development')
-
-const EXT_PATH = join(configPath, 'veonim', 'extensions')
-
-interface Debugger {
-  type: string
-  label: string
-  program: string
-  runtime?: 'node' | 'mono'
-}
-
-// TODO: on filetype change activate extensions
-// nvim.on.filetype(filetype => filetypeDetectedStartServerMaybe(nvim.state.cwd, filetype))
 
 // TODO: THIS LEAKS OUTSIDE OF WORKER!
 // need this flag to spawn node child processes. this will use the same node
@@ -40,7 +7,41 @@ interface Debugger {
 // the spawn call, but we do not have access to the spawn calls in the
 // extensions that are spawning node executables (language servers, etc.)
 process.env.ELECTRON_RUN_AS_NODE = '1'
+if (process.env.VEONIM_DEV) require('../dev/ext-host-development')
 
+// TODO: ALL THIS SHIT BELOW relates to debuggers. we need to clean it up once we get vscode extensions
+// setup properly. we should move all this shit to their own modules. extension-host should only be
+// a loader for all extension-host modules
+
+// import { DebugConfiguration, collectDebuggersFromExtensions,
+//   getAvailableDebuggers, getLaunchConfigs, resolveConfigurationByProviders,
+//   getDebuggerConfig } from '../extensions/debuggers'
+// import DebugProtocolConnection, { DebugAdapterConnection } from '../messaging/debug-protocol'
+// import { readFile, fromJSON, uuid, getDirs, getFiles, merge, configPath } from '../support/utils'
+// import { registerExtension } from '../vscode/extensions'
+// import { on, call } from '../messaging/worker-client'
+// import { ChildProcess, spawn } from 'child_process'
+// import LocalizeFile from '../support/localize'
+// import pleaseGet from '../support/please-get'
+// import { dirname, join } from 'path'
+
+
+
+// interface Debugger {
+//   type: string
+//   label: string
+//   program: string
+//   runtime?: 'node' | 'mono'
+// }
+
+// TODO: on filetype change activate extensions
+// nvim.on.filetype(filetype => filetypeDetectedStartServerMaybe(nvim.state.cwd, filetype))
+
+
+
+// TODO: move to separate module
+
+/*
 const runningDebugAdapters = new Map<string, DebugAdapterConnection>()
 
 on.listLaunchConfigs(() => getLaunchConfigs())
@@ -88,99 +89,23 @@ on.debug_onClose(({ serverId }: any) => {
   getDebugAdapter(serverId).onClose(() => call[`${serverId}:onClose`]())
 })
 
-// so we download the zip file into user--repo dir. this dir will then contain
-// a folder with the extension contents. it will look something like the following:
-// ~/.config/veonim/extensions/veonim--ext-json/ext-json-master/package.json
-// ~/.config/veonim/extensions/vspublisher--vscode-extension/extension/package.json
-const findPackageJson = async (packageDir: string) => {
-  const [ firstDir ] = await getDirs(packageDir)
-  if (!firstDir) throw new Error(`empty package dir: ${packageDir}`)
 
-  const filesInDir = await getFiles(firstDir.path)
-  const packagePath = filesInDir.find(m => m.path.endsWith('package.json'))
-  return (packagePath || {} as any).path
-}
 
-const findExtensions = async () => {
-  const extensionDirs = await getDirs(EXT_PATH)
-  return Promise.all(extensionDirs.map(m => findPackageJson(m.path)))
-}
 
-const parseExtensionDependency = (extString: string): ExtensionInfo => {
-  const [ publisher, name ] = extString.split('.')
-  return { publisher, name }
-}
 
-const findExtensionDependency = ({ name, publisher }: ExtensionInfo) => [...extensions]
-  .find(e => e.name === name && e.publisher === publisher)
-
-// TODO: handle recursive dependencies. THIS IDEA SUCKS WTF
-const installExtensionsIfNeeded = (extensions: string[]) => extensions
-  .map(parseExtensionDependency)
-  .map(e => ({ ...e, installed: !!findExtensionDependency(e) }))
-  .forEach(e => {
-    if (!e.installed) console.warn('NYI: please install extension dependency:', e)
-    // TODO: actually install it lol
-    // and do the whole package.json parse routine
-    // and we need to do it recursively... sheesh great design here
-  })
-
-const getPackageJsonConfig = async (packageJson: string): Promise<Extension> => {
-  const rawFileData = await readFile(packageJson)
-  const config = fromJSON(rawFileData).or({})
-  const { name, publisher, main, activationEvents = [], extensionDependencies = [] } = config
-  const packagePath = dirname(packageJson)
-  const languageFilePath = join(packagePath, 'package.nls.json')
-  const localize = await LocalizeFile(languageFilePath)
-
-  const parsedActivationEvents = activationEvents.map((m: string) => ({
-    type: m.split(':')[0] as ActivationEventType,
-    value: m.split(':')[1],
-  }))
-
-  return {
-    name,
-    config,
-    localize,
-    publisher,
-    packagePath,
-    extensionDependencies,
-    subscriptions: new Set(),
-    requirePath: join(packagePath, main),
-    activationEvents: parsedActivationEvents,
-  }
-}
-
-const load = async () => {
-  const extensionPaths = await findExtensions()
-  const extensionsWithConfig = await Promise.all(extensionPaths.map(m => getPackageJsonConfig(m)))
-
-  extensions.clear()
-
-  extensionsWithConfig.forEach(ext => {
-    extensions.add(ext)
-    registerExtension(ext)
-
-    if (ext.extensionDependencies.length) installExtensionsIfNeeded(ext.extensionDependencies)
-
-    ext.activationEvents
-      .filter(a => a.type === ActivationEventType.Language)
-      .forEach(a => languageExtensions.set(a.value, ext))
-  })
-
-  collectDebuggersFromExtensions(extensionsWithConfig)
-}
-
+// TODO: get debug adapters
+//   collectDebuggersFromExtensions(extensionsWithConfig)
+// }
 
 /** Start a debugger with a given launch.json configuration chosen by user */
-const startDebugWithConfig = async (cwd: string, config: DebugConfiguration) => {
-  const launchConfig = await resolveConfigurationByProviders(cwd, config.type, config)
+// const startDebugWithConfig = async (cwd: string, config: DebugConfiguration) => {
+//   const launchConfig = await resolveConfigurationByProviders(cwd, config.type, config)
 
-  // TODO: start debugger
-  console.log('start debugger with config:', launchConfig)
+//   // TODO: start debugger
+//   console.log('start debugger with config:', launchConfig)
 
-  return { launchConfig, serverId: -1 }
-}
+//   return { launchConfig, serverId: -1 }
+// }
 
 /*
  * Start a debugger with a given debug 'type'. This is a debugger chosen
@@ -188,6 +113,9 @@ const startDebugWithConfig = async (cwd: string, config: DebugConfiguration) => 
  * will be resolved automagically by via configs provided in extension
  * package.json and/or via DebugConfigurationProvider
  */
+
+
+ /*
 const startDebugWithType = async (cwd: string, type: string) => {
   const launchConfig = await getDebuggerConfig(cwd, type)
   if (!launchConfig) return console.error(`can not start debugger ${type}`)
@@ -284,3 +212,4 @@ const startDebugAdapter = (debugAdapterPath: string, runtime: Debugger['runtime'
 
   return proc
 }
+*/

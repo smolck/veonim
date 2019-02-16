@@ -27,7 +27,8 @@ const findPackageJson = (path: string): Promise<string> => new Promise((done, fa
 const getExtensionConfig = async (packagePath: string): Promise<ExtensionPackageConfig> => {
   // not using require('package.json') because we need to reload if contents change
   const rawFileData = await readFile(packagePath)
-  return fromJSON(rawFileData).or({})
+  const config = fromJSON(rawFileData).or({})
+  return { ...config, packagePath }
 }
 
 const getExtensionConfigsFromFS = async () => {
@@ -47,7 +48,6 @@ const removeExtraneous = async (extensions: ExtensionPackageConfig[]) => {
 
 export default async () => {
   const userDefinedExtensions = await nvim.g._vscode_extensions
-
   await downloadExtensionsIfNotExist(EXT_PATH, userDefinedExtensions)
 
   const recursiveResolveExtensions = async (): Promise<ExtensionPackageConfig[]> => {

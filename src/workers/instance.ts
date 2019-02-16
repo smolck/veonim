@@ -8,7 +8,7 @@ import nvim from '../neovim/api'
 import '../core/ai'
 import '../services/mru-buffers'
 import '../services/watch-reload'
-import '../support/dependency-manager'
+import '../support/manage-plugins'
 // TODO: not used:
 // require('../services/job-reader')
 

@@ -1,19 +1,14 @@
 import { dirname, join, basename } from 'path'
 import localizeFile from '../support/localize'
-import { Omit } from '../support/types'
+import * as vsc from 'vscode'
 
 export interface ExtensionPackageConfig {
+  packagePath: string
   name: string
   publisher: string
   extensionDependencies: string[]
   activationEvents: string[]
   main: string
-}
-
-interface ExtensionConfig extends Omit<ExtensionPackageConfig, 'activationEvents'> {
-  packagePath: string
-  requirePath: string
-  activationEvents: ActivationEvent[]
 }
 
 export enum ActivationEventType {
@@ -32,27 +27,30 @@ interface ActivationEvent {
   value: string
 }
 
-export default (packageConfig: ExtensionPackageConfig, packageJsonPath: string) => {
-  const packagePath = dirname(packageJsonPath)
-  const requirePath = join(packagePath, packageConfig.main)
-  const languageFilePath = join(packagePath, 'package.nls.json')
-  const activationEvents = packageConfig.activationEvents.map((m: string) => ({
+export interface Extension extends vsc.Extension<any> {
+  localize(value: string): Promise<string>
+  dispose(): void
+}
+
+export default (config: ExtensionPackageConfig): Extension => {
+  const extensionPath = dirname(config.packagePath)
+  const requirePath = join(extensionPath, config.main)
+  const languageFilePath = join(extensionPath, 'package.nls.json')
+  const activationEvents = config.activationEvents.map((m: string) => ({
     type: m.split(':')[0] as ActivationEventType,
     value: m.split(':')[1],
   }))
 
-  let subscriptions: any[] = []
-  const localizer = localizeFile(languageFilePath)
-
-  const config: ExtensionConfig = {
-    ...packageConfig,
-    packagePath,
-    requirePath,
-    activationEvents,
+  const state = {
+    subscriptions: [] as any[],
+    isActive: false,
+    exports: undefined,
   }
 
+  const localizer = localizeFile(languageFilePath)
+
+  // TODO: i think we need to activate any extension dependencies (recursively)
   const activate = async () => {
-    const requirePath = config.requirePath
     const extName = basename(requirePath)
     console.log('activating extension:', requirePath)
 
@@ -62,21 +60,29 @@ export default (packageConfig: ExtensionPackageConfig, packageJsonPath: string) 
       return [] as any[]
     }
 
-    const context = { subscriptions }
-    await extension.activate(context).catch((err: any) => console.error(extName, err))
+    const context = { subscriptions: state.subscriptions }
+    const api = await extension.activate(context).catch((err: any) => console.error(extName, err))
+    state.exports = api
+    state.isActive = true
   }
 
   const localize = async (value: string) => (await localizer)(value)
 
   const dispose = () => {
-    subscriptions.forEach(m => m())
-    subscriptions = []
+    state.subscriptions.forEach(m => m())
+    state.subscriptions = []
+    state.exports = undefined
+    state.isActive = false
   }
 
   return {
-    get config() { return { ...config } },
-    localize,
+    id: `${config.publisher}.${config.name}`,
+    extensionPath,
+    packageJSON: { ...config },
+    get isActive () { return state.isActive },
+    get exports () { return state.exports },
     activate,
     dispose,
+    localize,
   }
 }
