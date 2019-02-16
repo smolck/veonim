@@ -1,13 +1,21 @@
+// TODO: remove this file
 import { Extension, activateExtension } from '../extensions/extensions'
 import * as vsc from 'vscode'
 
-const extensionRepo = new Map<string, vsc.Extension<any>>()
+const registry = new Map<string, vsc.Extension<any>>()
 
 const extensions: typeof vsc.extensions = {
-  get all() { return [...extensionRepo.values()] },
-  getExtension: (id: string) => extensionRepo.get(id),
+  get all() { return [...registry.values()] },
+  getExtension: (id: string) => registry.get(id),
 }
 
+export const loadExtensions = (configs: ExtensionConfig[]) => {
+  const extensions = configs.map(config => Extensions(config))
+  // TODO: do this better
+  extensions.forEach(ext => registry.set(id, ext))
+}
+
+// TODO: deprecate
 export const registerExtension = (extension: Extension): void => {
   const { name, publisher, packagePath, config } = extension
   const id = `${publisher}:${name}`
@@ -28,7 +36,7 @@ export const registerExtension = (extension: Extension): void => {
     },
   }
 
-  extensionRepo.set(id, ext)
+  registry.set(id, ext)
 }
 
 export default extensions

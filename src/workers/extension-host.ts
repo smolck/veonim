@@ -14,6 +14,10 @@ import { dirname, join } from 'path'
 import '../support/vscode-shim'
 import '../extension-host/language-features'
 import '../extension-host/language-events'
+import installExtensions from '../extension-host/extension-discovery'
+
+// TODO: remove install extensions from dependency manager. that path is now deprecated
+on.installExtensions(installExtensions)
 
 if (process.env.VEONIM_DEV) require('../dev/ext-host-development')
 
@@ -36,11 +40,8 @@ interface Debugger {
 // extensions that are spawning node executables (language servers, etc.)
 process.env.ELECTRON_RUN_AS_NODE = '1'
 
-const extensions = new Set<Extension>()
-const languageExtensions = new Map<string, Extension>()
 const runningDebugAdapters = new Map<string, DebugAdapterConnection>()
 
-on.load(() => load())
 on.listLaunchConfigs(() => getLaunchConfigs())
 on.listDebuggers(async () => {
   const debuggers = await getAvailableDebuggers()

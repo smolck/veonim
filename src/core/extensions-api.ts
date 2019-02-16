@@ -1,5 +1,6 @@
 import { DebugAdapterConnection } from '../messaging/debug-protocol'
 import { DiagnosticsEvent } from '../extension-host/language-events'
+import installExtensions from '../support/manage-extensions'
 import { Providers } from '../extension-host/providers'
 import { workerData } from '../messaging/worker-client'
 import { threadSafeObject } from '../support/utils'
@@ -34,6 +35,9 @@ onContextHandler(nvimSyncApiHandler)
 
 on.clipboardRead(request.clipboardRead)
 on.clipboardWrite(call.clipboardWrite)
+on.installExtension(async () => {
+  installExtensions
+})
 
 const providerBridge: Providers = new Proxy(Object.create(null), {
   get: (_: any, method: string) => (...args: any[]) => {

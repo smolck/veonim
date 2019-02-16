@@ -8,9 +8,9 @@ import { join } from 'path'
 const EXT_PATH = join(configPath, 'veonim', 'extensions')
 
 interface Extension {
+  dirname: string,
+  publisher: string,
   name: string,
-  user: string,
-  repo: string,
   installed: boolean,
 }
 
@@ -20,30 +20,26 @@ enum ExtensionKind {
 }
 
 const parseExtensionDefinition = (text: string) => {
-  const isVscodeExt = text.toLowerCase().startsWith('vscode:extension')
-  const [ , user = '', repo = '' ] = isVscodeExt
-    ? (text.match(/^(?:vscode:extension\/)([^\.]+)\.(.*)/) || [])
-    : (text.match(/^([^/]+)\/(.*)/) || [])
-
-  return { user, repo, kind: isVscodeExt ? ExtensionKind.VSCode : ExtensionKind.Github }
+  const [ publisher, name ] = text.split('.')
+  return { publisher, name }
 }
 
 const getExtensions = async (texts: string[]) => Promise.all(texts
   .map(parseExtensionDefinition)
   .map(async m => {
-    const name = `${m.user}--${m.repo}`
+    const dirname = `${m.publisher}--${m.name}`
 
     return {
       ...m,
-      name,
-      installed: await exists(join(EXT_PATH, name)),
+      dirname,
+      installed: await exists(join(EXT_PATH, dirname)),
     }
   }))
 
 const removeExtraneous = async (extensions: Extension[]) => {
   const dirs = await getDirs(EXT_PATH)
-  const extensionInstalled = (path: string) => extensions.some(e => e.name === path)
-  const toRemove = dirs.filter(d => !extensionInstalled(d.name))
+  const extensionInstalled = (path: string) => extensions.some(e => e.dirname === path)
+  const toRemove = dirs.filter(d => !extensionInstalled(d.dirname))
 
   toRemove.forEach(dir => removePath(dir.path))
 }
@@ -51,16 +47,17 @@ const removeExtraneous = async (extensions: Extension[]) => {
 export default async (extText: string[]) => {
   const extensions = await getExtensions(extText).catch()
   const extensionsNotInstalled = extensions.filter(ext => !ext.installed)
-  if (!extensionsNotInstalled.length) return removeExtraneous(extensions)
+
+  // TODO: this needs to be done at the end of everything
+  // if (!extensionsNotInstalled.length) return removeExtraneous(extensions)
 
   call.notify(`Found ${extensionsNotInstalled.length} extensions. Installing...`, NotifyKind.System)
 
   const installed = await Promise.all(extensions.map(e => {
-    const isVscodeExt = e.kind === ExtensionKind.VSCode
-    const destination = join(EXT_PATH, `${e.user}--${e.repo}`)
-    const downloadUrl = isVscodeExt
-      ? downloader.url.vscode(e.user, e.repo)
-      : downloader.url.github(e.user, e.repo)
+    const destination = join(EXT_PATH, `${e.publisher}--${e.name}`)
+    const downloadUrl = e.publisher === 'veonim'
+      ? downloader.url.veonim(e.name)
+      : downloader.url.vscode(e.publisher, e.name)
 
     return downloader.download(downloadUrl, destination)
   }))
@@ -71,7 +68,7 @@ export default async (extText: string[]) => {
   if (installedOk) call.notify(`Installed ${installedOk} extensions!`, NotifyKind.Success)
   if (installedFail) call.notify(`Failed to install ${installedFail} extensions. See devtools console for more info.`, NotifyKind.Error)
 
-  removeExtraneous(extensions)
+  // TODO: at the end!
+  // removeExtraneous(extensions)
   loadExtensions()
-  downloader.dispose()
 }
