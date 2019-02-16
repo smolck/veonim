@@ -1,6 +1,6 @@
 import { NewlineSplitter, getDirs, readFile, fromJSON, configPath, remove as removePath } from '../support/utils'
 import downloadExtensionsIfNotExist, { doneDownloadingForNow } from '../extension-host/download-extensions'
-import { ExtensionConfig } from '../extension-host/extension'
+import { ExtensionPackageConfig } from '../extension-host/extension'
 import { loadExtensions } from '../vscode/extensions'
 import { Ripgrep } from '../support/binaries'
 import { sep, join } from 'path'
@@ -24,10 +24,10 @@ const findPackageJson = (path: string): Promise<string> => new Promise((done, fa
   })
 })
 
-const getExtensionConfig = async (packagePath: string): Promise<ExtensionConfig> => {
-    // not using require('package.json') because we need to reload if contents change
-    const rawFileData = await readFile(packagePath)
-    return fromJSON(rawFileData).or({})
+const getExtensionConfig = async (packagePath: string): Promise<ExtensionPackageConfig> => {
+  // not using require('package.json') because we need to reload if contents change
+  const rawFileData = await readFile(packagePath)
+  return fromJSON(rawFileData).or({})
 }
 
 const getExtensionConfigsFromFS = async () => {
@@ -37,7 +37,7 @@ const getExtensionConfigsFromFS = async () => {
   return Promise.all(configRequests)
 }
 
-const removeExtraneous = async (extensions: ExtensionConfig[]) => {
+const removeExtraneous = async (extensions: ExtensionPackageConfig[]) => {
   const dirs = await getDirs(EXT_PATH)
   const extensionInstalled = (path: string) => extensions.some(e => `${e.publisher}.${e.name}` === path)
   const toRemove = dirs.filter(d => !extensionInstalled(d.path))
@@ -50,7 +50,7 @@ export default async () => {
 
   await downloadExtensionsIfNotExist(EXT_PATH, userDefinedExtensions)
 
-  const recursiveResolveExtensions = async (): Promise<ExtensionConfig[]> => {
+  const recursiveResolveExtensions = async (): Promise<ExtensionPackageConfig[]> => {
     const extensions = await getExtensionConfigsFromFS()
     const dependencies = extensions.reduce((exts, e) => [...exts, ...e.extensionDependencies], [] as string[])
     const extensionsNotInstalled = dependencies.filter(dep => !extensions.some(e => `${e.publisher}.${e.name}` === dep))

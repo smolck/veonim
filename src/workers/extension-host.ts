@@ -12,6 +12,7 @@ import LocalizeFile from '../support/localize'
 import pleaseGet from '../support/please-get'
 import { dirname, join } from 'path'
 import '../support/vscode-shim'
+// TODO: this is missing? where did it go??? do we need it?
 import '../extension-host/language-features'
 import '../extension-host/language-events'
 import installExtensions from '../extension-host/extension-discovery'

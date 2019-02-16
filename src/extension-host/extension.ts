@@ -1,15 +1,19 @@
-import { NewlineSplitter, getDirs, readFile, fromJSON, getFiles } from '../support/utils'
-import { sep, dirname, join } from 'path'
+import { dirname, join, basename } from 'path'
+import localizeFile from '../support/localize'
+import { Omit } from '../support/types'
 
-export interface ExtensionConfig {
+export interface ExtensionPackageConfig {
   name: string
   publisher: string
   extensionDependencies: string[]
+  activationEvents: string[]
+  main: string
 }
 
-export interface ExtensionInfo {
-  name: string
-  publisher: string
+interface ExtensionConfig extends Omit<ExtensionPackageConfig, 'activationEvents'> {
+  packagePath: string
+  requirePath: string
+  activationEvents: ActivationEvent[]
 }
 
 export enum ActivationEventType {
@@ -28,39 +32,23 @@ interface ActivationEvent {
   value: string
 }
 
-export interface Extension extends ExtensionInfo {
-  config: any
-  packagePath: string
-  requirePath: string
-  extensionDependencies: string[]
-  activationEvents: ActivationEvent[]
-  subscriptions: Set<Disposable>
-  localize: Function
-}
+export default (packageConfig: ExtensionPackageConfig, packageJsonPath: string) => {
+  const packagePath = dirname(packageJsonPath)
+  const requirePath = join(packagePath, packageConfig.main)
+  const languageFilePath = join(packagePath, 'package.nls.json')
+  const activationEvents = packageConfig.activationEvents.map((m: string) => ({
+    type: m.split(':')[0] as ActivationEventType,
+    value: m.split(':')[1],
+  }))
 
-export default (config: any) => {
-  const config = {}
+  let subscriptions: any[] = []
+  const localizer = localizeFile(languageFilePath)
 
-  const parse = async () => {
-    const { main, activationEvents = [], extensionDependencies = [] } = data
-    const packagePath = dirname(packageJson)
-    const languageFilePath = join(packagePath, 'package.nls.json')
-    const localize = await LocalizeFile(languageFilePath)
-
-    const parsedActivationEvents = activationEvents.map((m: string) => ({
-      type: m.split(':')[0] as ActivationEventType,
-      value: m.split(':')[1],
-    }))
-
-    Object.assign(config, {
-      ...data,
-      localize,
-      packagePath,
-      extensionDependencies,
-      subscriptions: new Set(),
-      requirePath: join(packagePath, main),
-      activationEvents: parsedActivationEvents,
-    })
+  const config: ExtensionConfig = {
+    ...packageConfig,
+    packagePath,
+    requirePath,
+    activationEvents,
   }
 
   const activate = async () => {
@@ -74,19 +62,21 @@ export default (config: any) => {
       return [] as any[]
     }
 
-    const context = { subscriptions: [] as any[] }
-
-    const maybePromise = extension.activate(context)
-    const isPromise = maybePromise && maybePromise.then
-    if (isPromise) await maybePromise.catch((err: any) => console.error(extName, err))
-
-    context.subscriptions.forEach(sub => e.subscriptions.add(sub))
-    return context.subscriptions
+    const context = { subscriptions }
+    await extension.activate(context).catch((err: any) => console.error(extName, err))
   }
 
-  parse()
+  const localize = async (value: string) => (await localizer)(value)
+
+  const dispose = () => {
+    subscriptions.forEach(m => m())
+    subscriptions = []
+  }
+
   return {
-    get config() { return {...config} },
+    get config() { return { ...config } },
+    localize,
     activate,
+    dispose,
   }
 }
