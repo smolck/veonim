@@ -1,13 +1,23 @@
 import makeExtensionObject, { Extension, ExtensionPackageConfig, ActivationKind } from '../extension-host/extension'
-import { MapSetter } from '../support/utils'
+import { MapSetter, Watcher } from '../support/utils'
 import nvim from '../neovim/api'
 import * as vsc from 'vscode'
 
+interface Events {
+  didChange: void
+}
+
+const events = Watcher<Events>()
 const registry = new Map<string, Extension>()
+
+const eventreg = (name: keyof Events) => (fn: any, thisArg?: any) => ({
+  dispose: events.on(name, fn.bind(thisArg)),
+})
 
 const extensions: typeof vsc.extensions = {
   get all() { return [...registry.values()] },
   getExtension: (id: string) => registry.get(id),
+  onDidChange: eventreg('didChange'),
 }
 
 const activators = {

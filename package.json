@@ -24,7 +24,7 @@
     "type": "git",
     "url": "git+https://github.com/veonim/veonim.git"
   },
-  "vscode-api-version": "1.30.2",
+  "vscode-api-version": "1.31.1",
   "repository-mirrors": [
     "git@github.com:veonim/veonim.git",
     "https://veonim@gitlab.com/veonim/veonim.git",

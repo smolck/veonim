@@ -1034,6 +1034,7 @@ export class CodeActionKind {
 	public static readonly RefactorRewrite = CodeActionKind.Refactor.append('rewrite');
 	public static readonly Source = CodeActionKind.Empty.append('source');
 	public static readonly SourceOrganizeImports = CodeActionKind.Source.append('organizeImports');
+	public static readonly SourceFixAll = CodeActionKind.Source.append('fixAll');
 
 	constructor(
 		public readonly value: string
@@ -1041,6 +1042,10 @@ export class CodeActionKind {
 
 	public append(parts: string): CodeActionKind {
 		return new CodeActionKind(this.value ? this.value + CodeActionKind.sep + parts : parts);
+	}
+
+	public intersects(other: CodeActionKind): boolean {
+		return this.contains(other) || other.contains(this);
 	}
 
 	public contains(other: CodeActionKind): boolean {
