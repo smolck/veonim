@@ -1,10 +1,10 @@
-import nvimSync from '../neovim/sync-api-client'
+import * as configStore from '../extension-host/configuration-store'
 import { objDeepGet } from '../support/utils'
 import * as vsc from 'vscode'
 
 export default (section?: string): vsc.WorkspaceConfiguration => {
-  const vscodeConfig = nvimSync(nvim => nvim.g.vscode_config).call() || {}
-  const possiblyObject = section ? objDeepGet(vscodeConfig)(section) : vscodeConfig
+  const config = configStore.getConfig()
+  const possiblyObject = section ? objDeepGet(config)(section) : config
   const store = possiblyObject || {}
 
   const get = (section: string, defaultValue?: any) => {

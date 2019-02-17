@@ -1,4 +1,6 @@
+import { addExtensionConfiguration } from '../extension-host/configuration-store'
 import localizeFile from '../support/localize'
+import pleaseGet from '../support/please-get'
 import { dirname, join } from 'path'
 import * as vsc from 'vscode'
 
@@ -34,6 +36,17 @@ export interface Extension extends vsc.Extension<any> {
   activationEvents: ActivationEvent[]
 }
 
+const getContributesConfigurations = (config: ExtensionPackageConfig) => {
+  const configuration: any = pleaseGet(config).contributes.configuration()
+  if (!configuration) return
+
+  if (configuration.type !== 'object') return console.error('extension provided configuration is not of type object (could also be blank)')
+  if (!configuration.properties) return console.error('idk, extension config does not have any properties. what am i supposed to do now?')
+  return Object.entries(configuration.properties).reduce((res, [ key, val ]) => {
+    return Object.assign(res, { [key]: (val as any).default })
+  }, {})
+}
+
 export default (config: ExtensionPackageConfig): Extension => {
   const extensionPath = dirname(config.packagePath)
   const requirePath = join(extensionPath, config.main)
@@ -48,6 +61,9 @@ export default (config: ExtensionPackageConfig): Extension => {
     isActive: false,
     exports: undefined,
   }
+
+  const contributedConfiguration = getContributesConfigurations(config)
+  if (contributedConfiguration) addExtensionConfiguration(contributedConfiguration)
 
   const localizer = localizeFile(languageFilePath)
 
