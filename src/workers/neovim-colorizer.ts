@@ -37,22 +37,20 @@ const encoder = new MsgpackStreamEncoder()
 const decoder = new MsgpackStreamDecoder()
 
 const proc = Neovim.run([
-  '--cmd', `let $VIM = '${Neovim.path}'`,
-  '--cmd', `let $VIMRUNTIME = '${Neovim.runtime}'`,
-  '--cmd', `let &runtimepath .= ',${runtimeDir}'`,
+  '--cmd', `let $VIM = '${Neovim.path}' | let $VIMRUNTIME = '${Neovim.runtime}' | let &runtimepath .= ',${runtimeDir}' | let g:veonim = 1 | let g:vn_loaded = 0 | let g:vn_ask_cd = 0`,
   '--cmd', `colorscheme veonim`,
-  '--cmd', `let g:veonim = 1 | let g:vn_loaded = 0 | let g:vn_ask_cd = 0`,
   '--cmd', `exe ":fun! Veonim(...)\\n endfun"`,
   '--cmd', `exe ":fun! VK(...)\\n endfun"`,
   '--cmd', `com! -nargs=+ -range Veonim 1`,
+  '--cmd', `com! -nargs=+ VSCodeExtension 1`,
   '--cmd', 'com! -nargs=* Plug 1',
   '--embed',
 ])
 
 proc.on('error', (e: any) => console.error('vim colorizer err', e))
-proc.stdout.on('error', (e: any) => console.error('vim colorizer stdout err', e))
-proc.stdin.on('error', (e: any) => console.error('vim colorizer stdin err', e))
-proc.stderr.on('data', (e: any) => console.error('vim colorizer stderr', e))
+proc.stdout.on('error', (e: any) => console.error('vim colorizer stdout err', e+''))
+proc.stdin.on('error', (e: any) => console.error('vim colorizer stdin err', e+''))
+proc.stderr.on('data', (e: any) => console.error('vim colorizer stderr', e+''))
 proc.on('exit', () => console.error('vim colorizer exit'))
 
 encoder.pipe(proc.stdin)
@@ -66,7 +64,7 @@ const api: Api = onFnCall((name: string, args: any[]) => notify(prefix.core(name
 
 api.uiAttach(100, 10, vimOptions)
 
-api.command(asVimFunc('Colorize', `
+api.command(asVimFunc('VeonimColorize', `
   execute 'set filetype=' . a:1
 
   let lineColors = []
@@ -100,7 +98,7 @@ const insertIntoBuffer = (lines: string[]) => {
 }
 
 type Color = [number, string]
-const getTextColors = (filetype = ''): Promise<Color[][]> => req.callFunction('Colorize', [filetype])
+const getTextColors = (filetype = ''): Promise<Color[][]> => req.callFunction('VeonimColorize', [filetype])
 
 type ColorRange = [number, number, string]
 const colorsAsRanges = (colors: Color[][]): ColorRange[][] => colors.map(line => line.reduce((grp, [col, color]) => {
