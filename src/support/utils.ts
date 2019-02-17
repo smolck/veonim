@@ -465,6 +465,11 @@ export class MapSetter<A, B> extends Map<A, Set<B>> {
   removeMultiple(keys: A[], value: B) {
     keys.forEach(key => this.remove(key, value))
   }
+
+  getList(key: A): B[] {
+    const s = this.get(key)
+    return s ? [...s] : []
+  }
 }
 
 export const MapSet = <A, B, C>(initial?: any[]) => {

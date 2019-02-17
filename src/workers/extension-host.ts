@@ -1,5 +1,6 @@
 import '../support/vscode-shim'
 import '../extension-host/language-events'
+import '../extension-host/extension-discovery'
 
 // TODO: THIS LEAKS OUTSIDE OF WORKER!
 // need this flag to spawn node child processes. this will use the same node

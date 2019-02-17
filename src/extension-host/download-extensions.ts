@@ -22,6 +22,8 @@ const getExtensionsFromFS = async (location: string, extensions: string[]) => Pr
 export default async (location: string, extensions: string[]) => {
   const exts = await getExtensionsFromFS(location, extensions)
   const uninstalled = exts.filter(e => !e.installed)
+  // TODO: need to report status visually to UI
+  console.warn('uninstalled', uninstalled)
 
   const pendingDownloads = uninstalled.map(e => {
     const destination = join(location, `${e.publisher}.${e.name}`)
@@ -33,6 +35,8 @@ export default async (location: string, extensions: string[]) => {
   })
 
   const installed = await Promise.all(pendingDownloads)
+  // TODO: need to report status visually to UI
+  console.warn('installed', installed)
 
   return {
     ok: installed.filter(m => m).length,

@@ -1,8 +1,9 @@
-import { dirname, join, basename } from 'path'
 import localizeFile from '../support/localize'
+import { dirname, join } from 'path'
 import * as vsc from 'vscode'
 
 export interface ExtensionPackageConfig {
+  id: string
   packagePath: string
   name: string
   publisher: string
@@ -11,7 +12,7 @@ export interface ExtensionPackageConfig {
   main: string
 }
 
-export enum ActivationEventType {
+export enum ActivationKind {
   WorkspaceContains = 'workspaceContains',
   Language = 'onLanguage',
   Command = 'onCommand',
@@ -23,13 +24,14 @@ export enum ActivationEventType {
 }
 
 interface ActivationEvent {
-  type: ActivationEventType
+  type: ActivationKind
   value: string
 }
 
 export interface Extension extends vsc.Extension<any> {
   localize(value: string): Promise<string>
   dispose(): void
+  activationEvents: ActivationEvent[]
 }
 
 export default (config: ExtensionPackageConfig): Extension => {
@@ -37,7 +39,7 @@ export default (config: ExtensionPackageConfig): Extension => {
   const requirePath = join(extensionPath, config.main)
   const languageFilePath = join(extensionPath, 'package.nls.json')
   const activationEvents = config.activationEvents.map((m: string) => ({
-    type: m.split(':')[0] as ActivationEventType,
+    type: m.split(':')[0] as ActivationKind,
     value: m.split(':')[1],
   }))
 
@@ -51,17 +53,17 @@ export default (config: ExtensionPackageConfig): Extension => {
 
   // TODO: i think we need to activate any extension dependencies (recursively)
   const activate = async () => {
-    const extName = basename(requirePath)
-    console.log('activating extension:', requirePath)
+    if (state.isActive) return
+    console.log(`activation extension ${config.id}`)
 
     const extension = require(requirePath)
     if (!extension.activate) {
-      console.error(`extension ${extName} does not have a .activate() method`)
+      console.error(`extension ${config.id} does not have a .activate() method`)
       return [] as any[]
     }
 
     const context = { subscriptions: state.subscriptions }
-    const api = await extension.activate(context).catch((err: any) => console.error(extName, err))
+    const api = await extension.activate(context).catch((err: any) => console.error(config.id, err))
     state.exports = api
     state.isActive = true
   }
@@ -76,8 +78,9 @@ export default (config: ExtensionPackageConfig): Extension => {
   }
 
   return {
-    id: `${config.publisher}.${config.name}`,
+    id: config.id,
     extensionPath,
+    activationEvents,
     packageJSON: { ...config },
     get isActive () { return state.isActive },
     get exports () { return state.exports },
