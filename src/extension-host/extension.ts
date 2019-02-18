@@ -40,8 +40,8 @@ const getContributesConfigurations = (config: ExtensionPackageConfig) => {
   const configuration: any = pleaseGet(config).contributes.configuration()
   if (!configuration) return
 
-  if (configuration.type !== 'object') return console.error('extension provided configuration is not of type object (could also be blank)')
-  if (!configuration.properties) return console.error('idk, extension config does not have any properties. what am i supposed to do now?')
+  if (configuration.type !== 'object') return console.error(`extension ${config.id} provided configuration is not of type object (could also be blank)`)
+  if (!configuration.properties) return console.error(`idk, extension ${config.id} config does not have any properties. what am i supposed to do now?`)
   return Object.entries(configuration.properties).reduce((res, [ key, val ]) => {
     return Object.assign(res, { [key]: (val as any).default })
   }, {})
@@ -78,7 +78,10 @@ export default (config: ExtensionPackageConfig): Extension => {
       return [] as any[]
     }
 
-    const context = { subscriptions: state.subscriptions }
+    const context: vsc.ExtensionContext = {
+      subscriptions: state.subscriptions,
+    }
+
     const api = await extension.activate(context).catch((err: any) => console.error(config.id, err))
     state.exports = api
     state.isActive = true

@@ -36,6 +36,9 @@
     "url": "https://github.com/veonim/veonim/issues"
   },
   "homepage": "https://github.com/veonim/veonim#readme",
+  "bundled-extension-dependencies": {
+    "typescript": "latest"
+  },
   "bindeps-darwin": {
     "@veonim/neovim-mac": "0.4.0-alpha1",
     "@veonim/ripgrep-mac": "0.0.1",

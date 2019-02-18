@@ -16,6 +16,7 @@ go(async () => {
   await Promise.all([
     copy.index(),
     copy.processExplorer(),
+    copy.extensionDependencies(),
     copy.assets(),
     copy.runtime(),
     copy.hyperapp(),

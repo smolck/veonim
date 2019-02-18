@@ -1,6 +1,7 @@
 bindeps
 xdg_config
 coverage
+extension_dependencies
 node_modules
 build
 logs

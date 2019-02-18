@@ -5,6 +5,7 @@ const pkgPath = fromRoot('package.json')
 const pkg = require(pkgPath)
 const os = process.platform
 const deps = Reflect.get(pkg, `bindeps-${os}`)
+const extDeps = Reflect.get(pkg, 'bundled-extension-dependencies')
 
 const binaryDependencies = async () => {
   if (!deps) return
@@ -15,6 +16,16 @@ const binaryDependencies = async () => {
 
   const pkgData = JSON.stringify(pkg, null, 2)
   await fs.writeFile(pkgPath, pkgData)
+}
+
+const extendionDependencies = async () => {
+  if (!extDeps) return
+  const dir = fromRoot('extension_dependencies')
+  await fs.ensureDir(dir)
+
+  for (const [ dependency, version ] of Object.entries(extDeps)) {
+    await run(`npm i ${dependency}@${version} --no-save --no-package-lock --no-audit --loglevel=error --prefix ${dir}`)
+  }
 }
 
 const vscodeTypings = () => new Promise(async (done, fail) => {
@@ -44,6 +55,10 @@ require.main === module && go(async () => {
   $`installing binary dependencies`
   await binaryDependencies()
   $`installed binary dependencies`
+
+  $`installing extension dependencies`
+  await extendionDependencies()
+  $`installed extension dependencies`
 
   $`installing vscode extension api typings`
   await vscodeTypings().catch(err => console.log('failed to install vscode typings', err))
