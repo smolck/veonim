@@ -3,6 +3,7 @@ import downloadExtensionsIfNotExist, { doneDownloadingForNow } from '../extensio
 import { ExtensionPackageConfig } from '../extension-host/extension'
 import { loadExtensions } from '../vscode/extensions'
 import { Ripgrep } from '../support/binaries'
+import copy from '../support/fs-copy'
 import { sep, join } from 'path'
 import nvim from '../neovim/api'
 
@@ -38,7 +39,9 @@ const getExtensionConfig = async (packagePath: string): Promise<ExtensionPackage
 
 const getExtensionConfigsFromFS = async () => {
   const extensionDirs = await getDirs(EXT_PATH)
-  const extensionPaths = await Promise.all(extensionDirs.map(m => findPackageJson(m.path)))
+  // bundled extension dependencies reside in EXT_PATH/node_modules
+  const dirs = extensionDirs.filter(dir => dir.name !== 'node_modules')
+  const extensionPaths = await Promise.all(dirs.map(m => findPackageJson(m.path)))
   const configRequests = extensionPaths.map(path => getExtensionConfig(path))
   return Promise.all(configRequests)
 }
@@ -73,3 +76,11 @@ const installMaybe = async (userDefinedExtensions?: string[]) => {
 }
 
 nvim.getVarCurrentAndFuture('_veonim_extensions', installMaybe)
+
+const extensionDependenciesDir = join(__dirname, '..', 'extension_dependencies')
+const copyFrom = join(extensionDependenciesDir, 'node_modules')
+const copyTo = join(EXT_PATH, 'node_modules')
+
+copy(copyFrom, copyTo, { overwrite: true }).catch(err => {
+  console.error('failed to copy bundled extension dependencies', copyFrom, copyTo, err)
+})
