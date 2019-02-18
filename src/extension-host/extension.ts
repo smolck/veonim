@@ -89,8 +89,10 @@ export default (config: ExtensionPackageConfig): Extension => {
     const storagePath = join(EXT_DATA_PATH, `${workspaceId}-${config.id}`)
     await ensureDir(storagePath)
 
-    const globalState = createMemento(join(globalStoragePath, 'db.json'))
-    const workspaceState = createMemento(join(storagePath, 'db.json'))
+    const [ globalState, workspaceState ] = await Promise.all([
+      createMemento(join(globalStoragePath, 'db.json')),
+      createMemento(join(storagePath, 'db.json')),
+    ])
 
     const context: vsc.ExtensionContext = {
       extensionPath,
