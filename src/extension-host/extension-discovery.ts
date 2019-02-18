@@ -10,10 +10,11 @@ const EXT_PATH = join(configPath, 'veonim', 'extensions')
 
 const findPackageJson = (path: string): Promise<string> => new Promise((done, fail) => {
   const results = [] as string[]
-  const rg = Ripgrep(['--files', '--glob', '!node_modules', '--glob', `**/package.json`], { cwd: path }) 
+  const rg = Ripgrep(['--files', '--glob', '!node_modules', '--glob', '**/package.json'], { cwd: path })
   rg.stderr.pipe(new NewlineSplitter()).on('data', fail)
-  rg.stdout.pipe(new NewlineSplitter()).on('data', (path: string) => results.push(path))
-  rg.on('exit', () => {
+  rg.stdout.pipe(new NewlineSplitter()).on('data', (pkgpath: string) => results.push(pkgpath))
+
+  rg.on('close', () => {
     const paths = results.map(m => ({
       path: m,
       levels: m.split(sep).length,
@@ -65,7 +66,8 @@ const installMaybe = async (userDefinedExtensions?: string[]) => {
   const resolvedExtensions = await recursiveResolveExtensions()
   doneDownloadingForNow()
   loadExtensions(resolvedExtensions)
-  await removeExtraneous(resolvedExtensions)
+  // TODO: this is broken and does not work correctly
+  // await removeExtraneous(resolvedExtensions)
 }
 
 nvim.getVarCurrentAndFuture('_veonim_extensions', installMaybe)
