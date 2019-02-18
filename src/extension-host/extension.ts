@@ -1,7 +1,10 @@
 import { addExtensionConfiguration } from '../extension-host/configuration-store'
+import { EXT_DATA_PATH, LOG_PATH } from '../support/config-paths'
 import localizeFile from '../support/localize'
 import pleaseGet from '../support/please-get'
 import { dirname, join } from 'path'
+import { createHash } from 'crypto'
+import nvim from '../neovim/api'
 import * as vsc from 'vscode'
 
 export interface ExtensionPackageConfig {
@@ -47,6 +50,18 @@ const getContributesConfigurations = (config: ExtensionPackageConfig) => {
   }, {})
 }
 
+const createMemento = (): vsc.Memento => {
+  const get = <T>(key: string, defaultValue?: T): T => {
+
+  }
+
+  const update = async (key: string, value: any) => {
+
+  }
+
+  return { get, update }
+}
+
 export default (config: ExtensionPackageConfig): Extension => {
   const extensionPath = dirname(config.packagePath)
   const requirePath = join(extensionPath, config.main)
@@ -60,6 +75,8 @@ export default (config: ExtensionPackageConfig): Extension => {
     subscriptions: [] as any[],
     isActive: false,
     exports: undefined,
+    workspaceState: createMemento(),
+    globalState: createMemento(),
   }
 
   const contributedConfiguration = getContributesConfigurations(config)
@@ -78,8 +95,17 @@ export default (config: ExtensionPackageConfig): Extension => {
       return [] as any[]
     }
 
+    const workspaceId = createHash('md5').update(nvim.state.cwd).digest('hex')
+
     const context: vsc.ExtensionContext = {
+      extensionPath,
       subscriptions: state.subscriptions,
+      asAbsolutePath: relpath => join(extensionPath, relpath),
+      globalStoragePath: join(EXT_DATA_PATH, config.id),
+      storagePath: join(EXT_DATA_PATH, `${workspaceId}-${config.id}`),
+      logPath: join(LOG_PATH, config.id),
+      workspaceState: state.workspaceState,
+      globalState: state.globalState,
     }
 
     const api = await extension.activate(context).catch((err: any) => console.error(config.id, err))

@@ -1,13 +1,12 @@
-import { NewlineSplitter, getDirs, readFile, fromJSON, configPath, remove as removePath } from '../support/utils'
+import { NewlineSplitter, getDirs, readFile, fromJSON, remove as removePath } from '../support/utils'
 import downloadExtensionsIfNotExist, { doneDownloadingForNow } from '../extension-host/download-extensions'
 import { ExtensionPackageConfig } from '../extension-host/extension'
 import { loadExtensions } from '../vscode/extensions'
+import { EXT_PATH } from '../support/config-paths'
 import { Ripgrep } from '../support/binaries'
 import copy from '../support/fs-copy'
 import { sep, join } from 'path'
 import nvim from '../neovim/api'
-
-const EXT_PATH = join(configPath, 'veonim', 'extensions')
 
 const findPackageJson = (path: string): Promise<string> => new Promise((done, fail) => {
   const results = [] as string[]
