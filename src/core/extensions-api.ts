@@ -1,7 +1,7 @@
 import { DebugAdapterConnection } from '../messaging/debug-protocol'
 import { DiagnosticsEvent } from '../extension-host/language-events'
+import * as workerHost from '../messaging/worker-client'
 import { Providers } from '../extension-host/providers'
-import { workerData } from '../messaging/worker-client'
 import { threadSafeObject } from '../support/utils'
 import nvimSyncApiHandler from '../neovim/sync-api'
 import Worker from '../messaging/worker'
@@ -26,14 +26,15 @@ export interface DebugStarterPack {
 }
 
 const { on, call, request, onContextHandler } = Worker('extension-host', {
-  workerData,
+  workerData: workerHost.workerData,
   sharedMemorySize: (1024**2) * 4,
 })
 
 onContextHandler(nvimSyncApiHandler)
 
-on.clipboardRead(request.clipboardRead)
-on.clipboardWrite(call.clipboardWrite)
+on.notify(workerHost.call.notify)
+on.clipboardRead(workerHost.request.clipboardRead)
+on.clipboardWrite(workerHost.call.clipboardWrite)
 
 const providerBridge: Providers = new Proxy(Object.create(null), {
   get: (_: any, method: string) => (...args: any[]) => {
