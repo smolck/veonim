@@ -5,7 +5,7 @@ import { CreateTask } from '../support/utils'
 import nvim from '../neovim/api'
 import * as vsc from 'vscode'
 
-export default (winid: number): vsc.TextEditor => ({
+const TextEditor = (winid: number): vsc.TextEditor => ({
   get document() {
     const bufid = nvimSync(async (nvim, id) => {
       const buf = await nvim.Window(id).buffer
@@ -164,3 +164,12 @@ export default (winid: number): vsc.TextEditor => ({
   show: () => console.warn('DEPRECATED: use window.showTextDocument'),
   hide: () => console.warn('DEPRECATED: use workbench.action.closeActiveEditor'),
 })
+
+export default (winid: number) => {
+  if (typeof winid !== 'number') {
+    console.error('invalid TextEditor window id:', winid)
+    throw new Error('can not create TextEditor without a window id NUMBER')
+  }
+
+  return TextEditor(winid)
+}

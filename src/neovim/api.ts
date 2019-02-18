@@ -342,51 +342,6 @@ const isFunc = (m: any) => is.function(m) || is.asyncfunction(m)
 
 const getCursorPosition = () => requestFromUI.getCursorPosition()
 
-interface CurrentCache {
-  buffer?: Buffer
-}
-
-const _currentCache: CurrentCache = {
-  buffer: undefined,
-}
-
-const current = {
-  get buffer(): Buffer {
-    const promise = as.buf(req.core.getCurrentBuf())
-
-    return onProp<Buffer>(prop => {
-      if (prop === 'id' && _currentCache.buffer) return _currentCache.buffer.id
-      const testValue = Reflect.get(dummy.buf, prop)
-      if (testValue == null) throw new TypeError(`${prop as string} does not exist on Neovim.Buffer`)
-      return isFunc(testValue)
-        ? async (...args: any[]) => Reflect.get(await promise, prop)(...args)
-        : promise.then(m => Reflect.get(m, prop))
-    })
-  },
-  get window(): Window {
-    const promise = as.win(req.core.getCurrentWin())
-
-    return onProp<Window>(prop => {
-      const testValue = Reflect.get(dummy.win, prop)
-      if (testValue == null) throw new TypeError(`${prop as string} does not exist on Neovim.Window`)
-      return isFunc(testValue)
-        ? async (...args: any[]) => Reflect.get(await promise, prop)(...args)
-        : promise.then(m => Reflect.get(m, prop))
-    })
-  },
-  get tabpage(): Tabpage {
-    const promise = as.tab(req.core.getCurrentTabpage())
-
-    return onProp<Tabpage>(prop => {
-      const testValue = Reflect.get(dummy.tab, prop)
-      if (testValue == null) throw new TypeError(`${prop as string} does not exist on Neovim.Tabpage`)
-      return isFunc(testValue)
-        ? async (...args: any[]) => Reflect.get(await promise, prop)(...args)
-        : promise.then(m => Reflect.get(m, prop))
-    })
-  },
-}
-
 const emptyObject: { [index: string]: any } = Object.create(null)
 const g = new Proxy(emptyObject, {
   get: async (_t, name: string) => {
@@ -498,7 +453,57 @@ autocmd.TextChangedI(revision => {
 // TODO: i think we should just determine this from render events
 autocmd.WinEnter((id: number) => watchers.events.emit('winEnter', id))
 
-on.bufLoad(buffer => Object.assign(_currentCache, { buffer }))
+autocmd.WinEnter((id: number) => _currentCache.window = Window(id-0))
+as.win(req.core.getCurrentWin()).then(win => _currentCache.window = win)
+on.bufLoad(buffer => _currentCache.buffer = buffer)
+
+interface CurrentCache {
+  buffer?: Buffer
+  window?: Window
+}
+
+const _currentCache: CurrentCache = {
+  buffer: undefined,
+  window: undefined,
+}
+
+const current = {
+  get buffer(): Buffer {
+    const promise = as.buf(req.core.getCurrentBuf())
+
+    return onProp<Buffer>(prop => {
+      if (prop === 'id' && _currentCache.buffer) return _currentCache.buffer.id
+      const testValue = Reflect.get(dummy.buf, prop)
+      if (testValue == null) throw new TypeError(`${prop as string} does not exist on Neovim.Buffer`)
+      return isFunc(testValue)
+        ? async (...args: any[]) => Reflect.get(await promise, prop)(...args)
+        : promise.then(m => Reflect.get(m, prop))
+    })
+  },
+  get window(): Window {
+    const promise = as.win(req.core.getCurrentWin())
+
+    return onProp<Window>(prop => {
+      if (prop === 'id' && _currentCache.window) return _currentCache.window.id
+      const testValue = Reflect.get(dummy.win, prop)
+      if (testValue == null) throw new TypeError(`${prop as string} does not exist on Neovim.Window`)
+      return isFunc(testValue)
+        ? async (...args: any[]) => Reflect.get(await promise, prop)(...args)
+        : promise.then(m => Reflect.get(m, prop))
+    })
+  },
+  get tabpage(): Tabpage {
+    const promise = as.tab(req.core.getCurrentTabpage())
+
+    return onProp<Tabpage>(prop => {
+      const testValue = Reflect.get(dummy.tab, prop)
+      if (testValue == null) throw new TypeError(`${prop as string} does not exist on Neovim.Tabpage`)
+      return isFunc(testValue)
+        ? async (...args: any[]) => Reflect.get(await promise, prop)(...args)
+        : promise.then(m => Reflect.get(m, prop))
+    })
+  },
+}
 
 const fromId = {
   buffer: (id: number): Buffer => Buffer(id),
