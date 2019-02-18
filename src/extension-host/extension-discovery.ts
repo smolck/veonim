@@ -1,8 +1,8 @@
-import { NewlineSplitter, getDirs, readFile, fromJSON, remove as removePath } from '../support/utils'
+import { ensureDir, NewlineSplitter, getDirs, readFile, fromJSON, remove as removePath } from '../support/utils'
 import downloadExtensionsIfNotExist, { doneDownloadingForNow } from '../extension-host/download-extensions'
 import { ExtensionPackageConfig } from '../extension-host/extension'
+import { EXT_PATH, LOG_PATH } from '../support/config-paths'
 import { loadExtensions } from '../vscode/extensions'
-import { EXT_PATH } from '../support/config-paths'
 import { Ripgrep } from '../support/binaries'
 import copy from '../support/fs-copy'
 import { sep, join } from 'path'
@@ -80,6 +80,7 @@ const extensionDependenciesDir = join(__dirname, '..', 'extension_dependencies')
 const copyFrom = join(extensionDependenciesDir, 'node_modules')
 const copyTo = join(EXT_PATH, 'node_modules')
 
+ensureDir(LOG_PATH)
 copy(copyFrom, copyTo, { overwrite: true }).catch(err => {
   console.error('failed to copy bundled extension dependencies', copyFrom, copyTo, err)
 })

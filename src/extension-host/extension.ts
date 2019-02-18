@@ -1,7 +1,9 @@
 import { addExtensionConfiguration } from '../extension-host/configuration-store'
 import { EXT_DATA_PATH, LOG_PATH } from '../support/config-paths'
+import createMemento from '../support/memento'
 import localizeFile from '../support/localize'
 import pleaseGet from '../support/please-get'
+import { ensureDir } from '../support/utils'
 import { dirname, join } from 'path'
 import { createHash } from 'crypto'
 import nvim from '../neovim/api'
@@ -50,17 +52,6 @@ const getContributesConfigurations = (config: ExtensionPackageConfig) => {
   }, {})
 }
 
-const createMemento = (): vsc.Memento => {
-  const get = <T>(key: string, defaultValue?: T): T => {
-
-  }
-
-  const update = async (key: string, value: any) => {
-
-  }
-
-  return { get, update }
-}
 
 export default (config: ExtensionPackageConfig): Extension => {
   const extensionPath = dirname(config.packagePath)
@@ -75,8 +66,6 @@ export default (config: ExtensionPackageConfig): Extension => {
     subscriptions: [] as any[],
     isActive: false,
     exports: undefined,
-    workspaceState: createMemento(),
-    globalState: createMemento(),
   }
 
   const contributedConfiguration = getContributesConfigurations(config)
@@ -96,16 +85,22 @@ export default (config: ExtensionPackageConfig): Extension => {
     }
 
     const workspaceId = createHash('md5').update(nvim.state.cwd).digest('hex')
+    const globalStoragePath = join(EXT_DATA_PATH, config.id)
+    const storagePath = join(EXT_DATA_PATH, `${workspaceId}-${config.id}`)
+    await ensureDir(storagePath)
+
+    const globalState = createMemento(join(globalStoragePath, 'db.json'))
+    const workspaceState = createMemento(join(storagePath, 'db.json'))
 
     const context: vsc.ExtensionContext = {
       extensionPath,
+      storagePath,
+      globalStoragePath,
+      globalState,
+      workspaceState,
       subscriptions: state.subscriptions,
       asAbsolutePath: relpath => join(extensionPath, relpath),
-      globalStoragePath: join(EXT_DATA_PATH, config.id),
-      storagePath: join(EXT_DATA_PATH, `${workspaceId}-${config.id}`),
       logPath: join(LOG_PATH, config.id),
-      workspaceState: state.workspaceState,
-      globalState: state.globalState,
     }
 
     const api = await extension.activate(context).catch((err: any) => console.error(config.id, err))

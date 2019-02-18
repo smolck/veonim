@@ -109,8 +109,12 @@ export const asColor = (color?: number) => color ? '#' + [16, 8, 0].map(shift =>
   return hex.length < 2 ? ('0' + hex) : hex
 }).join('') : undefined
 
-export const readFile = (path: string, encoding = 'utf8') => P(fs.readFile)(path, encoding)
 export const exists = (path: string): Promise<boolean> => new Promise(fin => fs.access(path, e => fin(!e)))
+export const readFile = (path: string, encoding = 'utf8') => P(fs.readFile)(path, encoding)
+export const writeFile = async (path: string, data: string) => {
+  await ensureDir(dirname(path))
+  return P(fs.writeFile)(path, data)
+}
 
 const emptyStat = {
   isDirectory: () => false,
