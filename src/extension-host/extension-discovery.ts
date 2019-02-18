@@ -15,6 +15,8 @@ const findPackageJson = (path: string): Promise<string> => new Promise((done, fa
   rg.stdout.pipe(new NewlineSplitter()).on('data', (pkgpath: string) => results.push(pkgpath))
 
   rg.on('close', () => {
+    if (!results.length) return done()
+
     const paths = results.map(m => ({
       path: m,
       levels: m.split(sep).length,
