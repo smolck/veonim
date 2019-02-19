@@ -1,19 +1,25 @@
 import * as configStore from '../extension-host/configuration-store'
-import { objDeepGet } from '../support/utils'
 import * as vsc from 'vscode'
 
-export default (section?: string): vsc.WorkspaceConfiguration => {
+const getSection = (object: any, section: string) => {
+  const matches = Object.entries(object).filter(([ key ]) => key.startsWith(section))
+  return matches.reduce((res, [ key, value ]) => ({ ...res, [key]: value }), {})
+}
+
+export default (initialSection?: string): vsc.WorkspaceConfiguration => {
   const config = configStore.getConfig()
-  const possiblyObject = section ? objDeepGet(config)(section) : config
+  const possiblyObject = initialSection ? getSection(config, initialSection) : config
   const store = possiblyObject || {}
 
   const get = (section: string, defaultValue?: any) => {
-    const result = objDeepGet(store)(section)
+    const path = [ initialSection, section ].join('.')
+    const result = getSection(store, path)
     return result || defaultValue
   }
 
   const has = (section: string) => {
-    const result = objDeepGet(store)(section)
+    const path = [ initialSection, section ].join('.')
+    const result = getSection(store, path)
     return !!result
   }
 
@@ -23,10 +29,9 @@ export default (section?: string): vsc.WorkspaceConfiguration => {
 
   // TODO: support multiple levels of configuration (global, workspace, workspaceFolder, etc.)
   const update = (section: string, value: any) => {
-    const next = section.split('.').reduceRight((res, part, ix) => {
-      return Object.assign(res, { [part]: ix ? {} : value })
-    }, {})
-    Object.assign(store, next)
+    const path = [ initialSection, section ].join('.')
+    Reflect.set(store, section, value)
+    configStore.update(path, value)
   }
 
   return new Proxy(Object.create(null), {
