@@ -1,25 +1,25 @@
 import * as configStore from '../extension-host/configuration-store'
 import * as vsc from 'vscode'
 
-const getSection = (object: any, section: string) => {
+const getInitialSection = (object: any, section: string) => {
   const matches = Object.entries(object).filter(([ key ]) => key.startsWith(section))
   return matches.reduce((res, [ key, value ]) => ({ ...res, [key]: value }), {})
 }
 
 export default (initialSection?: string): vsc.WorkspaceConfiguration => {
   const config = configStore.getConfig()
-  const possiblyObject = initialSection ? getSection(config, initialSection) : config
+  const possiblyObject = initialSection ? getInitialSection(config, initialSection) : config
   const store = possiblyObject || {}
 
   const get = (section: string, defaultValue?: any) => {
     const path = [ initialSection, section ].join('.')
-    const result = getSection(store, path)
+    const result = Reflect.get(store, path)
     return result || defaultValue
   }
 
   const has = (section: string) => {
     const path = [ initialSection, section ].join('.')
-    const result = getSection(store, path)
+    const result = Reflect.get(store, path)
     return !!result
   }
 

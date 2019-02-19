@@ -47,8 +47,11 @@ const getContributesConfigurations = (config: ExtensionPackageConfig) => {
 
   if (configuration.type !== 'object') return console.error(`extension ${config.id} provided configuration is not of type object (could also be blank)`)
   if (!configuration.properties) return console.error(`idk, extension ${config.id} config does not have any properties. what am i supposed to do now?`)
-  return Object.entries(configuration.properties).reduce((res, [ key, val ]) => {
-    return Object.assign(res, { [key]: (val as any).default })
+  return Object.entries(configuration.properties).reduce((res, [ key, val ]: any) => {
+    const value = val.type === 'array' && val.items
+      ? [ val.items.default ]
+      : val.default
+    return Object.assign(res, { [key]: value })
   }, {})
 }
 
