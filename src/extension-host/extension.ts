@@ -105,9 +105,13 @@ export default (config: ExtensionPackageConfig): Extension => {
       logPath: join(LOG_PATH, config.id),
     }
 
-    const api = await extension.activate(context).catch((err: any) => console.error(config.id, err))
-    state.exports = api
-    state.isActive = true
+    try {
+      const api = await extension.activate(context)
+      state.exports = api
+      state.isActive = true
+    } catch(err) {
+      console.error(config.id, err)
+    }
   }
 
   const localize = async (value: string) => (await localizer)(value)

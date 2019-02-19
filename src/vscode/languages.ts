@@ -51,6 +51,12 @@ const eventreg = (name: keyof Events) => (fn: any, thisArg?: any) => ({
 })
 
 const languages: typeof vsc.languages = {
+  // TODO: this is a proposed API. our extension discombobulator process should
+  // target stable tags that match the vscode api instead of master@HEAD
+  // @ts-ignore
+  registerSelectionRangeProvider: () => {
+    console.warn('NYI: registerSelectionRangeProvider')
+  },
   getDiagnostics: PROGRAMMING_SUCKS_YAY,
   getLanguages: async () => {
     const filetypes = await nvim.call.getcompletion('', 'filetype')

@@ -550,24 +550,24 @@ const Buffer = (id: any) => ({
   },
   append: async (start, lines) => {
     const replacement = is.array(lines) ? lines as string[] : [lines as string]
-    const linesBelow = await req.buf.getLines(id, start + 1, -1, false)
+    const linesBelow = await req.buf.getLines(id, start, -2, false)
     const newLines = [...replacement, ...linesBelow]
 
     api.buf.setLines(id, start + 1, start + 1 + newLines.length, false, newLines)
   },
-  getAllLines: () => req.buf.getLines(id, 0, -1, true),
-  getLines: (start, end) => req.buf.getLines(id, start, end, true),
-  getLine: start => req.buf.getLines(id, start, start + 1, true).then(m => m[0]),
+  getAllLines: () => req.buf.getLines(id, 0, -2, true),
+  // getLines line ranges are end exclusive so we +1
+  getLines: (start, end) => req.buf.getLines(id, start, end + 1, true),
+  getLine: start => req.buf.getLines(id, start, start, true).then(m => m[0]),
   setLines: (start, end, lines) => api.buf.setLines(id, start, end, true, lines),
   delete: start => api.buf.setLines(id, start, start + 1, true, []),
   appendRange: async (line, column, text) => {
-    const lines = await req.buf.getLines(id, line, -1, false)
+    const lines = await req.buf.getLines(id, line, -2, false)
     const updatedLines = TextEditPatch.append({ lines, column, text })
     req.buf.setLines(id, line, line + updatedLines.length, false, updatedLines)
   },
   replaceRange: async (startLine, startColumn, endLine, endColumn, text) => {
-    // buffer get/set lines ranges are end exclusive so we +1
-    const lines = await req.buf.getLines(id, startLine, endLine + 1, false)
+    const lines = await req.buf.getLines(id, startLine, endLine, false)
     const updatedLines = TextEditPatch.replace({
       lines,
       start: new Position(0, startColumn),
@@ -577,8 +577,7 @@ const Buffer = (id: any) => ({
     req.buf.setLines(id, startLine, endLine + 1, false, updatedLines)
   },
   deleteRange: async (startLine, startColumn, endLine, endColumn) => {
-    // buffer get/set lines ranges are end exclusive so we +1
-    const lines = await req.buf.getLines(id, startLine, endLine + 1, false)
+    const lines = await req.buf.getLines(id, startLine, endLine, false)
     const updatedLines = TextEditPatch.remove({
       lines,
       start: new Position(0, startColumn),
