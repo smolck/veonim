@@ -162,6 +162,13 @@ const workspace: typeof vsc.workspace = {
   onWillSaveTextDocument: eventreg('willSaveTextDocument'),
   onDidSaveTextDocument: eventreg('didSaveTextDocument'),
   onDidChangeConfiguration: eventreg('didChangeConfiguration'),
+
+  // TODO: proposed API
+  // @ts-ignore
+  onDidRenameFile: () => {
+    console.warn('NYI: workspace.onDidRenameFile')
+    return ({ dispose: () => {} })
+  },
 }
 
 const WorkspaceFolder = (dir: string) => ({

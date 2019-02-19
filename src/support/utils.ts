@@ -291,6 +291,7 @@ export type GenericEvent = { [index: string]: any }
 // i tried T extends GenericEv but it does not work. help me obi wan kenobi
 export const Watcher = <T>() => {
   const ee = new EventEmitter()
+  ee.setMaxListeners(200)
 
   const on = <K extends keyof T>(event: K & string, handler: (value: T[K]) => void) => {
     ee.on(event, handler)
