@@ -1,4 +1,5 @@
 import OutputChannel from '../vscode/output-channel'
+import { StatusBarAlignment } from '../vscode/types'
 import { call } from '../messaging/worker-client'
 import { NotifyKind } from '../protocols/veonim'
 import nvimSync from '../neovim/sync-api-client'
@@ -32,6 +33,34 @@ const unifyMessage = ([ message, optionsOrItems, itemsMaybe ]: any[]): UnifiedMe
   const items: string[] = is.array(optionsOrItems) ? optionsOrItems : itemsMaybe || []
   const actionItems: string[] = items.map((item: any) => item.title || item)
   return { message, isModal, actionItems }
+}
+
+const makeStatusBarItem = (alignment = StatusBarAlignment.Left, priority = 0): vsc.StatusBarItem => {
+  let text = ''
+  let tooltip: string | undefined
+  let color: string | vsc.ThemeColor | undefined
+  let command: string | undefined
+
+  const api: vsc.StatusBarItem = {
+    get alignment() { return alignment },
+    get priority() { return priority },
+    get text() { return text },
+    set text(m) { text = m },
+    get tooltip() { return tooltip },
+    set tooltip(m) { tooltip = m },
+    get color() { return color },
+    set color(m) { color = m },
+    get command() { return command },
+    set command(m) { command = m },
+    // TODO: hookup to UI
+    show: () => console.warn('NYI: StatusBarItem.show()', api),
+    // TODO: is hide supposed to also call dispose()? the typings docs
+    // say something about that but it is ambigious. should check src
+    hide: () => console.warn('NYI: StatusBarItem.hide()', api),
+    dispose: () => console.warn('NYI: StatusBarItem.dispose()', api),
+  }
+
+  return api
 }
 
 const events = Watcher<Events>()
@@ -145,10 +174,7 @@ const window: typeof vsc.window = {
   withProgress: () => {
     console.warn('NYI: window.withProgress')
   },
-  // @ts-ignore
-  createStatusBarItem: () => {
-    console.warn('NYI: window.createStatusBarItem')
-  },
+  createStatusBarItem: makeStatusBarItem,
   // @ts-ignore
   createTerminal: () => {
     // TODO: this is easy to do, but where do we show the new term buffer?
