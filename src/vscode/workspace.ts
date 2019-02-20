@@ -1,6 +1,7 @@
 import WorkspaceConfiguration from '../vscode/workspace-configuration'
 import TextDocumentManager from '../neovim/text-document-manager'
 import { Watcher, pathRelativeToCwd, is } from '../support/utils'
+import makeFileSystemWatcher from '../vscode/filesystem-watcher'
 import TextDocument from '../vscode/text-document'
 import nvimSync from '../neovim/sync-api-client'
 import { on } from '../messaging/worker-client'
@@ -81,12 +82,7 @@ const workspace: typeof vsc.workspace = {
     nvim.cmd(`cd ${folder.uri.path}`)
     return true
   },
-  createFileSystemWatcher: () => {
-    console.warn('NYI: workspace.createFileSystemWatcher')
-    return new Proxy(Object.create(null), {
-      get: (_: any, __: string) => () => {},
-    }) as any
-  },
+  createFileSystemWatcher: makeFileSystemWatcher,
   // TODO: nvim does not provide a save buffers in background option yet
   saveAll: () => Promise.resolve(false),
   findFiles: async () => {
@@ -123,6 +119,7 @@ const workspace: typeof vsc.workspace = {
     return Promise.all(editRequests).then(() => true, () => false)
   },
   openTextDocument: async (arg: any) => {
+    console.log('open text docu:', arg)
     if (is.object(arg) && arg.path) {
       const buffer = await nvim.buffers.add((arg as vsc.Uri).path)
       return TextDocument(buffer.id)
@@ -143,7 +140,7 @@ const workspace: typeof vsc.workspace = {
   // TODO: i'm not sure what the resource is used for?
   getConfiguration: (section, resource) => {
     // TODO: we should load configuration (somewhere) provided in package.json
-    if (resource) console.warn('NYI: workspace.getConfiguration - resource param not used:', resource)
+    if (resource) console.warn('NYI: workspace.getConfiguration - resource param not used:', section, resource)
     return WorkspaceConfiguration(section)
   },
   registerTaskProvider: (...a: any[]) => {
