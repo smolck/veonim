@@ -119,7 +119,6 @@ const workspace: typeof vsc.workspace = {
     return Promise.all(editRequests).then(() => true, () => false)
   },
   openTextDocument: async (arg: any) => {
-    console.log('open text docu:', arg)
     if (is.object(arg) && arg.path) {
       const buffer = await nvim.buffers.add((arg as vsc.Uri).path)
       return TextDocument(buffer.id)
