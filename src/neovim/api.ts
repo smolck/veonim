@@ -260,20 +260,14 @@ const buffers = {
   },
   /** Add a new buffer to the buffer list from the given filesystem path */
   add: async (path: string) => {
-    const id = uuid()
-    cmd(`badd ${id}`)
+    const bufs = await getNamedBuffers()
+    const existingBuffer = bufs.find(m => m.name === path)
+    if (existingBuffer) return existingBuffer.buffer
 
-    const buffer = await buffers.find(id)
-    if (!buffer) throw new Error(`addBuffer: could not find buffer '${id}' added with :badd ${path}`)
-
-    // for some reason, buf.setName creates a new buffer? lolwut?
-    // so it's probably still better to do the shenanigans above
-    // since finding the buffer by uuid is more accurate instead
-    // of trying to get a buffer handle by name only alone
-    //
-    // after a future neovim PR we might consider using 'nvim_create_buf'
-    await buffer.setName(path)
-    cmd(`bwipeout! ${id}`)
+    // TODO: use nvim_create_buf() when it is available
+    cmd(`badd ${path}`)
+    const buffer = await buffers.find(path)
+    if (!buffer) throw new Error(`buffers.add(${path}) failed. probably we were not able to find the buffer after adding it`)
     return buffer
   },
   /** Remove a buffer from the buffer list */
