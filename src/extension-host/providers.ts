@@ -21,7 +21,7 @@ const F = <T extends object>() => {
     if (!providerz) return
     const requests = [...providerz].map(provider => {
       const func = Reflect.get(provider, providerMethodName)
-      if (typeof func === 'function') return func(...args)
+      if (typeof func === 'function') return func.apply(provider, args)
     })
     return Promise.all(requests).then(coalesce)
   }
