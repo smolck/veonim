@@ -89,55 +89,54 @@ const languages: typeof vsc.languages = {
   },
   registerCompletionItemProvider: (selector, provider, ...triggerCharacters) => {
     const filetypes = selectorToFiletypes(selector)
-    const d1 = providers.provideCompletionItems.addMultiple(filetypes, provider.provideCompletionItems)
-    const d2 = providers.resolveCompletionItem.addMultiple(filetypes, provider.resolveCompletionItem)
-    const d3 = providers.completionTriggerCharacters.addMultipleValues(filetypes, triggerCharacters)
-    return { dispose: () => (d1(), d2(), d3()), }
+    const d1 = providers.completionItem.register(filetypes, provider)
+    const d2 = providers.completionTriggerCharacters.addMultipleValues(filetypes, triggerCharacters)
+    return { dispose: () => (d1(), d2()) }
   },
   registerCodeActionsProvider: (selector, provider, metadata) => {
     if (metadata) {
+      // TODO: metadata includes CodeActionKind like quickfix, refactor, source.organizeImports. wat do wit dis?
       console.warn('NYI: languages.registerCodeActionsProvider metadata not supported:', metadata)
     }
 
     const filetypes = selectorToFiletypes(selector)
-    const dispose = providers.provideCodeActions.addMultiple(filetypes, provider.provideCodeActions)
+    const dispose = providers.codeAction.register(filetypes, provider)
     return { dispose }
   },
   registerCodeLensProvider: (selector, provider) => {
     // TODO: handle provider.onDidChangeCodeLenses event?
     const filetypes = selectorToFiletypes(selector)
-    const d1 = providers.provideCodeLenses.addMultiple(filetypes, provider.provideCodeLenses)
-    const d2 = providers.resolveCodeLens.addMultiple(filetypes, provider.resolveCodeLens)
-    return { dispose: () => (d1(), d2()) }
+    const dispose = providers.codeLens.register(filetypes, provider)
+    return { dispose }
   },
   registerDefinitionProvider: (selector, provider) => {
     const filetypes = selectorToFiletypes(selector)
-    const dispose = providers.provideDefinition.addMultiple(filetypes, provider.provideDefinition)
+    const dispose = providers.definition.register(filetypes, provider)
     return { dispose }
   },
   registerImplementationProvider: (selector, provider) => {
     const filetypes = selectorToFiletypes(selector)
-    const dispose = providers.provideImplementation.addMultiple(filetypes, provider.provideImplementation)
+    const dispose = providers.implementation.register(filetypes, provider)
     return { dispose }
   },
   registerTypeDefinitionProvider: (selector, provider) => {
     const filetypes = selectorToFiletypes(selector)
-    const dispose = providers.provideTypeDefinition.addMultiple(filetypes, provider.provideTypeDefinition)
+    const dispose = providers.typeDefinition.register(filetypes, provider)
     return { dispose }
   },
   registerDeclarationProvider: (selector, provider) => {
     const filetypes = selectorToFiletypes(selector)
-    const dispose = providers.provideDeclaration.addMultiple(filetypes, provider.provideDeclaration)
+    const dispose = providers.declaration.register(filetypes, provider)
     return { dispose }
   },
   registerHoverProvider: (selector, provider) => {
     const filetypes = selectorToFiletypes(selector)
-    const dispose = providers.provideHover.addMultiple(filetypes, provider.provideHover)
+    const dispose = providers.hover.register(filetypes, provider)
     return { dispose }
   },
   registerDocumentHighlightProvider: (selector, provider) => {
     const filetypes = selectorToFiletypes(selector)
-    const dispose = providers.provideDocumentHighlights.addMultiple(filetypes, provider.provideDocumentHighlights)
+    const dispose = providers.documentHighlight.register(filetypes, provider)
     return { dispose }
   },
   registerDocumentSymbolProvider: (selector, provider, metadata) => {
@@ -146,47 +145,42 @@ const languages: typeof vsc.languages = {
     }
 
     const filetypes = selectorToFiletypes(selector)
-    const dispose = providers.provideDocumentSymbols.addMultiple(filetypes, provider.provideDocumentSymbols)
+    const dispose = providers.documentSymbol.register(filetypes, provider)
     return { dispose }
   },
   registerWorkspaceSymbolProvider: provider => {
-    providers.provideWorkspaceSymbols.add(provider.provideWorkspaceSymbols)
-    providers.resolveWorkspaceSymbol.add(provider.resolveWorkspaceSymbol)
-    return { dispose: () => {
-      providers.provideWorkspaceSymbols.delete(provider.provideWorkspaceSymbols)
-      providers.resolveWorkspaceSymbol.delete(provider.resolveWorkspaceSymbol)
-    }}
+    const dispose = providers.workspaceSymbol.register(['*'], provider)
+    return { dispose }
   },
   registerReferenceProvider: (selector, provider) => {
     const filetypes = selectorToFiletypes(selector)
-    const dispose = providers.provideReferences.addMultiple(filetypes, provider.provideReferences)
+    const dispose = providers.reference.register(filetypes, provider)
     return { dispose }
   },
   registerRenameProvider: (selector, provider) => {
     const filetypes = selectorToFiletypes(selector)
-    const d1 = providers.provideRenameEdits.addMultiple(filetypes, provider.provideRenameEdits)
-    const d2 = providers.prepareRename.addMultiple(filetypes, provider.prepareRename)
-    return { dispose: () => (d1(), d2())}
+    const dispose = providers.rename.register(filetypes, provider)
+    return { dispose }
   },
   registerDocumentFormattingEditProvider: (selector, provider) => {
     const filetypes = selectorToFiletypes(selector)
-    const dispose = providers.provideDocumentFormattingEdits.addMultiple(filetypes, provider.provideDocumentFormattingEdits)
+    const dispose = providers.documentFormattingEdit.register(filetypes, provider)
     return { dispose }
   },
   registerDocumentRangeFormattingEditProvider: (selector, provider) => {
     const filetypes = selectorToFiletypes(selector)
-    const dispose = providers.provideDocumentRangeFormattingEdits.addMultiple(filetypes, provider.provideDocumentRangeFormattingEdits)
+    const dispose = providers.documentRangeFormattingEdit.register(filetypes, provider)
     return { dispose }
   },
   registerOnTypeFormattingEditProvider: (selector, provider, ...triggerCharacters: string[]) => {
     const filetypes = selectorToFiletypes(selector)
-    const disposeProvider = providers.provideOnTypeFormattingEdits.addMultiple(filetypes, provider.provideOnTypeFormattingEdits)
+    const disposeProvider = providers.onTypeFormattingEdit.register(filetypes, provider)
     const disposeTriggers = providers.onTypeFormattingTriggerCharacters.addMultipleValues(filetypes, triggerCharacters)
     return { dispose: () => (disposeProvider(), disposeTriggers()) }
   },
   registerSignatureHelpProvider: (selector: vsc.DocumentSelector, provider: vsc.SignatureHelpProvider, firstTriggerCharOrMetadata: string | vsc.SignatureHelpProviderMetadata, ...moreTriggerChars: string[]) => {
     const filetypes = selectorToFiletypes(selector)
-    const disposeProvider = providers.provideSignatureHelp.addMultiple(filetypes, provider.provideSignatureHelp)
+    const disposeProvider = providers.signatureHelp.register(filetypes, provider)
     let triggerCharacters: string[] = []
 
     if (is.object(firstTriggerCharOrMetadata)) {
@@ -205,19 +199,17 @@ const languages: typeof vsc.languages = {
   },
   registerDocumentLinkProvider: (selector, provider) => {
     const filetypes = selectorToFiletypes(selector)
-    const d1 = providers.provideDocumentLinks.addMultiple(filetypes, provider.provideDocumentLinks)
-    const d2 = providers.resolveDocumentLink.addMultiple(filetypes, provider.resolveDocumentLink)
-    return { dispose: () => (d1(), d2())}
+    const dispose = providers.documentLink.register(filetypes, provider)
+    return { dispose }
   },
   registerColorProvider: (selector, provider) => {
     const filetypes = selectorToFiletypes(selector)
-    const d1 = providers.provideColorPresentations.addMultiple(filetypes, provider.provideColorPresentations)
-    const d2 = providers.provideDocumentColors.addMultiple(filetypes, provider.provideDocumentColors)
-    return { dispose: () => (d1(), d2())}
+    const dispose = providers.color.register(filetypes, provider)
+    return { dispose }
   },
   registerFoldingRangeProvider: (selector, provider) => {
     const filetypes = selectorToFiletypes(selector)
-    const dispose = providers.provideFoldingRanges.addMultiple(filetypes, provider.provideFoldingRanges)
+    const dispose = providers.foldingRange.register(filetypes, provider)
     return { dispose }
   },
 }

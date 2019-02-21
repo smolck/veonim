@@ -1,45 +1,69 @@
+import { Unpacked, maybe, AlterReturnType, ReturnTypeOf } from '../support/types'
 import { MapSetter, dedupOn, threadSafeObject } from '../support/utils'
-import { makeCancelToken, cancelTokenById } from '../vscode/tools'
+import { makeCancelToken, cancelTokenById, Thenable } from '../vscode/tools'
 import { Position, Range, CompletionItem } from '../vscode/types'
 import TextDocument from '../vscode/text-document'
-import { Unpacked, maybe } from '../support/types'
 import { on } from '../messaging/worker-client'
 import workspace from '../vscode/workspace'
 import nvim from '../neovim/api'
 import * as vsc from 'vscode'
 
-const F = <T>() => new MapSetter<string, T>()
+// lol
+type MassageProviderResult<S> = AlterReturnType<S, Promise<Unpacked<Exclude<Exclude<ReturnTypeOf<S>, vsc.ProviderResult<S>>, Thenable<any>>>[] | undefined>>
+
+const $$GET_PROVIDERS = Symbol('GET_PROVIDERS')
+
+const F = <T extends object>() => {
+  const ms = new MapSetter<string, T>()
+  const register = (filetypes: string[], items: T) => ms.addMultiple(filetypes, items)
+  const call = (providerMethodName: string, args: any[]) => {
+    const providerz = ms.get(nvim.state.filetype)
+    if (!providerz) return
+    const requests = [...providerz].map(provider => {
+      const func = Reflect.get(provider, providerMethodName)
+      if (typeof func === 'function') return func(...args)
+    })
+    return Promise.all(requests).then(coalesce)
+  }
+
+  type Base = { [K in keyof T]: MassageProviderResult<T[K]> }
+  interface Api {
+    register(filetypes: string[], items: T): ReturnType<MapSetter<string, T>['addMultiple']>
+  }
+
+  return new Proxy(Object.create(null), {
+    get: (_, key: string | symbol) => {
+      if (key === $$GET_PROVIDERS) return ms
+      if (key === 'register') return register
+      return (...args: any[]) => call(key as string, args)
+    }
+  }) as Base & Api
+}
 
 export const providers = {
-  provideCompletionItems: F<vsc.CompletionItemProvider['provideCompletionItems']>(),
-  resolveCompletionItem: F<vsc.CompletionItemProvider['resolveCompletionItem']>(),
-  completionTriggerCharacters: F<string>(),
-  provideCodeActions: F<vsc.CodeActionProvider['provideCodeActions']>(),
-  provideCodeLenses: F<vsc.CodeLensProvider['provideCodeLenses']>(),
-  resolveCodeLens: F<vsc.CodeLensProvider['resolveCodeLens']>(),
-  provideDefinition: F<vsc.DefinitionProvider['provideDefinition']>(),
-  provideImplementation: F<vsc.ImplementationProvider['provideImplementation']>(),
-  provideTypeDefinition: F<vsc.TypeDefinitionProvider['provideTypeDefinition']>(),
-  provideDeclaration: F<vsc.DeclarationProvider['provideDeclaration']>(),
-  provideHover: F<vsc.HoverProvider['provideHover']>(),
-  provideDocumentHighlights: F<vsc.DocumentHighlightProvider['provideDocumentHighlights']>(),
-  provideDocumentSymbols: F<vsc.DocumentSymbolProvider['provideDocumentSymbols']>(),
-  provideWorkspaceSymbols: new Set<vsc.WorkspaceSymbolProvider['provideWorkspaceSymbols']>(),
-  resolveWorkspaceSymbol: new Set<vsc.WorkspaceSymbolProvider['resolveWorkspaceSymbol']>(),
-  provideReferences: F<vsc.ReferenceProvider['provideReferences']>(),
-  prepareRename: F<vsc.RenameProvider['prepareRename']>(),
-  provideRenameEdits: F<vsc.RenameProvider['provideRenameEdits']>(),
-  provideDocumentFormattingEdits: F<vsc.DocumentFormattingEditProvider['provideDocumentFormattingEdits']>(),
-  provideDocumentRangeFormattingEdits: F<vsc.DocumentRangeFormattingEditProvider['provideDocumentRangeFormattingEdits']>(),
-  provideOnTypeFormattingEdits: F<vsc.OnTypeFormattingEditProvider['provideOnTypeFormattingEdits']>(),
-  provideSignatureHelp: F<vsc.SignatureHelpProvider['provideSignatureHelp']>(),
-  provideDocumentLinks: F<vsc.DocumentLinkProvider['provideDocumentLinks']>(),
-  resolveDocumentLink: F<vsc.DocumentLinkProvider['resolveDocumentLink']>(),
-  provideColorPresentations: F<vsc.DocumentColorProvider['provideColorPresentations']>(),
-  provideDocumentColors: F<vsc.DocumentColorProvider['provideDocumentColors']>(),
-  provideFoldingRanges: F<vsc.FoldingRangeProvider['provideFoldingRanges']>(),
-  signatureHelpTriggerCharacters: F<string>(),
-  onTypeFormattingTriggerCharacters: F<string>(),
+  completionTriggerCharacters: new MapSetter<string, string>(),
+  signatureHelpTriggerCharacters: new MapSetter<string, string>(),
+  onTypeFormattingTriggerCharacters: new MapSetter<string, string>(),
+  completionItem: F<vsc.CompletionItemProvider>(),
+  codeAction: F<vsc.CodeActionProvider>(),
+  codeLens: F<vsc.CodeLensProvider>(),
+  definition: F<vsc.DefinitionProvider>(),
+  implementation: F<vsc.ImplementationProvider>(),
+  typeDefinition: F<vsc.TypeDefinitionProvider>(),
+  declaration: F<vsc.DeclarationProvider>(),
+  hover: F<vsc.HoverProvider>(),
+  documentHighlight: F<vsc.DocumentHighlightProvider>(),
+  documentSymbol: F<vsc.DocumentSymbolProvider>(),
+  workspaceSymbol: F<vsc.WorkspaceSymbolProvider>(),
+  reference: F<vsc.ReferenceProvider>(),
+  rename: F<vsc.RenameProvider>(),
+  documentFormattingEdit: F<vsc.DocumentFormattingEditProvider>(),
+  documentRangeFormattingEdit: F<vsc.DocumentRangeFormattingEditProvider>(),
+  onTypeFormattingEdit: F<vsc.OnTypeFormattingEditProvider>(),
+  signatureHelp: F<vsc.SignatureHelpProvider>(),
+  documentLink: F<vsc.DocumentLinkProvider>(),
+  color: F<vsc.DocumentColorProvider>(),
+  foldingRange: F<vsc.FoldingRangeProvider>(),
 }
 
 const getFormattingOptions = async (): Promise<vsc.FormattingOptions> => {
@@ -95,14 +119,11 @@ const prototypes = {
 const api = {
   cancelRequest: (tokenId: string) => cancelTokenById(tokenId),
   provideCompletionItems: (context: vsc.CompletionContext, tokenId?: string) => ({ cancel, promise: (async () => {
-    const funcs = providers.provideCompletionItems.get(nvim.state.filetype)
-    if (!funcs) return
-
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
     const position = new Position(nvim.state.line, nvim.state.column)
-
-    const results = await Promise.all([...funcs].map(fn => fn(document, position, token, context))).then(coalesce)
+    const results = await providers.completionItem.provideCompletionItems(document, position, token, context)
+    if (!results) return
 
     const allCompletions = results.reduce((res, item) => {
       const next = (item as vsc.CompletionList).items
@@ -123,28 +144,22 @@ const api = {
     return { incomplete, completions }
   })()}),
   resolveCompletionItem: (item: vsc.CompletionItem, tokenId?: string) => ({ cancel, promise: (async () => {
-    const funcs = providers.resolveCompletionItem.get(nvim.state.filetype)
-    if (!funcs) return
-
-    const realItem = Object.assign(Object.create(prototypes.completionItem), item)
     const { token } = makeCancelToken(tokenId!)
-
-    const [ result ] = await Promise.all([...funcs].map(fn => fn && fn(realItem, token))).then(coalesce)
-    return result
+    const realItem = Object.assign(Object.create(prototypes.completionItem), item)
+    const results = await providers.completionItem.resolveCompletionItem!(realItem, token)
+    return results && results[0]
   })()}),
   getCompletionTriggerCharacters: () => ({ cancel, promise: (async () => {
     return [...providers.completionTriggerCharacters.get(nvim.state.filetype) || []]
   })()}),
   provideCodeActions: (context: vsc.CodeActionContext, tokenId?: string) => ({ cancel, promise: (async () => {
-    const funcs = providers.provideCodeActions.get(nvim.state.filetype)
-    if (!funcs) return
-
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
     const position = new Position(nvim.state.line, nvim.state.column)
     const range = new Range(position, position)
+    const results = await providers.codeAction.provideCodeActions(document, range, context, token)
+    if (!results) return
 
-    const results = await Promise.all([...funcs].map(fn => fn(document, range, context, token))).then(coalesce)
     const actions = results.map(m => m.command
       ? m as vsc.CodeAction
       : { command: m as vsc.Command, title: m.title })
@@ -154,33 +169,25 @@ const api = {
       : (a as vsc.CodeAction).title === (b as vsc.CodeAction).title)
   })()}),
   provideCodeLenses: (tokenId?: string) => ({ cancel, promise: (async () => {
-    const funcs = providers.provideCodeLenses.get(nvim.state.filetype)
-    if (!funcs) return
-
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
-
-    const lenses = await Promise.all([...funcs].map(fn => fn(document, token))).then(coalesce)
+    const lenses = await providers.codeLens.provideCodeLenses(document, token)
+    if (!lenses) return
     return dedupOn(lenses, (a, b) => rangesEqual(a.range, b.range))
   })()}),
   resolveCodeLens: (codeLens: vsc.CodeLens, tokenId?: string) => ({ cancel, promise: (async () => {
-    const funcs = providers.resolveCodeLens.get(nvim.state.filetype)
-    if (!funcs) return
-
     const { token } = makeCancelToken(tokenId!)
-
-    const [ result ] = await Promise.all([...funcs].map(fn => fn && fn(codeLens, token))).then(coalesce).then(coalesce)
-    return result
+    const results = await providers.codeLens.resolveCodeLens!(codeLens, token)
+    return results && results[0]
   })()}),
   provideDefinition: (tokenId?: string) => ({ cancel, promise: (async () => {
-    const funcs = providers.provideDefinition.get(nvim.state.filetype)
-    if (!funcs) return
-
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
     const position = new Position(nvim.state.line, nvim.state.column)
+    const results = await providers.definition.provideDefinition(document, position, token)
+    if (!results) return
 
-    const [ location ] = await Promise.all([...funcs].map(fn => fn(document, position, token))).then(coalesce)
+    const [ location ] = results
     if (!location) return
 
     return {
@@ -189,14 +196,13 @@ const api = {
     }
   })()}),
   provideImplementation: (tokenId?: string) => ({ cancel, promise: (async () => {
-    const funcs = providers.provideImplementation.get(nvim.state.filetype)
-    if (!funcs) return
-
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
     const position = new Position(nvim.state.line, nvim.state.column)
+    const results = await providers.implementation.provideImplementation(document, position, token)
+    if (!results) return
 
-    const [ location ] = await Promise.all([...funcs].map(fn => fn(document, position, token))).then(coalesce)
+    const [ location ] = results
     if (!location) return
 
     return {
@@ -205,14 +211,13 @@ const api = {
     }
   })()}),
   provideTypeDefinition: (tokenId?: string) => ({ cancel, promise: (async () => {
-    const funcs = providers.provideTypeDefinition.get(nvim.state.filetype)
-    if (!funcs) return
-
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
     const position = new Position(nvim.state.line, nvim.state.column)
+    const results = await providers.typeDefinition.provideTypeDefinition(document, position, token)
+    if (!results) return
 
-    const [ location ] = await Promise.all([...funcs].map(fn => fn(document, position, token))).then(coalesce)
+    const [ location ] = results
     if (!location) return
 
     return {
@@ -221,14 +226,13 @@ const api = {
     }
   })()}),
   provideDeclaration: (tokenId?: string) => ({ cancel, promise: (async () => {
-    const funcs = providers.provideDeclaration.get(nvim.state.filetype)
-    if (!funcs) return
-
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
     const position = new Position(nvim.state.line, nvim.state.column)
+    const results = await providers.declaration.provideDeclaration(document, position, token)
+    if (!results) return
 
-    const [ location ] = await Promise.all([...funcs].map(fn => fn(document, position, token))).then(coalesce)
+    const [ location ] = results
     if (!location) return
 
     return {
@@ -237,14 +241,13 @@ const api = {
     }
   })()}),
   provideHover: (tokenId?: string) => ({ cancel, promise: (async () => {
-    const funcs = providers.provideHover.get(nvim.state.filetype)
-    if (!funcs) return
-
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
     const position = new Position(nvim.state.line, nvim.state.column)
+    const results = await providers.hover.provideHover(document, position, token)
+    if (!results) return
 
-    const [ hover ] = await Promise.all([...funcs].map(fn => fn(document, position, token))).then(coalesce)
+    const [ hover ] = results
     if (!hover) return
 
     return hover.contents.reduce((res, markedString) => {
@@ -253,24 +256,19 @@ const api = {
     }, [] as string[]).filter(m => m)
   })()}),
   provideDocumentHighlights: (tokenId?: string) => ({ cancel, promise: (async () => {
-    const funcs = providers.provideDocumentHighlights.get(nvim.state.filetype)
-    if (!funcs) return
-
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
     const position = new Position(nvim.state.line, nvim.state.column)
-
-    const highlights = await Promise.all([...funcs].map(fn => fn(document, position, token))).then(coalesce)
+    const highlights = await providers.documentHighlight.provideDocumentHighlights(document, position, token)
+    if (!highlights) return
     return dedupOn(highlights, (a, b) => rangesEqual(a.range, b.range))
   })()}),
   provideDocumentSymbols: (tokenId?: string) => ({ cancel, promise: (async () => {
-    const funcs = providers.provideDocumentSymbols.get(nvim.state.filetype)
-    if (!funcs) return
-
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
+    const results = await providers.documentSymbol.provideDocumentSymbols(document, token)
+    if (!results) return
 
-    const results = await Promise.all([...funcs].map(fn => fn(document, token))).then(coalesce)
     const symbols = results.map(m => {
       const info = m as vsc.SymbolInformation
       const docsym = m as vsc.DocumentSymbol
@@ -287,11 +285,13 @@ const api = {
 
     return dedupOn(symbols, (a, b) => a.name === b.name && rangesEqual(a.range, b.range))
   })()}),
+  // TODO: workspace symbols do not depend on filetypes! need an escape hatch! this is wrong! fire! fire! help me!
+  // looking forward to hearing from you. all the best, maurice moss
   provideWorkspaceSymbols: (query: string, tokenId?: string) => ({ cancel, promise: (async () => {
-    const funcs = providers.provideWorkspaceSymbols
     const { token } = makeCancelToken(tokenId!)
+    const results = await providers.workspaceSymbol.provideWorkspaceSymbols(query, token)
+    if (!results) return
 
-    const results = await Promise.all([...funcs].map(fn => fn(query, token))).then(coalesce)
     const symbols = results.map(m => ({
       name: m.name,
       containerName: m.containerName,
@@ -303,22 +303,18 @@ const api = {
     return dedupOn(symbols, (a, b) => a.name === b.name && rangesEqual(a.range, b.range))
   })()}),
   resolveWorkspaceSymbol: (symbol: vsc.SymbolInformation, tokenId?: string) => ({ cancel, promise: (async () => {
-    const funcs = providers.resolveWorkspaceSymbol
     const { token } = makeCancelToken(tokenId!)
-
-    const [ result ] = await Promise.all([...funcs].map(fn => fn && fn(symbol, token))).then(coalesce)
-    return result
+    const results = await providers.workspaceSymbol.resolveWorkspaceSymbol!(symbol, token)
+    return results && results[0]
   })()}),
   provideReferences: (tokenId?: string) => ({ cancel, promise: (async () => {
-    const funcs = providers.provideReferences.get(nvim.state.filetype)
-    if (!funcs) return
-
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
     const position = new Position(nvim.state.line, nvim.state.column)
     const context: vsc.ReferenceContext = { includeDeclaration: true }
+    const results = await providers.reference.provideReferences(document, position, context, token)
+    if (!results) return
 
-    const results = await Promise.all([...funcs].map(fn => fn(document, position, context, token))).then(coalesce)
     const references = results.map(m => ({
       path: m.uri.path,
       range: m.range,
@@ -326,31 +322,31 @@ const api = {
     return dedupOn(references, (a, b) => rangesEqual(a.range, b.range))
   })()}),
   prepareRename: (tokenId?: string) => ({ cancel, promise: (async () => {
-    const funcs = providers.prepareRename.get(nvim.state.filetype)
-    if (!funcs) return
-
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
     const position = new Position(nvim.state.line, nvim.state.column)
+    const results = await providers.rename.prepareRename!(document, position, token)
+    if (!results) return
 
-    const [ result ] = await Promise.all([...funcs].map(fn => fn && fn(document, position, token))).then(coalesce)
+    const [ result ] = results
     if (!result) return
     return ((result as any).range || result) as vsc.Range
   })()}),
   renameSymbol: (position: Position, newName: string, tokenId?: string) => ({ cancel, promise: (async () => {
-    const funcs = providers.provideRenameEdits.get(nvim.state.filetype)
-    if (!funcs) return false
+    const providerSet: MapSetter<string, vsc.RenameProvider> = Reflect.get(providers.rename, $$GET_PROVIDERS)
+    const providerz = providerSet.get(nvim.state.filetype)
+    if (!providerz) return
 
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
 
-    const $cancel = Symbol('cancel')
+    const $$cancel = Symbol('cancel')
     const result = await Promise.race([
-      Promise.all([...funcs].map(fn => fn && fn(document, position, newName, token))).then(coalesce),
-      new Promise(done => setTimeout(() => done($cancel), 10e3))
+      Promise.all([...providerz].map(p => p.provideRenameEdits(document, position, newName, token))).then(coalesce),
+      new Promise(done => setTimeout(() => done($$cancel), 10e3))
     ])
 
-    if (result === $cancel) {
+    if (result === $$cancel) {
       api.cancelRequest(tokenId!)
       return false
     }
@@ -360,58 +356,43 @@ const api = {
     return Promise.all(editRequests).then(() => true, () => false)
   })()}),
   provideDocumentFormattingEdits: (tokenId?: string) => ({ cancel, promise: (async () => {
-    const funcs = providers.provideDocumentFormattingEdits.get(nvim.state.filetype)
-    if (!funcs) return
-
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
-
     const options = await getFormattingOptions()
-    const edits = await Promise.all([...funcs].map(fn => fn && fn(document, options, token))).then(coalesce)
+    const edits = await providers.documentFormattingEdit.provideDocumentFormattingEdits(document, options, token)
+    if (!edits) return
     return dedupOn(edits, (a, b) => rangesEqual(a.range, b.range))
   })()}),
   provideDocumentRangeFormattingEdits: (range: vsc.Range, tokenId?: string) => ({ cancel, promise: (async () => {
-    const funcs = providers.provideDocumentRangeFormattingEdits.get(nvim.state.filetype)
-    if (!funcs) return
-
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
     const options = await getFormattingOptions()
-
-    const edits = await Promise.all([...funcs].map(fn => fn && fn(document, range, options, token))).then(coalesce)
+    const edits = await providers.documentRangeFormattingEdit.provideDocumentRangeFormattingEdits(document, range, options, token)
+    if (!edits) return
     return dedupOn(edits, (a, b) => rangesEqual(a.range, b.range))
   })()}),
   provideOnTypeFormattingEdits: (character: string, tokenId?: string) => ({ cancel, promise: (async () => {
-    const funcs = providers.provideOnTypeFormattingEdits.get(nvim.state.filetype)
-    if (!funcs) return
-
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
     const position = new Position(nvim.state.line, nvim.state.column)
     const options = await getFormattingOptions()
-
-    const edits = await Promise.all([...funcs].map(fn => fn && fn(document, position, character, options, token))).then(coalesce)
+    const edits = await providers.onTypeFormattingEdit.provideOnTypeFormattingEdits(document, position, character, options, token)
+    if (!edits) return
     return dedupOn(edits, (a, b) => rangesEqual(a.range, b.range))
   })()}),
   provideSignatureHelp: (context: vsc.SignatureHelpContext, tokenId?: string) => ({ cancel, promise: (async () => {
-    const funcs = providers.provideSignatureHelp.get(nvim.state.filetype)
-    if (!funcs) return
-
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
     const position = new Position(nvim.state.line, nvim.state.column)
-
-    const [ result ] = await Promise.all([...funcs].map(fn => fn(document, position, token, context))).then(coalesce)
-    return result
+    const results = await providers.signatureHelp.provideSignatureHelp(document, position, token, context)
+    return results && results[0]
   })()}),
   provideDocumentLinks: (tokenId?: string) => ({ cancel, promise: (async () => {
-    const funcs = providers.provideDocumentLinks.get(nvim.state.filetype)
-    if (!funcs) return
-
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
+    const results = await providers.documentLink.provideDocumentLinks(document, token)
+    if (!results) return
 
-    const results = await Promise.all([...funcs].map(fn => fn(document, token))).then(coalesce)
     const links = results.map(m => ({
       range: m.range,
       path: m.target ? m.target.path : undefined,
@@ -420,35 +401,27 @@ const api = {
     return dedupOn(links, (a, b) => rangesEqual(a.range, b.range))
   })()}),
   resolveDocumentLink: (link: vsc.DocumentLink, tokenId?: string) => ({ cancel, promise: (async () => {
-    const funcs = providers.resolveDocumentLink.get(nvim.state.filetype)
-    if (!funcs) return
-
     const { token } = makeCancelToken(tokenId!)
-
-    const [ result ] = await Promise.all([...funcs].map(fn => fn && fn(link, token))).then(coalesce)
-    return result
+    const results = await providers.documentLink.resolveDocumentLink!(link, token)
+    return results && results[0]
   })()}),
   provideColorPresentations: (color: vsc.Color, range: vsc.Range, tokenId?: string) => ({ cancel, promise: (async () => {
-    const funcs = providers.provideColorPresentations.get(nvim.state.filetype)
-    if (!funcs) return
-
     const { token } = makeCancelToken(tokenId!)
     const context = {
       range,
       document: TextDocument(nvim.current.buffer.id),
     }
 
-    const colors = await Promise.all([...funcs].map(fn => fn(color, context, token))).then(coalesce)
+    const colors = await providers.color.provideColorPresentations(color, context, token)
+    if (!colors) return
     return dedupOn(colors, (a, b) => a.label === b.label)
   })()}),
   provideDocumentColors: (tokenId?: string) => ({ cancel, promise: (async () => {
-    const funcs = providers.provideDocumentColors.get(nvim.state.filetype)
-    if (!funcs) return
-
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
+    const colors = await providers.color.provideDocumentColors(document, token)
+    if (!colors) return
 
-    const colors = await Promise.all([...funcs].map(fn => fn(document, token))).then(coalesce)
     return dedupOn(colors, (a, b) => rangesEqual(a.range, b.range)
       && a.color.alpha === b.color.alpha
       && a.color.red === b.color.red
@@ -456,14 +429,11 @@ const api = {
       && a.color.blue === b.color.blue)
   })()}),
   provideFoldingRanges: (tokenId?: string) => ({ cancel, promise: (async () => {
-    const funcs = providers.provideFoldingRanges.get(nvim.state.filetype)
-    if (!funcs) return
-
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
     const options: vsc.FoldingContext = {}
-
-    const ranges = await Promise.all([...funcs].map(fn => fn(document, options, token))).then(coalesce)
+    const ranges = await providers.foldingRange.provideFoldingRanges(document, options, token)
+    if (!ranges) return
     return dedupOn(ranges, (a, b) => a.start === b.start && a.end === b.end)
   })()}),
   getSignatureHelpTriggerCharacters: () => ({ cancel, promise: (async () => {

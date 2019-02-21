@@ -1,7 +1,12 @@
 import { vscLanguageToFiletypes } from '../vscode/vsc-languages'
+import { is, dedupOn } from '../support/utils'
 import { EventEmitter } from 'events'
-import { is } from '../support/utils'
 import * as vsc from 'vscode'
+
+export interface Thenable<T> {
+	then<TResult>(onfulfilled?: (value: T) => TResult | Thenable<TResult>, onrejected?: (reason: any) => TResult | Thenable<TResult>): Thenable<TResult>;
+	then<TResult>(onfulfilled?: (value: T) => TResult | Thenable<TResult>, onrejected?: (reason: any) => void): Thenable<TResult>;
+}
 
 const cancelTokens = new EventEmitter()
 
@@ -46,9 +51,11 @@ const parseDocumentFilter = (filter: vsc.DocumentFilter): string[] => {
 export const selectorToFiletypes = (selector: vsc.DocumentSelector): string[] => {
   const selectors = is.array(selector) ? selector : [ selector ]
 
-  return (selectors as Array<vsc.DocumentFilter | string>).reduce((res, sel) => {
+  const seltzer = (selectors as Array<vsc.DocumentFilter | string>).reduce((res, sel) => {
     if (is.string(sel)) return [ ...res, ...vscLanguageToFiletypes(sel as string) ]
     if (is.object(sel)) return [ ...res, ...parseDocumentFilter(sel as vsc.DocumentFilter) ]
     return res
   }, [] as string[])
+
+  return dedupOn(seltzer, (a, b) => a === b)
 }

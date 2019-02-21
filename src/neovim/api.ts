@@ -1,6 +1,6 @@
 import { VimOption, BufferEvent, HyperspaceCoordinates, BufferType, BufferHide, BufferOption, Buffer, Window, Tabpage, GenericCallback, BufferInfo, Keymap } from '../neovim/types'
 import { Api, ExtContainer, Prefixes, Buffer as IBuffer, Window as IWindow, Tabpage as ITabpage } from '../neovim/protocol'
-import { is, onFnCall, onProp, prefixWith, uuid, simplifyPath, remove, rename } from '../support/utils'
+import { is, onFnCall, onProp, prefixWith, simplifyPath, remove, rename } from '../support/utils'
 import { workerData, request as requestFromUI } from '../messaging/worker-client'
 import ConnectMsgpackRPC from '../messaging/msgpack-transport'
 import * as TextEditPatch from '../neovim/text-edit-patch'
