@@ -22,7 +22,7 @@ export enum VarKind {
 }
 
 interface SetupData {
-  setData: (data: ArrayBufferView, drawKind?: typeof WebGL2RenderingContext.STATIC_DRAW) => void
+  setData: (data: ArrayBufferView, drawKind?: typeof WebGLRenderingContext.STATIC_DRAW) => void
 }
 
 type VK = { [index: string]: VarKind }
@@ -33,6 +33,31 @@ type SetupDataFunc = SD1 & SD2
 const create = (options?: WebGLContextAttributes) => {
   const canvas = document.createElement('canvas')
   const gl = canvas.getContext('webgl2', options) as WebGL2RenderingContext
+    || canvas.getContext('webgl', options) as WebGLRenderingContext
+    || canvas.getContext('experimental-webgl', options) as WebGLRenderingContext
+  const webgl2Mode = !(gl instanceof WebGLRenderingContext)
+
+  // webgl1 extensions
+  const ext = {
+    vao: gl.getExtension('OES_vertex_array_object'),
+    instance: gl.getExtension('ANGLE_instanced_arrays')
+  }
+
+  const createVertexArray = () => webgl2Mode
+    ? (gl as WebGL2RenderingContext).createVertexArray()
+    : ext.vao!.createVertexArrayOES()
+
+  const bindVertexArray = (vao: WebGLVertexArrayObjectOES | WebGLVertexArrayObject) => webgl2Mode
+    ? (gl as WebGL2RenderingContext).bindVertexArray(vao)
+    : ext.vao!.bindVertexArrayOES(vao)
+
+  const vertexAttribDivisor = (pointer: number, divisor: number) => webgl2Mode
+    ? (gl as WebGL2RenderingContext).vertexAttribDivisor(pointer, divisor)
+    : ext.instance!.vertexAttribDivisorANGLE(pointer, divisor)
+
+  const drawArraysInstanced = (mode: number, first: number, count: number, primcount: number) => webgl2Mode
+    ? (gl as WebGL2RenderingContext).drawArraysInstanced(mode, first, count, primcount)
+    : ext.instance!.drawArraysInstancedANGLE(mode, first, count, primcount)
 
   const resize = (width: number, height: number) => {
     const w = Math.round(width * window.devicePixelRatio)
@@ -47,7 +72,9 @@ const create = (options?: WebGLContextAttributes) => {
   }
 
   const createShader = (type: number, source: string) => {
-    const shaderSource = '#version 300 es\n' + source
+    const shaderSource = webgl2Mode
+      ? '#version 300 es\n' + source
+      : source
     const shader = gl.createShader(type)
     if (!shader) return console.error('failed to create gl shader. oops.')
 
@@ -104,7 +131,8 @@ const create = (options?: WebGLContextAttributes) => {
     gl.enableVertexAttribArray(pointer)
     if (!type) throw new Error(`need vertex array type. we try to guess the type based on the bufferData type, but this logic is not very smart.`)
     gl.vertexAttribPointer(pointer, size, type, normalize, stride, offset)
-    if (divisor > 0) gl.vertexAttribDivisor(pointer, divisor)
+
+    if (divisor > 0) vertexAttribDivisor(pointer, divisor)
   }
 
   const setupProgram = <T extends VK>(incomingVars: T) => {
@@ -135,7 +163,8 @@ const create = (options?: WebGLContextAttributes) => {
       const res = createProgramWithShaders(vertexShader, fragmentShader)
       if (!res) throw new Error('catastrophic failure of the third kind to create webgl program')
       program = res
-      const createdVao = gl.createVertexArray()
+
+      const createdVao = createVertexArray()
       if (!createdVao) throw new Error(`failed to create vertex array object... hmmm`)
       vao = createdVao
 
@@ -157,7 +186,7 @@ const create = (options?: WebGLContextAttributes) => {
 
     const use = () => {
       gl.useProgram(program)
-      gl.bindVertexArray(vao)
+      bindVertexArray(vao)
       gl.enable(gl.SCISSOR_TEST)
     }
 
@@ -180,8 +209,8 @@ const create = (options?: WebGLContextAttributes) => {
     return { create, vars, use, setVertexShader, setFragmentShader, setupData }
   }
 
-  return { canvasElement: canvas, setupProgram, gl, loadCanvasTexture, resize }
+  return { canvasElement: canvas, setupProgram, gl, loadCanvasTexture, resize, drawArraysInstanced, webgl2Mode }
 }
 
-export type WebGL2 = ReturnType<typeof create>
+export type WebGL = ReturnType<typeof create>
 export default create
