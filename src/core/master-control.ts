@@ -61,8 +61,8 @@ const spawnVimInstance = (pipeName: string) => Neovim.run([
   cwd: homedir(),
   env: {
     ...process.env,
-    VIM: Neovim.path,
-    VIMRUNTIME: Neovim.runtime,
+    VIM: Neovim.$VIM,
+    VIMRUNTIME: Neovim.$VIMRUNTIME,
   },
 })
 

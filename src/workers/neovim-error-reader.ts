@@ -22,9 +22,7 @@ const encoder = new MsgpackStreamEncoder()
 const decoder = new MsgpackStreamDecoder()
 
 const proc = Neovim.run([
-  '--cmd', `let $VIM = '${Neovim.path}'`,
-  '--cmd', `let $VIMRUNTIME = '${Neovim.runtime}'`,
-  '--cmd', `let g:veonim = 1 | let g:vn_loaded = 0 | let g:vn_ask_cd = 0`,
+  '--cmd', `let $VIM = '${Neovim.$VIM}' | let $VIMRUNTIME = '${Neovim.$VIMRUNTIME}' | let g:veonim = 1 | let g:vn_loaded = 0 | let g:vn_ask_cd = 0`,
   '--cmd', `exe ":fun! Veonim(...)\\n endfun"`,
   '--cmd', `exe ":fun! VK(...)\\n endfun"`,
   '--cmd', `com! -nargs=+ -range Veonim 1`,

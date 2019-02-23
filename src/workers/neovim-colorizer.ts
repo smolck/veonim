@@ -37,7 +37,7 @@ const encoder = new MsgpackStreamEncoder()
 const decoder = new MsgpackStreamDecoder()
 
 const proc = Neovim.run([
-  '--cmd', `let $VIM = '${Neovim.path}' | let $VIMRUNTIME = '${Neovim.runtime}' | let &runtimepath .= ',${runtimeDir}' | let g:veonim = 1 | let g:vn_loaded = 0 | let g:vn_ask_cd = 0`,
+  '--cmd', `let $VIM = '${Neovim.$VIM}' | let $VIMRUNTIME = '${Neovim.$VIMRUNTIME}' | let &runtimepath .= ',${runtimeDir}' | let g:veonim = 1 | let g:vn_loaded = 0 | let g:vn_ask_cd = 0`,
   '--cmd', `colorscheme veonim`,
   '--cmd', `exe ":fun! Veonim(...)\\n endfun"`,
   '--cmd', `exe ":fun! VK(...)\\n endfun"`,
