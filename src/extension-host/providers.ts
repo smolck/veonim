@@ -285,12 +285,14 @@ const api = {
 
     return dedupOn(symbols, (a, b) => a.name === b.name && rangesEqual(a.range, b.range))
   })()}),
-  // TODO: workspace symbols do not depend on filetypes! need an escape hatch! this is wrong! fire! fire! help me!
-  // looking forward to hearing from you. all the best, maurice moss
   provideWorkspaceSymbols: (query: string, tokenId?: string) => ({ cancel, promise: (async () => {
+    const providerSet: MapSetter<string, vsc.WorkspaceSymbolProvider> = Reflect.get(providers.workspaceSymbol, $$GET_PROVIDERS)
+    const providerz = providerSet.get('*')
+    if (!providerz) return
+
     const { token } = makeCancelToken(tokenId!)
-    const results = await providers.workspaceSymbol.provideWorkspaceSymbols(query, token)
-    if (!results) return
+
+    const results = await Promise.all([...providerz].map(p => p.provideWorkspaceSymbols(query, token))).then(coalesce)
 
     const symbols = results.map(m => ({
       name: m.name,
@@ -303,9 +305,16 @@ const api = {
     return dedupOn(symbols, (a, b) => a.name === b.name && rangesEqual(a.range, b.range))
   })()}),
   resolveWorkspaceSymbol: (symbol: vsc.SymbolInformation, tokenId?: string) => ({ cancel, promise: (async () => {
+    const providerSet: MapSetter<string, vsc.WorkspaceSymbolProvider> = Reflect.get(providers.workspaceSymbol, $$GET_PROVIDERS)
+    const providerz = providerSet.get('*')
+    if (!providerz) return
+
     const { token } = makeCancelToken(tokenId!)
-    const results = await providers.workspaceSymbol.resolveWorkspaceSymbol!(symbol, token)
-    return results && results[0]
+    const results = await Promise.all([...providerz].map(p => {
+      return p.resolveWorkspaceSymbol && p.resolveWorkspaceSymbol(symbol, token)
+    })).then(coalesce)
+
+    return results[0]
   })()}),
   provideReferences: (tokenId?: string) => ({ cancel, promise: (async () => {
     const { token } = makeCancelToken(tokenId!)
