@@ -26,7 +26,7 @@ export default async (srcPath: string, destPath: string, options = {} as CopyOpt
     return copyFile(srcPath, destPath)
   }
 
-  if (options.overwrite) await remove(destPath)
+  if (options.overwrite) await remove(destPath, { ignoreNotExist: true })
 
   const allFiles = await listFiles(srcPath)
   return Promise.all(allFiles.map(async file => {

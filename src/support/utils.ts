@@ -140,8 +140,13 @@ export const getDirFiles = async (path: string) => {
 export const getDirs = async (path: string) => (await getDirFiles(path)).filter(m => m.dir)
 export const getFiles = async (path: string) => (await getDirFiles(path)).filter(m => m.file)
 
-export const remove = async (path: string) => {
-  if (!(await exists(path))) throw new Error(`remove: ${path} does not exist`)
+type RemoveOpts = { ignoreNotExist?: boolean }
+export const remove = async (path: string, { ignoreNotExist } = {} as RemoveOpts) => {
+  if (!(await exists(path))) {
+    if (ignoreNotExist) return
+    throw new Error(`remove: ${path} does not exist`)
+  }
+
   if ((await P(fs.stat)(path)).isFile()) return P(fs.unlink)(path)
 
   const dirFiles = await getDirFiles(path)
