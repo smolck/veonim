@@ -1,4 +1,4 @@
-import { ensureDir, NewlineSplitter, getDirs, readFile, fromJSON, remove as removePath } from '../support/utils'
+import { ensureDir, NewlineSplitter, getDirs, readFile, fromJSON, remove as removePath, exists } from '../support/utils'
 import downloadExtensionsIfNotExist, { doneDownloadingForNow } from '../extension-host/download-extensions'
 import { ExtensionPackageConfig } from '../extension-host/extension'
 import { EXT_PATH, LOG_PATH } from '../support/config-paths'
@@ -29,6 +29,10 @@ const findPackageJson = (path: string): Promise<string> => new Promise((done, fa
 })
 
 const getExtensionConfig = async (packagePath: string): Promise<ExtensionPackageConfig> => {
+  if (!packagePath) throw new Error(`packagePath does not exist. oopsie doopsie`)
+  const fileExists = await exists(packagePath)
+  if (!fileExists) throw new Error(`extension package.json does not exist: ${packagePath}`)
+
   // not using require('package.json') because we need to reload if contents change
   const rawFileData = await readFile(packagePath)
   const config: ExtensionPackageConfig = fromJSON(rawFileData).or({})
@@ -47,9 +51,15 @@ const getExtensionConfigsFromFS = async () => {
 
 const removeExtraneous = async (extensions: ExtensionPackageConfig[]) => {
   const dirs = await getDirs(EXT_PATH)
-  const extensionInstalled = (path: string) => extensions.some(e => e.id === path)
-  const toRemove = dirs.filter(d => !extensionInstalled(d.name))
-  const removeRequests = toRemove.map(dir => removePath(dir.path))
+  const toRemove = dirs.filter(d => !extensions.some(e => e.id === d.name))
+  // some built-in vscode extensions like typescript-language-features depends
+  // on extension dependencies (node_modules) that is designed in such a way to
+  // be shared between extensions. vscode does this by putting a node_modules
+  // folder in the root directory of extensions. we mirror that setup here.
+  // when removing extensions the node_modules dir will appear out of place
+  // so we should just leave it intact. or remove it if no deps need it?
+  const safeToRemove = toRemove.filter(m => m.name !== 'node_modules')
+  const removeRequests = safeToRemove.map(dir => removePath(dir.path))
   return Promise.all(removeRequests)
 }
 
@@ -70,8 +80,7 @@ const installMaybe = async (userDefinedExtensions?: string[]) => {
   const resolvedExtensions = await recursiveResolveExtensions()
   doneDownloadingForNow()
   loadExtensions(resolvedExtensions)
-  // TODO: this is broken and does not work correctly
-  // await removeExtraneous(resolvedExtensions)
+  await removeExtraneous(resolvedExtensions)
 }
 
 nvim.getVarCurrentAndFuture('_veonim_extensions', installMaybe)

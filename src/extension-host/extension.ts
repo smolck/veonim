@@ -45,7 +45,7 @@ const getContributesConfigurations = (config: ExtensionPackageConfig) => {
   const configuration: any = pleaseGet(config).contributes.configuration()
   if (!configuration) return
 
-  if (configuration.type !== 'object') return console.error(`extension ${config.id} provided configuration is not of type object (could also be blank)`)
+  if (configuration.type !== 'object') return console.error(`extension ${config.id} provided contributes.configuration is not of type object (could also be blank)`)
   if (!configuration.properties) return console.error(`idk, extension ${config.id} config does not have any properties. what am i supposed to do now?`)
   return Object.entries(configuration.properties).reduce((res, [ key, val ]: any) => {
     const value = val.type === 'array' && val.items

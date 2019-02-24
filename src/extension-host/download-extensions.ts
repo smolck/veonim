@@ -19,6 +19,15 @@ const getExtensionsFromFS = async (location: string, extensions: string[]) => Pr
     }
   }))
 
+const builtinExtensions = [
+  'vscode.typescript-language-features',
+  'vscode.html-language-features',
+  'vscode.css-language-features',
+  'vscode.php-language-features',
+  'vscode.json-language-features',
+  'vscode.markdown-language-features',
+]
+
 export default async (location: string, extensions: string[]) => {
   const exts = await getExtensionsFromFS(location, extensions)
   const uninstalled = exts.filter(e => !e.installed)
@@ -27,7 +36,7 @@ export default async (location: string, extensions: string[]) => {
 
   const pendingDownloads = uninstalled.map(e => {
     const destination = join(location, `${e.publisher}.${e.name}`)
-    const downloadUrl = e.publisher === 'veonim'
+    const downloadUrl = builtinExtensions.includes(`${e.publisher}.${e.name}`)
       ? downloader.url.veonim(e.name)
       : downloader.url.vscode(e.publisher, e.name)
 
