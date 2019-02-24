@@ -552,7 +552,7 @@ const Buffer = (id: any) => ({
   getAllLines: () => req.buf.getLines(id, 0, -2, true),
   // getLines line ranges are end exclusive so we +1
   getLines: (start, end) => req.buf.getLines(id, start, end + 1, true),
-  getLine: start => req.buf.getLines(id, start, start, true).then(m => m[0]),
+  getLine: start => req.buf.getLines(id, start, start + 1, true).then(m => m[0]),
   setLines: (start, end, lines) => api.buf.setLines(id, start, end, true, lines),
   delete: start => api.buf.setLines(id, start, start + 1, true, []),
   appendRange: async (line, column, text) => {
