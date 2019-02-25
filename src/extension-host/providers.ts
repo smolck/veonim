@@ -116,13 +116,30 @@ const prototypes = {
   completionItem: Object.getPrototypeOf(new CompletionItem('derp')),
 }
 
+export const completionRequest = {
+  active: false,
+  line: -1,
+  character: -1,
+}
+
 const api = {
   cancelRequest: (tokenId: string) => cancelTokenById(tokenId),
   provideCompletionItems: (context: vsc.CompletionContext, tokenId?: string) => ({ cancel, promise: (async () => {
     const { token } = makeCancelToken(tokenId!)
     const document = TextDocument(nvim.current.buffer.id)
     const position = new Position(nvim.state.line, nvim.state.column)
+    Object.assign(completionRequest, {
+      active: true,
+      line: nvim.state.line,
+      character: nvim.state.column,
+    })
+
     const results = await providers.completionItem.provideCompletionItems(document, position, token, context)
+    Object.assign(completionRequest, {
+      active: false,
+      line: -1,
+      character: -1,
+    })
     if (!results) return
 
     const allCompletions = results.reduce((res, item) => {
@@ -132,8 +149,16 @@ const api = {
       return [...res, ...next]
     }, [] as vsc.CompletionItem[])
 
-    const completions = dedupOn(allCompletions, (a, b) => a.label === b.label)
-    const incomplete = results.some(m => !!(m as vsc.CompletionList).isIncomplete)
+    // the CompletionItem returned from the extensions has a bunch of extra
+    // shit tacked onto it (like TextDocuments, etc) that we most definitely
+    // do not want to serialize and send across threads. we will send only
+    // the essentials back to the parent thread
+    const completions = allCompletions.map(c => {
+      const { label, kind, detail, documentation, sortText, filterText,
+        preselect, insertText, range, commitCharacters, keepWhitespace, textEdit, additionalTextEdits, command } = c
+      return { label, kind, detail, documentation, sortText, filterText,
+        preselect, insertText, range, commitCharacters, keepWhitespace, textEdit, additionalTextEdits, command }
+    })
 
     // it seems we need to maintain the prototype of the CompletionItem. I tried regen
     // from CompletionItem and ProtocolCompletionItem (from vscode-languageclient)
@@ -141,7 +166,8 @@ const api = {
     // seems to work... sorry
     if (completions.length) prototypes.completionItem = Object.getPrototypeOf(completions[0])
 
-    return { incomplete, completions }
+    // we will not dedup completions as they will be run thru the fuzzy filter engine
+    return completions
   })()}),
   resolveCompletionItem: (item: vsc.CompletionItem, tokenId?: string) => ({ cancel, promise: (async () => {
     const { token } = makeCancelToken(tokenId!)

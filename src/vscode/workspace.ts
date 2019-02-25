@@ -136,9 +136,8 @@ const workspace: typeof vsc.workspace = {
     console.warn('NYI: workspace.registerTextDocumentContentProvider')
     return ({ dispose: () => {} })
   },
-  // TODO: i'm not sure what the resource is used for?
   getConfiguration: (section, resource) => {
-    // TODO: we should load configuration (somewhere) provided in package.json
+    // TODO: i'm not sure what the resource is used for?
     if (resource) console.warn('NYI: workspace.getConfiguration - resource param not used:', section, resource)
     return WorkspaceConfiguration(section)
   },

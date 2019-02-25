@@ -109,15 +109,13 @@ const getSemanticCompletions = (line: number, column: number) => EarlyPromise(as
   if (cache.semanticCompletions.has(`${line}:${column}`)) 
     return done(cache.semanticCompletions.get(`${line}:${column}`)!)
 
-    // TODO: promise boss but need to cancel once we cursor move
   // TODO: different 'triggerKind'(s)? what about 'triggerCharacters'?
-  const items = await completionBoss.schedule(vscode.language.provideCompletionItems({ triggerKind: 0 }), { timeout: 2e3 })
-  if (!items) return done([])
-
-  const { incomplete, completions } = items
-  incomplete && console.warn('completions are incomplete')
+  nvim.untilEvent.cursorMoveInsert.then(completionBoss.cancelCurrentPromise)
+  const completions = await completionBoss.schedule(vscode.language.provideCompletionItems({ triggerKind: 0 }), { timeout: 2e3 })
+  if (!completions) return done([])
 
   // TODO: support TextEdits and snippets
+  // TODO: do we need to remap this or can we just pass along the completions object as is?
   const options = completions.map(m => ({
     raw: m,
     insertText: ((m.insertText || {} as any).value as string || m.insertText as string) || m.label,

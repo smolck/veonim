@@ -1,4 +1,5 @@
 import { getWordAtText, ensureValidWordDefinition } from '../vscode/word-helper'
+import { completionRequest } from '../extension-host/providers'
 import { regExpLeadsToEndlessLoop } from '../vscode/strings'
 import filetypeToVSCLanguage from '../vscode/vsc-languages'
 import { wordDefinitions } from '../vscode/languages'
@@ -13,7 +14,9 @@ export interface SuperTextDocument extends vsc.TextDocument {
   _nvimBufferId: number
 }
 
-export default (bufid: number): SuperTextDocument => ({
+let memoize_wordRangeAtPosition: vsc.Range
+
+const api = (bufid: number): SuperTextDocument => ({
   get _nvimBufferId() { return bufid },
   get isUntitled() {
     return !nvimSync((nvim, id) => nvim.Buffer(id).name).call(bufid)
@@ -118,15 +121,22 @@ export default (bufid: number): SuperTextDocument => ({
     return selection.join('\n')
   },
   getWordRangeAtPosition: (givenPosition, givenRegex) => {
+    // getting completions makes the typescript extension call new CompletionItem()
+    // which in turn calls getWordRangeAtPosition in the constructor. but y tho?
+    // since the position is the same for every call i'm gonna memoize this (kinda)
+    if (completionRequest.active && completionRequest.line === givenPosition.line && completionRequest.character === givenPosition.character) {
+      return memoize_wordRangeAtPosition
+    }
+
     const position = validatePosition(bufid, givenPosition)
-    let regex = givenRegex
     const filetype: string = nvimSync((nvim, id) => nvim.Buffer(id).getOption('filetype')).call(bufid)
     const languageId = filetypeToVSCLanguage(filetype)
     const currentLineText = nvimSync((nvim, id, line) => nvim.Buffer(id).getLine(line)).call(bufid, position.line)
+    let regex = givenRegex
 
     if (!regex) regex = wordDefinitions.get(languageId)
     else if (regExpLeadsToEndlessLoop(regex)) {
-      console.warn(`[getWordRangeAtPosition]: ignoring custom regexp '${regex.source}' because it matches the empty string.`)
+      console.warn(`vscode.TextDocument.getWordRangeAtPosition: ignoring custom regexp '${regex.source}' because it matches the empty string`)
       regex = wordDefinitions.get(languageId)
     }
 
@@ -139,12 +149,16 @@ export default (bufid: number): SuperTextDocument => ({
 
     if (!wordAtText) return
 
-    return new Range(
+    const result = new Range(
       position.line,
       wordAtText.startColumn - 1,
       position.line,
       wordAtText.endColumn - 1,
     )
+
+    if (completionRequest.active) memoize_wordRangeAtPosition = result
+
+    return result
   },
   // assumes given range starts a line:0, character: 0
   validateRange: range => {
@@ -187,3 +201,5 @@ const validatePosition = (bufid: number, position: vsc.Position) => {
 
   return new Position(position.line, lastLineText.length)
 }
+
+export default api
