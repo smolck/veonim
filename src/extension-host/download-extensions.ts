@@ -26,6 +26,7 @@ const builtinExtensions = [
   'vscode.php-language-features',
   'vscode.json-language-features',
   'vscode.markdown-language-features',
+  'veonim.ext-typescript-javascript',
 ]
 
 export default async (location: string, extensions: string[]) => {

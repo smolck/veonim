@@ -37,7 +37,7 @@ nvim.onAction('next-usage', async () => {
   if (reference) nvim.jumpTo({
     path: reference.path,
     line: reference.range.start.line,
-    column: reference.range.end.character,
+    column: reference.range.start.character,
   })
 })
 
