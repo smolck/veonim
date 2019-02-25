@@ -102,37 +102,23 @@ const TextEditor = (winid: number): vsc.TextEditor => ({
         if (transactionComplete) return
         const buffer = await nvim.Window(winid).buffer
 
-        const start = {
-          line: location instanceof Position
-            ? location.line
-            : (location as Range).start.line,
-          column: location instanceof Position
-            ? location.character
-            : (location as Range).start.character,
-        }
+        const range = location instanceof Position
+          ? new Range(location, location)
+          : location as Range
 
-        const end = {
-          line: location instanceof Position
-            ? location.line
-            : (location as Range).end.line,
-          column: location instanceof Position
-            ? location.character
-            : (location as Range).end.character,
-        }
-
-        buffer.replaceRange(start.line, start.column, end.line, end.column, value)
+        buffer.replaceRange(range, value)
         fin()
       },
       insert: async (location, value) => {
         if (transactionComplete) return
         const buffer = await nvim.Window(winid).buffer
-        buffer.appendRange(location.line, location.character, value)
+        buffer.appendRange(location, value)
         fin()
       },
-      delete: async ({ start, end }) => {
+      delete: async range => {
         if (transactionComplete) return
         const buffer = await nvim.Window(winid).buffer
-        buffer.deleteRange(start.line, start.character, end.line, end.character)
+        buffer.deleteRange(range)
         fin()
       },
       setEndOfLine: eol => {
