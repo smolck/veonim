@@ -547,29 +547,33 @@ const Buffer = (id: any) => ({
   getLine: start => req.buf.getLines(id, start, start + 1, true).then(m => m[0]),
   setLines: (start, end, lines) => api.buf.setLines(id, start, end, true, lines),
   delete: start => api.buf.setLines(id, start, start + 1, true, []),
-  appendRange: async (line, column, text) => {
+  appendRange: async (position, text, undojoin = false) => {
+    const { line, character: column } = position
     const lines = await req.buf.getLines(id, line, -2, false)
     const updatedLines = TextEditPatch.append({ lines, column, text })
     req.buf.setLines(id, line, line + updatedLines.length, false, updatedLines)
+    if (undojoin) cmd('undojoin')
   },
-  replaceRange: async (startLine, startColumn, endLine, endColumn, text) => {
-    const lines = await req.buf.getLines(id, startLine, endLine, false)
+  replaceRange: async ({ start, end }, text, undojoin = false) => {
+    const lines = await req.buf.getLines(id, start.line, end.line + 1, false)
     const updatedLines = TextEditPatch.replace({
       lines,
-      start: new Position(0, startColumn),
-      end: new Position(endLine - startLine, endColumn),
+      start: new Position(0, start.character),
+      end: new Position(end.line - start.line, end.character),
       text
     })
-    req.buf.setLines(id, startLine, endLine + 1, false, updatedLines)
+    req.buf.setLines(id, start.line, end.line + 1, false, updatedLines)
+    if (undojoin) cmd('undojoin')
   },
-  deleteRange: async (startLine, startColumn, endLine, endColumn) => {
-    const lines = await req.buf.getLines(id, startLine, endLine, false)
+  deleteRange: async ({ start, end }, undojoin = false) => {
+    const lines = await req.buf.getLines(id, start.line, end.line, false)
     const updatedLines = TextEditPatch.remove({
       lines,
-      start: new Position(0, startColumn),
-      end: new Position(endLine - startLine, endColumn),
+      start: new Position(0, start.character),
+      end: new Position(end.line - start.line, end.character),
     })
-    req.buf.setLines(id, startLine, endLine + 1, false, updatedLines)
+    req.buf.setLines(id, start.line, end.line + 1, false, updatedLines)
+    if (undojoin) cmd('undojoin')
   },
   replace: (start, line) => api.buf.setLines(id, start, start + 1, false, [ line ]),
   getVar: name => req.buf.getVar(id, name),
