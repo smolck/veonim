@@ -63,7 +63,7 @@ const selectResult = (results: Result[], ix: number, subix: number) => {
   if (subix < 0) return
   const [ path, items ] = results[ix]
   const { line, column } = items[subix]
-  api.nvim.jumpToProjectFile({ path, line, column })
+  api.nvim.jumpTo({ path, line, column })
   showCursorline()
 }
 

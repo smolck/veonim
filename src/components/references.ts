@@ -50,7 +50,7 @@ const selectResult = (references: ReferenceResult[], ix: number, subix: number) 
   if (subix < 0) return
   const [ , items ] = references[ix]
   const { path, range: { start } } = items[subix]
-  api.nvim.jumpToProjectFile({
+  api.nvim.jumpTo({
     path,
     line: start.line,
     column: start.character,

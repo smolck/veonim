@@ -105,7 +105,6 @@ const nvimFeedkeys = (keys: string, mode = 'm') => getActiveInstance().call.nvim
 const nvimExpr = (expr: string) => getActiveInstance().request.nvimExpr(expr)
 const nvimCall: Functions = onFnCall((name, a) => getActiveInstance().request.nvimCall(name, a))
 const nvimJumpTo = (coords: HyperspaceCoordinates) => getActiveInstance().call.nvimJumpTo(coords)
-const nvimJumpToProjectFile = (coords: HyperspaceCoordinates) => getActiveInstance().call.nvimJumpToProjectFile(coords)
 const nvimGetKeymap = () => getActiveInstance().request.nvimGetKeymap()
 const nvimGetColorByName = (name: string) => getActiveInstance().request.nvimGetColorByName(name)
 const nvimSaveCursor = async () => {
@@ -176,7 +175,6 @@ const api = {
     getKeymap: nvimGetKeymap,
     saveCursor: nvimSaveCursor,
     getColorByName: nvimGetColorByName,
-    jumpToProjectFile: nvimJumpToProjectFile,
     removeHighlightSearch: nvimRemoveHighlightSearch,
     highlightSearchPattern: nvimHighlightSearchPattern,
   }

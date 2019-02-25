@@ -199,7 +199,7 @@ const loadBuffer = async (file: string): Promise<boolean> => {
 type JumpOpts = HyperspaceCoordinates & { openBufferFirst: boolean }
 
 const jumpToPositionInFile = async ({ line, path, column, openBufferFirst }: JumpOpts) => {
-  if (openBufferFirst && path) await buffers.open(path)
+  if (openBufferFirst && path) cmd(`e ${path}`)
   // nvim_win_set_cursor params
   // line: 1-index based
   // column: 0-index based
@@ -207,17 +207,9 @@ const jumpToPositionInFile = async ({ line, path, column, openBufferFirst }: Jum
 }
 
 const jumpTo = async ({ line, column, path }: HyperspaceCoordinates) => {
-  const bufferLoaded = path ? path === state.absoluteFilepath : true
-  jumpToPositionInFile({ line, column, path, openBufferFirst: !bufferLoaded })
-}
-
-// the reason this method exists is because opening buffers with an absolute path
-// will have the abs path in names and buffer lists. idk, it just behaves wierdly
-// so it's much easier to open a file realtive to the current project (:cd/:pwd)
-// TODO: we should consoldiate these functions and have the function
-// smartly determine how to open the buffer in a non-offensive way.
-const jumpToProjectFile = async ({ line, column, path }: HyperspaceCoordinates) => {
-  const bufferLoaded = path ? path === state.file : true
+  const bufferLoaded = path
+    ? (path === state.file || path === state.absoluteFilepath)
+    : true
   jumpToPositionInFile({ line, column, path, openBufferFirst: !bufferLoaded })
 }
 
@@ -640,8 +632,8 @@ const dummy = {
 
 const exportAPI = { state, watchState, onStateChange, onStateValue,
   untilStateValue, cmd, cmdOut, expr, call, feedkeys, normal, callAtomic,
-  onAction, getCurrentLine, jumpTo, jumpToProjectFile, systemAction, current,
-  g, on, untilEvent, buffers, windows, tabs, options: readonlyOptions,
+  onAction, getCurrentLine, jumpTo, systemAction, current, g, on,
+  untilEvent, buffers, windows, tabs, options: readonlyOptions,
   Buffer: fromId.buffer, Window: fromId.window, Tabpage: fromId.tabpage,
   getKeymap, getColorByName, getCursorPosition, highlightSearchPattern,
   removeHighlightSearch, getOptionCurrentAndFuture, getVarCurrentAndFuture }
