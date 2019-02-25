@@ -93,9 +93,8 @@ const workspace: typeof vsc.workspace = {
   applyEdit: async workspaceEdit => {
     // vscode does the same weird hack here, so shush
     const entries = (workspaceEdit as WorkspaceEdit)._allEntries()
-    let firstEditApplied = false
 
-    const editRequests = entries.map(async ([ arg1, arg2 ]) => {
+    const editRequests = entries.map(async ([ arg1, arg2 ], fileEditIx) => {
       // create buffer
       if (arg1 == null && URI.isUri(arg2)) return nvim.buffers.add(arg2.path)
       // delete buffer
@@ -109,10 +108,9 @@ const workspace: typeof vsc.workspace = {
       const edits = arg2 as vsc.TextEdit[]
       const buffer = await nvim.buffers.getBufferFromPath(uri.path)
 
-      edits.forEach(({ range, newText }) => {
-        buffer.replaceRange(range.start.line, range.start.character, range.end.line, range.end.character, newText)
-        if (!firstEditApplied) firstEditApplied = true
-        else nvim.cmd('undojoin')
+      edits.forEach(({ range, newText }, editIx) => {
+        const undojoin = !fileEditIx && !editIx
+        buffer.replaceRange(range, newText, undojoin)
       })
     })
 
