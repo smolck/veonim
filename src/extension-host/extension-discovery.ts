@@ -83,7 +83,7 @@ const installMaybe = async (userDefinedExtensions?: string[]) => {
   await removeExtraneous(resolvedExtensions)
 }
 
-nvim.getVarCurrentAndFuture('_veonim_extensions', installMaybe)
+nvim.getVarCurrentAndFuture('vscode_extensions', installMaybe)
 
 const extensionDependenciesDir = join(__dirname, '..', 'extension_dependencies')
 const copyFrom = join(extensionDependenciesDir, 'node_modules')

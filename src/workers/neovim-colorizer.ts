@@ -42,7 +42,6 @@ const proc = Neovim.run([
   '--cmd', `exe ":fun! Veonim(...)\\n endfun"`,
   '--cmd', `exe ":fun! VK(...)\\n endfun"`,
   '--cmd', `com! -nargs=+ -range Veonim 1`,
-  '--cmd', `com! -nargs=+ VSCodeExtension 1`,
   '--cmd', 'com! -nargs=* Plug 1',
   '--embed',
 ])

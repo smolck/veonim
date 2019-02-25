@@ -52,7 +52,6 @@ const msgpackEncoder = new MsgpackStreamEncoder()
 
 const spawnVimInstance = (pipeName: string) => Neovim.run([
   '--cmd', `com! -nargs=+ -range -complete=custom,VeonimCmdCompletions Veonim call Veonim(<f-args>)`,
-  '--cmd', `com! -nargs=1 VSCodeExtension call add(g:_veonim_extensions, <args>)`,
   '--cmd', `com! -nargs=1 Plug call add(g:_veonim_plugins, <args>)`,
   '--embed',
   '--listen',
