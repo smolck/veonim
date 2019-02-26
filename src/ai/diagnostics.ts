@@ -104,7 +104,7 @@ vscode.onDiagnostics(event => {
   // could also be that we get diagnostics for the same uri from multiple extensions
   // TODO: in the extension host did we check if we get duplicate uris in the event?
   const res = event.find(m => m.path === nvim.state.absoluteFilepath)
-  if (!res) return console.error('did not receive any diagnostics for the current file', event)
+  if (!res) return console.warn('received diagnostics but not for the current file', event)
   cache.problems = res.diagnostics
   refreshProblemHighlights(res.diagnostics)
   ui.problemCount.update(getProblemCount(res.diagnostics))

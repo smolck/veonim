@@ -37,7 +37,7 @@
   },
   "homepage": "https://github.com/veonim/veonim#readme",
   "bundled-extension-dependencies": {
-    "typescript": "latest"
+    "typescript": "3.3.1"
   },
   "bindeps-darwin": {
     "@veonim/neovim-mac": "0.4.0-alpha1",

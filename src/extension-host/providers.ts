@@ -1,8 +1,8 @@
 import { Unpacked, maybe, AlterReturnType, ReturnTypeOf } from '../support/types'
 import { MapSetter, dedupOn, threadSafeObject } from '../support/utils'
 import { makeCancelToken, cancelTokenById, Thenable } from '../vscode/tools'
-import { Position, Range, CompletionItem } from '../vscode/types'
 import TextDocument from '../vscode/text-document'
+import { Position, Range } from '../vscode/types'
 import { on } from '../messaging/worker-client'
 import workspace from '../vscode/workspace'
 import nvim from '../neovim/api'
@@ -112,8 +112,26 @@ const cancel = () => {}
 //   - TODO: does vscode rank certain provider's completions higher than others?
 // - single -> ask user to choose (definition, implementation, etc.)
 // - what about non-user ones, like resolving things or hover, signhelp?
-const prototypes = {
-  completionItem: Object.getPrototypeOf(new CompletionItem('derp')),
+const cache = {
+  currentCompletionItems: [] as vsc.CompletionItem[],
+}
+
+const simplify = {
+  completionItem: (item: vsc.CompletionItem, index = 0) => {
+    const { label, kind, detail, documentation, sortText, filterText,
+      preselect, insertText, range, commitCharacters, keepWhitespace, textEdit,
+      additionalTextEdits, /*command*/ } = item
+    // TODO: call CompletionItem.command after completion was inserted into the document
+    // we should probably handle this from the extension-host because serializing the
+    // Command object across threads is a no-no
+    // TODO: determine what it means inserted? in the typescript-language-features
+    // extension, a CompletionItem.command had something like "completionAccepted"
+    // which indicates that it is not the insertion of text when we scroll thru the
+    // completion menu, but rather on CompletionDone event (the final word)
+    return { index, label, kind, detail, documentation, sortText, filterText,
+      preselect, insertText, range, commitCharacters, keepWhitespace, textEdit,
+      additionalTextEdits }
+  }
 }
 
 export const completionRequest = {
@@ -142,7 +160,7 @@ const api = {
     })
     if (!results) return
 
-    const allCompletions = results.reduce((res, item) => {
+    cache.currentCompletionItems = results.reduce((res, item) => {
       const next = (item as vsc.CompletionList).items
         ? (item as vsc.CompletionList).items
         : [item as vsc.CompletionItem]
@@ -150,30 +168,27 @@ const api = {
     }, [] as vsc.CompletionItem[])
 
     // the CompletionItem returned from the extensions has a bunch of extra
-    // shit tacked onto it (like TextDocuments, etc) that we most definitely
-    // do not want to serialize and send across threads. we will send only
-    // the essentials back to the parent thread
-    const completions = allCompletions.map(c => {
-      const { label, kind, detail, documentation, sortText, filterText,
-        preselect, insertText, range, commitCharacters, keepWhitespace, textEdit, additionalTextEdits, command } = c
-      return { label, kind, detail, documentation, sortText, filterText,
-        preselect, insertText, range, commitCharacters, keepWhitespace, textEdit, additionalTextEdits, command }
-    })
-
-    // it seems we need to maintain the prototype of the CompletionItem. I tried regen
-    // from CompletionItem and ProtocolCompletionItem (from vscode-languageclient)
-    // but it did not work. this hack of saving the prototype of one of the items
-    // seems to work... sorry
-    if (completions.length) prototypes.completionItem = Object.getPrototypeOf(completions[0])
+    // shit tacked onto it that is not part of the CompletionItem interface.
+    // we don't want to transfer all the extra memes across threads as it makes
+    // serialization take much too long, and some stuff is lost during the
+    // serialization process.
+    // so we do a couple things:
+    // 1. extract only the relevant information (the properties defined in the
+    // vscode.CompletionItem interface) to send back to the parent threads
+    // 2. keep a temporary copy of the entire completion list in memory so
+    // that when we need to resolve a completion item we can send the extension
+    // the same object that we received. (things break if we do not send back
+    // the same object to the extension)
+    const completions = cache.currentCompletionItems.map((item, index) => simplify.completionItem(item, index))
 
     // we will not dedup completions as they will be run thru the fuzzy filter engine
     return completions
   })()}),
   resolveCompletionItem: (item: vsc.CompletionItem, tokenId?: string) => ({ cancel, promise: (async () => {
     const { token } = makeCancelToken(tokenId!)
-    const realItem = Object.assign(Object.create(prototypes.completionItem), item)
+    const realItem = Reflect.get(cache.currentCompletionItems, (item as any).index)
     const results = await providers.completionItem.resolveCompletionItem!(realItem, token)
-    return results && results[0]
+    return results && simplify.completionItem(results[0])
   })()}),
   getCompletionTriggerCharacters: () => ({ cancel, promise: (async () => {
     return [...providers.completionTriggerCharacters.get(nvim.state.filetype) || []]
