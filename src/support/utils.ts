@@ -124,21 +124,71 @@ const emptyStat = {
 
 const getFSStat = async (path: string) => P(fs.stat)(path).catch((_) => emptyStat)
 
-export const getDirFiles = async (path: string) => {
+interface DirFileInfo {
+  name: string
+  path: string
+  dir: boolean
+  file: boolean
+  symlink: boolean
+}
+
+export const getDirFiles = async (path: string): Promise<DirFileInfo[]> => {
   const paths = await P(fs.readdir)(path).catch((_e: string) => []) as string[]
+  const filepaths = paths.map(f => ({ name: f, path: join(path, f) }))
+
+  const filesreq = await Promise.all(filepaths.map(async f => ({
+    path: f.path,
+    name: f.name,
+    stats: await getFSStat(f.path),
+  })))
+
+  return filesreq.map(({ name, path, stats }) => ({
+    name,
+    path,
+    dir: stats.isDirectory(),
+    // file: stats.isFile(),
+    // TODO: electron FS does not report .asar files as either files or
+    // directories this is a big problem when we need to remove paths. this
+    // should be temporary until we move the server code back to vanilla node
+    // (which does report .asar correctly as file)
+    file: stats.isFile() || path.endsWith('.asar'),
+    symlink: stats.isSymbolicLink(),
+  }))
+}
+
+export const getDirs = async (path: string) => (await getDirFiles(path)).filter(m => m.dir)
+export const getFiles = async (path: string) => (await getDirFiles(path)).filter(m => m.file)
+
+export const getDirsFilesRecursively = async (path: string): Promise<DirFileInfo[]> => {
+  const paths = await P(fs.readdir)(path).catch(() => []) as string[]
   const filepaths = paths.map(f => ({ name: f, path: join(path, f) }))
   const filesreq = await Promise.all(filepaths.map(async f => ({
     path: f.path,
     name: f.name,
     stats: await getFSStat(f.path),
   })))
-  return filesreq
-    .map(({ name, path, stats }) => ({ name, path, dir: stats.isDirectory(), file: stats.isFile() }))
-    .filter(m => m.dir || m.file)
-}
 
-export const getDirs = async (path: string) => (await getDirFiles(path)).filter(m => m.dir)
-export const getFiles = async (path: string) => (await getDirFiles(path)).filter(m => m.file)
+  const meta = filesreq.map(({ name, path, stats }) => ({
+    name,
+    path,
+    dir: stats.isDirectory(),
+    // file: stats.isFile(),
+    // TODO: electron FS does not report .asar files as either files or
+    // directories this is a big problem when we need to remove paths. this
+    // should be temporary until we move the server code back to vanilla node
+    // (which does report .asar correctly as file)
+    file: stats.isFile() || path.endsWith('.asar'),
+    symlink: stats.isSymbolicLink(),
+  }))
+
+  return meta
+    .filter(m => m.dir)
+    .reduce(async (q, dir) => {
+      const res = await q
+      const df = await getDirsFilesRecursively(dir.path)
+      return [...res, ...df]
+    }, Promise.resolve(meta))
+}
 
 type RemoveOpts = { ignoreNotExist?: boolean }
 export const remove = async (path: string, { ignoreNotExist } = {} as RemoveOpts) => {
@@ -149,9 +199,20 @@ export const remove = async (path: string, { ignoreNotExist } = {} as RemoveOpts
 
   if ((await P(fs.stat)(path)).isFile()) return P(fs.unlink)(path)
 
-  const dirFiles = await getDirFiles(path)
-  await Promise.all(dirFiles.map(m => m.dir ? remove(m.path) : P(fs.unlink)(m.path)))
-  P(fs.rmdir)(path)
+  const dfs = await getDirsFilesRecursively(path)
+  if (!dfs.length) return P(fs.rmdir)(path)
+
+  const files = dfs.filter(m => m.file)
+  await Promise.all(files.map(f => P(fs.unlink)(f.path)))
+  await dfs
+    .filter(m => m.dir)
+    .map(m => ({ ...m, depth: m.path.split(sep).length }))
+    .sort((a, b) => b.depth - a.depth)
+    .reduce(async (q, m) => {
+      return (await q, P(fs.rmdir)(m.path))
+    }, Promise.resolve())
+
+  return P(fs.rmdir)(path)
 }
 
 export const rename = async (path: string, newPath: string) => {
