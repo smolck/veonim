@@ -1,6 +1,6 @@
-import { CompletionItemKind, MarkupContent, MarkupKind } from 'vscode-languageserver-protocol'
 import { RowNormal, RowComplete } from '../components/row-container'
 import { resetMarkdownHTMLStyle } from '../ui/styles'
+import { CompletionItemKind } from '../vscode/types'
 import { CompletionOption } from '../ai/completions'
 import { markdownToHTML } from '../support/markdown'
 import * as windows from '../windows/window-manager'
@@ -10,6 +10,7 @@ import * as workspace from '../core/workspace'
 import { paddingVH, cvar } from '../ui/css'
 import Overlay from '../components/overlay'
 import * as Icon from 'hyperapp-feather'
+import { MarkdownString } from 'vscode'
 import { cursor } from '../core/cursor'
 import api from '../core/instance-api'
 import { h, app } from '../ui/uikit'
@@ -65,12 +66,9 @@ const icons = new Map([
 const getCompletionIcon = (kind: CompletionItemKind) => icons.get(kind) || h(Icon.Code)
 
 // TODO: move to common place. used in other places like signature-hint
-const parseDocs = async (docs?: string | MarkupContent): Promise<string | undefined> => {
+const parseDocs = async (docs?: string | MarkdownString): Promise<string | undefined> => {
   if (!docs) return
-
-  if (typeof docs === 'string') return docs
-  if (docs.kind === MarkupKind.PlainText) return docs.value
-  return markdownToHTML(docs.value)
+  return typeof docs === 'string' ? docs : markdownToHTML(docs.value)
 }
 
 const docs = (data: string) => h(RowNormal, {
@@ -107,15 +105,22 @@ const actions = {
 
   select: (ix: number) => (s: S, a: typeof actions) => {
     const completionItem = (s.options[ix] || {}).raw
+    // raw could be missing if not semantic completions
+    if (!completionItem) return { ix, documentation: undefined }
 
-    if (completionItem) (async () => {
-      const detail = await api.ai.completions.getDetail(completionItem)
-      if (!detail.documentation) return
-      const richFormatDocs = await parseDocs(detail.documentation)
+    const { detail, documentation } = completionItem
+    // TODO: what are we doing with detail and documentation?
+    // show both? or one or the other?
+
+    if (!detail || !documentation) (async () => {
+      // TODO: what do with .detail?
+      const details = await api.ai.completions.getDetail(completionItem)
+      if (!details || !details.documentation) return
+      const richFormatDocs = await parseDocs(details.documentation)
       a.showDocs(richFormatDocs)
     })()
 
-    return { ix, documentation: undefined }
+    return { ix, documentation: documentation || detail }
   },
 }
 

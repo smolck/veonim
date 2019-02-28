@@ -6,7 +6,8 @@ test('workspace.rootPath', eq => {
 })
 
 test('workspace.workspaceFolders', eq => {
-  eq(vscode.workspace.workspaceFolders, [ testDataPath ])
+  const uri = vscode.Uri.from(testDataPath)
+  eq(vscode.workspace.workspaceFolders, [ uri ])
 })
 
 test('workspace.name', eq => {

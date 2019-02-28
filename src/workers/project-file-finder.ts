@@ -37,7 +37,7 @@ const getFilesWithRipgrep = (cwd: string) => {
     }
   })
 
-  rg.on('exit', () => {
+  rg.on('close', () => {
     clearInterval(timer)
     sendResults({ filter: initialSent })
     call.done()

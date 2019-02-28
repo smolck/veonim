@@ -1,5 +1,6 @@
 const { src, same } = require('../util')
 const { append, replace, remove } = src('neovim/text-edit-patch')
+const { Position } = src('vscode/types')
 
 describe('text edit patch', () => {
   it('append', () => {
@@ -50,8 +51,8 @@ describe('text edit patch', () => {
         'you were supposed to destroy the sith',
         'not join them',
       ],
-      start: { line: 1, column: 5 },
-      end: { line: 1, column: 21 },
+      start: new Position(1, 5),
+      end: new Position(1, 21),
       text: 'hello there',
     }
 
@@ -70,8 +71,8 @@ describe('text edit patch', () => {
         'you were supposed to destroy the sith',
         'not join them',
       ],
-      start: { line: 1, column: 5 },
-      end: { line: 2, column: 5 },
+      start: new Position(1, 5),
+      end: new Position(2, 5),
       text: 'general kenobi',
     }
 
@@ -89,8 +90,8 @@ describe('text edit patch', () => {
         'you were supposed to destroy the sith',
         'not join them',
       ],
-      start: { line: 1, column: 5 },
-      end: { line: 2, column: 6 },
+      start: new Position(1, 5),
+      end: new Position(2, 6),
       text: `did you ever hear\nthe tragedy of darth plagueis the wise\nit's not a story\nthe jedi would tell you\n`,
     }
 
@@ -112,8 +113,8 @@ describe('text edit patch', () => {
         'you were supposed to destroy the sith',
         'not join them',
       ],
-      start: { line: 1, column: 5 },
-      end: { line: 2, column: 2 },
+      start: new Position(1, 5),
+      end: new Position(2, 2),
     }
 
     const patch = remove(req)

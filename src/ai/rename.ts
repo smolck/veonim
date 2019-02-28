@@ -1,5 +1,5 @@
-import { rename, textSync } from '../langserv/adapter'
-import { supports } from '../langserv/server-features'
+import { vscode } from '../core/extensions-api'
+import { Position } from '../vscode/types'
 import nvim from '../neovim/api'
 
 // TODO: anyway to improve the glitchiness of undo/apply edit? any way to also pause render in undo
@@ -7,17 +7,18 @@ import nvim from '../neovim/api'
 // call atomic? tricky with getting target lines for replacements
 // even if done before atomic operations, line numbers could be off
 const doRename = async () => {
-  if (!supports.rename(nvim.state.cwd, nvim.state.filetype)) return
-
-  textSync.pause()
-  const editPosition = { line: nvim.state.line, column: nvim.state.column }
+  vscode.textSync.pause()
+  const position = new Position(nvim.state.line, nvim.state.column)
   nvim.feedkeys('ciw')
   await nvim.untilEvent.insertLeave
   const newName = await nvim.expr('@.')
   nvim.feedkeys('u')
-  textSync.resume()
+  vscode.textSync.resume()
 
-  nvim.applyPatches(await rename({ ...nvim.state, ...editPosition, newName }))
+  if (!newName) return
+  const success = await vscode.language.renameSymbol(position, newName).promise
+  // TODO: do we need to do any cleanup in case the rename failed? like undo?
+  if (!success) console.error('rename failed', newName)
 }
 
 nvim.onAction('rename', doRename)

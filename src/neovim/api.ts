@@ -1,6 +1,6 @@
 import { VimOption, BufferEvent, HyperspaceCoordinates, BufferType, BufferHide, BufferOption, Buffer, Window, Tabpage, GenericCallback, BufferInfo, Keymap } from '../neovim/types'
 import { Api, ExtContainer, Prefixes, Buffer as IBuffer, Window as IWindow, Tabpage as ITabpage } from '../neovim/protocol'
-import { is, onFnCall, onProp, prefixWith, uuid, simplifyPath } from '../support/utils'
+import { is, onFnCall, onProp, prefixWith, simplifyPath, remove, rename } from '../support/utils'
 import { workerData, request as requestFromUI } from '../messaging/worker-client'
 import ConnectMsgpackRPC from '../messaging/msgpack-transport'
 import * as TextEditPatch from '../neovim/text-edit-patch'
@@ -8,7 +8,7 @@ import { normalizeVimMode} from '../support/neovim-utils'
 import { Functions } from '../neovim/function-types'
 import { Autocmds } from '../neovim/startup'
 import CreateVimState from '../neovim/state'
-import { Patch } from '../langserv/patch'
+import { Position } from '../vscode/types'
 import { basename, dirname } from 'path'
 import { EventEmitter } from 'events'
 
@@ -30,6 +30,7 @@ const watchers = {
   events: new EventEmitter(),
   autocmds: new EventEmitter(),
   bufferEvents: new EventEmitter(),
+  internal: new EventEmitter(),
 }
 
 const req = {
@@ -74,6 +75,24 @@ const readonlyOptions: VimOption = new Proxy(Object.create(null), {
     ? Promise.resolve(options.get(key))
     : getOption(key)
 })
+
+const getOptionCurrentAndFuture = (name: string, fn: (value: any) => void) => {
+  Reflect.get(readonlyOptions, name).then(fn)
+  const key = `option-set::${name}`
+  watchers.internal.on(key, fn)
+  return () => watchers.internal.removeListener(key, fn)
+}
+
+const getVarCurrentAndFuture = (name: string, fn: (value: any) => void) => {
+  Reflect.get(g, name).then(fn)
+  cmd(`call dictwatcheradd(g:, '${name}', 'VeonimGChange')`)
+  const key = `gvar::${name}`
+  watchers.internal.on(key, fn)
+  return () => {
+    cmd(`call dictwatcherdel(g:, '${name}', 'VeonimGChange')`)
+    watchers.internal.removeListener(key, fn)
+  }
+}
 
 const cmd = (command: string) => api.core.command(command)
 const cmdOut = (command: string) => req.core.commandOutput(command)
@@ -173,14 +192,14 @@ const loadBuffer = async (file: string): Promise<boolean> => {
   const targetBuffer = await buffers.find(file)
   if (!targetBuffer) return false
 
-  api.core.setCurrentBuf(targetBuffer.id)
+  api.core.setCurrentBuf(targetBuffer.id as any)
   return true
 }
 
 type JumpOpts = HyperspaceCoordinates & { openBufferFirst: boolean }
 
 const jumpToPositionInFile = async ({ line, path, column, openBufferFirst }: JumpOpts) => {
-  if (openBufferFirst && path) await buffers.open(path)
+  if (openBufferFirst && path) cmd(`e ${path}`)
   // nvim_win_set_cursor params
   // line: 1-index based
   // column: 0-index based
@@ -188,56 +207,75 @@ const jumpToPositionInFile = async ({ line, path, column, openBufferFirst }: Jum
 }
 
 const jumpTo = async ({ line, column, path }: HyperspaceCoordinates) => {
-  const bufferLoaded = path ? path === state.absoluteFilepath : true
-  jumpToPositionInFile({ line, column, path, openBufferFirst: !bufferLoaded })
-}
-
-// the reason this method exists is because opening buffers with an absolute path
-// will have the abs path in names and buffer lists. idk, it just behaves wierdly
-// so it's much easier to open a file realtive to the current project (:cd/:pwd)
-// TODO: we should consoldiate these functions and have the function
-// smartly determine how to open the buffer in a non-offensive way.
-const jumpToProjectFile = async ({ line, column, path }: HyperspaceCoordinates) => {
-  const bufferLoaded = path ? path === state.file : true
+  const bufferLoaded = path
+    ? (path === state.file || path === state.absoluteFilepath)
+    : true
   jumpToPositionInFile({ line, column, path, openBufferFirst: !bufferLoaded })
 }
 
 const systemAction = (event: string, cb: GenericCallback) => watchers.actions.on(event, cb)
 
 const buffers = {
+  /** Get a buffer using a filesystem path. If buffer is not yet in buffer list it will be added to the list */
+  getBufferFromPath: async (path: string): Promise<Buffer> => {
+    const bufs = await getNamedBuffers()
+    const found = bufs.find(b => b.name === path)
+    return found ? found.buffer : buffers.add(path)
+  },
+  /** Create untitled buffer and open it up. Also optionally set filetype and initial contents */
+  create: async ({ filetype = '', content = '' } = {}) => {
+    const bufid = await call.bufnr('[No Name]', 420)
+    cmd(`b ${bufid}`)
+    const buffer = Buffer(bufid)
+    if (filetype) buffer.setOption(BufferOption.Filetype, filetype)
+    if (content) buffer.append(0, content.split('\n'))
+    return buffer
+  },
+  /** List all buffers */
   list: () => as.bufl(req.core.listBufs()),
-  open: async (file: string) => {
-    const loaded = await loadBuffer(file)
+  /** Open a buffer from a filesystem path in the current window */
+  open: async (path: string) => {
+    const loaded = await loadBuffer(path)
     if (loaded) return true
 
-    cmd(`badd ${file}`)
-    return loadBuffer(file)
+    cmd(`badd ${path}`)
+    return loadBuffer(path)
   },
-  find: async (name: string) => {
+  /** Find a buffer from a filesystem path */
+  find: async (path: string) => {
     const buffers = await getNamedBuffers()
     // it appears that buffers name will have a fullpath, like
     // `/Users/anna/${name}` so we will try to substring match 
     // the end of the name
-    const found = buffers.find(b => b.name.endsWith(name)) || {} as any
+    const found = buffers.find(b => b.name.endsWith(path)) || { buffer: dummy.buf }
     return found.buffer
   },
-  add: async (name: string) => {
-    const id = uuid()
-    cmd(`badd ${id}`)
+  /** Add a new buffer to the buffer list from the given filesystem path */
+  add: async (path: string) => {
+    const bufs = await getNamedBuffers()
+    const existingBuffer = bufs.find(m => m.name === path)
+    if (existingBuffer) return existingBuffer.buffer
 
-    const buffer = await buffers.find(id)
-    if (!buffer) throw new Error(`addBuffer: could not find buffer '${id}' added with :badd ${name}`)
-
-    // for some reason, buf.setName creates a new buffer? lolwut?
-    // so it's probably still better to do the shenanigans above
-    // since finding the buffer by uuid is more accurate instead
-    // of trying to get a buffer handle by name only alone
-    //
-    // after a future neovim PR we might consider using 'nvim_create_buf'
-    await buffer.setName(name)
-    cmd(`bwipeout! ${id}`)
+    // TODO: use nvim_create_buf() when it is available
+    cmd(`badd ${path}`)
+    const buffer = await buffers.find(path)
+    if (!buffer) throw new Error(`buffers.add(${path}) failed. probably we were not able to find the buffer after adding it`)
     return buffer
   },
+  /** Remove a buffer from the buffer list */
+  remove: (path: string) => cmd(`bdelete ${path}`),
+  /** Rename buffer and file given old and new paths. This affects the filesystem */
+  rename: async (oldPath: string, newPath: string) => {
+    buffers.remove(oldPath)
+    await rename(oldPath, newPath)
+    return buffers.add(newPath)
+  },
+  /** Delete buffer and file at the given path. This affects the filesystem */
+  delete: async (path: string) => {
+    buffers.remove(path)
+    remove(path)
+  },
+  /** List all buffers with some useful metadata preloaded */
   listWithInfo: async (): Promise<BufferInfo[]> => {
     const bufs = await buffers.list()
     const currentBufferId = current.buffer.id
@@ -264,6 +302,7 @@ const buffers = {
       .map((m, ix, arr) => ({ ...m, duplicate: arr.some((n, ixf) => ixf !== ix && n.base === m.base) }))
       .map(m => ({ ...m, name: m.duplicate ? `${m.dir}/${m.base}` : m.base }))
   },
+  /** Add a shadow buffer used to render GUI elements on top of */
   addShadow: async (name: string) => {
     const buffer = await buffers.add(name)
 
@@ -288,42 +327,6 @@ const tabs = {
 const isFunc = (m: any) => is.function(m) || is.asyncfunction(m)
 
 const getCursorPosition = () => requestFromUI.getCursorPosition()
-
-const current = {
-  get buffer(): Buffer {
-    const promise = as.buf(req.core.getCurrentBuf())
-
-    return onProp<Buffer>(prop => {
-      const testValue = Reflect.get(dummy.buf, prop)
-      if (testValue == null) throw new TypeError(`${prop as string} does not exist on Neovim.Buffer`)
-      return isFunc(testValue)
-        ? async (...args: any[]) => Reflect.get(await promise, prop)(...args)
-        : promise.then(m => Reflect.get(m, prop))
-    })
-  },
-  get window(): Window {
-    const promise = as.win(req.core.getCurrentWin())
-
-    return onProp<Window>(prop => {
-      const testValue = Reflect.get(dummy.win, prop)
-      if (testValue == null) throw new TypeError(`${prop as string} does not exist on Neovim.Window`)
-      return isFunc(testValue)
-        ? async (...args: any[]) => Reflect.get(await promise, prop)(...args)
-        : promise.then(m => Reflect.get(m, prop))
-    })
-  },
-  get tabpage(): Tabpage {
-    const promise = as.tab(req.core.getCurrentTabpage())
-
-    return onProp<Tabpage>(prop => {
-      const testValue = Reflect.get(dummy.tab, prop)
-      if (testValue == null) throw new TypeError(`${prop as string} does not exist on Neovim.Tabpage`)
-      return isFunc(testValue)
-        ? async (...args: any[]) => Reflect.get(await promise, prop)(...args)
-        : promise.then(m => Reflect.get(m, prop))
-    })
-  },
-}
 
 const emptyObject: { [index: string]: any } = Object.create(null)
 const g = new Proxy(emptyObject, {
@@ -354,42 +357,6 @@ const untilEvent: UntilEvent = new Proxy(Object.create(null), {
   })
 })
 
-const applyPatches = async (patches: Patch[]) => {
-  const bufs = await Promise.all((await buffers.list()).map(async buffer => ({
-    buffer,
-    path: await buffer.name,
-  })))
-
-  // TODO: this assumes all missing files are in the cwd
-  // TODO: badd allows the option of specifying a line number to position the curosr
-  // when loading the buffer. might be nice to use on a rename op. see :h badd
-
-  // TODO: we should notify user that other files were changed
-  patches
-    .filter(p => bufs.some(b => b.path !== p.path))
-    .forEach(b => cmd(`badd ${b.file}`))
-
-  applyPatchesToBuffers(patches, bufs)
-}
-
-interface PathBuf { buffer: Buffer, path: string }
-const applyPatchesToBuffers = async (patches: Patch[], buffers: PathBuf[]) => buffers.forEach(({ buffer, path }) => {
-  const patch = patches.find(p => p.path === path)
-  if (!patch) return
-
-  patch.operations.forEach(async ({ op, start, end, val }, ix) => {
-    if (op === 'delete') buffer.delete(start.line)
-    else if (op === 'append') buffer.append(start.line, val)
-    else if (op === 'replace') {
-      const targetLine = await buffer.getLine(start.line)
-      const newLine = targetLine.slice(0, start.character) + val + targetLine.slice(end.character)
-      buffer.replace(start.line, newLine)
-    }
-
-    if (!ix) cmd('undojoin')
-  })
-})
-
 const refreshState = async () => {
   const nextState = await call.VeonimState()
   Object.assign(state, nextState)
@@ -409,6 +376,7 @@ cmd(`let g:vn_cmd_completions .= "${events}\\n"`)
 subscribe('veonim', ([ event, args = [] ]) => watchers.actions.emit(event, ...args))
 subscribe('veonim-state', ([ nextState ]) => Object.assign(state, nextState))
 subscribe('veonim-position', ([ position ]) => Object.assign(state, position))
+subscribe('veonim-g', ([ name, change = {} ]) => watchers.internal.emit(`gvar::${name}`, change.new))
 subscribe('veonim-autocmd', ([ autocmd, ...arg ]) => {
   // TODO: should really provide a way to scope autocmds to the current vim instance...
   if (autocmd === 'FileType') registerFiletype(arg[0], arg[1])
@@ -452,8 +420,11 @@ autocmd.BufWritePost(bufId => watchers.events.emit('bufWrite', Buffer(bufId-0)))
 autocmd.BufWipeout(bufId => watchers.events.emit('bufClose', Buffer(bufId-0)))
 autocmd.InsertEnter(() => watchers.events.emit('insertEnter'))
 autocmd.InsertLeave(() => watchers.events.emit('insertLeave'))
-autocmd.OptionSet((name: string, value: any) => options.set(name, value))
 autocmd.FileType((_, filetype: string) => watchers.events.emit('filetype', filetype))
+autocmd.OptionSet((name: string, value: any) => {
+  options.set(name, value)
+  watchers.internal.emit(`option-set::${name}`, value)
+})
 
 autocmd.TextChanged(revision => {
   state.revision = revision-0
@@ -467,6 +438,58 @@ autocmd.TextChangedI(revision => {
 
 // TODO: i think we should just determine this from render events
 autocmd.WinEnter((id: number) => watchers.events.emit('winEnter', id))
+
+autocmd.WinEnter((id: number) => _currentCache.window = Window(id-0))
+as.win(req.core.getCurrentWin()).then(win => _currentCache.window = win)
+on.bufLoad(buffer => _currentCache.buffer = buffer)
+
+interface CurrentCache {
+  buffer?: Buffer
+  window?: Window
+}
+
+const _currentCache: CurrentCache = {
+  buffer: undefined,
+  window: undefined,
+}
+
+const current = {
+  get buffer(): Buffer {
+    const promise = as.buf(req.core.getCurrentBuf())
+
+    return onProp<Buffer>(prop => {
+      if (prop === 'id' && _currentCache.buffer) return _currentCache.buffer.id
+      const testValue = Reflect.get(dummy.buf, prop)
+      if (testValue == null) throw new TypeError(`${prop as string} does not exist on Neovim.Buffer`)
+      return isFunc(testValue)
+        ? async (...args: any[]) => Reflect.get(await promise, prop)(...args)
+        : promise.then(m => Reflect.get(m, prop))
+    })
+  },
+  get window(): Window {
+    const promise = as.win(req.core.getCurrentWin())
+
+    return onProp<Window>(prop => {
+      if (prop === 'id' && _currentCache.window) return _currentCache.window.id
+      const testValue = Reflect.get(dummy.win, prop)
+      if (testValue == null) throw new TypeError(`${prop as string} does not exist on Neovim.Window`)
+      return isFunc(testValue)
+        ? async (...args: any[]) => Reflect.get(await promise, prop)(...args)
+        : promise.then(m => Reflect.get(m, prop))
+    })
+  },
+  get tabpage(): Tabpage {
+    const promise = as.tab(req.core.getCurrentTabpage())
+
+    return onProp<Tabpage>(prop => {
+      const testValue = Reflect.get(dummy.tab, prop)
+      if (testValue == null) throw new TypeError(`${prop as string} does not exist on Neovim.Tabpage`)
+      return isFunc(testValue)
+        ? async (...args: any[]) => Reflect.get(await promise, prop)(...args)
+        : promise.then(m => Reflect.get(m, prop))
+    })
+  },
+}
 
 const fromId = {
   buffer: (id: number): Buffer => Buffer(id),
@@ -513,39 +536,44 @@ const Buffer = (id: any) => ({
   },
   append: async (start, lines) => {
     const replacement = is.array(lines) ? lines as string[] : [lines as string]
-    const linesBelow = await req.buf.getLines(id, start + 1, -1, false)
+    const linesBelow = await req.buf.getLines(id, start, -2, false)
     const newLines = [...replacement, ...linesBelow]
 
     api.buf.setLines(id, start + 1, start + 1 + newLines.length, false, newLines)
   },
-  getAllLines: () => req.buf.getLines(id, 0, -1, true),
-  getLines: (start, end) => req.buf.getLines(id, start, end, true),
+  getAllLines: () => req.buf.getLines(id, 0, -2, true),
+  // getLines line ranges are end exclusive so we +1
+  getLines: (start, end) => req.buf.getLines(id, start, end + 1, true),
   getLine: start => req.buf.getLines(id, start, start + 1, true).then(m => m[0]),
   setLines: (start, end, lines) => api.buf.setLines(id, start, end, true, lines),
   delete: start => api.buf.setLines(id, start, start + 1, true, []),
-  appendRange: async (line, column, text) => {
-    const lines = await req.buf.getLines(id, line, -1, false)
+  appendRange: async (position, text, undojoin = false) => {
+    const { line, character: column } = position
+    const lines = await req.buf.getLines(id, line, -2, false)
     const updatedLines = TextEditPatch.append({ lines, column, text })
     req.buf.setLines(id, line, line + updatedLines.length, false, updatedLines)
+    if (undojoin) cmd('undojoin')
   },
-  replaceRange: async (startLine, startColumn, endLine, endColumn, text) => {
-    const lines = await req.buf.getLines(id, startLine, endLine, false)
+  replaceRange: async ({ start, end }, text, undojoin = false) => {
+    const lines = await req.buf.getLines(id, start.line, end.line + 1, false)
     const updatedLines = TextEditPatch.replace({
       lines,
-      start: { line: 0, column: startColumn },
-      end: { line: endLine - startLine, column: endColumn },
+      start: new Position(0, start.character),
+      end: new Position(end.line - start.line, end.character),
       text
     })
-    req.buf.setLines(id, startLine, endLine, false, updatedLines)
+    req.buf.setLines(id, start.line, end.line + 1, false, updatedLines)
+    if (undojoin) cmd('undojoin')
   },
-  deleteRange: async (startLine, startColumn, endLine, endColumn) => {
-    const lines = await req.buf.getLines(id, startLine, endLine, false)
+  deleteRange: async ({ start, end }, undojoin = false) => {
+    const lines = await req.buf.getLines(id, start.line, end.line, false)
     const updatedLines = TextEditPatch.remove({
       lines,
-      start: { line: 0, column: startColumn },
-      end: { line: endLine - startLine, column: endColumn },
+      start: new Position(0, start.character),
+      end: new Position(end.line - start.line, end.character),
     })
-    req.buf.setLines(id, startLine, endLine, false, updatedLines)
+    req.buf.setLines(id, start.line, end.line + 1, false, updatedLines)
+    if (undojoin) cmd('undojoin')
   },
   replace: (start, line) => api.buf.setLines(id, start, start + 1, false, [ line ]),
   getVar: name => req.buf.getVar(id, name),
@@ -608,11 +636,11 @@ const dummy = {
 
 const exportAPI = { state, watchState, onStateChange, onStateValue,
   untilStateValue, cmd, cmdOut, expr, call, feedkeys, normal, callAtomic,
-  onAction, getCurrentLine, jumpTo, jumpToProjectFile, systemAction, current,
-  g, on, untilEvent, applyPatches, buffers, windows, tabs, options:
-  readonlyOptions, Buffer: fromId.buffer, Window: fromId.window,
-  Tabpage: fromId.tabpage, getKeymap, getColorByName, getCursorPosition,
-  highlightSearchPattern, removeHighlightSearch }
+  onAction, getCurrentLine, jumpTo, systemAction, current, g, on,
+  untilEvent, buffers, windows, tabs, options: readonlyOptions,
+  Buffer: fromId.buffer, Window: fromId.window, Tabpage: fromId.tabpage,
+  getKeymap, getColorByName, getCursorPosition, highlightSearchPattern,
+  removeHighlightSearch, getOptionCurrentAndFuture, getVarCurrentAndFuture }
 
 export default exportAPI
 export type NeovimAPI = typeof exportAPI

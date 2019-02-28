@@ -26,6 +26,10 @@ const copy = {
     $`copying runtime files`
     return fs.copy(fromRoot('runtime'), fromRoot('build/runtime'))
   },
+  extensionDependencies: () => {
+    $`copying extension dependencies`
+    return fs.copy(fromRoot('extension_dependencies'), fromRoot('build/extension_dependencies'))
+  },
   hyperapp: () => {
     $`copying hyperapp`
     return fs.copy(fromRoot('src/ui/hyperapp.js'), fromRoot('build/ui/hyperapp.js'))
@@ -69,6 +73,7 @@ require.main === module && go(async () => {
     copy.processExplorer(),
     copy.assets(),
     copy.runtime(),
+    copy.extensionDependencies(),
     copy.hyperapp(),
   ])
 })

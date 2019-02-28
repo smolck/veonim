@@ -1,11 +1,21 @@
-import { supports } from '../langserv/server-features'
-import { typeDefinition } from '../langserv/adapter'
+import { vscode } from '../core/extensions-api'
+import { PromiseBoss } from '../support/utils'
 import nvim from '../neovim/api'
 
-nvim.onAction('type-definition', async () => {
-  if (!supports.typeDefinition(nvim.state.cwd, nvim.state.filetype)) return
+const boss = PromiseBoss()
 
-  const { path, line, column } = await typeDefinition(nvim.state)
-  if (!line || !column) return
-  nvim.jumpTo({ path, line, column })
-})
+const doDefinition = async () => {
+  nvim.untilEvent.cursorMove.then(boss.cancelCurrentPromise)
+  const result = await boss.schedule(vscode.language.provideTypeDefinition(), { timeout: 3e3 })
+  if (!result) return
+  const { path, range: { start } } = result
+
+  nvim.jumpTo({
+    path,
+    line: start.line,
+    column: start.character,
+  })
+}
+
+nvim.onAction('type-definition', doDefinition)
+export default doDefinition

@@ -1,4 +1,7 @@
-// test('activeTextEditor')
+const vscode = require('vscode')
+const path = require('path')
+
+// test('activeTextEditor', eq => { })
 // test('visibleTextEditors')
 // test('state')
 // test('terminals')

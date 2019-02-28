@@ -1,12 +1,9 @@
+import { Position } from 'vscode'
+
 interface AppendPatch {
   lines: string[]
   column: number
   text: string
-}
-
-interface Position {
-  line: number
-  column: number
 }
 
 interface ReplacePatch {
@@ -22,12 +19,12 @@ interface DeletePatch {
   end: Position
 }
 
-const positionToOffset = (lines: string[], position: Position): number => {
+export const positionToOffset = (lines: string[], position: Position): number => {
   let offset = 0
   const totalol = lines.length
   for (let ix = 0; ix < totalol; ix++) {
     const line = lines[ix]
-    if (position.line === ix) return position.column + offset
+    if (position.line === ix) return position.character + offset
     offset += line.length
   }
   return offset

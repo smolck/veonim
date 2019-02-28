@@ -1,13 +1,12 @@
-import { findIndexRight, hasUpperCase, EarlyPromise, exists, getDirFiles, resolvePath } from '../support/utils'
-import { CompletionItemKind, CompletionItem } from 'vscode-languageserver-protocol'
-import { completions, completionDetail } from '../langserv/adapter'
+import { findIndexRight, hasUpperCase, EarlyPromise, exists, getDirFiles, resolvePath, PromiseBoss } from '../support/utils'
 import transformCompletions from '../ai/completion-transforms'
-import { getTriggerChars } from '../langserv/server-features'
-import toVSCodeLanguage from '../langserv/vsc-languages'
 import { workerData } from '../messaging/worker-client'
-import * as ai from '../langserv/server-features'
+import toVSCodeLanguage from '../vscode/vsc-languages'
+import { CompletionItemKind } from '../vscode/types'
+import { vscode } from '../core/extensions-api'
 import { filter } from 'fuzzaldrin-plus'
 import Worker from '../messaging/worker'
+import { CompletionItem } from 'vscode'
 import { join, dirname } from 'path'
 import nvim from '../neovim/api'
 import { ui } from '../core/ai'
@@ -27,10 +26,11 @@ export interface CompletionOption {
   text: string,
   insertText: string,
   kind: CompletionItemKind,
-  // TODO: raw is used to get more completion detail. perhaps should change
-  // prop name to reflect that
   raw?: CompletionItem,
 }
+
+const completionBoss = PromiseBoss()
+const resolveBoss = PromiseBoss()
 
 // TODO: do we really want to connect another nvim instance in the worker?
 const harvester = Worker('harvester', { workerData })
@@ -109,15 +109,22 @@ const getSemanticCompletions = (line: number, column: number) => EarlyPromise(as
   if (cache.semanticCompletions.has(`${line}:${column}`)) 
     return done(cache.semanticCompletions.get(`${line}:${column}`)!)
 
-  const supported = ai.supports.completion(nvim.state.cwd, nvim.state.filetype)
-  if (!supported) return done([])
+  // TODO: different 'triggerKind'(s)? what about 'triggerCharacters'?
+  // TODO: i'm not sure if we are ready for this yet?
+  // if we cache completions on the first char, then we will not want to cancel
+  // the first request for the current start index. we should find a way to cancel
+  // more intelligently based on available/relevant completion cache results
+  // nvim.untilEvent.cursorMoveInsert.then(completionBoss.cancelCurrentPromise)
+  const completions = await completionBoss.schedule(vscode.language.provideCompletionItems({ triggerKind: 0 }), { timeout: 2e3 })
+  if (!completions) return done([])
 
-  const items = await completions(nvim.state)
-  if (!items) return done([])
-
-  const options = items.map(m => ({
+  // TODO: support TextEdits and snippets
+  // TODO: do we need to remap this or can we just pass along the completions object as is?
+  const options = completions.map(m => ({
     raw: m,
-    insertText: m.insertText || m.label,
+    // TODO: snippets not supported yet because no extended marks. try priority of label first
+    // insertText: ((m.insertText || {} as any).value as string || m.insertText as string) || m.label,
+    insertText: m.label || ((m.insertText || {} as any).value as string || m.insertText as string),
     text: m.label,
     kind: m.kind || CompletionItemKind.Text,
   }))
@@ -153,7 +160,8 @@ const showCompletionsRaw = (column: number, query: string, startIndex: number, l
 export const discoverCompletions = async (lineContent: string, line: number, column: number) => {
   const { startIndex, query, leftChar } = findQuery(lineContent, column)
   const showCompletions = showCompletionsRaw(column, query, startIndex, lineContent)
-  const triggerChars = getTriggerChars.completion(nvim.state.cwd, nvim.state.filetype)
+  const completionTriggerCharacters = await vscode.language.getCompletionTriggerCharacters().promise
+  const triggerChars = new Set(completionTriggerCharacters)
   let semanticCompletions: CompletionOption[] = []
 
   cache.activeCompletion = `${line}:${startIndex}`
@@ -219,9 +227,8 @@ export const discoverCompletions = async (lineContent: string, line: number, col
   }
 }
 
-export const getCompletionDetail = (item: CompletionItem): Promise<CompletionItem> => {
-  const supported = ai.supports.completionResolve(nvim.state.cwd, nvim.state.filetype)
-  return supported ? completionDetail(nvim.state, item) : Promise.resolve({} as CompletionItem)
+export const getCompletionDetail = (item: CompletionItem): Promise<CompletionItem | undefined> => {
+  return resolveBoss.schedule(vscode.language.resolveCompletionItem(item), { timeout: 5e3 })
 }
 
 nvim.on.insertLeave(async () => {

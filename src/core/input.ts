@@ -78,9 +78,9 @@ const wrapKey = (key: string): string => key.length > 1 && isUpper(key[0]) ? `<$
 const combineModsWithKey = (mods: string, key: string) => mods.length ? `${mods}-${key}` : key
 const userModRemaps = (mods: string[]) => mods.map(m => remaps.get(m) || m)
 const joinModsWithDash = (mods: string[]) => mods.join('-')
-const mapMods = $(handleMods, userModRemaps, joinModsWithDash)
-const mapKey = $(bypassEmptyMod, toVimKey)
-const formatInput = $(combineModsWithKey, wrapKey)
+const mapMods = $<string>(handleMods, userModRemaps, joinModsWithDash)
+const mapKey = $<string>(bypassEmptyMod, toVimKey)
+const formatInput = $<string>(combineModsWithKey, wrapKey)
 const shortcuts = new Map<string, Function>()
 
 const resetInputState = () => {

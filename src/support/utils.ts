@@ -1,5 +1,6 @@
-import { dirname, basename, join, extname, resolve, sep, parse, normalize } from 'path'
+import { dirname, basename, join, extname, resolve, sep, parse, normalize, relative } from 'path'
 import { createConnection } from 'net'
+// TODO: in the near future we can use require('fs').promises
 import { promisify as P } from 'util'
 import { EventEmitter } from 'events'
 import { exec } from 'child_process'
@@ -34,7 +35,7 @@ export const merge = Object.assign
 export const cc = (...a: any[]) => Promise.all(a)
 export const delay = (t: number) => new Promise(d => setTimeout(d, t))
 export const ID = (val = 0) => ({ next: () => (val++, val) })
-export const $ = (...fns: Function[]) => (...a: any[]) => fns.reduce((res, fn, ix) => ix ? fn(res) : fn(...res), a)
+export const $ = <T>(...fns: Function[]) => (...a: any[]) => fns.reduce((res, fn, ix) => ix ? fn(res) : fn(...res), a) as unknown as T
 export const is = new Proxy<Types>({} as Types, { get: (_, key) => (val: any) => type(val) === key })
 export const onProp = <T>(cb: (name: PropertyKey) => void): T => new Proxy({}, { get: (_, name) => cb(name) }) as T
 export const onFnCall = <T>(cb: (name: string, args: any[]) => void): T => new Proxy({}, { get: (_, name) => (...args: any[]) => cb(name as string, args) }) as T
@@ -108,8 +109,12 @@ export const asColor = (color?: number) => color ? '#' + [16, 8, 0].map(shift =>
   return hex.length < 2 ? ('0' + hex) : hex
 }).join('') : undefined
 
-export const readFile = (path: string, encoding = 'utf8') => P(fs.readFile)(path, encoding)
 export const exists = (path: string): Promise<boolean> => new Promise(fin => fs.access(path, e => fin(!e)))
+export const readFile = (path: string, encoding = 'utf8') => P(fs.readFile)(path, encoding)
+export const writeFile = async (path: string, data: string) => {
+  await ensureDir(dirname(path))
+  return P(fs.writeFile)(path, data)
+}
 
 const emptyStat = {
   isDirectory: () => false,
@@ -119,29 +124,132 @@ const emptyStat = {
 
 const getFSStat = async (path: string) => P(fs.stat)(path).catch((_) => emptyStat)
 
-export const getDirFiles = async (path: string) => {
+interface DirFileInfo {
+  name: string
+  path: string
+  relativePath: string
+  dir: boolean
+  file: boolean
+  symlink: boolean
+}
+
+export const getDirFiles = async (path: string): Promise<DirFileInfo[]> => {
   const paths = await P(fs.readdir)(path).catch((_e: string) => []) as string[]
   const filepaths = paths.map(f => ({ name: f, path: join(path, f) }))
+
   const filesreq = await Promise.all(filepaths.map(async f => ({
     path: f.path,
     name: f.name,
+    relativePath: f.path,
     stats: await getFSStat(f.path),
   })))
-  return filesreq
-    .map(({ name, path, stats }) => ({ name, path, dir: stats.isDirectory(), file: stats.isFile() }))
-    .filter(m => m.dir || m.file)
+
+  return filesreq.map(({ name, path, relativePath, stats }) => ({
+    name,
+    path,
+    relativePath,
+    dir: stats.isDirectory(),
+    // file: stats.isFile(),
+    // TODO: electron FS does not report .asar files as either files or
+    // directories this is a big problem when we need to remove paths. this
+    // should be temporary until we move the server code back to vanilla node
+    // (which does report .asar correctly as file)
+    file: stats.isFile() || path.endsWith('.asar'),
+    symlink: stats.isSymbolicLink(),
+  }))
 }
 
 export const getDirs = async (path: string) => (await getDirFiles(path)).filter(m => m.dir)
 export const getFiles = async (path: string) => (await getDirFiles(path)).filter(m => m.file)
+const isFile = async (path: string) => (await P(fs.stat)(path)).isFile()
+const copyFile = (src: string, dest: string) => P(fs.copyFile)(src, dest)
 
-export const remove = async (path: string) => {
-  if (!(await exists(path))) throw new Error(`remove: ${path} does not exist`)
-  if ((await P(fs.stat)(path)).isFile()) return P(fs.unlink)(path)
+export const getDirsFilesRecursively = async (startPath: string): Promise<DirFileInfo[]> => {
+  const dive = async (path: string): Promise<DirFileInfo[]> => {
+    const paths = await P(fs.readdir)(path).catch(() => []) as string[]
+    const filepaths = paths.map(f => ({ name: f, path: join(path, f) }))
+    const filesreq = await Promise.all(filepaths.map(async f => ({
+      path: f.path,
+      name: f.name,
+      relativePath: relative(startPath, f.path),
+      stats: await getFSStat(f.path),
+    })))
 
-  const dirFiles = await getDirFiles(path)
-  await Promise.all(dirFiles.map(m => m.dir ? remove(m.path) : P(fs.unlink)(m.path)))
-  P(fs.rmdir)(path)
+    const meta = filesreq.map(({ name, path, relativePath, stats }) => ({
+      name,
+      path,
+      relativePath,
+      dir: stats.isDirectory(),
+      // file: stats.isFile(),
+      // TODO: electron FS does not report .asar files as either files or
+      // directories this is a big problem when we need to remove paths. this
+      // should be temporary until we move the server code back to vanilla node
+      // (which does report .asar correctly as file)
+      file: stats.isFile() || path.endsWith('.asar'),
+      symlink: stats.isSymbolicLink(),
+    }))
+
+    return meta
+      .filter(m => m.dir)
+      .reduce(async (q, dir) => {
+        const res = await q
+        const df = await dive(dir.path)
+        return [...res, ...df]
+      }, Promise.resolve(meta))
+  }
+
+  return dive(startPath)
+}
+
+type RemoveOpts = { ignoreNotExist?: boolean }
+export const remove = async (path: string, { ignoreNotExist } = {} as RemoveOpts) => {
+  if (!(await exists(path))) {
+    if (ignoreNotExist) return
+    throw new Error(`remove: ${path} does not exist`)
+  }
+
+  if (await isFile(path)) return P(fs.unlink)(path)
+
+  const dfs = await getDirsFilesRecursively(path)
+  if (!dfs.length) return P(fs.rmdir)(path)
+
+  const files = dfs.filter(m => m.file)
+  await Promise.all(files.map(f => P(fs.unlink)(f.path)))
+  await dfs
+    .filter(m => m.dir)
+    .map(m => ({ ...m, depth: m.path.split(sep).length }))
+    .sort((a, b) => b.depth - a.depth)
+    .reduce(async (q, m) => {
+      return (await q, P(fs.rmdir)(m.path))
+    }, Promise.resolve())
+
+  return P(fs.rmdir)(path)
+}
+
+interface CopyOptions { overwrite?: boolean }
+/** Copy file or dir from source to destination path. Destination path should be the final path. */
+export const copy = async (srcPath: string, destPath: string, options = {} as CopyOptions) => {
+  if (await isFile(srcPath)) {
+    await ensureDir(destPath)
+    return copyFile(srcPath, destPath)
+  }
+
+  if (options.overwrite) await remove(destPath, { ignoreNotExist: true })
+  const dfs = await getDirsFilesRecursively(srcPath)
+  const files = dfs.filter(m => m.file).map(m => m.relativePath)
+
+  return Promise.all(files.map(async file => {
+    const destdir = join(destPath, dirname(file))
+    await ensureDir(destdir)
+    const srcfile = join(srcPath, file)
+    const dstfile = join(destPath, file)
+    return copyFile(srcfile, dstfile)
+  }))
+}
+
+export const rename = async (path: string, newPath: string) => {
+  if (!(await exists(path))) throw new Error(`rename: ${path} does not exist`)
+  return P(fs.rename)(path, newPath)
 }
 
 export const pathParts = (path: string) => {
@@ -210,6 +318,40 @@ export const objDeepGet = (obj: object) => (givenPath: string | string[]) => {
   return dive(obj)
 }
 
+export const dedupOn = <T>(list: T[], comparator: (a: T, b: T) => boolean): T[] => list.filter((m, ix) => {
+  return ix === list.findIndex(s => comparator(m, s))
+})
+
+const defaultProtoKeys = Object.keys(Object.getOwnPropertyDescriptors(Object.getPrototypeOf({})))
+
+export const threadSafeObject = <T>(obj: T): T => {
+  // @ts-ignore
+  if (!is.object(obj)) return Array.isArray(obj) ? obj.map(v => threadSafeObject(v)) : obj
+
+  const proto = Object.getPrototypeOf(obj)
+  const mainDesc = Object.entries(Object.getOwnPropertyDescriptors(obj))
+  const protoDesc = Object.entries(Object.getOwnPropertyDescriptors(proto))
+
+  const collectValues = ((res: any, [ key, desc ]: any) => {
+    if (defaultProtoKeys.includes(key)) return res
+    if (typeof desc.value === 'function') return res
+
+    // @ts-ignore
+    const value = obj[key]
+    const threadSafeValue = Array.isArray(value)
+      ? value.map(v => threadSafeObject(v))
+      : threadSafeObject(value)
+
+    Reflect.set(res, key, threadSafeValue)
+    return res
+  })
+
+  const part1 = protoDesc.reduce(collectValues, {})
+  const part2 = mainDesc.reduce(collectValues, {})
+
+  return { ...part1, ...part2 }
+}
+
 // TODO: deprecate this and use native Events.EventEmitter
 export class Watchers extends Map<string, Set<Function>> {
   constructor() {
@@ -247,27 +389,33 @@ export type GenericEvent = { [index: string]: any }
 // i tried T extends GenericEv but it does not work. help me obi wan kenobi
 export const Watcher = <T>() => {
   const ee = new EventEmitter()
+  ee.setMaxListeners(200)
 
-  const on = <K extends keyof T>(event: K, handler: (value: T[K]) => void) => {
+  const on = <K extends keyof T>(event: K & string, handler: (value: T[K]) => void) => {
     ee.on(event, handler)
     return () => ee.removeListener(event, handler)
   }
 
-  const once = <K extends keyof T>(event: K, handler: (...args: any[]) => void) => {
+  const once = <K extends keyof T>(event: K & string, handler: (...args: any[]) => void) => {
     ee.once(event, handler)
   }
 
   // TODO: how do we make "value" arg require OR optional based on T[K]?
-  type Emit1 = <K extends keyof T>(event: K) => void
-  type Emit2 = <K extends keyof T>(event: K, value: T[K]) => void
-  type Emit3 = <K extends keyof T>(event: K, ...args: any[]) => void
-  type Emit = Emit1 & Emit2 & Emit3
-
-  const emit: Emit = (event: string, ...args: any[]) => {
-    ee.emit(event, ...args)
+  type Emit = {
+    <K extends keyof T>(event: K): void
+    <K extends keyof T>(event: K, value: T[K]): void
+    <K extends keyof T>(event: K, ...args: any[]): void
   }
 
-  const remove = (event: keyof T) => {
+  const emit: Emit = (event: string, ...args: any[]) => {
+    try {
+      ee.emit(event, ...args)
+    } catch(e) {
+      console.error('Watcher emit callback threw', event, e)
+    }
+  }
+
+  const remove = (event: keyof T & string) => {
     ee.removeAllListeners(event)
   }
 
@@ -365,10 +513,66 @@ export const MapMap = <A, B, C>(initial?: any[]) => {
   }
 }
 
-class MapSetter<A, B> extends Map<A, Set<B>> {
+export class MapList<A, B> extends Map<A, B[]> {
+  add(key: A, values: B[]) {
+    const list = this.get(key) || []
+    list.push(...values)
+    this.set(key, list)
+  }
+
+  replace(key: A, values: B[]) {
+    const list = [...values]
+    this.set(key, list)
+  }
+}
+
+export class MapSetter<A, B> extends Map<A, Set<B>> {
   add(key: A, value: B) {
     const s = this.get(key) || new Set()
     this.set(key, s.add(value))
+    return () => this.remove(key, value)
+  }
+
+  addMany(key: A, values: B[]) {
+    return values.map(val => this.add(key, val))
+  }
+
+  addMultiple(keys: A[], value: B) {
+    keys.forEach(key => this.add(key, value))
+    return () => this.removeMultiple(keys, value)
+  }
+
+  addMultipleValues(keys: A[], values: B[]) {
+    const removalFuncs = values.map(value => this.addMultiple(keys, value))
+    return () => removalFuncs.forEach(fn => fn())
+  }
+
+  replace(key: A, value: B) {
+    const s = this.get(key) || new Set()
+    s.clear()
+    this.set(key, s.add(value))
+    return () => this.remove(key, value)
+  }
+
+  replaceMany(key: A, values: B[]) {
+    const s = this.get(key) || new Set()
+    s.clear()
+    return values.map(val => this.add(key, val))
+  }
+
+  remove(key: A, value: B) {
+    const s = this.get(key)
+    if (!s) return false
+    return s.delete(value)
+  }
+
+  removeMultiple(keys: A[], value: B) {
+    keys.forEach(key => this.remove(key, value))
+  }
+
+  getList(key: A): B[] {
+    const s = this.get(key)
+    return s ? [...s] : []
   }
 }
 
@@ -457,3 +661,45 @@ export const tryNetConnect = (path: string, interval = 500, timeout = 5e3): Prom
 
   attemptConnection()
 })
+
+export const PromiseBoss = () => {
+  interface CancelPromise<T> {
+    promise: Promise<T>
+    cancel: () => any
+  }
+
+  interface Options {
+    timeout?: number
+  }
+
+  const $cancel = Symbol('cancel')
+  type CancelFn = () => any
+  let previousCancel: CancelFn | null
+  let externalControlTask = CreateTask()
+
+  /** Schedule a cancellable promise which can be cancelled by next invocation or timeout */
+  const schedule = <T>(cancellablePromise: CancelPromise<T>, options: Options): Promise<T> => new Promise(async (ok, no) => {
+    previousCancel && previousCancel()
+    previousCancel = cancellablePromise.cancel
+    externalControlTask = CreateTask()
+
+    const result = await Promise.race([
+      cancellablePromise.promise,
+      externalControlTask.promise,
+      new Promise(done => setTimeout(() => done($cancel), options.timeout || 1e3)),
+    ]).catch(no)
+
+    if (result === $cancel) {
+      previousCancel = null
+      cancellablePromise.cancel()
+      return
+    }
+
+    previousCancel = null
+    ok(result as T)
+  }) as Promise<T>
+
+  const cancelCurrentPromise = () => externalControlTask.done($cancel)
+
+  return { schedule, cancelCurrentPromise }
+}

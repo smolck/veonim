@@ -930,16 +930,17 @@ export class SymbolInformation {
 	}
 
 	name: string;
-  // @ts-ignore
+	// @ts-ignore
 	location: Location;
 	kind: SymbolKind;
-	containerName: string | undefined;
+	containerName: string;
 
 	constructor(name: string, kind: SymbolKind, containerName: string, location: Location);
 	constructor(name: string, kind: SymbolKind, range: Range, uri?: URI, containerName?: string);
 	constructor(name: string, kind: SymbolKind, rangeOrContainer: string | Range, locationOrUri?: Location | URI, containerName?: string) {
 		this.name = name;
 		this.kind = kind;
+		// @ts-ignore
 		this.containerName = containerName;
 
 		if (typeof rangeOrContainer === 'string') {
@@ -1033,6 +1034,7 @@ export class CodeActionKind {
 	public static readonly RefactorRewrite = CodeActionKind.Refactor.append('rewrite');
 	public static readonly Source = CodeActionKind.Empty.append('source');
 	public static readonly SourceOrganizeImports = CodeActionKind.Source.append('organizeImports');
+	public static readonly SourceFixAll = CodeActionKind.Source.append('fixAll');
 
 	constructor(
 		public readonly value: string
@@ -1040,6 +1042,10 @@ export class CodeActionKind {
 
 	public append(parts: string): CodeActionKind {
 		return new CodeActionKind(this.value ? this.value + CodeActionKind.sep + parts : parts);
+	}
+
+	public intersects(other: CodeActionKind): boolean {
+		return this.contains(other) || other.contains(this);
 	}
 
 	public contains(other: CodeActionKind): boolean {

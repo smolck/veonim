@@ -1,3 +1,5 @@
+import { Range } from 'vscode'
+
 interface Distance<T> {
   reference: T,
   lines: number,
@@ -5,11 +7,8 @@ interface Distance<T> {
 }
 
 export interface LocationItem {
-  path: string,
-  line: number,
-  column: number,
-  endLine: number,
-  endColumn: number,
+  path: string
+  range: Range
 }
 
 const distanceAsc = <T>(a: Distance<T>, b: Distance<T>) =>
@@ -20,8 +19,8 @@ const distanceDesc = <T>(a: Distance<T>, b: Distance<T>) =>
 
 const locationItemAsDistance = (line: number, column: number) => <T extends LocationItem>(item: T) => ({
   reference: item,
-  lines: item.line - line,
-  characters: item.column - column,
+  lines: item.range.start.line - line,
+  characters: item.range.start.character - column,
 } as Distance<T>)
 
 const findNextItem = <T extends LocationItem>(items: T[], line: number, column: number) => {
@@ -37,8 +36,8 @@ const findPreviousItem = <T extends LocationItem>(items: T[], line: number, colu
 }
 
 const itemContainsPosition = <T extends LocationItem>(item: T, line: number, column: number) => {
-  if (item.line !== line) return false
-  return column >= item.column && column <= item.endColumn
+  if (item.range.start.line !== line) return false
+  return column >= item.range.start.character && column <= item.range.end.character
 }
 
 // there is no guarantee that the item results will be grouped together by path
@@ -46,9 +45,9 @@ const itemContainsPosition = <T extends LocationItem>(item: T, line: number, col
 // when we sort by lines/columns we are sorting them relative to the current file
 const sortItems = <T extends LocationItem>(items: T[]) => items
   .sort((a, b) => a.path.toLowerCase().localeCompare(b.path.toLowerCase()))
-  .sort((a, b) => a.line === b.line
-    ? a.column - b.column
-    : a.line - b.line)
+  .sort((a, b) => a.range.start.line === b.range.start.line
+    ? a.range.start.character - b.range.start.character
+    : a.range.start.line - b.range.start.line)
 
 const findInCurrent = <T extends LocationItem>(items: T[], line: number, column: number, findNext: boolean) => {
   const sortedItems = sortItems(items)
@@ -63,7 +62,7 @@ const findInCurrent = <T extends LocationItem>(items: T[], line: number, column:
   // this really only happens when trying to find items backwards
   // (because distances and jump locations always use the start range)
   if (itemContainsPosition(foundItem.reference, line, column)) {
-    const possiblyAnother = findPreviousItem(sortedItems, line, foundItem.reference.column - 1)
+    const possiblyAnother = findPreviousItem(sortedItems, line, foundItem.reference.range.start.character - 1)
     if (possiblyAnother) return possiblyAnother.reference
   }
 

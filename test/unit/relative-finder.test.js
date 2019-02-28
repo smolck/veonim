@@ -3,36 +3,36 @@ const { findNext, findPrevious } = src('support/relative-finder')
 
 const getA = () => [{
   path: '/main/a.ts',
-  line: 4,
-  column: 7,
-  endLine: 4,
-  endColumn: 9,
+  range: {
+    start: { line: 4, character: 7 },
+    end: { line: 4, character: 9 },
+  }
 }, {
   path: '/main/a.ts',
-  line: 1,
-  column: 1,
-  endLine: 1,
-  endColumn: 5,
+  range: {
+    start: { line: 1, character: 1 },
+    end: { line: 1, character: 5 },
+  }
 }, {
   path: '/main/a.ts',
-  line: 9,
-  column: 2,
-  endLine: 9,
-  endColumn: 4,
+  range: {
+    start: { line: 9, character: 2 },
+    end: { line: 9, character: 4 },
+  }
 }]
 
 const getC = () => [{
   path: '/main/c.ts',
-  line: 3,
-  column: 1,
-  endLine: 3,
-  endColumn: 9,
+  range: {
+    start: { line: 3, character: 1 },
+    end: { line: 3, character: 9 },
+  }
 }, {
   path: '/main/c.ts',
-  line: 1,
-  column: 7,
-  endLine: 1,
-  endColumn: 9,
+  range: {
+    start: { line: 1, character: 7 },
+    end: { line: 1, character: 9 },
+  }
 }]
 
 const getItems = () => [ ...getA(), ...getC() ]
@@ -43,10 +43,10 @@ describe('relative finder', () => {
 
     same(next, {
       path: '/main/a.ts',
-      line: 4,
-      column: 7,
-      endLine: 4,
-      endColumn: 9,
+      range: {
+        start: { line: 4, character: 7 },
+        end: { line: 4, character: 9 },
+      }
     })
   })
 
@@ -55,10 +55,10 @@ describe('relative finder', () => {
 
     same(next, {
       path: '/main/c.ts',
-      line: 1,
-      column: 7,
-      endLine: 1,
-      endColumn: 9,
+      range: {
+        start: { line: 1, character: 7 },
+        end: { line: 1, character: 9 },
+      }
     })
   })
 
@@ -67,10 +67,10 @@ describe('relative finder', () => {
 
     same(next, {
       path: '/main/a.ts',
-      line: 1,
-      column: 1,
-      endLine: 1,
-      endColumn: 5,
+      range: {
+        start: { line: 1, character: 1 },
+        end: { line: 1, character: 5 },
+      }
     })
   })
 
@@ -79,10 +79,10 @@ describe('relative finder', () => {
 
     same(next, {
       path: '/main/a.ts',
-      line: 1,
-      column: 1,
-      endLine: 1,
-      endColumn: 5,
+      range: {
+        start: { line: 1, character: 1 },
+        end: { line: 1, character: 5 },
+      }
     })
   })
 
@@ -91,10 +91,10 @@ describe('relative finder', () => {
 
     same(next, {
       path: '/main/a.ts',
-      line: 9,
-      column: 2,
-      endLine: 9,
-      endColumn: 4,
+      range: {
+        start: { line: 9, character: 2 },
+        end: { line: 9, character: 4 },
+      }
     })
   })
 
@@ -103,10 +103,10 @@ describe('relative finder', () => {
 
     same(next, {
       path: '/main/a.ts',
-      line: 9,
-      column: 2,
-      endLine: 9,
-      endColumn: 4,
+      range: {
+        start: { line: 9, character: 2 },
+        end: { line: 9, character: 4 },
+      }
     })
   })
 
@@ -115,10 +115,10 @@ describe('relative finder', () => {
 
     same(next, {
       path: '/main/a.ts',
-      line: 1,
-      column: 1,
-      endLine: 1,
-      endColumn: 5,
+      range: {
+        start: { line: 1, character: 1 },
+        end: { line: 1, character: 5 },
+      }
     })
   })
 })

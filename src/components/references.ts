@@ -48,9 +48,13 @@ const scrollIntoView = (next: number) => setTimeout(() => {
 
 const selectResult = (references: ReferenceResult[], ix: number, subix: number) => {
   if (subix < 0) return
-  const [ path, items ] = references[ix]
-  const { line, column } = items[subix]
-  api.nvim.jumpToProjectFile({ line, column, path })
+  const [ , items ] = references[ix]
+  const { path, range: { start } } = items[subix]
+  api.nvim.jumpTo({
+    path,
+    line: start.line,
+    column: start.character,
+  })
   showCursorline()
 }
 

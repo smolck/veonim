@@ -24,7 +24,7 @@
     "type": "git",
     "url": "git+https://github.com/veonim/veonim.git"
   },
-  "vscode-api-version": "1.30.0",
+  "vscode-api-version": "1.31.1",
   "repository-mirrors": [
     "git@github.com:veonim/veonim.git",
     "https://veonim@gitlab.com/veonim/veonim.git",
@@ -36,6 +36,9 @@
     "url": "https://github.com/veonim/veonim/issues"
   },
   "homepage": "https://github.com/veonim/veonim#readme",
+  "bundled-extension-dependencies": {
+    "typescript": "3.3.1"
+  },
   "bindeps-darwin": {
     "@veonim/neovim-mac": "0.4.0-alpha1",
     "@veonim/ripgrep-mac": "0.0.1",
@@ -57,8 +60,7 @@
     "hyperapp": "1.2.9",
     "hyperapp-feather": "0.4.0",
     "hyperapp-seti": "0.2.0",
-    "marked": "0.5.0",
-    "vscode-languageserver-protocol": "3.9.0"
+    "marked": "0.5.0"
   },
   "devDependencies": {
     "@deomitrus/hyperapp-redux-devtools": "1.2.0",
@@ -75,8 +77,8 @@
     "proxyquire": "2.0.1",
     "spectron": "5.0.0",
     "ts-unused-exports": "2.0.5",
-    "ttypescript": "1.5.5",
-    "typescript": "2.8.1",
+    "ttypescript": "1.5.6",
+    "typescript": "3.2.4",
     "vscode-debugprotocol": "1.29.0"
   }
 }

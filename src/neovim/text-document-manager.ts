@@ -1,10 +1,13 @@
-import { TextDocumentContentChangeEvent } from 'vscode-languageserver-protocol'
-import filetypeToLanguageID from '../langserv/vsc-languages'
+import { positionToOffset } from '../neovim/text-edit-patch'
 import { BufferChangeEvent, Buffer } from '../neovim/types'
+import filetypeToLanguageID from '../vscode/vsc-languages'
+import { TextDocumentContentChangeEvent } from 'vscode'
+import { Range, Position } from '../vscode/types'
 import { NeovimAPI } from '../neovim/api'
 import { EventEmitter } from 'events'
 
 interface Doc {
+  id: number
   uri: string
   name: string
 }
@@ -29,30 +32,36 @@ interface DidChange extends DocInfo {
 
 type On<T> = (params: T) => void
 
+const positionsToRangeData = (startLine: number, startColumn: number, endLine: number, endColumn: number, lineData: string[]) => {
+  const start = new Position(startLine, startColumn)
+  const end = new Position(endLine, endColumn)
+  const range = new Range(start, end)
+  const rangeOffset = positionToOffset(lineData, start)
+  const rangeOffsetEnd = positionToOffset(lineData, end)
+  const rangeLength = rangeOffsetEnd - rangeOffset
+  return { range, rangeLength, rangeOffset }
+}
+
 const nvimChangeToLSPChange = ({ firstLine, lastLine, lineData }: BufferChangeEvent): TextDocumentContentChangeEvent[] => {
   const isEmpty = !lineData.length
-  const range = {
-    start: { line: firstLine, character: 0 },
-    end: { line: lastLine, character: 0 },
-  }
 
-  if (isEmpty) return [{ range, text: '' }]
+  if (isEmpty) return [{
+    ...positionsToRangeData(firstLine, 0, lastLine, 0, lineData),
+    text: ''
+  }]
 
   const replaceOP = !isEmpty && lastLine - firstLine === 1
 
   if (replaceOP) return [{
-    range,
+    ...positionsToRangeData(firstLine, 0, lastLine, 0, lineData),
     text: '',
   }, {
-    range: {
-      start: { line: firstLine, character: 0 },
-      end: { line: firstLine, character: 0 },
-    },
+    ...positionsToRangeData(firstLine, 0, firstLine, 0, lineData),
     text: lineData.map(line => `${line}\n`).join(''),
   }]
 
   return [{
-    range,
+    ...positionsToRangeData(firstLine, 0, lastLine, 0, lineData),
     text: lineData.map(line => `${line}\n`).join(''),
   }]
 }
@@ -76,6 +85,7 @@ const api = (nvim: NeovimAPI, onlyFiletypeBuffers?: string[]) => {
       watchers.emit('didOpen', {
         name,
         filetype,
+        id: buffer.id,
         version: changedTick,
         uri: `file://${name}`,
         languageId: filetypeToLanguageID(filetype),
@@ -95,6 +105,7 @@ const api = (nvim: NeovimAPI, onlyFiletypeBuffers?: string[]) => {
         firstLine,
         lastLine,
         textLines,
+        id: buffer.id,
         uri: `file://${name}`,
         languageId: filetypeToLanguageID(filetype),
         contentChanges: nvimChangeToLSPChange(change),
@@ -119,6 +130,7 @@ const api = (nvim: NeovimAPI, onlyFiletypeBuffers?: string[]) => {
       attachedBuffers.delete(buffer)
       watchers.emit('didClose', {
         name,
+        id: buffer.id,
         uri: `file://${name}`,
       } as Doc)
     })
@@ -154,12 +166,14 @@ const api = (nvim: NeovimAPI, onlyFiletypeBuffers?: string[]) => {
 
     watchers.emit('didClose', {
       name,
+      id: buffer.id,
       uri: `file://${name}`,
     } as Doc)
 
     watchers.emit('didOpen', {
       name,
       filetype,
+      id: buffer.id,
       version: revision,
       uri: `file://${name}`,
       languageId: filetypeToLanguageID(filetype),
@@ -175,17 +189,19 @@ const api = (nvim: NeovimAPI, onlyFiletypeBuffers?: string[]) => {
     subscribeToBufferChanges(nvim.current.buffer, nvim.state.absoluteFilepath)
   }))
 
-  dsp.add(nvim.on.bufWritePre(() => {
+  dsp.add(nvim.on.bufWritePre(buffer => {
     if (invalidFiletype(nvim.state.filetype)) return
     watchers.emit('willSave', {
+      id: buffer.id,
       name: nvim.state.absoluteFilepath,
       uri: `file://${nvim.state.absoluteFilepath}`,
     } as Doc)
   }))
 
-  dsp.add(nvim.on.bufWrite(() => {
+  dsp.add(nvim.on.bufWrite(buffer => {
     if (invalidFiletype(nvim.state.filetype)) return
     watchers.emit('didSave', {
+      id: buffer.id,
       name: nvim.state.absoluteFilepath,
       uri: `file://${nvim.state.absoluteFilepath}`,
     } as Doc)

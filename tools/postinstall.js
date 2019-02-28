@@ -5,6 +5,7 @@ const pkgPath = fromRoot('package.json')
 const pkg = require(pkgPath)
 const os = process.platform
 const deps = Reflect.get(pkg, `bindeps-${os}`)
+const extDeps = Reflect.get(pkg, 'bundled-extension-dependencies')
 
 const binaryDependencies = async () => {
   if (!deps) return
@@ -17,10 +18,21 @@ const binaryDependencies = async () => {
   await fs.writeFile(pkgPath, pkgData)
 }
 
+const extendionDependencies = async () => {
+  if (!extDeps) return
+  const dir = fromRoot('extension_dependencies')
+  await fs.ensureDir(dir)
+
+  for (const [ dependency, version ] of Object.entries(extDeps)) {
+    await run(`npm i ${dependency}@${version} --no-save --no-package-lock --no-audit --loglevel=error --prefix ${dir}`)
+  }
+}
+
 const vscodeTypings = () => new Promise(async (done, fail) => {
   const vscodeApiVersion = Reflect.get(pkg, 'vscode-api-version')
+  $`fetching vscode api ${vscodeApiVersion}`
   const modulePath = 'node_modules/@types/vscode'
-const vscodeTypingsUrl = version => `https://raw.githubusercontent.com/Microsoft/vscode/${version}/src/vs/vscode.d.ts`
+  const vscodeTypingsUrl = version => `https://raw.githubusercontent.com/Microsoft/vscode/${version}/src/vs/vscode.d.ts`
 
   await fs.ensureDir(fromRoot(modulePath))
   await fs.writeFile(fromRoot(modulePath, 'package.json'), `{
@@ -43,6 +55,10 @@ require.main === module && go(async () => {
   $`installing binary dependencies`
   await binaryDependencies()
   $`installed binary dependencies`
+
+  $`installing extension dependencies`
+  await extendionDependencies()
+  $`installed extension dependencies`
 
   $`installing vscode extension api typings`
   await vscodeTypings().catch(err => console.log('failed to install vscode typings', err))

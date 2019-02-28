@@ -1,4 +1,4 @@
-import { Watcher } from '../support/utils'
+import { Watcher, MapSetter } from '../support/utils'
 import * as vsc from 'vscode'
 
 interface Events {
@@ -15,11 +15,16 @@ interface MetaTask extends vsc.Task {
 const activeTasks = new Set<vsc.TaskExecution>()
 const registeredTasks = new Set<MetaTask>()
 const watchers = Watcher<Events>()
+const taskProviders = new MapSetter<string, vsc.TaskProvider>()
 
-const provideTasksAndRegister = async (type: string, provider: vsc.TaskProvider) => {
-  const providedTasks = (await provider.provideTasks()) || []
-  providedTasks.forEach(task => registeredTasks.add(Object.assign(task, { type })))
-}
+// TODO: determine when we need to call the task providers and register the tasks
+// looking at vscode it seems to be called when the task list is called upon in
+// the UI by either user action or implicit thru build/run/unTests vscode functionality
+// see here: https://github.com/Microsoft/vscode/blob/master/src/vs/workbench/contrib/tasks/electron-browser/task.contribution.ts (getGroupedTasks)
+// const provideTasksAndRegister = async (type: string, provider: vsc.TaskProvider) => {
+//   const providedTasks = (await provider.provideTasks()) || []
+//   providedTasks.forEach(task => registeredTasks.add(Object.assign(task, { type })))
+// }
 
 const runTask = (task: vsc.Task): vsc.TaskExecution => {
   const terminate = () => {
@@ -42,13 +47,13 @@ const runTask = (task: vsc.Task): vsc.TaskExecution => {
 const tasks: typeof vsc.tasks = {
   get taskExecutions() { return [...activeTasks] },
 
-  onDidStartTask: fn => ({ dispose: watchers.on('didStartTask', fn) }),
-  onDidEndTask: fn => ({ dispose: watchers.on('didEndTask', fn) }),
-  onDidStartTaskProcess: fn => ({ dispose: watchers.on('didStartTaskProcess', fn) }),
-  onDidEndTaskProcess: fn => ({ dispose: watchers.on('didEndTaskProcess', fn) }),
+  onDidStartTask: (fn, thisArg) => ({ dispose: watchers.on('didStartTask', fn.bind(thisArg)) }),
+  onDidEndTask: (fn, thisArg) => ({ dispose: watchers.on('didEndTask', fn.bind(thisArg)) }),
+  onDidStartTaskProcess: (fn, thisArg) => ({ dispose: watchers.on('didStartTaskProcess', fn.bind(thisArg)) }),
+  onDidEndTaskProcess: (fn, thisArg) => ({ dispose: watchers.on('didEndTaskProcess', fn.bind(thisArg)) }),
 
   registerTaskProvider: (type, provider) => {
-    provideTasksAndRegister(type, provider)
+    taskProviders.add(type, provider)
     // TODO: when do we resolve a task?
     return { dispose: () => console.warn('NYI: remove registered task provider') }
   },

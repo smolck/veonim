@@ -76,7 +76,7 @@ const searchFiles = ({ query, cwd }: Request) => {
     })
   })
 
-  rg.on('exit', () => {
+  rg.on('close', () => {
     alive = false
     clearInterval(timer)
     sendResults()

@@ -1,5 +1,5 @@
 // stolen from: https://github.com/Microsoft/vscode/blob/master/src/vs/editor/contrib/snippet/snippetParser.ts
-import { CharCode } from '../langserv/char-code'
+import { CharCode } from '../vscode/char-code'
 
 export const enum TokenType {
 	Dollar,

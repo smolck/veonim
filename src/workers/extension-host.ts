@@ -1,30 +1,6 @@
-import { TextDocumentSyncKind, StreamMessageReader, StreamMessageWriter, createProtocolConnection, ProtocolConnection } from 'vscode-languageserver-protocol'
-import { DebugConfiguration, collectDebuggersFromExtensions,
-  getAvailableDebuggers, getLaunchConfigs, resolveConfigurationByProviders,
-  getDebuggerConfig } from '../extensions/debuggers'
-import { ExtensionInfo, Extension, ActivationEventType,
-  Disposable, activateExtension } from '../extensions/extensions'
-import DebugProtocolConnection, { DebugAdapterConnection } from '../messaging/debug-protocol'
-import { readFile, fromJSON, is, uuid, getDirs, getFiles, merge, CreateTask, Task, configPath } from '../support/utils'
-import updateLanguageServersWithTextDocuments from '../langserv/update-server'
-import { on, call, request } from '../messaging/worker-client'
-import { registerExtension } from '../vscode/extensions'
-import { ChildProcess, spawn } from 'child_process'
-import LocalizeFile from '../support/localize'
-import pleaseGet from '../support/please-get'
-import { dirname, join } from 'path'
 import '../support/vscode-shim'
-
-if (process.env.VEONIM_DEV) require('../dev/ext-host-development')
-
-const EXT_PATH = join(configPath, 'veonim', 'extensions')
-
-interface Debugger {
-  type: string
-  label: string
-  program: string
-  runtime?: 'node' | 'mono'
-}
+import '../extension-host/language-events'
+import '../extension-host/extension-discovery'
 
 // TODO: THIS LEAKS OUTSIDE OF WORKER!
 // need this flag to spawn node child processes. this will use the same node
@@ -32,37 +8,42 @@ interface Debugger {
 // the spawn call, but we do not have access to the spawn calls in the
 // extensions that are spawning node executables (language servers, etc.)
 process.env.ELECTRON_RUN_AS_NODE = '1'
+if (process.env.VEONIM_DEV) require('../dev/ext-host-development')
 
-interface ActivateOpts {
-  kind: string
-  data: string
-}
+// TODO: ALL THIS SHIT BELOW relates to debuggers. we need to clean it up once we get vscode extensions
+// setup properly. we should move all this shit to their own modules. extension-host should only be
+// a loader for all extension-host modules
 
-interface ServerBridgeParams {
-  serverId: string
-  method: string
-  params: any[]
-}
+// import { DebugConfiguration, collectDebuggersFromExtensions,
+//   getAvailableDebuggers, getLaunchConfigs, resolveConfigurationByProviders,
+//   getDebuggerConfig } from '../extensions/debuggers'
+// import DebugProtocolConnection, { DebugAdapterConnection } from '../messaging/debug-protocol'
+// import { readFile, fromJSON, uuid, getDirs, getFiles, merge, configPath } from '../support/utils'
+// import { registerExtension } from '../vscode/extensions'
+// import { on, call } from '../messaging/worker-client'
+// import { ChildProcess, spawn } from 'child_process'
+// import LocalizeFile from '../support/localize'
+// import pleaseGet from '../support/please-get'
+// import { dirname, join } from 'path'
 
-interface LanguageServer extends ProtocolConnection {
-  textSyncKind: TextDocumentSyncKind
-  pauseTextSync: boolean
-  initializeTask: Task<void>
-  untilInitialized: Promise<void>
-}
 
-const extensions = new Set<Extension>()
-const languageExtensions = new Map<string, Extension>()
-const runningLangServers = new Map<string, LanguageServer>()
+
+// interface Debugger {
+//   type: string
+//   label: string
+//   program: string
+//   runtime?: 'node' | 'mono'
+// }
+
+// TODO: on filetype change activate extensions
+// nvim.on.filetype(filetype => filetypeDetectedStartServerMaybe(nvim.state.cwd, filetype))
+
+
+
+// TODO: move to separate module
+
+/*
 const runningDebugAdapters = new Map<string, DebugAdapterConnection>()
-
-on.load(() => load())
-
-on.existsForLanguage((language: string) => Promise.resolve(languageExtensions.has(language)))
-
-on.activate(({ kind, data }: ActivateOpts) => {
-  if (kind === 'language') return activate.language(data)
-})
 
 on.listLaunchConfigs(() => getLaunchConfigs())
 on.listDebuggers(async () => {
@@ -79,57 +60,11 @@ on.startDebugWithType((folderUri: string, type: string) => startDebugWithType(fo
 // TODO: deprecate?
 on.startDebug((type: string) => start.debug(type))
 
-const getServer = (id: string) => {
-  const server = runningLangServers.get(id)
-  if (!server) throw new Error(`fail to get serv ${id}. this should not happen... ever.`)
-  return server
-}
-
 const getDebugAdapter = (id: string) => {
   const server = runningDebugAdapters.get(id)
   if (!server) throw new Error(`fail to get debug adapter ${id}. this should not happen... ever.`)
   return server
 }
-
-const getTextSyncKind = ({ capabilities: c }: any): TextDocumentSyncKind => {
-  const syncKind = pleaseGet(c).textDocumentSync()
-  if (syncKind == null) return TextDocumentSyncKind.None
-  if (is.number(syncKind)) return syncKind
-  return pleaseGet(c).textDocumentSync.change(TextDocumentSyncKind.None)
-}
-
-on.server_setTextSyncState((serverId: string, syncState: boolean) => {
-  getServer(serverId).pauseTextSync = syncState
-})
-
-on.server_sendNotification(({ serverId, method, params }: ServerBridgeParams) => {
-  const server = getServer(serverId)
-  if (method === 'initialized') server.initializeTask.done(undefined)
-  server.sendNotification(method as any, ...params)
-})
-
-on.server_sendRequest(async ({ serverId, method, params }: ServerBridgeParams) => {
-  const server = getServer(serverId)
-  const response = await server.sendRequest(method, ...params)
-  if (method === 'initialize') server.textSyncKind = getTextSyncKind(response)
-  return response
-})
-
-on.server_onNotification(({ serverId, method }: ServerBridgeParams) => {
-  getServer(serverId).onNotification(method, (...args: any[]) => call[`${serverId}:${method}`](args))
-})
-
-on.server_onRequest(({ serverId, method }: ServerBridgeParams) => {
-  getServer(serverId).onRequest(method, async (...args: any[]) => request[`${serverId}:${method}`](args))
-})
-
-on.server_onError(({ serverId }: ServerBridgeParams) => {
-  getServer(serverId).onError((err: any) => call[`${serverId}:onError`](err))
-})
-
-on.server_onClose(({ serverId }: ServerBridgeParams) => {
-  getServer(serverId).onClose(() => call[`${serverId}:onClose`]())
-})
 
 on.debug_sendRequest(({ serverId, command, args }: any) => {
   return getDebugAdapter(serverId).sendRequest(command, args)
@@ -155,158 +90,23 @@ on.debug_onClose(({ serverId }: any) => {
   getDebugAdapter(serverId).onClose(() => call[`${serverId}:onClose`]())
 })
 
-// so we download the zip file into user--repo dir. this dir will then contain
-// a folder with the extension contents. it will look something like the following:
-// ~/.config/veonim/extensions/veonim--ext-json/ext-json-master/package.json
-// ~/.config/veonim/extensions/vspublisher--vscode-extension/extension/package.json
-const findPackageJson = async (packageDir: string) => {
-  const [ firstDir ] = await getDirs(packageDir)
-  if (!firstDir) throw new Error(`empty package dir: ${packageDir}`)
 
-  const filesInDir = await getFiles(firstDir.path)
-  const packagePath = filesInDir.find(m => m.path.endsWith('package.json'))
-  return (packagePath || {} as any).path
-}
 
-const findExtensions = async () => {
-  const extensionDirs = await getDirs(EXT_PATH)
-  return Promise.all(extensionDirs.map(m => findPackageJson(m.path)))
-}
 
-const parseExtensionDependency = (extString: string): ExtensionInfo => {
-  const [ publisher, name ] = extString.split('.')
-  return { publisher, name }
-}
 
-const findExtensionDependency = ({ name, publisher }: ExtensionInfo) => [...extensions]
-  .find(e => e.name === name && e.publisher === publisher)
+// TODO: get debug adapters
+//   collectDebuggersFromExtensions(extensionsWithConfig)
+// }
 
-// TODO: handle recursive dependencies. THIS IDEA SUCKS WTF
-const installExtensionsIfNeeded = (extensions: string[]) => extensions
-  .map(parseExtensionDependency)
-  .map(e => ({ ...e, installed: !!findExtensionDependency(e) }))
-  .forEach(e => {
-    if (!e.installed) console.warn('NYI: please install extension dependency:', e)
-    // TODO: actually install it lol
-    // and do the whole package.json parse routine
-    // and we need to do it recursively... sheesh great design here
-  })
+/** Start a debugger with a given launch.json configuration chosen by user */
+// const startDebugWithConfig = async (cwd: string, config: DebugConfiguration) => {
+//   const launchConfig = await resolveConfigurationByProviders(cwd, config.type, config)
 
-const getPackageJsonConfig = async (packageJson: string): Promise<Extension> => {
-  const rawFileData = await readFile(packageJson)
-  const config = fromJSON(rawFileData).or({})
-  const { name, publisher, main, activationEvents = [], extensionDependencies = [] } = config
-  const packagePath = dirname(packageJson)
-  const languageFilePath = join(packagePath, 'package.nls.json')
-  const localize = await LocalizeFile(languageFilePath)
+//   // TODO: start debugger
+//   console.log('start debugger with config:', launchConfig)
 
-  const parsedActivationEvents = activationEvents.map((m: string) => ({
-    type: m.split(':')[0] as ActivationEventType,
-    value: m.split(':')[1],
-  }))
-
-  return {
-    name,
-    config,
-    localize,
-    publisher,
-    packagePath,
-    extensionDependencies,
-    subscriptions: new Set(),
-    requirePath: join(packagePath, main),
-    activationEvents: parsedActivationEvents,
-  }
-}
-
-const load = async () => {
-  const extensionPaths = await findExtensions()
-  const extensionsWithConfig = await Promise.all(extensionPaths.map(m => getPackageJsonConfig(m)))
-
-  extensions.clear()
-
-  extensionsWithConfig.forEach(ext => {
-    extensions.add(ext)
-    registerExtension(ext)
-
-    if (ext.extensionDependencies.length) installExtensionsIfNeeded(ext.extensionDependencies)
-
-    ext.activationEvents
-      .filter(a => a.type === ActivationEventType.Language)
-      .forEach(a => languageExtensions.set(a.value, ext))
-  })
-
-  collectDebuggersFromExtensions(extensionsWithConfig)
-}
-
-const connectRPCServer = (proc: ChildProcess): string => {
-  const serverId = uuid()
-
-  const reader = new StreamMessageReader(proc.stdout)
-  const writer = new StreamMessageWriter(proc.stdin)
-  const conn = createProtocolConnection(reader, writer, console)
-
-  conn.listen()
-
-  const initializeTask = CreateTask()
-
-  Object.assign(conn, {
-    initializeTask,
-    pauseTextSync: false,
-    untilInitialized: initializeTask.promise,
-  })
-
-  runningLangServers.set(serverId, conn as LanguageServer)
-  return serverId
-}
-
-const activateExtensionForLanguage = async (language: string) => {
-  const extension = languageExtensions.get(language)
-  if (!extension) {
-    console.error(`extension for ${language} not found`)
-    return []
-  }
-
-  return activateExtension(extension)
-}
-
-const activate = {
-  language: async (language: string) => {
-    // TODO: handle extension dependencies
-    const subscriptions = await activateExtensionForLanguage(language)
-    console.log('language', language)
-    console.log('subscriptions', subscriptions)
-    if (!subscriptions.length) return
-
-    // TODO: potentially other subscriptions disposables
-    // how can subs be both disposables and promises that return child processes?
-    // would like to double check the typings in vscode
-    const [ serverActivator ] = subscriptions as any[]
-
-    // TODO: i don't think extensions need to return the langserv??
-    if (!is.promise(serverActivator)) {
-      return console.error(`server activator function not valid or did not return a promise for ${language}`)
-    }
-
-    const proc: ChildProcess = await serverActivator
-    const serverId = connectRPCServer(proc)
-    // TODO: register updater dispose and call it when langserv is gone.
-    console.log('activate language:', language)
-    updateLanguageServersWithTextDocuments(getServer(serverId), language)
-    return serverId
-  },
-}
-
-/*
- * Start a debugger with a given launch.json configuration chosen by user
- */
-const startDebugWithConfig = async (cwd: string, config: DebugConfiguration) => {
-  const launchConfig = await resolveConfigurationByProviders(cwd, config.type, config)
-
-  // TODO: start debugger
-  console.log('start debugger with config:', launchConfig)
-
-  return { launchConfig, serverId: -1 }
-}
+//   return { launchConfig, serverId: -1 }
+// }
 
 /*
  * Start a debugger with a given debug 'type'. This is a debugger chosen
@@ -314,6 +114,9 @@ const startDebugWithConfig = async (cwd: string, config: DebugConfiguration) => 
  * will be resolved automagically by via configs provided in extension
  * package.json and/or via DebugConfigurationProvider
  */
+
+
+ /*
 const startDebugWithType = async (cwd: string, type: string) => {
   const launchConfig = await getDebuggerConfig(cwd, type)
   if (!launchConfig) return console.error(`can not start debugger ${type}`)
@@ -410,3 +213,4 @@ const startDebugAdapter = (debugAdapterPath: string, runtime: Debugger['runtime'
 
   return proc
 }
+*/

@@ -1,34 +1,48 @@
-import { Extension, activateExtension } from '../extensions/extensions'
+import makeExtensionObject, { Extension, ExtensionPackageConfig, ActivationKind } from '../extension-host/extension'
+import { MapSetter, Watcher } from '../support/utils'
+import nvim from '../neovim/api'
 import * as vsc from 'vscode'
 
-const extensionRepo = new Map<string, vsc.Extension<any>>()
+interface Events {
+  didChange: void
+}
+
+const events = Watcher<Events>()
+const registry = new Map<string, Extension>()
+
+const eventreg = (name: keyof Events) => (fn: any, thisArg?: any) => ({
+  dispose: events.on(name, fn.bind(thisArg)),
+})
 
 const extensions: typeof vsc.extensions = {
-  get all() { return [...extensionRepo.values()] },
-  getExtension: (id: string) => extensionRepo.get(id),
+  get all() { return [...registry.values()] },
+  getExtension: (id: string) => registry.get(id),
+  onDidChange: eventreg('didChange'),
 }
 
-export const registerExtension = (extension: Extension): void => {
-  const { name, publisher, packagePath, config } = extension
-  const id = `${publisher}:${name}`
-
-  const ext: vsc.Extension<any> = {
-    id,
-    extensionPath: packagePath,
-    isActive: false,
-    packageJSON: config,
-    exports: {},
-    activate: async () => {
-      // TODO: activateExtension returns subscriptions, but we want the exports here...
-      const activateResult = await activateExtension(extension)
-      Object.assign(ext, {
-        isActive: true,
-        exports: activateResult,
-      })
-    },
-  }
-
-  extensionRepo.set(id, ext)
+const activators = {
+  language: new MapSetter<string, Extension>(),
 }
+
+export const loadExtensions = (configs: ExtensionPackageConfig[]) => {
+  registry.clear()
+  const extensions = configs.map(config => makeExtensionObject(config))
+  extensions.forEach(ext => registry.set(ext.id, ext))
+  setupExtensionActivations()
+}
+
+const setupExtensionActivations = () => {
+  activators.language.clear()
+  ;[...registry.values()].forEach(setupActivation)
+}
+
+const setupActivation = (ext: Extension) => ext.activationEvents.forEach(event => {
+  if (event.type === ActivationKind.Always) return ext.activate()
+  if (event.type === ActivationKind.Language) return activators.language.add(event.value, ext)
+})
+
+nvim.on.filetype(filetype => {
+  activators.language.getList(filetype).forEach(ext => ext.activate())
+})
 
 export default extensions

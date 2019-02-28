@@ -1,4 +1,4 @@
-import { ensureDir, remove } from '../support/utils'
+import { ensureDir, remove, getDirs, rename } from '../support/utils'
 import { on } from '../messaging/worker-client'
 import { Archiver } from '../support/binaries'
 import { fetchStream } from '../support/fetch'
@@ -15,21 +15,29 @@ const downloadZip = (url: string, path: string) => new Promise(async done => {
 })
 
 const unzip = (path: string) => new Promise(done => Archiver(['open', `${path}.zip`, path])
-  .on('exit', done)
+  .on('close', done)
   .on('error', done))
 
 on.download(async (url: string, path: string) => {
-  await ensureDir(path)
+  const tempPath = `${path}_temp`
+  await ensureDir(tempPath)
 
-  const downloadErr = await downloadZip(url, path).catch(console.error)
+  const downloadErr = await downloadZip(url, tempPath)
   if (downloadErr) {
-    console.error(downloadErr)
+    console.error('download fail:', url, tempPath, downloadErr)
     return false
   }
 
-  const unzipErr = await unzip(path).catch(console.error)
-  if (unzipErr) console.error(unzipErr)
+  const unzipErr = await unzip(tempPath)
+  if (unzipErr) console.error('unzip fail:', url, tempPath, unzipErr)
 
-  await remove(`${path}.zip`).catch(console.error)
+  const dirs = await getDirs(tempPath)
+
+  if (dirs.length === 1) {
+    await rename(dirs[0].path, path)
+    await remove(tempPath)
+  }
+
+  await remove(`${tempPath}.zip`).catch(console.error)
   return !unzipErr
 })

@@ -1,9 +1,11 @@
-import { highlights, references as getReferences } from '../langserv/adapter'
 import { Highlight, HighlightGroupId } from '../neovim/types'
-import { supports } from '../langserv/server-features'
 import { request } from '../messaging/worker-client'
+import { vscode } from '../core/extensions-api'
+import { PromiseBoss } from '../support/utils'
 import { brighten } from '../ui/css'
 import nvim from '../neovim/api'
+
+const boss = PromiseBoss()
 
 const setHighlightColor = async () => {
   const colors = await request.getDefaultColors()
@@ -15,27 +17,18 @@ nvim.watchState.colorscheme(setHighlightColor)
 setHighlightColor()
 
 export const highlight = async () => {
-  const referencesSupported = supports.references(nvim.state.cwd, nvim.state.filetype)
-  const highlightsSupported = supports.highlights(nvim.state.cwd, nvim.state.filetype)
-  const anySupport = highlightsSupported || referencesSupported
-
-  if (!anySupport) return
-
-  const { references } = highlightsSupported
-    ? await highlights(nvim.state)
-    : await getReferences(nvim.state)
+  const highlights = await boss.schedule(vscode.language.provideDocumentHighlights(), { timeout: 3e3 })
+  if (!highlights) return
 
   const buffer = nvim.current.buffer
   buffer.clearHighlight(HighlightGroupId.DocumentHighlight, 0, -1)
 
-  if (!references.length) return
-
-  references.forEach(hi => buffer.addHighlight(
+  highlights.forEach(hi => buffer.addHighlight(
     HighlightGroupId.DocumentHighlight,
     Highlight.DocumentHighlight,
-    hi.line,
-    hi.column,
-    hi.endColumn,
+    hi.range.start.line,
+    hi.range.start.character,
+    hi.range.end.character,
   ))
 }
 

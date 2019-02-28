@@ -24,7 +24,7 @@ export const startupCmds = CmdGroup`
   let g:vn_callback_id = 0
   let g:vn_jobs_connected = {}
   let g:_veonim_plugins = []
-  let g:_veonim_extensions = []
+  let g:vscode_extensions = []
   let g:veonim_completing = 0
   let g:veonim_complete_pos = 1
   let g:veonim_completions = []
@@ -141,6 +141,10 @@ startup.defineFunc.VeonimPosition`
   let m.editorTopLine = line('w0')
   let m.editorBottomLine = line('w$')
   return m
+`
+
+startup.defineFunc.VeonimGChange`
+  call rpcnotify(0, 'veonim-g', a:2, a:3)
 `
 
 startup.defineFunc.VeonimTermReader`

@@ -1,4 +1,5 @@
-import { registerDebugConfigProvider } from '../extensions/debuggers'
+// TODO: do this
+// import { registerDebugConfigProvider } from '../extensions/debuggers'
 import { Watcher } from '../support/utils'
 import * as vsc from 'vscode'
 
@@ -11,6 +12,10 @@ interface Events {
 }
 
 const events = Watcher<Events>()
+
+const eventreg = (name: keyof Events) => (fn: any, thisArg?: any) => ({
+  dispose: events.on(name, fn.bind(thisArg)),
+})
 
 const debug: typeof vsc.debug = {
   get activeDebugSession() {
@@ -29,6 +34,7 @@ const debug: typeof vsc.debug = {
     return []
   },
   registerDebugConfigurationProvider: (debugType: string, provider: vsc.DebugConfigurationProvider) => {
+    // @ts-ignore
     const dispose = registerDebugConfigProvider(debugType, provider)
     // TODO: why fail to registerDebugConfigProvider? vscode api assumes this will always return a Disposable?
     return { dispose: dispose || (() => {}) }
@@ -51,13 +57,11 @@ const debug: typeof vsc.debug = {
   removeBreakpoints: () => {
     console.warn('NYI: debug.removeBreakpoints')
   },
-  onDidChangeActiveDebugSession: fn => registerEvent('didChangeActiveDebugSession', fn),
-  onDidStartDebugSession: fn => registerEvent('didStartDebugSession', fn),
-  onDidReceiveDebugSessionCustomEvent: fn => registerEvent('didReceiveDebugSessionCustomEvent', fn),
-  onDidTerminateDebugSession: fn => registerEvent('didTerminateDebugSession', fn),
-  onDidChangeBreakpoints: fn => registerEvent('didChangeBreakpoints', fn),
+  onDidChangeActiveDebugSession: eventreg('didChangeActiveDebugSession'),
+  onDidStartDebugSession: eventreg('didStartDebugSession'),
+  onDidReceiveDebugSessionCustomEvent: eventreg('didReceiveDebugSessionCustomEvent'),
+  onDidTerminateDebugSession: eventreg('didTerminateDebugSession'),
+  onDidChangeBreakpoints: eventreg('didChangeBreakpoints'),
 }
-
-const registerEvent = (name: keyof Events, fn: any) => ({ dispose: events.on(name, fn) })
 
 export default debug

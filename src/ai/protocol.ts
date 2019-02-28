@@ -1,7 +1,14 @@
-import { Diagnostic, Command } from 'vscode-languageserver-protocol'
-import { Symbol, Reference } from '../langserv/adapter'
+import { LocationResult } from '../neovim/get-line-contents'
+import { Providers } from '../extension-host/providers'
 import { CompletionOption } from '../ai/completions'
 import { ColorData } from '../services/colorizer'
+import { Diagnostic, CodeAction } from 'vscode'
+import { UnPromisify } from '../support/types'
+
+export type Symbol = NonNullable<UnPromisify<ReturnType<Providers['provideDocumentSymbols']>['promise']>>[0]
+export type WorkspaceSymbol = NonNullable<UnPromisify<ReturnType<Providers['provideWorkspaceSymbols']>['promise']>>[0]
+export type Reference = NonNullable<UnPromisify<ReturnType<Providers['provideReferences']>['promise']>>[0]
+export type ReferenceResult = [string, LocationResult[]]
 
 export interface CompletionShow {
   row: number
@@ -30,13 +37,6 @@ export interface ProblemCount {
   warnings: number
 }
 
-export enum SymbolMode {
-  Buffer,
-  Workspace,
-}
-
-export type ReferenceResult = [string, Reference[]]
-
 export interface AI {
   completions: {
     show(options: CompletionShow): void
@@ -47,7 +47,10 @@ export interface AI {
     hide(): void
   }
   symbols: {
-    show(symbols: Symbol[], mode: SymbolMode): void
+    show(symbols: Symbol[]): void
+  }
+  workspaceSymbols: {
+    show(symbols: WorkspaceSymbol[]): void
   }
   references: {
     show(references: ReferenceResult[], keyword: string): void
@@ -61,7 +64,7 @@ export interface AI {
     hide(): void
   }
   codeAction: {
-    show(row: number, col: number, actions: Command[]): void
+    show(row: number, col: number, actions: CodeAction[]): void
   }
   problems: {
     update(problems: Diagnostic[]): void
@@ -84,6 +87,9 @@ export interface AIClient {
   }
   symbols: {
     onShow(fn: AI['symbols']['show']): void
+  }
+  workspaceSymbols: {
+    onShow(fn: AI['workspaceSymbols']['show']): void
   }
   references: {
     onShow(fn: AI['references']['show']): void

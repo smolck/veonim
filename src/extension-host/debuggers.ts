@@ -1,4 +1,5 @@
-import { Extension, activateExtension } from '../extensions/extensions'
+// TODO: this whole file is fucked right now. need to rework it once we have vscode extensions setup
+// import { Extension, activateExtension } from '../extensions/extensions'
 import pleaseGet from '../support/please-get'
 import { merge } from '../support/utils'
 import * as vsc from 'vscode'
@@ -18,12 +19,14 @@ interface Debugger {
   initialConfigurations?: DebugConfiguration[]
   hasInitialConfiguration: boolean
   hasConfigurationProvider: boolean
+  // @ts-ignore
   extension: Extension
   debugConfigProviders: Set<vsc.DebugConfigurationProvider>
 }
 
 const debuggers = new Map<string, Debugger>()
 
+// @ts-ignore
 const getExtensionDebuggers = (extension: Extension): Debugger[] => {
   const debuggers = pleaseGet(extension.config).contributes.debuggers([]) as any[]
 
@@ -53,7 +56,9 @@ const getProviders = (type: string) => {
 
 const activateDebuggersByEvent = async (eventType: string) => {
   const activations = [...debuggers.values()]
+  // @ts-ignore
     .filter(d => d.extension.activationEvents.some(ae => ae.type === eventType))
+    // @ts-ignore
     .map(d => activateExtension(d.extension))
 
   return Promise.all(activations)
@@ -142,6 +147,7 @@ export const resolveConfigurationByProviders = async (cwd: string, type: string,
  * this means we should reset the collection of debuggers from any previous
  * extension loadings
  */
+// @ts-ignore
 export const collectDebuggersFromExtensions = (extensions: Extension[]): void => {
   debuggers.clear()
 

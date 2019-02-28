@@ -1,16 +1,15 @@
 import { getActiveInstance, onSwitchVim, onCreateVim, instances } from '../core/instance-manager'
 import { VimMode, BufferInfo, HyperspaceCoordinates } from '../neovim/types'
-import { CompletionItem, Command } from 'vscode-languageserver-protocol'
-import { onFnCall, pascalCase, is } from '../support/utils'
+import { AIClient, WorkspaceSymbol } from '../ai/protocol'
+import { onFnCall, pascalCase } from '../support/utils'
 import { colors } from '../render/highlight-attributes'
 import { Functions } from '../neovim/function-types'
 import { WindowMetadata } from '../windows/metadata'
+import { CompletionItem, CodeAction } from 'vscode'
 import * as dispatch from '../messaging/dispatch'
 import { NotifyKind } from '../protocols/veonim'
-import { Symbol } from '../langserv/adapter'
 import { GitStatus } from '../support/git'
 import NeovimState from '../neovim/state'
-import { AIClient } from '../ai/protocol'
 import { EventEmitter } from 'events'
 import { clipboard } from 'electron'
 
@@ -106,7 +105,6 @@ const nvimFeedkeys = (keys: string, mode = 'm') => getActiveInstance().call.nvim
 const nvimExpr = (expr: string) => getActiveInstance().request.nvimExpr(expr)
 const nvimCall: Functions = onFnCall((name, a) => getActiveInstance().request.nvimCall(name, a))
 const nvimJumpTo = (coords: HyperspaceCoordinates) => getActiveInstance().call.nvimJumpTo(coords)
-const nvimJumpToProjectFile = (coords: HyperspaceCoordinates) => getActiveInstance().call.nvimJumpToProjectFile(coords)
 const nvimGetKeymap = () => getActiveInstance().request.nvimGetKeymap()
 const nvimGetColorByName = (name: string) => getActiveInstance().request.nvimGetColorByName(name)
 const nvimSaveCursor = async () => {
@@ -116,9 +114,7 @@ const nvimSaveCursor = async () => {
 }
 
 const nvimHighlightSearchPattern = async (pattern: string, id?: number): Promise<number> => {
-  const res = await getActiveInstance().request.nvimHighlightSearchPattern(pattern, id)
-  // TODO: undefined gets converted to an empty array in the rpc layer??
-  return is.array(res) ? undefined : res
+  return getActiveInstance().request.nvimHighlightSearchPattern(pattern, id)
 }
 
 const nvimRemoveHighlightSearch = async (id: number, pattern?: string): Promise<boolean> => {
@@ -131,13 +127,13 @@ const manualAI = {
       return getActiveInstance().request.aiGetCompletionDetail(item)
     },
   },
-  symbols: {
-    getWorkspaceSymbols: (query: string): Promise<Symbol[]> => {
+  workspaceSymbols: {
+    getSymbols: (query: string): Promise<WorkspaceSymbol[]> => {
       return getActiveInstance().request.aiGetWorkspaceSymbols(query)
-    },
+    }
   },
   codeAction: {
-    run: (action: Command) => getActiveInstance().call.aiRunCodeAction(action),
+    run: (action: CodeAction) => getActiveInstance().call.aiRunCodeAction(action),
   }
 }
 
@@ -179,7 +175,6 @@ const api = {
     getKeymap: nvimGetKeymap,
     saveCursor: nvimSaveCursor,
     getColorByName: nvimGetColorByName,
-    jumpToProjectFile: nvimJumpToProjectFile,
     removeHighlightSearch: nvimRemoveHighlightSearch,
     highlightSearchPattern: nvimHighlightSearchPattern,
   }

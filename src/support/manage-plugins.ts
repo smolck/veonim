@@ -1,4 +1,4 @@
-import { exists, getDirs, configPath, remove as removePath } from '../support/utils'
+import { isOnline, exists, getDirs, configPath, remove as removePath } from '../support/utils'
 import * as downloader from '../support/download'
 import { call } from '../messaging/worker-client'
 import { NotifyKind } from '../protocols/veonim'
@@ -43,7 +43,10 @@ const removeExtraneous = async (plugins: Plugin[]) => {
   toRemove.forEach(dir => removePath(dir.path))
 }
 
-export default async (pluginText: string[]) => {
+const download = async (pluginText: string[]) => {
+  const online = await isOnline('google.com')
+  if (!online) return console.error('cant download plugins - no internet connection')
+
   const plugins = await getPlugins(pluginText).catch()
   const pluginsNotInstalled = plugins.filter(plug => !plug.installed)
   if (!pluginsNotInstalled.length) return removeExtraneous(plugins)
@@ -61,3 +64,5 @@ export default async (pluginText: string[]) => {
   nvim.cmd(`packloadall!`)
   downloader.dispose()
 }
+
+export default () => nvim.getVarCurrentAndFuture('_veonim_plugins', download)

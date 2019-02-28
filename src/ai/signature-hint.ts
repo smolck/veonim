@@ -1,10 +1,12 @@
-import { SignatureInformation, MarkupContent, MarkupKind } from 'vscode-languageserver-protocol'
-import { supports, getTriggerChars } from '../langserv/server-features'
+import { SignatureInformation, MarkdownString } from 'vscode'
+import { SignatureHelpTriggerKind } from '../vscode/types'
+import { merge, PromiseBoss } from '../support/utils'
 import { markdownToHTML } from '../support/markdown'
-import { signatureHelp } from '../langserv/adapter'
-import { merge } from '../support/utils'
+import { vscode } from '../core/extensions-api'
 import nvim from '../neovim/api'
 import { ui } from '../core/ai'
+
+const boss = PromiseBoss()
 
 const cache = {
   signatures: [] as SignatureInformation[],
@@ -24,12 +26,9 @@ const shouldCloseSignatureHint = (totalParams: number, currentParam: number, tri
     || (leftChar === ']' && triggers.has('['))
 }
 
-const parseDocs = async (docs?: string | MarkupContent): Promise<string | undefined> => {
+const parseDocs = async (docs?: string | MarkdownString): Promise<string | undefined> => {
   if (!docs) return
-
-  if (typeof docs === 'string') return docs
-  if (docs.kind === MarkupKind.PlainText) return docs.value
-  return markdownToHTML(docs.value)
+  return typeof docs === 'string' ? docs : markdownToHTML(docs.value)
 }
 
 const showSignature = async (signatures: SignatureInformation[], which?: number | null, param?: number | null) => {
@@ -40,8 +39,11 @@ const showSignature = async (signatures: SignatureInformation[], which?: number 
   const baseOpts = { ...cursorPosition, totalSignatures: signatures.length }
 
   if (activeParameter < parameters.length) {
-    const { label: currentParam = '', documentation: paramDoc } = parameters[activeParameter]
     cache.totalParams = parameters.length
+    const { label: paramLabel, documentation: paramDoc } = parameters[activeParameter]
+    const currentParam = Array.isArray(paramLabel)
+      ? label.slice(paramLabel[0], paramLabel[1])
+      : paramLabel || ''
 
     const [ parsedParamDoc, parsedDocumentation ] = await Promise.all([
       parseDocs(paramDoc),
@@ -82,7 +84,8 @@ const showSignature = async (signatures: SignatureInformation[], which?: number 
 }
 
 const getSignatureHint = async (lineContent: string) => {
-  const triggerChars = getTriggerChars.signatureHint(nvim.state.cwd, nvim.state.filetype)
+  const signatureHintTriggerCharacters = await vscode.language.getSignatureHelpTriggerCharacters().promise
+  const triggerChars = new Set(signatureHintTriggerCharacters)
   const leftChar = lineContent[Math.max(nvim.state.column - 1, 0)]
 
   // TODO: should probably also hide if we jumped to another line
@@ -92,9 +95,12 @@ const getSignatureHint = async (lineContent: string) => {
   if (closeSignatureHint) return ui.signatureHint.hide()
 
   if (!triggerChars.has(leftChar)) return
-  if (!supports.signatureHint(nvim.state.cwd, nvim.state.filetype)) return
-
-  const hint = await signatureHelp(nvim.state)
+  const hint = await boss.schedule(vscode.language.provideSignatureHelp({
+    triggerKind: SignatureHelpTriggerKind.TriggerCharacter,
+    triggerCharacter: leftChar,
+    // TODO: let the provider know if the signature hint is currently visible or not
+    isRetrigger: false,
+  }), { timeout: 2e3 })
   if (!hint) return
 
   const { activeParameter, activeSignature, signatures = [] } = hint

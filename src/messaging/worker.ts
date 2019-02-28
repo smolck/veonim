@@ -55,12 +55,17 @@ export default (name: string, opts = {} as WorkerOptions) => {
 
   const onContextHandler: OnContextHandler = fn => ee.on('context-handler', fn)
 
-  worker.onmessage = async ({ data: [e, data = [], id, requestSync, func] }: MessageEvent) => {
+  worker.onmessage = async ({ data: [e, data, id, requestSync, func] }: MessageEvent) => {
     if (e === '@@request-sync-context') {
       const listener = ee.listeners('context-handler')[0]
       if (!listener) throw new Error('no "onContextHandler" function registered for synchronous RPC requests. you should register a function handler with "onContextHandler"')
-      const result = await listener(func, data)
-      return writeSharedArray(id, result)
+      try {
+        const result = await listener(func, data)
+        return writeSharedArray(id, result)
+      } catch(err) {
+        console.error('worker request-sync-context response listener failed:', err)
+        return writeSharedArray(id, undefined)
+      }
     }
 
     if (requestSync) {
@@ -81,8 +86,12 @@ export default (name: string, opts = {} as WorkerOptions) => {
 
     const listener = ee.listeners(e)[0]
     if (!listener) return
-    const result = await listener(...data)
-    worker.postMessage([e, result, id])
+    try {
+      const result = await listener(...data)
+      worker.postMessage([e, result, id])
+    } catch(err) {
+      console.error('worker request response listener failed:', err)
+    }
   }
 
   const terminate = () => worker.terminate()

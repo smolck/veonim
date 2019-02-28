@@ -11,7 +11,11 @@ const env: typeof vsc.env = {
   clipboard: {
     readText: async () => request.clipboardRead(),
     writeText: async value => call.clipboardWrite(value),
-  }
+  },
+  openExternal: async () => {
+    console.warn('vscode.env.openExternal is not supported. sorry')
+    return false
+  },
 }
 
 export default env

@@ -1,10 +1,18 @@
 import { getColorAtlas, colors } from '../render/highlight-attributes'
-import { WebGL2, VarKind } from '../render/webgl-utils'
+import { WebGL, VarKind } from '../render/webgl-utils'
 import { cell } from '../core/workspace'
 import { hexToRGB } from '../ui/css'
 
-export default (webgl: WebGL2) => {
+export default (webgl: WebGL) => {
   const viewport = { x: 0, y: 0, width: 0, height: 0 }
+
+  const w2 = webgl.webgl2Mode
+  const c = {
+    attr: w2 ? 'in' : 'attribute',
+    out: w2 ? 'out' : 'varying',
+    tex: w2 ? 'texture' : 'texture2D',
+    fin: w2 ? 'in' : 'varying',
+  }
 
   const program = webgl.setupProgram({
     quadVertex: VarKind.Attribute,
@@ -18,17 +26,17 @@ export default (webgl: WebGL2) => {
   })
 
   program.setVertexShader(v => `
-    in vec2 ${v.quadVertex};
-    in vec2 ${v.cellPosition};
-    in float ${v.hlid};
+    ${c.attr} vec2 ${v.quadVertex};
+    ${c.attr} vec2 ${v.cellPosition};
+    ${c.attr} float ${v.hlid};
     uniform vec2 ${v.canvasResolution};
     uniform vec2 ${v.colorAtlasResolution};
     uniform vec2 ${v.cellSize};
     uniform float ${v.hlidType};
     uniform sampler2D ${v.colorAtlasTextureId};
 
-    out vec4 o_color;
-    out vec2 o_colorPosition;
+    ${c.out} vec4 o_color;
+    ${c.out} vec2 o_colorPosition;
 
     void main() {
       vec2 absolutePixelPosition = ${v.cellPosition} * ${v.cellSize};
@@ -39,18 +47,18 @@ export default (webgl: WebGL2) => {
       gl_Position = vec4(posx, posy, 0, 1);
 
       vec2 colorPosition = vec2(${v.hlid} + 0.0001, ${v.hlidType} + 0.0001) / ${v.colorAtlasResolution};
-      o_color = texture(${v.colorAtlasTextureId}, colorPosition);
+      o_color = ${c.tex}(${v.colorAtlasTextureId}, colorPosition);
     }
   `)
 
   program.setFragmentShader(() => `
     precision mediump float;
 
-    in vec4 o_color;
-    out vec4 outColor;
+    ${c.fin} vec4 o_color;
+    ${w2 ? 'out vec4 outColor;' : ''}
 
     void main() {
-      outColor = o_color;
+      ${w2 ? 'outColor' : 'gl_FragColor'} = o_color;
     }
   `)
 
@@ -147,12 +155,12 @@ export default (webgl: WebGL2) => {
     // background
     quadBuffer.setData(quads.boxes)
     webgl.gl.uniform1f(program.vars.hlidType, 0)
-    webgl.gl.drawArraysInstanced(webgl.gl.TRIANGLES, 0, 6, buffer.length / 4)
+    webgl.drawArraysInstanced(webgl.gl.TRIANGLES, 0, 6, buffer.length / 4)
 
     // underlines
     quadBuffer.setData(quads.lines)
     webgl.gl.uniform1f(program.vars.hlidType, 2)
-    webgl.gl.drawArraysInstanced(webgl.gl.TRIANGLES, 0, 6, buffer.length / 4)
+    webgl.drawArraysInstanced(webgl.gl.TRIANGLES, 0, 6, buffer.length / 4)
   }
 
 

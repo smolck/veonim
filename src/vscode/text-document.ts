@@ -1,4 +1,8 @@
-import filetypeToVSCLanguage from '../langserv/vsc-languages'
+import { getWordAtText, ensureValidWordDefinition } from '../vscode/word-helper'
+import { completionRequest } from '../extension-host/providers'
+import { regExpLeadsToEndlessLoop } from '../vscode/strings'
+import filetypeToVSCLanguage from '../vscode/vsc-languages'
+import { wordDefinitions } from '../vscode/languages'
 import { Position, Range } from '../vscode/types'
 import nvimSync from '../neovim/sync-api-client'
 import TextLine from '../vscode/text-line'
@@ -10,7 +14,9 @@ export interface SuperTextDocument extends vsc.TextDocument {
   _nvimBufferId: number
 }
 
-export default (bufid: number): SuperTextDocument => ({
+let memoize_wordRangeAtPosition: vsc.Range
+
+const api = (bufid: number): SuperTextDocument => ({
   get _nvimBufferId() { return bufid },
   get isUntitled() {
     return !nvimSync((nvim, id) => nvim.Buffer(id).name).call(bufid)
@@ -114,13 +120,45 @@ export default (bufid: number): SuperTextDocument => ({
 
     return selection.join('\n')
   },
-  getWordRangeAtPosition: (position, regex) => {
-    // TODO: NYI
-    // not sure how to define a word-range. it appears some definitions
-    // can be setup in LanguageConfiguration.wordPattern or use provided regex?
-    console.error('NYI: getWordRangeAtPosition', position, regex)
-    const start = new Position(position.line, position.character)
-    return new Range(start, start)
+  getWordRangeAtPosition: (givenPosition, givenRegex) => {
+    // getting completions makes the typescript extension call new CompletionItem()
+    // which in turn calls getWordRangeAtPosition in the constructor. but y tho?
+    // since the position is the same for every call i'm gonna memoize this (kinda)
+    if (completionRequest.active && completionRequest.line === givenPosition.line && completionRequest.character === givenPosition.character) {
+      return memoize_wordRangeAtPosition
+    }
+
+    const position = validatePosition(bufid, givenPosition)
+    const filetype: string = nvimSync((nvim, id) => nvim.Buffer(id).getOption('filetype')).call(bufid)
+    const languageId = filetypeToVSCLanguage(filetype)
+    const currentLineText = nvimSync((nvim, id, line) => nvim.Buffer(id).getLine(line)).call(bufid, position.line)
+    let regex = givenRegex
+
+    if (!regex) regex = wordDefinitions.get(languageId)
+    else if (regExpLeadsToEndlessLoop(regex)) {
+      console.warn(`vscode.TextDocument.getWordRangeAtPosition: ignoring custom regexp '${regex.source}' because it matches the empty string`)
+      regex = wordDefinitions.get(languageId)
+    }
+
+    const wordAtText = getWordAtText(
+      position.character + 1,
+      ensureValidWordDefinition(regex),
+      currentLineText,
+      0
+    )
+
+    if (!wordAtText) return
+
+    const result = new Range(
+      position.line,
+      wordAtText.startColumn - 1,
+      position.line,
+      wordAtText.endColumn - 1,
+    )
+
+    if (completionRequest.active) memoize_wordRangeAtPosition = result
+
+    return result
   },
   // assumes given range starts a line:0, character: 0
   validateRange: range => {
@@ -145,19 +183,23 @@ export default (bufid: number): SuperTextDocument => ({
       new Position(range.end.line, lastLineText.length),
     )
   },
-  validatePosition: position => {
-    const lastLineText = nvimSync((nvim, id, line) => {
-      return nvim.Buffer(id).getLine(line)
-    }).call(bufid, position.line)
-
-    if (!lastLineText) {
-      const lineCount = nvimSync((nvim, id) => nvim.Buffer(id).length).call(bufid)
-      const lastLine = nvimSync((nvim, id, line) => nvim.Buffer(id).getLine(line)).call(bufid)
-      return new Position(lineCount, lastLine.length)
-    }
-
-    if (lastLineText.length > position.character) return position
-
-    return new Position(position.line, lastLineText.length)
-  },
+  validatePosition: position => validatePosition(bufid, position),
 })
+
+const validatePosition = (bufid: number, position: vsc.Position) => {
+  const lastLineText = nvimSync((nvim, id, line) => {
+    return nvim.Buffer(id).getLine(line)
+  }).call(bufid, position.line)
+
+  if (!lastLineText) {
+    const lineCount = nvimSync((nvim, id) => nvim.Buffer(id).length).call(bufid)
+    const lastLine = nvimSync((nvim, id, line) => nvim.Buffer(id).getLine(line)).call(bufid)
+    return new Position(lineCount, lastLine.length)
+  }
+
+  if (lastLineText.length > position.character) return position
+
+  return new Position(position.line, lastLineText.length)
+}
+
+export default api
