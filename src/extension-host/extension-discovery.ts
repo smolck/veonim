@@ -1,10 +1,9 @@
-import { ensureDir, NewlineSplitter, getDirs, readFile, fromJSON, remove as removePath, exists } from '../support/utils'
+import { ensureDir, NewlineSplitter, getDirs, readFile, fromJSON, remove as removePath, exists, copy } from '../support/utils'
 import downloadExtensionsIfNotExist, { doneDownloadingForNow } from '../extension-host/download-extensions'
 import { ExtensionPackageConfig } from '../extension-host/extension'
 import { EXT_PATH, LOG_PATH } from '../support/config-paths'
 import { loadExtensions } from '../vscode/extensions'
 import { Ripgrep } from '../support/binaries'
-import copy from '../support/fs-copy'
 import { sep, join } from 'path'
 import nvim from '../neovim/api'
 
