@@ -98,12 +98,13 @@ nvim.onAction('code-action', async () => {
 })
 
 vscode.onDiagnostics(event => {
+  if (!event.length) return
   // TODO: WHAT DO if we have multiple uris? i thought langserv only supported current file
   // maybe with vscode extensions they do something more fancy and support multiple.
   // could also be that we get diagnostics for the same uri from multiple extensions
   // TODO: in the extension host did we check if we get duplicate uris in the event?
   const res = event.find(m => m.path === nvim.state.absoluteFilepath)
-  if (!res) return console.error('did not receive any diagnostics for the current file')
+  if (!res) return console.warn('received diagnostics but not for the current file', event)
   cache.problems = res.diagnostics
   refreshProblemHighlights(res.diagnostics)
   ui.problemCount.update(getProblemCount(res.diagnostics))

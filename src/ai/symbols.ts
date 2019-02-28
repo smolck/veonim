@@ -9,6 +9,7 @@ const workspaceBoss = PromiseBoss()
 nvim.onAction('symbols', async () => {
   ui.symbols.show([])
   // TODO: show pending spinner
+  // show symbol cache on load?
   const symbols = await symbolBoss.schedule(vscode.language.provideDocumentSymbols(), { timeout: 3e3 })
   if (!symbols) return
   ui.symbols.show(symbols)

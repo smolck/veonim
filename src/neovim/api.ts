@@ -199,7 +199,7 @@ const loadBuffer = async (file: string): Promise<boolean> => {
 type JumpOpts = HyperspaceCoordinates & { openBufferFirst: boolean }
 
 const jumpToPositionInFile = async ({ line, path, column, openBufferFirst }: JumpOpts) => {
-  if (openBufferFirst && path) await buffers.open(path)
+  if (openBufferFirst && path) cmd(`e ${path}`)
   // nvim_win_set_cursor params
   // line: 1-index based
   // column: 0-index based
@@ -207,17 +207,9 @@ const jumpToPositionInFile = async ({ line, path, column, openBufferFirst }: Jum
 }
 
 const jumpTo = async ({ line, column, path }: HyperspaceCoordinates) => {
-  const bufferLoaded = path ? path === state.absoluteFilepath : true
-  jumpToPositionInFile({ line, column, path, openBufferFirst: !bufferLoaded })
-}
-
-// the reason this method exists is because opening buffers with an absolute path
-// will have the abs path in names and buffer lists. idk, it just behaves wierdly
-// so it's much easier to open a file realtive to the current project (:cd/:pwd)
-// TODO: we should consoldiate these functions and have the function
-// smartly determine how to open the buffer in a non-offensive way.
-const jumpToProjectFile = async ({ line, column, path }: HyperspaceCoordinates) => {
-  const bufferLoaded = path ? path === state.file : true
+  const bufferLoaded = path
+    ? (path === state.file || path === state.absoluteFilepath)
+    : true
   jumpToPositionInFile({ line, column, path, openBufferFirst: !bufferLoaded })
 }
 
@@ -552,32 +544,36 @@ const Buffer = (id: any) => ({
   getAllLines: () => req.buf.getLines(id, 0, -2, true),
   // getLines line ranges are end exclusive so we +1
   getLines: (start, end) => req.buf.getLines(id, start, end + 1, true),
-  getLine: start => req.buf.getLines(id, start, start, true).then(m => m[0]),
+  getLine: start => req.buf.getLines(id, start, start + 1, true).then(m => m[0]),
   setLines: (start, end, lines) => api.buf.setLines(id, start, end, true, lines),
   delete: start => api.buf.setLines(id, start, start + 1, true, []),
-  appendRange: async (line, column, text) => {
+  appendRange: async (position, text, undojoin = false) => {
+    const { line, character: column } = position
     const lines = await req.buf.getLines(id, line, -2, false)
     const updatedLines = TextEditPatch.append({ lines, column, text })
     req.buf.setLines(id, line, line + updatedLines.length, false, updatedLines)
+    if (undojoin) cmd('undojoin')
   },
-  replaceRange: async (startLine, startColumn, endLine, endColumn, text) => {
-    const lines = await req.buf.getLines(id, startLine, endLine, false)
+  replaceRange: async ({ start, end }, text, undojoin = false) => {
+    const lines = await req.buf.getLines(id, start.line, end.line + 1, false)
     const updatedLines = TextEditPatch.replace({
       lines,
-      start: new Position(0, startColumn),
-      end: new Position(endLine - startLine, endColumn),
+      start: new Position(0, start.character),
+      end: new Position(end.line - start.line, end.character),
       text
     })
-    req.buf.setLines(id, startLine, endLine + 1, false, updatedLines)
+    req.buf.setLines(id, start.line, end.line + 1, false, updatedLines)
+    if (undojoin) cmd('undojoin')
   },
-  deleteRange: async (startLine, startColumn, endLine, endColumn) => {
-    const lines = await req.buf.getLines(id, startLine, endLine, false)
+  deleteRange: async ({ start, end }, undojoin = false) => {
+    const lines = await req.buf.getLines(id, start.line, end.line, false)
     const updatedLines = TextEditPatch.remove({
       lines,
-      start: new Position(0, startColumn),
-      end: new Position(endLine - startLine, endColumn),
+      start: new Position(0, start.character),
+      end: new Position(end.line - start.line, end.character),
     })
-    req.buf.setLines(id, startLine, endLine + 1, false, updatedLines)
+    req.buf.setLines(id, start.line, end.line + 1, false, updatedLines)
+    if (undojoin) cmd('undojoin')
   },
   replace: (start, line) => api.buf.setLines(id, start, start + 1, false, [ line ]),
   getVar: name => req.buf.getVar(id, name),
@@ -640,8 +636,8 @@ const dummy = {
 
 const exportAPI = { state, watchState, onStateChange, onStateValue,
   untilStateValue, cmd, cmdOut, expr, call, feedkeys, normal, callAtomic,
-  onAction, getCurrentLine, jumpTo, jumpToProjectFile, systemAction, current,
-  g, on, untilEvent, buffers, windows, tabs, options: readonlyOptions,
+  onAction, getCurrentLine, jumpTo, systemAction, current, g, on,
+  untilEvent, buffers, windows, tabs, options: readonlyOptions,
   Buffer: fromId.buffer, Window: fromId.window, Tabpage: fromId.tabpage,
   getKeymap, getColorByName, getCursorPosition, highlightSearchPattern,
   removeHighlightSearch, getOptionCurrentAndFuture, getVarCurrentAndFuture }

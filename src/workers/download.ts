@@ -15,21 +15,21 @@ const downloadZip = (url: string, path: string) => new Promise(async done => {
 })
 
 const unzip = (path: string) => new Promise(done => Archiver(['open', `${path}.zip`, path])
-  .on('exit', done)
+  .on('close', done)
   .on('error', done))
 
 on.download(async (url: string, path: string) => {
   const tempPath = `${path}_temp`
   await ensureDir(tempPath)
 
-  const downloadErr = await downloadZip(url, tempPath).catch(console.error)
+  const downloadErr = await downloadZip(url, tempPath)
   if (downloadErr) {
-    console.error(downloadErr)
+    console.error('download fail:', url, tempPath, downloadErr)
     return false
   }
 
-  const unzipErr = await unzip(tempPath).catch(console.error)
-  if (unzipErr) console.error(unzipErr)
+  const unzipErr = await unzip(tempPath)
+  if (unzipErr) console.error('unzip fail:', url, tempPath, unzipErr)
 
   const dirs = await getDirs(tempPath)
 

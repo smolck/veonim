@@ -115,7 +115,7 @@ const actions = {
     if (!detail || !documentation) (async () => {
       // TODO: what do with .detail?
       const details = await api.ai.completions.getDetail(completionItem)
-      if (!details.documentation) return
+      if (!details || !details.documentation) return
       const richFormatDocs = await parseDocs(details.documentation)
       a.showDocs(richFormatDocs)
     })()

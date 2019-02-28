@@ -37,7 +37,7 @@
   },
   "homepage": "https://github.com/veonim/veonim#readme",
   "bundled-extension-dependencies": {
-    "typescript": "latest"
+    "typescript": "3.3.1"
   },
   "dependencies": {
     "diff-match-patch": "1.0.4",

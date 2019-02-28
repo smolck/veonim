@@ -135,7 +135,7 @@ const view = ($: S, a: typeof actions) => Plugin($.visible, [
   ])
 
   ,h('div', {
-    ref: (e: HTMLElement) => {
+    oncreate: (e: HTMLElement) => {
       if (e) listElRef = e
     },
     style: {

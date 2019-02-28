@@ -2,6 +2,7 @@ import filetypeToVscLanguage, { vscLanguageToFiletypes } from '../vscode/vsc-lan
 import DiagnosticCollection from '../vscode/diagnostic-collection'
 import { languageSelectorFrom } from '../vscode/type-converters'
 import { Watcher, is, uuid, MapSetter } from '../support/utils'
+import { regExpLeadsToEndlessLoop } from '../vscode/strings'
 import { SuperTextDocument } from '../vscode/text-document'
 import { providers } from '../extension-host/providers'
 import { selectorToFiletypes } from '../vscode/tools'
@@ -14,7 +15,8 @@ interface Events {
 }
 
 const events = Watcher<Events>()
-
+export const wordDefinitions = new Map<string, RegExp | undefined>()
+export const languageConfigurations = new Map<string, vsc.LanguageConfiguration>()
 export const emitDidChangeDiagnostics = (uris: vsc.Uri[]) => events.emit('didChangeDiagnostics', { uris })
 const diagnosticCollectionRepository = new Map<string, vsc.DiagnosticCollection>()
 
@@ -83,9 +85,17 @@ const languages: typeof vsc.languages = {
     diagnosticCollectionRepository.set(key, collection)
     return collection
   },
-  setLanguageConfiguration: (language, configuration) => {
-    console.warn('NYI: languages.setLanguageConfiguration', language, configuration)
-    return { dispose: () => {} }
+  setLanguageConfiguration: (languageId, configuration) => {
+    const { wordPattern } = configuration
+
+    // check for a valid word pattern
+    if (wordPattern && regExpLeadsToEndlessLoop(wordPattern)) {
+      throw new Error(`Invalid language configuration: wordPattern '${wordPattern}' is not allowed to match the empty string.`)
+    }
+
+    wordDefinitions.set(languageId, wordPattern)
+    languageConfigurations.set(languageId, configuration)
+    return { dispose: () => languageConfigurations.delete(languageId) }
   },
   registerCompletionItemProvider: (selector, provider, ...triggerCharacters) => {
     const filetypes = selectorToFiletypes(selector)

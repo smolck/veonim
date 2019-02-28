@@ -39,8 +39,11 @@ const showSignature = async (signatures: SignatureInformation[], which?: number 
   const baseOpts = { ...cursorPosition, totalSignatures: signatures.length }
 
   if (activeParameter < parameters.length) {
-    const { label: currentParam = '', documentation: paramDoc } = parameters[activeParameter]
     cache.totalParams = parameters.length
+    const { label: paramLabel, documentation: paramDoc } = parameters[activeParameter]
+    const currentParam = Array.isArray(paramLabel)
+      ? label.slice(paramLabel[0], paramLabel[1])
+      : paramLabel || ''
 
     const [ parsedParamDoc, parsedDocumentation ] = await Promise.all([
       parseDocs(paramDoc),

@@ -1,3 +1,5 @@
+import { Range, Position } from 'vscode'
+
 export type GenericCallback = (...args: any[]) => void
 export type VimOption = { [index: string]: Promise<any> }
 export type Keymap = Map<string, KeymapObject>
@@ -162,9 +164,9 @@ export interface Buffer {
   append(start: number, lines: string | string[]): void
   delete(start: number): void
   replace(start: number, line: string): void
-  appendRange(line: number, column: number, text: string): void
-  replaceRange(startLine: number, startColumn: number, endLine: number, endColumn: number, text: string): void
-  deleteRange(startLine: number, startColumn: number, endLine: number, endColumn: number): void
+  appendRange(position: Position, text: string, undojoin?: boolean): void
+  replaceRange(range: Range, text: string, undojoin?: boolean): void
+  deleteRange(range: Range, undojoin?: boolean): void
   getKeymap(mode: string): Promise<any>
   getVar(name: string): Promise<any>
   setVar(name: string, value: any): void

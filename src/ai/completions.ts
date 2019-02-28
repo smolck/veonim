@@ -109,18 +109,22 @@ const getSemanticCompletions = (line: number, column: number) => EarlyPromise(as
   if (cache.semanticCompletions.has(`${line}:${column}`)) 
     return done(cache.semanticCompletions.get(`${line}:${column}`)!)
 
-    // TODO: promise boss but need to cancel once we cursor move
   // TODO: different 'triggerKind'(s)? what about 'triggerCharacters'?
-  const items = await completionBoss.schedule(vscode.language.provideCompletionItems({ triggerKind: 0 }), { timeout: 2e3 })
-  if (!items) return done([])
-
-  const { incomplete, completions } = items
-  incomplete && console.warn('completions are incomplete')
+  // TODO: i'm not sure if we are ready for this yet?
+  // if we cache completions on the first char, then we will not want to cancel
+  // the first request for the current start index. we should find a way to cancel
+  // more intelligently based on available/relevant completion cache results
+  // nvim.untilEvent.cursorMoveInsert.then(completionBoss.cancelCurrentPromise)
+  const completions = await completionBoss.schedule(vscode.language.provideCompletionItems({ triggerKind: 0 }), { timeout: 2e3 })
+  if (!completions) return done([])
 
   // TODO: support TextEdits and snippets
+  // TODO: do we need to remap this or can we just pass along the completions object as is?
   const options = completions.map(m => ({
     raw: m,
-    insertText: ((m.insertText || {} as any).value as string || m.insertText as string) || m.label,
+    // TODO: snippets not supported yet because no extended marks. try priority of label first
+    // insertText: ((m.insertText || {} as any).value as string || m.insertText as string) || m.label,
+    insertText: m.label || ((m.insertText || {} as any).value as string || m.insertText as string),
     text: m.label,
     kind: m.kind || CompletionItemKind.Text,
   }))

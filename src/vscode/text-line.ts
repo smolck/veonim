@@ -2,8 +2,7 @@ import { Range, Position } from '../vscode/types'
 import * as vsc from 'vscode'
 
 export default (lineNumber: number, text: string): vsc.TextLine => {
-  const [ , whitespace ] = text.match(/^\s/) || [] as string[]
-  const firstNonWhitespaceCharacterIndex = text.length - whitespace.length
+  const firstNonWhitespaceCharacterIndex = findFirstNonWhitespaceCharIndex(text)
   const isEmptyOrWhitespace = firstNonWhitespaceCharacterIndex === text.length
   const pos = {
     start: new Position(lineNumber, 0),
@@ -20,4 +19,13 @@ export default (lineNumber: number, text: string): vsc.TextLine => {
     firstNonWhitespaceCharacterIndex,
     isEmptyOrWhitespace,
   }
+}
+
+const findFirstNonWhitespaceCharIndex = (text: string, startIndex = 0): number => {
+  const length = text.length
+  for (let ix = startIndex; ix < length; ix++) {
+    const char = text.charAt(ix)
+    if (char !== ' ' && char !== '\t') return ix
+  }
+  return length
 }
