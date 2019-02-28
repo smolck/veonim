@@ -85,7 +85,6 @@ export const disableCursor = () => cursorEnabled = false
 
 export const hideCursor = () => {
   if (!cursorEnabled) return
-  if (cursorRequestedToBeHidden === true) return
 
   cursorRequestedToBeHidden = true
   cursorEl.style.display = 'none'
@@ -94,7 +93,6 @@ export const hideCursor = () => {
 
 export const showCursor = () => {
   if (!cursorEnabled) return
-  if (cursorRequestedToBeHidden === false) return
 
   cursorRequestedToBeHidden = false
   cursorEl.style.display = 'flex'

@@ -46,7 +46,7 @@ export default (webgl: WebGL) => {
       float posy = posFloat.y * -2.0 + 1.0;
       gl_Position = vec4(posx, posy, 0, 1);
 
-      vec2 colorPosition = vec2(${v.hlid}, ${v.hlidType}) / ${v.colorAtlasResolution};
+      vec2 colorPosition = vec2(${v.hlid} + 0.0001, ${v.hlidType} + 0.0001) / ${v.colorAtlasResolution};
       o_color = ${c.tex}(${v.colorAtlasTextureId}, colorPosition);
     }
   `)

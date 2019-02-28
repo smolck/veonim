@@ -172,8 +172,8 @@ export const getHighlight = (id: number) => highlights.get(instances.current, id
 
 export const generateColorLookupAtlas = () => {
   // hlid are 0 indexed, but width starts at 1
-  const size = highlights.subsize(instances.current)
-  canvas.width = size + 1
+  const max = Math.max(...highlights.keys(instances.current))
+  canvas.width = max + 1
   canvas.height = 3
 
   const defaultColors = getCurrentDefaultColors()
