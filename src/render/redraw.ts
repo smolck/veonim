@@ -1,6 +1,6 @@
 import { addHighlight, generateColorLookupAtlas, setDefaultColors } from '../render/highlight-attributes'
 import { getCharIndex, getUpdatedFontAtlasMaybe } from '../render/font-texture-atlas'
-import { moveCursor, hideCursor, showCursor } from '../core/cursor'
+import { moveCursor, hideCursor, showCursor, updateCursorChar } from '../core/cursor'
 import * as windows from '../windows/window-manager'
 import * as dispatch from '../messaging/dispatch'
 import { onRedraw } from '../core/master-control'
@@ -226,6 +226,7 @@ onRedraw(redrawEvents => {
 
   requestAnimationFrame(() => {
     state_cursorVisible ? showCursor() : hideCursor()
+    if (state_cursorVisible) updateCursorChar()
     dispatch.pub('redraw')
     if (!winUpdates) return
     windows.disposeInvalidWindows()

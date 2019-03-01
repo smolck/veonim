@@ -101,7 +101,13 @@ export const showCursor = () => {
 
 export const showCursorline = () => cursorline.style.display = ''
 
-const updateCursorChar = (gridId: number, row: number, col: number) => {
+export const updateCursorChar = () => {
+  cursorChar.innerText = cursor.shape === CursorShape.block
+    ? windows.getActive().editor.getChar(cursor.row, cursor.col)
+    : ''
+}
+
+const updateCursorCharInternal = (gridId: number, row: number, col: number) => {
   if (cursor.shape !== CursorShape.block) {
     cursorChar.style.display = 'none'
     cursorChar.innerText = ''
@@ -132,7 +138,7 @@ export const moveCursor = (gridId: number, row: number, col: number) => {
     height: `${cell.height}px`,
   })
 
-  updateCursorChar(gridId, row, col)
+  updateCursorCharInternal(gridId, row, col)
 
   if (cursorRequestedToBeHidden) return
   showCursor()
