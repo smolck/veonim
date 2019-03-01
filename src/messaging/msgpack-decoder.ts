@@ -76,6 +76,12 @@ export default class extends Transform {
     return res
   }
 
+  toBigInt(raw: Buffer, index: number): BigInt {
+    const part = raw.slice(index, index + 8)
+    const hex = part.toString('hex')
+    return hex.length ? BigInt(`0x${hex}`) : BigInt(0)
+  }
+
   superparse(raw: Buffer) {
     const m = raw[this.ix]
 
@@ -195,11 +201,22 @@ export default class extends Transform {
       return (this.ix+=4, this.parseExt(raw, length))
     }
 
+    // TODO: i'm not sure i'm converting these BigInts correctly
+    // i think there is a way to set unsigned or not...
+
     // uint64
-    else if (m === 0xcf) (this.ix += 9, NOT_SUPPORTED)
+    else if (m === 0xcf) {
+      const val = this.toBigInt(raw, this.ix + 1)
+      this.ix += 9
+      return val
+    }
 
     // int64
-    else if (m === 0xd3) (this.ix += 9, NOT_SUPPORTED)
+    else if (m === 0xd3) {
+      const val = this.toBigInt(raw, this.ix + 1)
+      this.ix += 9
+      return val
+    }
 
     else if (m === undefined) {
       this.incomplete = true

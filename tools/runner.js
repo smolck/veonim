@@ -39,7 +39,7 @@ const $ = (s, ...v) => Array.isArray(s) ? console.log(s.map((s, ix) => s + (v[ix
 const go = fn => fn().catch(e => (console.error(e), process.exit(1)))
 const createTask = () => ( (done = () => {}, promise = new Promise(m => done = m)) => ({ done, promise }) )()
 
-const fetch = (url, options = { method: 'GET' }) => new Promise((done, fail) => {
+const fetchStream = (url, options = { method: 'GET' }) => new Promise((done, fail) => {
   const { data, ...requestOptions } = options
   const opts = { ...require('url').parse(url), ...requestOptions }
 
@@ -50,6 +50,36 @@ const fetch = (url, options = { method: 'GET' }) => new Promise((done, fail) => 
   const req = request(opts, res => done(res.statusCode >= 300 && res.statusCode < 400
     ? fetchStream(res.headers.location, options)
     : res))
+
+  req.on('error', fail)
+  if (data) req.write(data)
+  req.end()
+})
+
+const fetch = (url, options = { method: 'GET' }) => new Promise((done, fail) => {
+  const { data, ...reqOpts } = options
+  const { request } = require(url.match(/^(\w+):\/\//)[1])
+
+  const req = request({
+    ...require('url').parse(url),
+    ...reqOpts,
+  }, res => {
+    let buffer = ''
+    res.on('data', m => buffer += m)
+
+    res.on('end', () => {
+      if (res.statusCode >= 300 && res.statusCode < 400) {
+        return done(fetch(res.headers.location, options))
+      }
+
+      done({
+        response: res,
+        status: res.statusCode,
+        headers: res.headers,
+        data: buffer,
+      })
+    })
+  })
 
   req.on('error', fail)
   if (data) req.write(data)
@@ -71,4 +101,6 @@ const getDirFiles = async path => {
     .filter(m => m.dir || m.file)
 }
 
-module.exports = { $, go, run, root, fromRoot, createTask, fetch, getDirFiles }
+const fromJSON = m => ({ or: defaultVal => { try { return JSON.parse(m) } catch(_) { return defaultVal } }})
+
+module.exports = { $, go, run, root, fetch, fromRoot, createTask, fetchStream, getDirFiles, fromJSON }

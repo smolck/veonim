@@ -30,6 +30,10 @@ const copy = {
     $`copying extension dependencies`
     return fs.copy(fromRoot('extension_dependencies'), fromRoot('build/extension_dependencies'))
   },
+  binaries: () => {
+    $`copying binaries`
+    return fs.copy(fromRoot('binaries'), fromRoot('build/binaries'))
+  },
   hyperapp: () => {
     $`copying hyperapp`
     return fs.copy(fromRoot('src/ui/hyperapp.js'), fromRoot('build/ui/hyperapp.js'))
@@ -61,21 +65,22 @@ const unfuckTypescript = async () => {
   return Promise.all(requests)
 }
 
+const copyAll = () => Promise.all([
+  copy.index(),
+  copy.processExplorer(),
+  copy.assets(),
+  copy.runtime(),
+  copy.extensionDependencies(),
+  copy.binaries(),
+  copy.hyperapp(),
+])
+
 require.main === module && go(async () => {
   $`cleaning build folder`
   await fs.emptyDir(fromRoot('build'))
-
   await run('ttsc -p src/tsconfig.json')
   await unfuckTypescript()
-
-  await Promise.all([
-    copy.index(),
-    copy.processExplorer(),
-    copy.assets(),
-    copy.runtime(),
-    copy.extensionDependencies(),
-    copy.hyperapp(),
-  ])
+  await copyAll()
 })
 
-module.exports = { paths, copy, unfuckTypescript }
+module.exports = { paths, copy, copyAll, unfuckTypescript }

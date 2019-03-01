@@ -1,7 +1,7 @@
 'use strict'
 
 const { $, go, run, fromRoot, createTask } = require('./runner')
-const { copy, unfuckTypescript } = require('./build')
+const { copy, copyAll, unfuckTypescript } = require('./build')
 const fs = require('fs-extra')
 
 const devConfig = fromRoot('xdg_config')
@@ -12,15 +12,7 @@ go(async () => {
 
   $`cleaning build folder`
   await fs.emptyDir(fromRoot('build'))
-
-  await Promise.all([
-    copy.index(),
-    copy.processExplorer(),
-    copy.extensionDependencies(),
-    copy.assets(),
-    copy.runtime(),
-    copy.hyperapp(),
-  ])
+  await copyAll()
 
   const tsc = createTask()
 

@@ -1,33 +1,25 @@
 import { SpawnOptions, ChildProcess, spawn } from 'child_process'
-import { dirname, join } from 'path'
-
-const platforms = new Map([
-  ['darwin', 'mac'],
-  ['win32', 'win'],
-  ['linux', 'linux'],
-])
-
-const os = platforms.get(process.platform)
-if (!os) throw new Error(`Unsupported platform ${process.platform}`)
+import { join } from 'path'
 
 type Binary = (args?: string[], options?: SpawnOptions) => ChildProcess
 
 interface INeovim {
   run: Binary,
-  runtime: string,
-  path: string,
+  $VIMRUNTIME: string,
+  $VIM: string,
 }
 
-const NVIM_PATH = process.env.VEONIM_NVIM_PATH || dirname(require.resolve(`@veonim/neovim-${os}`))
-
-const binary = os === 'win' ? 'nvim.exe' : 'nvim'
-const binPath = join(NVIM_PATH, 'bin', binary)
+const binpath = join(__dirname, '..', 'binaries')
+const spawnBinary = (command: string, args?: string[], options?: SpawnOptions) => {
+  const name = process.platform === 'win32' ? `${command}.exe` : command
+  return spawn(name, args, options)
+}
 
 export const Neovim: INeovim = {
-  run: (args, opts) => spawn(binPath, args, opts),
-  runtime: join(NVIM_PATH, 'share', 'runtime'),
-  path: join(NVIM_PATH, 'share'),
+  run: (args, opts) => spawnBinary(join(binpath, 'neovim', 'bin', 'nvim'), args, opts),
+  $VIMRUNTIME: join(binpath, 'neovim', 'share', 'nvim', 'runtime'),
+  $VIM: join(binpath, 'neovim', 'share', 'nvim'),
 }
 
-export const Ripgrep: Binary = require(`@veonim/ripgrep-${os}`).default
-export const Archiver: Binary = require(`all-other-unzip-libs-suck-${os}`).default
+export const Ripgrep: Binary = (args, opts) => spawnBinary(join(binpath, 'ripgrep', 'rg'), args, opts)
+export const Archiver: Binary = (args, opts) => spawnBinary(join(binpath, 'archiver'), args, opts)

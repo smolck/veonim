@@ -39,21 +39,6 @@
   "bundled-extension-dependencies": {
     "typescript": "3.3.1"
   },
-  "bindeps-darwin": {
-    "@veonim/neovim-mac": "0.4.0-alpha1",
-    "@veonim/ripgrep-mac": "0.0.1",
-    "all-other-unzip-libs-suck-mac": "0.0.2"
-  },
-  "bindeps-win32": {
-    "@veonim/neovim-win": "0.3.2-3",
-    "@veonim/ripgrep-win": "0.0.1",
-    "all-other-unzip-libs-suck-win": "0.0.2"
-  },
-  "bindeps-linux": {
-    "@veonim/neovim-linux": "0.4.0-alpha1",
-    "@veonim/ripgrep-linux": "0.0.1",
-    "all-other-unzip-libs-suck-linux": "0.0.2"
-  },
   "dependencies": {
     "diff-match-patch": "1.0.4",
     "fuzzaldrin-plus": "0.4.1",
@@ -69,6 +54,7 @@
     "@types/fuzzaldrin-plus": "0.0.1",
     "@types/node": "9.4.0",
     "@types/webgl2": "0.0.4",
+    "all-other-unzip-libs-suck": "0.0.3",
     "electron": "4.0.0",
     "electron-builder": "20.38.4",
     "electron-devtools-installer": "2.2.4",
@@ -80,5 +66,31 @@
     "ttypescript": "1.5.6",
     "typescript": "3.2.4",
     "vscode-debugprotocol": "1.29.0"
-  }
+  },
+  "binaryDependencies": [
+    {
+      "org": "neovim",
+      "repo": "neovim",
+      "tag": "nightly",
+      "mac": "nvim-macos.tar.gz",
+      "win": "nvim-win64.zip",
+      "linux": "nvim-linux64.tar.gz"
+    },
+    {
+      "org": "mholt",
+      "repo": "archiver",
+      "tag": "v3.1.1",
+      "mac": "arc_mac_amd64",
+      "win": "arc_windows_amd64.exe",
+      "linux": "arc_linux_amd64"
+    },
+    {
+      "org": "burntsushi",
+      "repo": "ripgrep",
+      "tag": "0.10.0",
+      "mac": "ripgrep-${tag}-x86_64-apple-darwin.tar.gz",
+      "win": "ripgrep-${tag}-x86_64-pc-windows-msvc.zip",
+      "linux": "ripgrep-${tag}-x86_64-unknown-linux-musl.tar.gz"
+    }
+  ]
 }

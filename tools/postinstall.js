@@ -1,24 +1,21 @@
 #! /usr/bin/env node
-const { $, go, run, fromRoot, fetch } = require('./runner')
+const { $, go, run, fromRoot, fetchStream } = require('./runner')
+const downloadGithubRelease = require('./gh-download-release')
 const fs = require('fs-extra')
 const pkgPath = fromRoot('package.json')
 const pkg = require(pkgPath)
 const os = process.platform
-const deps = Reflect.get(pkg, `bindeps-${os}`)
+const deps = Reflect.get(pkg, 'binaryDependencies')
 const extDeps = Reflect.get(pkg, 'bundled-extension-dependencies')
+
+const binpath = 'binaries'
 
 const binaryDependencies = async () => {
   if (!deps) return
-
-  for (const [ dependency, version ] of Object.entries(deps)) {
-    await run(`npm i ${dependency}@${version} --no-save --no-package-lock --no-audit --loglevel=error`)
-  }
-
-  const pkgData = JSON.stringify(pkg, null, 2)
-  await fs.writeFile(pkgPath, pkgData)
+  return Promise.all(deps.map(data => downloadGithubRelease(data, binpath)))
 }
 
-const extendionDependencies = async () => {
+const extensionDependencies = async () => {
   if (!extDeps) return
   const dir = fromRoot('extension_dependencies')
   await fs.ensureDir(dir)
@@ -42,7 +39,7 @@ const vscodeTypings = () => new Promise(async (done, fail) => {
   "typings": "index.d.ts"
 }\n`)
 
-  const downloadStream = await fetch(vscodeTypingsUrl(vscodeApiVersion))
+  const downloadStream = await fetchStream(vscodeTypingsUrl(vscodeApiVersion))
   const fileStream = fs.createWriteStream(fromRoot(modulePath, 'index.d.ts'))
 
   downloadStream
@@ -57,7 +54,7 @@ require.main === module && go(async () => {
   $`installed binary dependencies`
 
   $`installing extension dependencies`
-  await extendionDependencies()
+  await extensionDependencies()
   $`installed extension dependencies`
 
   $`installing vscode extension api typings`

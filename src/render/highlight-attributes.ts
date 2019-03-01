@@ -79,9 +79,13 @@ const highlights = MapMap<number, number, HighlightGroup>()
 export const setDefaultColors = (fg: number, bg: number, sp: number) => {
   const defaultColors = defaultColorsMap.get(instances.current) || {} as DefaultColors
 
-  const foreground = fg >= 0 ? asColor(fg) : defaultColors.foreground
-  const background = bg >= 0 ? asColor(bg) : defaultColors.background
-  const special = sp >= 0 ? asColor(sp) : defaultColors.special
+  const nextFG = fg >= 0 ? asColor(fg) : defaultColors.foreground
+  const nextBG = bg >= 0 ? asColor(bg) : defaultColors.background
+  const nextSP = sp >= 0 ? asColor(sp) : defaultColors.special
+
+  const foreground = nextFG || defaultAppColors.foreground
+  const background = nextBG || defaultAppColors.background
+  const special = nextSP || defaultAppColors.special
 
   const same = defaultColors.foreground === foreground
     && defaultColors.background === background
