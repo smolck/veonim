@@ -61,5 +61,3 @@ require.main === module && go(async () => {
   await vscodeTypings().catch(err => console.log('failed to install vscode typings', err))
   $`installed vscode extension api typings`
 })
-
-module.exports = { deps }
