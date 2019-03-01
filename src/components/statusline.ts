@@ -97,7 +97,7 @@ const Tab = ({ id, label, active }: TabView) => h('div', {
     ...itemStyle,
     paddingLeft: '20px',
     paddingRight: '20px',
-    marginRight: '-10px',
+    marginRight: '-14px',
     clipPath: 'polygon(15px 0, 100% 0, calc(100% - 15px) 100%, 0 100%)',
     color: cvar('foreground-40'),
     ...(active ? {
