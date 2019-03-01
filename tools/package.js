@@ -12,7 +12,8 @@ const config = {
   },
   files: [
     'build/**',
-    '!**/*.map'
+    '!**/*.map',
+    '!**/.bin',
   ],
   mac: {
     target: ['dmg', 'zip'],

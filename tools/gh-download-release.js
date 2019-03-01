@@ -1,6 +1,7 @@
 'use strict'
 const { fetchStream, fromJSON, fromRoot, getDirFiles } = require('./runner')
 const Archiver = require('all-other-unzip-libs-suck').default
+const { promisify: P } = require('util')
 const { extname } = require('path')
 const fs = require('fs-extra')
 
@@ -33,7 +34,11 @@ module.exports = ({ org, repo, tag, mac, win, linux }, dlpath) => new Promise(as
 
   stream.pipe(dest).on('error', fail).on('close', async () => {
     console.log('downloaded binary:', filename)
-    if (!unpack) return done({ org, repo, tag, url, filename })
+    if (!unpack) {
+      await P(fs.chmod)(filename, '755')
+      return done({ org, repo, tag, url, filename })
+    }
+
     const unzipErr = await unzip(filename, tempPath).catch(e => console.error('unzip err:', e))
     if (unzipErr) console.error('unzip fail:', unzipErr)
     const dirs = await getDirs(tempPath)

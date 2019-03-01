@@ -28,7 +28,7 @@ const copy = {
   },
   extensionDependencies: () => {
     $`copying extension dependencies`
-    return fs.copy(fromRoot('extension_dependencies'), fromRoot('build/extension_dependencies'))
+    return fs.copy(fromRoot('extension_dependencies/node_modules'), fromRoot('build/extdeps'))
   },
   binaries: () => {
     $`copying binaries`

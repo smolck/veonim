@@ -14,7 +14,7 @@ const downloadZip = (url: string, path: string) => new Promise(async done => {
     .on('error', done)
 })
 
-const unzip = (path: string) => new Promise(done => Archiver(['open', `${path}.zip`, path])
+const unzip = (path: string) => new Promise(done => Archiver(['unarchive', `${path}.zip`, path])
   .on('close', done)
   .on('error', done))
 

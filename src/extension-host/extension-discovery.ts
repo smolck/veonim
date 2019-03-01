@@ -98,8 +98,7 @@ const installMaybe = async (userDefinedExtensions?: string[]) => {
 
 nvim.getVarCurrentAndFuture('vscode_extensions', installMaybe)
 
-const extensionDependenciesDir = join(__dirname, '..', 'extension_dependencies')
-const copyFrom = join(extensionDependenciesDir, 'node_modules')
+const copyFrom = join(__dirname, '..', 'extdeps')
 const copyTo = join(EXT_PATH, 'node_modules')
 
 ensureDir(LOG_PATH)
