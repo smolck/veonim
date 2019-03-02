@@ -85,42 +85,44 @@ const messageNotifyKindMappings = new Map([
 
 // TODO: handle multi-line messages
 type MessageEvent = [number, string]
-export const msg_show = ([ , [ kind, msgs, flag ] ]: [any, [string, MessageEvent[], boolean]]) => {
-  // TODO: what is flag?
-  console.log('MSG OF:', kind, flag)
+export const msg_show = ([ , [ kind, msgs, replaceLast ] ]: [any, [string, MessageEvent[], boolean]]) => {
+  // TODO: what is replaceLast?
+  console.log('MSG OF:', kind, replaceLast)
+	// `replace_last` controls how multiple messages should be displayed.
+	// If `replace_last` is false, this message should be displayed together
+	// with all previous messages that are still visible. If `replace_last`
+	// is true, this message should replace the message in the most recent
+	// `msg_show` call, but any other visible message should still remain.
 
   const messageKind = sillyString(kind)
-  const notifyKind = messageNotifyKindMappings.get(messageKind) || NotifyKind.System
-  // TODO: do something with hlid or ignore?
-  msgs.forEach(([ /*hlid*/, text ]) => notify(sillyString(text), notifyKind))
+  const notifyKind = messageNotifyKindMappings.get(messageKind)
+  msgs.forEach(([ /*hlid*/, text ]) => notifyKind
+    ? notify(sillyString(text), notifyKind)
+    : dispatch.pub('message.status', sillyString(text)))
 }
 
 export const msg_history_show = (m: any) => {
   console.warn('NYI: messages', m)
 }
 
-// TODO: wat do here lol - macro msg and shit?
-// export const msg_showmode = ([, [ msgs ]]: any) => {
-//   msgs.forEach((m: [number, string]) => console.log('MSG_SHOWMODE:', m[0], m[1]))
-// }
-
-export const msg_showmode = (m: any) => {
-  // TODO: on empty msg_showmode clear out any previous recording messages
-  // see docs for more info
-  console.warn('NYI: msg_showmode', m)
+export const msg_showmode = ([ , [ msgs ] ]: [any, [MessageEvent[]]]) => {
+  if (!msgs.length) return dispatch.pub('message.control', '')
+  msgs.forEach(([ /*hlid*/, text ]) => dispatch.pub('message.control', text))
 }
 
-export const msg_showcmd = (m: any) => {
-  console.warn('NYI: msg_showcmd', m)
+export const msg_showcmd = ([ , [ msgs ] ]: [any, [MessageEvent[]]]) => {
+  if (!msgs.length) return dispatch.pub('message.control', '')
+  msgs.forEach(([ /*hlid*/, text ]) => dispatch.pub('message.control', text))
 }
 
-export const msg_ruler = (m: any) => {
-  console.warn('NYI: msg_ruler', m)
+export const msg_clear = ([, [ content ]]: [any, [string]]) => {
+  dispatch.pub('message.status', content)
 }
 
-export const msg_clear = (m: any) => {
-  console.warn('NYI: msg_clear:', m)
-}
+// we display our own ruler based on cursor position. why use this?  i think
+// maybe we could use 'set noruler' or 'set ruler' to determine if we show the
+// ruler block in the statusline (with these msg_ruler events)
+export const msg_ruler = (_: any) => {}
 
 export const mode_change = ([ , [ m ] ]: [any, [string]]) => {
   const mode = sillyString(m)

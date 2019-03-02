@@ -31,7 +31,8 @@ const state = {
   active: -1,
   filetype: '',
   runningServers: new Set<string>(),
-  mode: 'NORMAL',
+  message: '',
+  controlMessage: '',
   line: 0,
   column: 0,
   cwd: '',
@@ -40,7 +41,6 @@ const state = {
   branch: '',
   additions: 0,
   deletions: 0,
-  macro: '',
   baseColor: '#4e415a',
 }
 
@@ -76,6 +76,8 @@ Object.assign(container.style, {
 })
 
 const actions = {
+  setMessage: (message: string) => ({ message }),
+  setControlMessage: (controlMessage: string) => ({ controlMessage }),
   updateTabs: ({ active, tabs }: any) => ({ active, tabs }),
   setFiletype: (filetype: any) => ({ filetype }),
   setLine: (line: any) => ({ line }),
@@ -84,7 +86,6 @@ const actions = {
   setDiagnostics: ({ errors = 0, warnings = 0 }: any) => ({ errors, warnings }),
   setGitBranch: (branch: any) => ({ branch }),
   setGitStatus: ({ additions, deletions }: any) => ({ additions, deletions }),
-  setMacro: (macro = '') => ({ macro }),
   setColor: (baseColor: any) => ({ baseColor }),
   aiStart: ({ cwd, filetype }: any) => (s: S) => ({ runningServers: new Set([...s.runningServers, cwd + filetype]) }),
 }
@@ -209,38 +210,14 @@ const view = ($: S) => h('div', {
       }, `${$.deletions}`)
     ])
 
-    ,$.runningServers.has(api.nvim.state.cwd + $.filetype) && h('div', {
-      style: itemStyle,
-    }, [
-      ,h('div', [
-        ,h(Icon.Zap, { color: '#555', ...iconStyle })
-      ])
-    ])
-
-  ])
-
-  // CENTER
-  ,h('div', {
-    style: statusGroupStyle,
-  }, [
-
-    ,$.macro && h('div', {
-      style: itemStyle,
-    }, [
+    // STATUSBAR MESSAGE
+    ,h('div', [
       ,h('div', {
         style: {
-          ...iconBoxStyle,
-          color: colors.error,
-        }
-      }, [
-        ,h(Icon.Target, iconStyle)
-      ])
-
-      ,h('div', {
-        style: {
-          color: colors.error,
-        }
-      }, $.macro)
+          marginLeft: '26px',
+          color: cvar('foreground-60'),
+        },
+      }, $.message)
     ])
 
   ])
@@ -249,6 +226,24 @@ const view = ($: S) => h('div', {
   ,h('div', {
     style: statusGroupStyle,
   }, [
+
+    // STATUSBAR CONTROL MESSAGE
+    ,h('div', [
+      ,h('div', {
+        style: {
+          marginRight: '10px',
+          color: cvar('foreground-60'),
+        },
+      }, $.controlMessage)
+    ])
+
+    ,$.runningServers.has(api.nvim.state.cwd + $.filetype) && h('div', {
+      style: itemStyle,
+    }, [
+      ,h('div', [
+        ,h(Icon.Zap, { color: '#555', ...iconStyle })
+      ])
+    ])
 
     ,h('div', {
       style: {
@@ -347,10 +342,10 @@ sub('tabs', async ({ curtab, tabs }: { curtab: ExtContainer, tabs: Tab[] }) => {
 
 api.git.onBranch(branch => ui.setGitBranch(branch))
 api.git.onStatus(status => ui.setGitStatus(status))
-sub('ai:diagnostics.count', count => ui.setDiagnostics(count))
-sub('ai:start', opts => ui.aiStart(opts))
-sub('vim:macro.start', reg => ui.setMacro(reg))
-sub('vim:macro.end', () => ui.setMacro())
+sub('ai.diagnostics.count', count => ui.setDiagnostics(count))
+sub('ai.start', opts => ui.aiStart(opts))
+sub('message.status', msg => ui.setMessage(msg))
+sub('message.control', msg => ui.setControlMessage(msg))
 onSwitchVim(() => ui.updateTabs({ active: -1, tabs: [] }))
 
 api.nvim.watchState.colorscheme(async () => {

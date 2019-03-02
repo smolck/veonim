@@ -31,6 +31,7 @@ onCreateVim(info => {
   })
 
   instance.on.notify((msg: string, kind: NotifyKind, actions?: string[]) => isActive() && dispatch.pub('notify', { msg, kind, actions }))
+  instance.on.pub((...a: [string, any]) => isActive() && dispatch.pub(...a))
   instance.on.vimrcLoaded(() => isActive() && ee.emit('nvim.load', false))
   instance.on.gitStatus((status: GitStatus) => isActive() && ee.emit('git.status', status))
   instance.on.gitBranch((branch: string) => isActive() && ee.emit('git.branch', branch))
