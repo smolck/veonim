@@ -128,6 +128,8 @@ const view = ($: S) => Overlay({
     ,h('div', { style: {
       display: 'flex',
       padding: '8px',
+      fontFamily: 'var(--font)',
+      fontSize: 'var(--font-size)px',
     } }, [
       ,h('div', [
         ,h('span', { style: fadedStyle }, [ h('span', $.labelStart) ])

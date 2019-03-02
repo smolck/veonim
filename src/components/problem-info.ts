@@ -55,6 +55,8 @@ const view = ($: S) => Overlay({
       padding: '8px',
       display: 'flex',
       alignItems: 'center',
+      fontFamily: 'var(--font)',
+      fontSize: 'var(--font-size)px',
     }
   }, [
 

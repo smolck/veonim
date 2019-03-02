@@ -127,7 +127,7 @@ const view = ({
       value,
       style: {
         color,
-        fontSize: small ? '1rem' : '1.286rem',
+        fontSize: small ? '1rem' : '1.4rem',
       },
       type: 'text',
       oncreate: (e: HTMLInputElement) => {
