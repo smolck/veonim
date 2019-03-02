@@ -18,7 +18,7 @@ const fontSizer = face => size => {
 
 const main = () => {
   console.log('fonts loaded k thx')
-  const getWidth = fontSizer('Roboto Mono Builtin')
+  const getWidth = fontSizer('Roboto Mono Veonim')
 
   const points = [...Array(50)].map((_, ix) => ix + 4)
   const widths = points.map(p => ({ size: p, width: getWidth(p) }))

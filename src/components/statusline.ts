@@ -92,6 +92,12 @@ const actions = {
 
 const iconStyle = { style: { fontSize: '1.15rem' } }
 
+const Label = (label: string) => h('div', {
+  style: {
+    paddingBottom: '1px',
+  }
+}, label)
+
 const Tab = ({ id, label, active }: TabView) => h('div', {
   key: id,
   style: {
@@ -99,6 +105,7 @@ const Tab = ({ id, label, active }: TabView) => h('div', {
     paddingLeft: '20px',
     paddingRight: '20px',
     marginRight: '-14px',
+    paddingBottom: '1px',
     clipPath: 'polygon(15px 0, 100% 0, calc(100% - 15px) 100%, 0 100%)',
     color: cvar('foreground-40'),
     ...(active ? {
@@ -126,6 +133,7 @@ const view = ($: S) => h('div', {
     ,h('div', {
       style: {
         ...itemStyle,
+        paddingLeft: '15px',
         color: brighten($.baseColor, 90),
         background: darken($.baseColor, 20),
         paddingRight: '30px',
@@ -139,7 +147,7 @@ const view = ($: S) => h('div', {
         ,h(Icon.HardDrive, iconStyle)
       ])
 
-      ,h('span', $.cwd || 'main')
+      ,Label($.cwd || 'main')
     ])
 
     ,$.branch && h('div', {
@@ -156,13 +164,14 @@ const view = ($: S) => h('div', {
       ,h('div', {
         style: {
           ...iconBoxStyle,
+          paddingTop: '4px',
           display: $.branch ? '' : 'none',
         },
       }, [
         h(Icon.GitBranch, iconStyle),
       ])
 
-      ,h('span', $.branch)
+      ,Label($.branch)
     ])
 
     ,$.branch && h('div', {
@@ -189,6 +198,7 @@ const view = ($: S) => h('div', {
       ,h('div', {
         style: {
           color: $.additions > 0 ? colors.success : undefined,
+          paddingBottom: '1px',
         }
       }, `${$.additions}`)
 
@@ -206,6 +216,7 @@ const view = ($: S) => h('div', {
       ,h('div', {
         style: {
           color: $.deletions > 0 ? colors.error : undefined,
+          paddingBottom: '1px',
         },
       }, `${$.deletions}`)
     ])
@@ -216,6 +227,7 @@ const view = ($: S) => h('div', {
         style: {
           marginLeft: '26px',
           color: cvar('foreground-60'),
+          paddingBottom: '1px',
         },
       }, $.message)
     ])
@@ -233,6 +245,7 @@ const view = ($: S) => h('div', {
         style: {
           marginRight: '10px',
           color: cvar('foreground-60'),
+          paddingBottom: '1px',
         },
       }, $.controlMessage)
     ])
@@ -269,6 +282,7 @@ const view = ($: S) => h('div', {
       ,h('div', {
         style: {
           color: $.errors > 0 ? colors.error : undefined,
+          paddingBottom: '1px',
         },
       }, `${$.errors}`)
 
@@ -286,6 +300,7 @@ const view = ($: S) => h('div', {
       ,h('div', {
         style: {
           color: $.warnings > 0 ? colors.warning : undefined,
+          paddingBottom: '1px',
         },
       }, `${$.warnings}`)
     ])
@@ -299,6 +314,7 @@ const view = ($: S) => h('div', {
         background: darken($.baseColor, 30),
         marginRight: '-15px',
         clipPath: 'polygon(15px 0, 100% 0, calc(100% - 15px) 100%, 0 100%)',
+        paddingBottom: '1px',
       }
     }, [
       ,h('div', `${$.line + 1}:${$.column + 1}`)
