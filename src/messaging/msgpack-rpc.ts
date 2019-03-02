@@ -53,7 +53,9 @@ export default (send: (data: any[]) => void): RPCAPI => {
   api.onEvent = (event, fn) => watchers.on(event, fn)
   api.handleRequest = (event, fn) => requestHandlers.set(event, fn)
 
-  const onData = ([ type, ...d ]: any) => {
+  const onData = (data: any) => {
+    const [ type, ...d ] = data || [] as any[]
+
     if (type === 0) onVimRequest(d[0] as number, d[1].toString(), d[2] as any[])
     else if (type === 1) onResponse(d[0] as number, d[1] as string, d[2])
     else if (type === 2) onNotification(d[0].toString(), d[1] as any[])
