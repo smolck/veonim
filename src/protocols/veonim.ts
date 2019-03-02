@@ -7,6 +7,12 @@ export enum NotifyKind {
   Hidden = 'hidden',
 }
 
+export interface Message {
+  kind: NotifyKind
+  message: string
+  actions?: string[]
+}
+
 export interface FlexibleExpire {
   refresh(): void
 }

@@ -1,123 +1,98 @@
-import { NotifyKind, Notification } from '../protocols/veonim'
-import { RowNormal } from '../components/row-container'
-import { h, app, vimBlur, vimFocus } from '../ui/uikit'
-import Input from '../components/text-input'
-import { filter } from 'fuzzaldrin-plus'
+import { NotifyKind, Message } from '../protocols/veonim'
+import { colors, badgeStyle } from '../ui/styles'
+import { animate, cvar } from '../ui/css'
 import * as Icon from 'hyperapp-feather'
-import api from '../core/instance-api'
-import { colors } from '../ui/styles'
+import { h, app } from '../ui/uikit'
 
 const state = {
-  query: '',
-  messages: [] as Notification[],
-  cache: [] as Notification[],
-  vis: false,
-  ix: 0,
+  messages: [] as Message[],
 }
 
 type S = typeof state
 
-let elref: HTMLElement
-const SCROLL_AMOUNT = 0.4
-
-const iconStyle = { fontSize: '1.2rem' }
-
-// TODO: maybe this can be shared with notifications.ts component
-const icons = new Map([
-  ['error', h(Icon.XCircle, { color: colors.error, style: iconStyle })],
-  ['warning', h(Icon.AlertTriangle, { color: colors.warning, style: iconStyle })],
-  ['success', h(Icon.CheckCircle, { color: colors.success, style: iconStyle })],
-  ['info', h(Icon.MessageCircle, { color: colors.info, style: iconStyle })],
-  ['hidden', h(Icon.MessageCircle, { color: colors.info, style: iconStyle })],
-  ['system', h(Icon.AlertCircle, { color: colors.system, style: iconStyle })],
+const renderIcons = new Map([
+  [ NotifyKind.Error, Icon.XCircle ],
+  [ NotifyKind.Warning, Icon.AlertTriangle ],
+  [ NotifyKind.Success, Icon.CheckCircle ],
+  [ NotifyKind.Info, Icon.MessageCircle ],
+  [ NotifyKind.System, Icon.AlertCircle ],
 ])
 
-const getIcon = (kind: NotifyKind) => icons.get(kind) || icons.get('info')
+const getIcon = (kind: NotifyKind) => renderIcons.get(kind)!
 
 const actions = {
-  toggle: () => (s: S) => {
-    const next = !s.vis
-    next ? vimBlur() : vimFocus()
-    return { vis: next }
-  },
-
-  hide: () => (vimFocus(), { vis: false }),
-
-  addMessage: (message: Notification) => (s: S) => ({
-    messages: [message, ...s.messages].slice(0, 500),
-    cache: [message, ...s.messages].slice(0, 500),
+  addMessage: (message: Message) => (s: S) => ({
+    messages: [...s.messages, message],
   }),
-
-  change: (query: string) => (s: S) => ({ query, ix: 0, messages: query
-    ? filter(s.messages, query, { key: 'message' })
-    : s.cache
-  }),
-
-  down: () => {
-    const { height } = elref.getBoundingClientRect()
-    elref.scrollTop += Math.floor(height * SCROLL_AMOUNT)
-  },
-
-  up: () => {
-    const { height } = elref.getBoundingClientRect()
-    elref.scrollTop -= Math.floor(height * SCROLL_AMOUNT)
-  },
 }
 
-const view = ($: S, a: typeof actions) => h('div', {
+type A = typeof actions
+
+const Message = ({ kind, message }: Message) => h('div', {
   style: {
-    background: 'var(--background-45)',
-    color: '#eee',
-    display: $.vis ? 'flex' : 'none',
-    flexFlow: 'column',
-    position: 'absolute',
-    alignSelf: 'flex-end',
-    maxHeight: '70vh',
-    width: '100%',
+    display: 'flex',
+    marginTop: '4px',
+    padding: '18px',
+    background: cvar('background-30'),
+    borderLeft: '4px solid',
+    borderColor: Reflect.get(colors, kind),
+    fontSize: '1.2rem',
   }
 }, [
 
-  ,Input({
-    up: a.up,
-    hide: a.hide,
-    down: a.down,
-    change: a.change,
-    value: $.query,
-    focus: true,
-    small: true,
-    icon: Icon.Filter,
-    desc: 'filter messages',
-  })
-
   ,h('div', {
-    oncreate: (e: HTMLElement) => {
-      if (e) elref = e
-    },
-    style: { overflowY: 'hidden' }
-    // TODO: show timestamp and dedup. only dedup nearby?
-  }, $.messages.map(({ id, kind, message }, pos) => h(RowNormal, {
-    key: id,
-    active: pos === $.ix
-  }, [
-    ,h('div', {
+    style: {
       display: 'flex',
+      wordBreak: 'break-all',
       alignItems: 'center',
-      paddingRight: '10px',
+    }
+  }, [
+
+    ,h('div', {
+      style: {
+        display: 'flex',
+        paddingRight: '14px',
+        alignItems: 'center',
+        fontSize: '1.6rem',
+        color: Reflect.get(colors, kind),
+      }
     }, [
-      ,getIcon(kind)
+      ,h(getIcon(kind))
     ])
 
     ,h('span', {
       style: {
-        color: (icons.get(kind) || icons.get('info'))!.color
+        color: cvar('foreground-10'),
       }
     }, message)
-  ])))
+
+  ])
+])
+
+const view = ($: S, a: A) => h('div', {
+  style: {
+    display: 'flex',
+    height: '100%',
+    width: '100%',
+    alignItems: 'flex-end',
+    justifyContent: 'flex-end',
+  }
+}, [
+
+  ,h('div', {
+    style: {
+      display: 'flex',
+      flexFlow: 'column',
+    }
+  }, [
+
+    ,$.messages.map(Message)
+
+  ])
 
 ])
 
 const ui = app({ name: 'messages', state, actions, view })
 
-export const addMessage = (message: Notification) => ui.addMessage(message)
-
-api.onAction('messages', ui.toggle)
+ui.addMessage({ message: 'Would you like to download extensions?', kind: NotifyKind.Warning })
+ui.addMessage({ message: 'Failed to download extension Rust', kind: NotifyKind.Error })
