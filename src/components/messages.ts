@@ -1,9 +1,23 @@
+import { registerOneTimeUseShortcuts } from '../core/input'
 import { NotifyKind, Message } from '../protocols/veonim'
-import { animate, cvar } from '../ui/css'
 import * as Icon from 'hyperapp-feather'
 import { uuid } from '../support/utils'
 import { colors } from '../ui/styles'
 import { h, app } from '../ui/uikit'
+import { cvar } from '../ui/css'
+
+interface MessageAction {
+  label: string
+  shortcut: string
+}
+
+interface IMessage {
+  id?: string
+  kind: NotifyKind
+  message: string
+  actions?: MessageAction[]
+  expire?: number
+}
 
 const state = {
   messages: [] as Message[],
@@ -23,7 +37,8 @@ const getIcon = (kind: NotifyKind) => renderIcons.get(kind)!
 
 const actions = {
   addMessage: (message: Message) => (s: S) => ({
-    messages: [...s.messages, message],
+    // messages: [...s.messages, message],
+    messages: [message, ...s.messages],
   }),
   removeMessage: (id: string) => (s: S) => ({
     messages: s.messages.filter(m => m.id !== id),
@@ -32,7 +47,7 @@ const actions = {
 
 type A = typeof actions
 
-const Message = ({ kind, message, actions = [{ label: 'OK', shortcut: 'C S N' }] }: Message) => h('div', {
+const MessageView = ({ kind, message, actions = [{ label: 'OK', shortcut: 'C S N' }] }: IMessage, last: number) => h('div', {
   style: {
     display: 'flex',
     marginTop: '4px',
@@ -71,10 +86,9 @@ const Message = ({ kind, message, actions = [{ label: 'OK', shortcut: 'C S N' }]
       }
     }, message)
 
-
   ])
 
-  ,h('div', {
+  ,last && h('div', {
     style: {
       marginTop: '10px',
       display: 'flex',
@@ -162,13 +176,19 @@ const view = ($: S) => h('div', {
     }
   }, [
 
-    ,$.messages.map(Message)
+    ,void registerFirstMessageShortcuts($.messages[$.messages.length - 1])
+    ,$.messages.map((m, ix) => MessageView(m, ix === $.messages.length - 1))
 
   ])
 
 ])
 
 const ui = app<S, A>({ name: 'messages', state, actions, view })
+
+const registerFirstMessageShortcuts = (message: IMessage) => {
+  console.log('shortcuts register for:', message)
+
+}
 
 // TODO: i don't think vscode extensions specify a negative option
 // i think it assumed that the x at the top right will close/dismiss
@@ -188,7 +208,20 @@ ui.addMessage({
 
 export const addMessage = (message: Message, onAction?: (action: string) => void) => {
   const id = uuid()
-  ui.addMessage({ ...message, id })
+
+  const actions = (message.actions || []).map(a => ({
+    label: a,
+    // TODO: does this conform to input standards?
+    shortcut: 'C S Y',
+  }))
+
+  // generic close/dismiss message functionality - like the (x) button in the prompt
+  actions.push({
+    label: 'OK',
+    shortcut: 'C S N',
+  })
+
+  ui.addMessage({ ...message, id, actions })
 
   return () => ui.removeMessage(id)
 }

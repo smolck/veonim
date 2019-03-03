@@ -82,6 +82,7 @@ const mapMods = $<string>(handleMods, userModRemaps, joinModsWithDash)
 const mapKey = $<string>(bypassEmptyMod, toVimKey)
 const formatInput = $<string>(combineModsWithKey, wrapKey)
 const shortcuts = new Map<string, Function>()
+const globalShortcuts = new Map<string, () => void>()
 
 const resetInputState = () => {
   xformed = false
@@ -175,6 +176,8 @@ const sendToVim = (inputKeys: string) => {
     }
   }
 
+  if (globalShortcuts.has(inputKeys)) return globalShortcut.get(inputKeys)!()
+
   // TODO: this might need more attention. i think s-space can be a valid
   // vim keybind. s-space was causing issues in terminal mode, sending weird
   // term esc char.
@@ -190,6 +193,14 @@ const sendToVim = (inputKeys: string) => {
 
 export const registerShortcut = (keys: string, mode: VimMode, cb: Function) => {
   shortcuts.set(`${mode}:<${keys}>`, cb)
+}
+
+export const registerOneTimeUseShortcuts = (shortcuts: string[], cb: () => void) => {
+  const done = (shortcut: string) => {
+    shortcuts.forEach(s => globalShortcuts.delete(s))
+    cb(shortcut)
+  }
+  shortcuts.forEach(s => globalShortcuts.set(s, () => done(s)))
 }
 
 const sendKeys = async (e: KeyboardEvent, inputType: InputType) => {

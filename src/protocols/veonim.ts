@@ -7,16 +7,11 @@ export enum NotifyKind {
   Hidden = 'hidden',
 }
 
-export interface MessageAction {
-  label: string
-  shortcut: string
-}
-
 export interface Message {
   id?: string
   kind: NotifyKind
   message: string
-  actions?: MessageAction[]
+  actions?: string[]
   expire?: number
 }
 
