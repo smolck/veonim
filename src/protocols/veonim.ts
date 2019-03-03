@@ -13,6 +13,7 @@ export interface MessageAction {
 }
 
 export interface Message {
+  id?: string
   kind: NotifyKind
   message: string
   actions?: MessageAction[]

@@ -1,6 +1,7 @@
 import { NotifyKind, Message } from '../protocols/veonim'
 import { animate, cvar } from '../ui/css'
 import * as Icon from 'hyperapp-feather'
+import { uuid } from '../support/utils'
 import { colors } from '../ui/styles'
 import { h, app } from '../ui/uikit'
 
@@ -24,6 +25,9 @@ const actions = {
   addMessage: (message: Message) => (s: S) => ({
     messages: [...s.messages, message],
   }),
+  removeMessage: (id: string) => (s: S) => ({
+    messages: s.messages.filter(m => m.id !== id),
+  }),
 }
 
 type A = typeof actions
@@ -38,7 +42,7 @@ const Message = ({ kind, message, actions = [{ label: 'OK', shortcut: 'C S N' }]
     borderColor: Reflect.get(colors, kind),
     fontSize: '1.2rem',
     flexFlow: 'column',
-  }
+  },
 }, [
 
   ,h('div', {
@@ -154,6 +158,7 @@ const view = ($: S) => h('div', {
     style: {
       display: 'flex',
       flexFlow: 'column',
+      maxWidth: '500px',
     }
   }, [
 
@@ -176,15 +181,34 @@ const ui = app<S, A>({ name: 'messages', state, actions, view })
 // one will receive the buttons (again on the bottom)
 
 ui.addMessage({
-  message: 'Would you like to download extensions?',
-  kind: NotifyKind.Warning,
-  actions: [
-    { label: 'Yes', shortcut: 'C S Y' },
-    { label: 'No', shortcut: 'C S N' },
-  ],
-})
-
-ui.addMessage({
+  id: 'fortytwo',
   message: 'Failed to download extension Rust',
   kind: NotifyKind.Error,
 })
+
+export const addMessage = (message: Message, onAction?: (action: string) => void) => {
+  const id = uuid()
+  ui.addMessage({ ...message, id })
+
+  return () => ui.removeMessage(id)
+}
+
+const demo = () => {
+  setTimeout(() => {
+    const dispose = addMessage({
+      message: 'Would you like to download extensions?',
+      kind: NotifyKind.Warning,
+      actions: [
+        { label: 'Yes', shortcut: 'C S Y' },
+        { label: 'No', shortcut: 'C S N' },
+      ],
+    })
+
+    setTimeout(() => {
+      dispose()
+      demo()
+    }, 3e3)
+  }, 1e3)
+}
+
+demo()
