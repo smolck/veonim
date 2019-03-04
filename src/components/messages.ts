@@ -9,18 +9,20 @@ import { cvar } from '../ui/css'
 interface MessageAction {
   label: string
   shortcut: string
+  shortcutLabel: string
 }
 
 interface IMessage {
-  id?: string
+  id: string
   kind: NotifyKind
   message: string
-  actions?: MessageAction[]
+  actions: MessageAction[]
   expire?: number
+  onAction: (action: string) => void
 }
 
 const state = {
-  messages: [] as Message[],
+  messages: [] as IMessage[],
 }
 
 type S = typeof state
@@ -36,7 +38,7 @@ const renderIcons = new Map([
 const getIcon = (kind: NotifyKind) => renderIcons.get(kind)!
 
 const actions = {
-  addMessage: (message: Message) => (s: S) => ({
+  addMessage: (message: IMessage) => (s: S) => ({
     // messages: [...s.messages, message],
     messages: [message, ...s.messages],
   }),
@@ -47,7 +49,7 @@ const actions = {
 
 type A = typeof actions
 
-const MessageView = ({ kind, message, actions = [{ label: 'OK', shortcut: 'C S N' }] }: IMessage, last: number) => h('div', {
+const MessageView = ({ kind, message, actions }: IMessage, last: boolean) => h('div', {
   style: {
     display: 'flex',
     marginTop: '4px',
@@ -63,7 +65,6 @@ const MessageView = ({ kind, message, actions = [{ label: 'OK', shortcut: 'C S N
   ,h('div', {
     style: {
       display: 'flex',
-      wordBreak: 'break-all',
       alignItems: 'center',
     }
   }, [
@@ -90,11 +91,11 @@ const MessageView = ({ kind, message, actions = [{ label: 'OK', shortcut: 'C S N
 
   ,last && h('div', {
     style: {
-      marginTop: '10px',
+      marginTop: '12px',
       display: 'flex',
       justifyContent: 'flex-end',
     }
-  }, actions.map(a => Action(a.label, a.shortcut)))
+  }, actions.map(a => Action(a.label, a.shortcutLabel)))
 
 ])
 
@@ -173,6 +174,7 @@ const view = ($: S) => h('div', {
       display: 'flex',
       flexFlow: 'column',
       maxWidth: '500px',
+      minWidth: '350px',
     }
   }, [
 
@@ -186,7 +188,13 @@ const view = ($: S) => h('div', {
 const ui = app<S, A>({ name: 'messages', state, actions, view })
 
 const registerFirstMessageShortcuts = (message: IMessage) => {
-  console.log('shortcuts register for:', message)
+  if (!message) return
+
+  const shortcuts = message.actions.map(m => m.shortcut)
+  registerOneTimeUseShortcuts(shortcuts, shortcut => {
+    const action = message.actions.find(m => m.shortcut === shortcut)
+    if (action) message.onAction(action.label)
+  })
 
 }
 
@@ -200,48 +208,73 @@ const registerFirstMessageShortcuts = (message: IMessage) => {
 // once a keyboard action is activated, the message goes away and the next
 // one will receive the buttons (again on the bottom)
 
-ui.addMessage({
-  id: 'fortytwo',
-  message: 'Failed to download extension Rust',
-  kind: NotifyKind.Error,
-})
+// will there be more than 6 message actions?
+const availableShortcuts = [
+  { shortcutLabel: 'C S Y', shortcut: '<S-C-y>' },
+  { shortcutLabel: 'C S T', shortcut: '<S-C-t>' },
+  { shortcutLabel: 'C S U', shortcut: '<S-C-u>' },
+  { shortcutLabel: 'C S R', shortcut: '<S-C-r>' },
+  { shortcutLabel: 'C S E', shortcut: '<S-C-e>' },
+]
 
 export const addMessage = (message: Message, onAction?: (action: string) => void) => {
   const id = uuid()
 
   const actions = (message.actions || []).map(a => ({
     label: a,
-    // TODO: does this conform to input standards?
-    shortcut: 'C S Y',
+    shortcutLabel: 'C S Y',
+    shortcut: '<S-C-y>'
   }))
 
   // generic close/dismiss message functionality - like the (x) button in the prompt
   actions.push({
     label: 'OK',
-    shortcut: 'C S N',
+    shortcutLabel: 'C S N',
+    shortcut: '<S-C-n>',
   })
 
-  ui.addMessage({ ...message, id, actions })
+  const callback = (action: string) => {
+    console.log('action:', action, message)
+    ui.removeMessage(id)
+    if (typeof onAction === 'function') onAction(action)
+  }
+
+  ui.addMessage({ ...message, id, actions, onAction: callback })
 
   return () => ui.removeMessage(id)
 }
+
+addMessage({
+  id: 'fortytwo',
+  message: 'Failed to download extension Rust',
+  kind: NotifyKind.Error,
+}, action => {
+  console.log('failed to download extension - > action', action)
+})
 
 const demo = () => {
   setTimeout(() => {
     const dispose = addMessage({
       message: 'Would you like to download extensions?',
       kind: NotifyKind.Warning,
-      actions: [
-        { label: 'Yes', shortcut: 'C S Y' },
-        { label: 'No', shortcut: 'C S N' },
-      ],
+      actions: ['Yes']
+    })
+  }, 1e3)
+
+  setTimeout(() => {
+    addMessage({
+      message: 'Download tacos?',
+      kind: NotifyKind.Info,
+      actions: ['Yes'],
     })
 
-    setTimeout(() => {
-      dispose()
-      demo()
-    }, 3e3)
-  }, 1e3)
+    addMessage({
+      message: `Did you ever hear the tragedy of Darth Plagueis the Wise? It's not a story the jedi would tell you. Darth Plagueis was so powerful he could stop people from dying. Not from a jedi`,
+      kind: NotifyKind.System,
+      actions: ['Blarg', 'Lol'],
+    })
+
+  }, 2e3)
 }
 
 demo()

@@ -176,7 +176,7 @@ const sendToVim = (inputKeys: string) => {
     }
   }
 
-  if (globalShortcuts.has(inputKeys)) return globalShortcut.get(inputKeys)!()
+  if (globalShortcuts.has(inputKeys)) return globalShortcuts.get(inputKeys)!()
 
   // TODO: this might need more attention. i think s-space can be a valid
   // vim keybind. s-space was causing issues in terminal mode, sending weird
@@ -195,7 +195,7 @@ export const registerShortcut = (keys: string, mode: VimMode, cb: Function) => {
   shortcuts.set(`${mode}:<${keys}>`, cb)
 }
 
-export const registerOneTimeUseShortcuts = (shortcuts: string[], cb: () => void) => {
+export const registerOneTimeUseShortcuts = (shortcuts: string[], cb: (shortcut: string) => void) => {
   const done = (shortcut: string) => {
     shortcuts.forEach(s => globalShortcuts.delete(s))
     cb(shortcut)
