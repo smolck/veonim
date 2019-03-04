@@ -1,12 +1,11 @@
 import { CursorShape, setCursorColor, setCursorShape } from '../core/cursor'
 import { forceRegenerateFontAtlas } from '../render/font-texture-atlas'
+import messages, { MessageKind } from '../components/messages'
 import { getColorById } from '../render/highlight-attributes'
 import { normalizeVimMode } from '../support/neovim-utils'
 import * as windows from '../windows/window-manager'
 import * as dispatch from '../messaging/dispatch'
-import { NotifyKind } from '../protocols/veonim'
 import * as workspace from '../core/workspace'
-import { notify } from '../ui/notifications'
 import api from '../core/instance-api'
 
 interface Mode {
@@ -74,13 +73,13 @@ const cursorShapeType = (shape?: string) => {
 }
 
 const messageNotifyKindMappings = new Map([
-  ['echo', NotifyKind.Info],
-  ['emsg', NotifyKind.Error],
-  ['echoerr', NotifyKind.Error],
-  ['echomsg', NotifyKind.Info],
-  ['quickfix', NotifyKind.System],
+  ['echo', MessageKind.Info],
+  ['emsg', MessageKind.Error],
+  ['echoerr', MessageKind.Error],
+  ['echomsg', MessageKind.Info],
+  ['quickfix', MessageKind.System],
   // TODO: handle prompts
-  ['return_prompt', NotifyKind.System],
+  ['return_prompt', MessageKind.System],
 ])
 
 // TODO: handle multi-line messages
@@ -97,7 +96,7 @@ export const msg_show = ([ , [ kind, msgs, replaceLast ] ]: [any, [string, Messa
   const messageKind = sillyString(kind)
   const notifyKind = messageNotifyKindMappings.get(messageKind)
   msgs.forEach(([ /*hlid*/, text ]) => notifyKind
-    ? notify(sillyString(text), notifyKind)
+    ? messages.neovim.add({ message: sillyString(text), kind: notifyKind })
     : dispatch.pub('message.status', sillyString(text)))
 }
 
@@ -116,6 +115,7 @@ export const msg_showcmd = ([ , [ msgs ] ]: [any, [MessageEvent[]]]) => {
 }
 
 export const msg_clear = ([, [ content ]]: [any, [string]]) => {
+  messages.neovim.clear()
   dispatch.pub('message.status', content)
 }
 

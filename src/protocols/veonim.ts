@@ -1,4 +1,4 @@
-export enum NotifyKind {
+export enum MessageKind {
   Error = 'error',
   Warning = 'warning',
   Info = 'info',
@@ -8,17 +8,26 @@ export enum NotifyKind {
 }
 
 export interface Message {
-  id?: string
-  kind: NotifyKind
+  kind: MessageKind
   message: string
   actions?: string[]
-  expire?: number
 }
 
 export interface FlexibleExpire {
   refresh(): void
 }
 
+// TODO: delet dis
+export enum NotifyKind {
+  Error = 'error',
+  Warning = 'warning',
+  Info = 'info',
+  Success = 'success',
+  System = 'system',
+  Hidden = 'hidden',
+}
+
+// TODO: delet dis
 export interface Notification {
   id: string
   kind: NotifyKind

@@ -1,10 +1,16 @@
 import { registerOneTimeUseShortcuts } from '../core/input'
-import { NotifyKind, Message } from '../protocols/veonim'
+import { MessageKind, Message } from '../protocols/veonim'
 import * as Icon from 'hyperapp-feather'
 import { uuid } from '../support/utils'
 import { colors } from '../ui/styles'
 import { h, app } from '../ui/uikit'
 import { cvar } from '../ui/css'
+export { MessageKind } from '../protocols/veonim'
+
+enum MessageSource {
+  Neovim,
+  VSCode,
+}
 
 interface MessageAction {
   label: string
@@ -14,10 +20,10 @@ interface MessageAction {
 
 interface IMessage {
   id: string
-  kind: NotifyKind
+  source: MessageSource
+  kind: MessageKind
   message: string
   actions: MessageAction[]
-  expire?: number
   onAction: (action: string) => void
 }
 
@@ -28,22 +34,24 @@ const state = {
 type S = typeof state
 
 const renderIcons = new Map([
-  [ NotifyKind.Error, Icon.XCircle ],
-  [ NotifyKind.Warning, Icon.AlertTriangle ],
-  [ NotifyKind.Success, Icon.CheckCircle ],
-  [ NotifyKind.Info, Icon.MessageCircle ],
-  [ NotifyKind.System, Icon.AlertCircle ],
+  [ MessageKind.Error, Icon.XCircle ],
+  [ MessageKind.Warning, Icon.AlertTriangle ],
+  [ MessageKind.Success, Icon.CheckCircle ],
+  [ MessageKind.Info, Icon.MessageCircle ],
+  [ MessageKind.System, Icon.AlertCircle ],
 ])
 
-const getIcon = (kind: NotifyKind) => renderIcons.get(kind)!
+const getIcon = (kind: MessageKind) => renderIcons.get(kind)!
 
 const actions = {
   addMessage: (message: IMessage) => (s: S) => ({
-    // messages: [...s.messages, message],
     messages: [message, ...s.messages],
   }),
   removeMessage: (id: string) => (s: S) => ({
     messages: s.messages.filter(m => m.id !== id),
+  }),
+  clearMessages: (source: MessageSource) => (s: S) => ({
+    messages: s.messages.filter(m => m.source !== source),
   }),
 }
 
@@ -212,7 +220,7 @@ const registerFirstMessageShortcuts = (message: IMessage) => {
 
 const ui = app<S, A>({ name: 'messages', state, actions, view })
 
-export const addMessage = (message: Message, onAction?: (action: string) => void) => {
+const addMessage = (source: MessageSource, message: Message, onAction?: (action: string) => void) => {
   const id = uuid()
 
   const registeredActions = message.actions || []
@@ -231,7 +239,28 @@ export const addMessage = (message: Message, onAction?: (action: string) => void
     if (typeof onAction === 'function') onAction(action)
   }
 
-  ui.addMessage({ ...message, id, actions, onAction: callback })
+  ui.addMessage({
+    ...message,
+    id,
+    source,
+    actions,
+    onAction: callback,
+  })
 
   return () => ui.removeMessage(id)
+}
+
+export default {
+  neovim: {
+    add: (message: Message, onAction?: (action: string) => void) => {
+      addMessage(MessageSource.Neovim, message, onAction)
+    },
+    clear: () => ui.clearMessages(MessageSource.Neovim),
+  },
+  vscode: {
+    add: (message: Message, onAction?: (action: string) => void) => {
+      addMessage(MessageSource.Neovim, message, onAction)
+    },
+    clear: () => ui.clearMessages(MessageSource.VSCode),
+  },
 }
