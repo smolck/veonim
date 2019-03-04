@@ -185,7 +185,20 @@ const view = ($: S) => h('div', {
 
 ])
 
-const ui = app<S, A>({ name: 'messages', state, actions, view })
+// will there be more than 6 message actions?
+const availableShortcuts = [
+  { shortcutLabel: 'C S Y', shortcut: '<S-C-y>' },
+  { shortcutLabel: 'C S T', shortcut: '<S-C-t>' },
+  { shortcutLabel: 'C S U', shortcut: '<S-C-u>' },
+  { shortcutLabel: 'C S R', shortcut: '<S-C-r>' },
+  { shortcutLabel: 'C S E', shortcut: '<S-C-e>' },
+  { shortcutLabel: 'C S W', shortcut: '<S-C-e>' },
+]
+
+const getShortcut = (index: number) => availableShortcuts[index] || {
+  shortcutLabel: '???',
+  shortcut: '',
+}
 
 const registerFirstMessageShortcuts = (message: IMessage) => {
   if (!message) return
@@ -195,46 +208,25 @@ const registerFirstMessageShortcuts = (message: IMessage) => {
     const action = message.actions.find(m => m.shortcut === shortcut)
     if (action) message.onAction(action.label)
   })
-
 }
 
-// TODO: i don't think vscode extensions specify a negative option
-// i think it assumed that the x at the top right will close/dismiss
-// the message. therefore i think we should hardcode the CSN (dismiss/reject)
-// option and style it a bit differently
-
-// TODO: in terms of where the buttons go, i'm thinking the oldest message
-// (so the one at the bottom) will get the buttons (and keyboard action).
-// once a keyboard action is activated, the message goes away and the next
-// one will receive the buttons (again on the bottom)
-
-// will there be more than 6 message actions?
-const availableShortcuts = [
-  { shortcutLabel: 'C S Y', shortcut: '<S-C-y>' },
-  { shortcutLabel: 'C S T', shortcut: '<S-C-t>' },
-  { shortcutLabel: 'C S U', shortcut: '<S-C-u>' },
-  { shortcutLabel: 'C S R', shortcut: '<S-C-r>' },
-  { shortcutLabel: 'C S E', shortcut: '<S-C-e>' },
-]
+const ui = app<S, A>({ name: 'messages', state, actions, view })
 
 export const addMessage = (message: Message, onAction?: (action: string) => void) => {
   const id = uuid()
 
-  const actions = (message.actions || []).map(a => ({
-    label: a,
-    shortcutLabel: 'C S Y',
-    shortcut: '<S-C-y>'
-  }))
+  const registeredActions = message.actions || []
+  if (registeredActions.length > 6) console.error('messages: more than 6 actions - not enough shortcuts!')
+  const actions = registeredActions.map((label, ix) => ({ ...getShortcut(ix), label }))
 
   // generic close/dismiss message functionality - like the (x) button in the prompt
   actions.push({
-    label: 'OK',
+    label: 'Dismiss',
     shortcutLabel: 'C S N',
     shortcut: '<S-C-n>',
   })
 
   const callback = (action: string) => {
-    console.log('action:', action, message)
     ui.removeMessage(id)
     if (typeof onAction === 'function') onAction(action)
   }
@@ -243,38 +235,3 @@ export const addMessage = (message: Message, onAction?: (action: string) => void
 
   return () => ui.removeMessage(id)
 }
-
-addMessage({
-  id: 'fortytwo',
-  message: 'Failed to download extension Rust',
-  kind: NotifyKind.Error,
-}, action => {
-  console.log('failed to download extension - > action', action)
-})
-
-const demo = () => {
-  setTimeout(() => {
-    const dispose = addMessage({
-      message: 'Would you like to download extensions?',
-      kind: NotifyKind.Warning,
-      actions: ['Yes']
-    })
-  }, 1e3)
-
-  setTimeout(() => {
-    addMessage({
-      message: 'Download tacos?',
-      kind: NotifyKind.Info,
-      actions: ['Yes'],
-    })
-
-    addMessage({
-      message: `Did you ever hear the tragedy of Darth Plagueis the Wise? It's not a story the jedi would tell you. Darth Plagueis was so powerful he could stop people from dying. Not from a jedi`,
-      kind: NotifyKind.System,
-      actions: ['Blarg', 'Lol'],
-    })
-
-  }, 2e3)
-}
-
-demo()
