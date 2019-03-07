@@ -96,7 +96,7 @@ export const msg_show = ([ , [ kind, msgs, replaceLast ] ]: [any, [string, Messa
   const messageKind = sillyString(kind)
   const notifyKind = messageNotifyKindMappings.get(messageKind)
   msgs.forEach(([ /*hlid*/, text ]) => notifyKind
-    ? messages.neovim.add({ message: sillyString(text), kind: notifyKind })
+    ? messages.neovim.show({ message: sillyString(text), kind: notifyKind })
     : dispatch.pub('message.status', sillyString(text)))
 }
 

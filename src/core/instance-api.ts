@@ -6,8 +6,6 @@ import { colors } from '../render/highlight-attributes'
 import { Functions } from '../neovim/function-types'
 import { WindowMetadata } from '../windows/metadata'
 import { CompletionItem, CodeAction } from 'vscode'
-import * as dispatch from '../messaging/dispatch'
-import { NotifyKind } from '../protocols/veonim'
 import { GitStatus } from '../support/git'
 import NeovimState from '../neovim/state'
 import { EventEmitter } from 'events'
@@ -30,8 +28,12 @@ onCreateVim(info => {
     Object.assign(state, stateDiff)
   })
 
-  instance.on.notify((msg: string, kind: NotifyKind, actions?: string[]) => isActive() && dispatch.pub('notify', { msg, kind, actions }))
-  instance.on.pub((...a: [string, any]) => isActive() && dispatch.pub(...a))
+  instance.on.showVSCodeMessage(async (...a: any[]) => {
+    isActive() && require('../components/messages').default.vscode.show(...a)
+  })
+  instance.on.showNeovimMessage(async (...a: any[]) => {
+    isActive() && require('../components/messages').default.neovim.show(...a)
+  })
   instance.on.vimrcLoaded(() => isActive() && ee.emit('nvim.load', false))
   instance.on.gitStatus((status: GitStatus) => isActive() && ee.emit('git.status', status))
   instance.on.gitBranch((branch: string) => isActive() && ee.emit('git.branch', branch))
@@ -67,6 +69,11 @@ onSwitchVim(async () => {
   ee.emit('git.status', gitInfo.status)
   ee.emit('git.branch', gitInfo.branch)
   ee.emit('nvim.load', true)
+
+  const mappings = await instance.request.nvimGetVar('veonim_remap_modifiers')
+  ee.emit('input.remap.modifiers', mappings)
+  const transforms = await instance.request.nvimGetVar('veonim_key_transforms')
+  ee.emit('input.key.transforms', transforms)
 })
 
 const getBufferInfo = (): Promise<BufferInfo[]> => getActiveInstance().request.getBufferInfo()
@@ -151,10 +158,16 @@ const ai: AIAPI = new Proxy(Object.create(null), {
   })
 })
 
+const onConfig = {
+  inputRemapModifiersDidChange: (fn: (modifiers: any[]) => void) => ee.on('input.remap.modifiers', fn),
+  inputKeyTransformsDidChange: (fn: (transforms: any[]) => void) => ee.on('input.key.transforms', fn),
+}
+
 const api = {
   ai,
   git,
   onAction,
+  onConfig,
   getWindowMetadata,
   bufferSearch,
   bufferSearchVisible,

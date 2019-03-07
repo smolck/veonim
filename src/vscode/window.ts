@@ -1,7 +1,7 @@
+import { showMessage } from '../extension-host/bridge-api'
 import OutputChannel from '../vscode/output-channel'
 import { StatusBarAlignment } from '../vscode/types'
-import { call } from '../messaging/worker-client'
-import { NotifyKind } from '../protocols/veonim'
+import { MessageKind } from '../protocols/veonim'
 import nvimSync from '../neovim/sync-api-client'
 import TextEditor from '../vscode/text-editor'
 import { is, Watcher } from '../support/utils'
@@ -25,14 +25,15 @@ interface Events {
 interface UnifiedMessage {
   message: string
   isModal: boolean
-  actionItems: string[]
+  actions: string[]
 }
 
+// TODO: look at the vscode api, items may be rest arguments
 const unifyMessage = ([ message, optionsOrItems, itemsMaybe ]: any[]): UnifiedMessage => {
   const isModal: boolean = is.object(optionsOrItems) ? <any>optionsOrItems.modal : false
   const items: string[] = is.array(optionsOrItems) ? optionsOrItems : itemsMaybe || []
-  const actionItems: string[] = items.map((item: any) => item.title || item)
-  return { message, isModal, actionItems }
+  const actions: string[] = items.map((item: any) => item.title || item)
+  return { message, isModal, actions }
 }
 
 const makeStatusBarItem = (alignment = StatusBarAlignment.Left, priority = 0): vsc.StatusBarItem => {
@@ -108,22 +109,17 @@ const window: typeof vsc.window = {
 
     return terminalBufferIds.map(bufid => Terminal(bufid))
   },
-  // TODO: maybe we can use nvim inputlist() for this?
-  // TODO: we need to return the selected dialog button action item thingy value
   showInformationMessage: async (...a: any[]) => {
-    const { message, actionItems } = unifyMessage(a)
-    call.notify(message, NotifyKind.Info, actionItems)
-    return Promise.resolve(undefined)
+    const { message, actions } = unifyMessage(a)
+    return showMessage({ message, kind: MessageKind.Info, actions })
   },
   showWarningMessage: async (...a: any[]) => {
-    const { message, actionItems } = unifyMessage(a)
-    call.notify(message, NotifyKind.Info, actionItems)
-    return Promise.resolve(undefined)
+    const { message, actions } = unifyMessage(a)
+    return showMessage({ message, kind: MessageKind.Warning, actions })
   },
   showErrorMessage: async (...a: any[]) => {
-    const { message, actionItems } = unifyMessage(a)
-    call.notify(message, NotifyKind.Info, actionItems)
-    return Promise.resolve(undefined)
+    const { message, actions } = unifyMessage(a)
+    return showMessage({ message, kind: MessageKind.Error, actions })
   },
   showQuickPick: () => {
     console.warn('NYI: window.showQuickPick')

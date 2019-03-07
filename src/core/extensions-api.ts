@@ -35,6 +35,8 @@ onContextHandler(nvimSyncApiHandler)
 on.notify(workerHost.call.notify)
 on.clipboardRead(workerHost.request.clipboardRead)
 on.clipboardWrite(workerHost.call.clipboardWrite)
+on.showVSCodeMessage(workerHost.request.showVSCodeMessage)
+on.showNeovimMessage(workerHost.request.showNeovimMessage)
 
 const providerBridge: Providers = new Proxy(Object.create(null), {
   get: (_: any, method: string) => (...args: any[]) => {

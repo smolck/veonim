@@ -44,7 +44,7 @@ const renderIcons = new Map([
 const getIcon = (kind: MessageKind) => renderIcons.get(kind)!
 
 const actions = {
-  addMessage: (message: IMessage) => (s: S) => ({
+  showMessage: (message: IMessage) => (s: S) => ({
     messages: [message, ...s.messages],
   }),
   removeMessage: (id: string) => (s: S) => ({
@@ -220,7 +220,7 @@ const registerFirstMessageShortcuts = (message: IMessage) => {
 
 const ui = app<S, A>({ name: 'messages', state, actions, view })
 
-const addMessage = (source: MessageSource, message: Message, onAction?: (action: string) => void) => {
+const showMessage = (source: MessageSource, message: Message, onAction?: (action: string) => void) => {
   const id = uuid()
 
   const registeredActions = message.actions || []
@@ -239,7 +239,7 @@ const addMessage = (source: MessageSource, message: Message, onAction?: (action:
     if (typeof onAction === 'function') onAction(action)
   }
 
-  ui.addMessage({
+  ui.showMessage({
     ...message,
     id,
     source,
@@ -252,14 +252,14 @@ const addMessage = (source: MessageSource, message: Message, onAction?: (action:
 
 export default {
   neovim: {
-    add: (message: Message, onAction?: (action: string) => void) => {
-      addMessage(MessageSource.Neovim, message, onAction)
+    show: (message: Message, onAction?: (action: string) => void) => {
+      showMessage(MessageSource.Neovim, message, onAction)
     },
     clear: () => ui.clearMessages(MessageSource.Neovim),
   },
   vscode: {
-    add: (message: Message, onAction?: (action: string) => void) => {
-      addMessage(MessageSource.Neovim, message, onAction)
+    show: (message: Message, onAction?: (action: string) => void) => {
+      showMessage(MessageSource.Neovim, message, onAction)
     },
     clear: () => ui.clearMessages(MessageSource.VSCode),
   },

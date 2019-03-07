@@ -100,7 +100,7 @@ export const blur = () => {
   resetInputState()
 }
 
-const setupRemapModifiers = (mappings: RemapModifer[]) => {
+export const setupRemapModifiers = (mappings: RemapModifer[]) => {
   remaps.clear()
   mappings.forEach(mapping => remapModifier(mapping.from, mapping.to))
 }
@@ -131,7 +131,7 @@ const setupTransforms = (transforms: KeyTransform[]) => {
   })
 }
 
-export const remapModifier = (from: string, to: string) => remaps.set(from, to)
+const remapModifier = (from: string, to: string) => remaps.set(from, to)
 
 type Transformer = (input: KeyboardEvent) => KeyboardEvent
 export const xfrmHold = new Map<string, Transformer>()
@@ -294,10 +294,5 @@ remote.getCurrentWindow().on('blur', async () => {
   if (fixTermEscape) shouldClearEscapeOnNextAppFocus = true
 })
 
-api.nvim.onLoad(async () => {
-  const mappings = await api.nvim.getVar('veonim_remap_modifiers')
-  setupRemapModifiers(mappings)
-
-  const transforms = await api.nvim.getVar('veonim_key_transforms')
-  setupTransforms(transforms)
-})
+api.onConfig.inputRemapModifiersDidChange(setupRemapModifiers)
+api.onConfig.inputKeyTransformsDidChange(setupTransforms)
