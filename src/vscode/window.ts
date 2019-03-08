@@ -28,10 +28,13 @@ interface UnifiedMessage {
   actions: string[]
 }
 
-// TODO: look at the vscode api, items may be rest arguments
-const unifyMessage = ([ message, optionsOrItems, itemsMaybe ]: any[]): UnifiedMessage => {
-  const isModal: boolean = is.object(optionsOrItems) ? <any>optionsOrItems.modal : false
-  const items: string[] = is.array(optionsOrItems) ? optionsOrItems : itemsMaybe || []
+// (message: string, ...items: string[])
+// (message: string, ...items: { title: string }[])
+// (message: string, options: {}, ...items: { title: string }[])
+const unifyMessage = ([ message, ...stuff ]: any[]): UnifiedMessage => {
+  const [ firstItem, ...restOfItems ] = stuff || [] as any[]
+  const isModal: boolean = is.object(firstItem) ? <any>firstItem.modal : false
+  const items: string[] = is.object(firstItem) ? restOfItems : stuff
   const actions: string[] = items.map((item: any) => item.title || item)
   return { message, isModal, actions }
 }
