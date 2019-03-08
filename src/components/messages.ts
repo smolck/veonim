@@ -25,6 +25,7 @@ interface IMessage {
   message: string
   actions: MessageAction[]
   onAction: (action: string) => void
+  stealsFocus: boolean
 }
 
 const state = {
@@ -47,12 +48,22 @@ const actions = {
   showMessage: (message: IMessage) => (s: S) => ({
     messages: [message, ...s.messages],
   }),
+  appendMessage: (message: IMessage) => (s: S) => {
+    const [ firstMessage, ...nextMessages ] = s.messages
+    if (!firstMessage) {
+      message.actions = addDefaultDismissAction(message)
+      return { messages: [message, ...s.messages] }
+    }
+
+    firstMessage.message += message.message
+    return { messages: [firstMessage, ...nextMessages] }
+  },
   removeMessage: (id: string) => (s: S) => ({
     messages: s.messages.filter(m => m.id !== id),
   }),
-  clearMessages: (source: MessageSource, kind?: MessageKind) => (s: S) => ({
-    messages: kind
-      ? s.messages.filter(m => m.source !== source && m.kind !== kind)
+  clearMessages: (source: MessageSource, clearFn?: (message: IMessage) => boolean) => (s: S) => ({
+    messages: clearFn
+      ? s.messages.filter(m => m.source !== source && clearFn(m))
       : s.messages.filter(m => m.source !== source),
   }),
 }
@@ -211,7 +222,7 @@ const getShortcut = (index: number) => availableShortcuts[index] || {
 }
 
 const registerFirstMessageShortcuts = (message: IMessage) => {
-  if (!message) return
+  if (!message || message.stealsFocus) return
 
   const shortcuts = message.actions.map(m => m.shortcut)
   registerOneTimeUseShortcuts(shortcuts, shortcut => {
@@ -222,19 +233,22 @@ const registerFirstMessageShortcuts = (message: IMessage) => {
 
 const ui = app<S, A>({ name: 'messages', state, actions, view })
 
+// generic close/dismiss message functionality - like the (x) button in the prompt
+const addDefaultDismissAction = (msg: IMessage | Message) => !msg.stealsFocus
+  ? [{
+    label: 'Dismiss',
+    shortcutLabel: 'C S N',
+    shortcut: '<S-C-n>',
+  }]
+  : []
+
 const showMessage = (source: MessageSource, message: Message, onAction?: (action: string) => void) => {
   const id = uuid()
 
   const registeredActions = message.actions || []
   if (registeredActions.length > 6) console.error('messages: more than 6 actions - not enough shortcuts!')
-  const actions = registeredActions.map((label, ix) => ({ ...getShortcut(ix), label }))
-
-  // generic close/dismiss message functionality - like the (x) button in the prompt
-  if (message.kind !== MessageKind.PromptList) actions.push({
-    label: 'Dismiss',
-    shortcutLabel: 'C S N',
-    shortcut: '<S-C-n>',
-  })
+  const definedActions = registeredActions.map((label, ix) => ({ ...getShortcut(ix), label }))
+  const actions = [...definedActions, ...addDefaultDismissAction(message)]
 
   const callback = (action: string) => {
     ui.removeMessage(id)
@@ -247,6 +261,7 @@ const showMessage = (source: MessageSource, message: Message, onAction?: (action
     source,
     actions,
     onAction: callback,
+    stealsFocus: message.stealsFocus || false,
   })
 
   return () => ui.removeMessage(id)
@@ -257,7 +272,18 @@ export default {
     show: (message: Message, onAction?: (action: string) => void) => {
       showMessage(MessageSource.Neovim, message, onAction)
     },
-    clear: (kind?: MessageKind) => ui.clearMessages(MessageSource.Neovim, kind),
+    append: (message: Message) => {
+      const id = uuid()
+      ui.appendMessage({
+        ...message,
+        id,
+        source: MessageSource.Neovim,
+        actions: [],
+        onAction: () => ui.removeMessage(id),
+        stealsFocus: message.stealsFocus || false,
+      })
+    },
+    clear: (matcher?: (message: IMessage) => boolean) => ui.clearMessages(MessageSource.Neovim, matcher),
   },
   vscode: {
     show: (message: Message, onAction?: (action: string) => void) => {

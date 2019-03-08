@@ -5,12 +5,12 @@ export enum MessageKind {
   Success = 'success',
   System = 'system',
   Hidden = 'hidden',
-  PromptList = 'prompt-list',
 }
 
 export interface Message {
   kind: MessageKind
   message: string
+  stealsFocus?: boolean
   actions?: string[]
 }
 

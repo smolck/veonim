@@ -92,19 +92,23 @@ const showStatusMessage = (message: string) => {
 
 let state_MessagePromptVisible = false
 type MessageEvent = [number, string]
-export const msg_show = ([ , [ kind, msgs, replaceLast ] ]: [any, [string, MessageEvent[], boolean]], cursorVisible: boolean) => {
-  if (replaceLast) messages.neovim.clear()
+export const msg_show = ([ , [ msgKind, msgs, replaceLast ] ]: [any, [string, MessageEvent[], boolean]], cursorVisible: boolean) => {
+  const messageKind = sillyString(msgKind)
+  const kind = messageNotifyKindMappings.get(messageKind)
+  state_MessagePromptVisible = !cursorVisible
+  const message = msgs.reduce((res, [ /*hlid*/, text ]) => res += sillyString(text), '')
 
-  const messageKind = sillyString(kind)
-  const notifyKind = cursorVisible
-    ? messageNotifyKindMappings.get(messageKind)
-    : MessageKind.PromptList
+  if (!kind && replaceLast) return showStatusMessage(message)
 
-  state_MessagePromptVisible = notifyKind === MessageKind.PromptList
+  const msginfo = {
+    message,
+    kind: kind || MessageKind.System,
+    stealsFocus: !cursorVisible,
+  }
 
-  msgs.forEach(([ /*hlid*/, text ]) => notifyKind
-    ? messages.neovim.show({ message: sillyString(text), kind: notifyKind })
-    : showStatusMessage(sillyString(text)))
+  replaceLast
+    ? messages.neovim.show(msginfo)
+    : messages.neovim.append(msginfo)
 }
 
 export const msg_history_show = (m: any) => {
@@ -134,7 +138,7 @@ export const msg_ruler = (_: any) => {}
 // ideally nvim would tell us when to clear message prompts like spell window and inputlist()
 export const messageClearPromptsMaybeHack = (cursorVisible: boolean) => {
   if (!state_MessagePromptVisible) return
-  if (cursorVisible) messages.neovim.clear(MessageKind.PromptList)
+  if (cursorVisible) messages.neovim.clear(m => m.stealsFocus)
 }
 
 export const mode_change = ([ , [ m ] ]: [any, [string]]) => {
