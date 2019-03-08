@@ -50,8 +50,10 @@ const actions = {
   removeMessage: (id: string) => (s: S) => ({
     messages: s.messages.filter(m => m.id !== id),
   }),
-  clearMessages: (source: MessageSource) => (s: S) => ({
-    messages: s.messages.filter(m => m.source !== source),
+  clearMessages: (source: MessageSource, kind?: MessageKind) => (s: S) => ({
+    messages: kind
+      ? s.messages.filter(m => m.source !== source && m.kind !== kind)
+      : s.messages.filter(m => m.source !== source),
   }),
 }
 
@@ -228,7 +230,7 @@ const showMessage = (source: MessageSource, message: Message, onAction?: (action
   const actions = registeredActions.map((label, ix) => ({ ...getShortcut(ix), label }))
 
   // generic close/dismiss message functionality - like the (x) button in the prompt
-  actions.push({
+  if (message.kind !== MessageKind.PromptList) actions.push({
     label: 'Dismiss',
     shortcutLabel: 'C S N',
     shortcut: '<S-C-n>',
@@ -255,7 +257,7 @@ export default {
     show: (message: Message, onAction?: (action: string) => void) => {
       showMessage(MessageSource.Neovim, message, onAction)
     },
-    clear: () => ui.clearMessages(MessageSource.Neovim),
+    clear: (kind?: MessageKind) => ui.clearMessages(MessageSource.Neovim, kind),
   },
   vscode: {
     show: (message: Message, onAction?: (action: string) => void) => {

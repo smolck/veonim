@@ -90,13 +90,18 @@ const showStatusMessage = (message: string) => {
   dispatch.pub('message.status', message)
 }
 
-// TODO: handle multi-line messages
+let state_MessagePromptVisible = false
 type MessageEvent = [number, string]
-export const msg_show = ([ , [ kind, msgs, replaceLast ] ]: [any, [string, MessageEvent[], boolean]]) => {
+export const msg_show = ([ , [ kind, msgs, replaceLast ] ]: [any, [string, MessageEvent[], boolean]], cursorVisible: boolean) => {
   if (replaceLast) messages.neovim.clear()
 
   const messageKind = sillyString(kind)
-  const notifyKind = messageNotifyKindMappings.get(messageKind)
+  const notifyKind = cursorVisible
+    ? messageNotifyKindMappings.get(messageKind)
+    : MessageKind.PromptList
+
+  state_MessagePromptVisible = notifyKind === MessageKind.PromptList
+
   msgs.forEach(([ /*hlid*/, text ]) => notifyKind
     ? messages.neovim.show({ message: sillyString(text), kind: notifyKind })
     : showStatusMessage(sillyString(text)))
@@ -125,6 +130,12 @@ export const msg_clear = ([, [ content ]]: [any, [string]]) => {
 // maybe we could use 'set noruler' or 'set ruler' to determine if we show the
 // ruler block in the statusline (with these msg_ruler events)
 export const msg_ruler = (_: any) => {}
+
+// ideally nvim would tell us when to clear message prompts like spell window and inputlist()
+export const messageClearPromptsMaybeHack = (cursorVisible: boolean) => {
+  if (!state_MessagePromptVisible) return
+  if (cursorVisible) messages.neovim.clear(MessageKind.PromptList)
+}
 
 export const mode_change = ([ , [ m ] ]: [any, [string]]) => {
   const mode = sillyString(m)

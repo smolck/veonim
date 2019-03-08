@@ -5,6 +5,7 @@ export enum MessageKind {
   Success = 'success',
   System = 'system',
   Hidden = 'hidden',
+  PromptList = 'prompt-list',
 }
 
 export interface Message {
