@@ -53,6 +53,7 @@ export enum CommandType {
 
 export interface CommandUpdate {
   cmd: string
+  prompt?: string
   kind: CommandType
   position: number
 }
@@ -82,22 +83,23 @@ const messageNotifyKindMappings = new Map([
   ['return_prompt', MessageKind.System],
 ])
 
+const showStatusMessage = (message: string) => {
+  // TODO: \n on all platforms?
+  const newlineCount = (message.match(/\n/g) || []).length
+  if (newlineCount) return messages.neovim.show({ message, kind: MessageKind.Info })
+  dispatch.pub('message.status', message)
+}
+
 // TODO: handle multi-line messages
 type MessageEvent = [number, string]
 export const msg_show = ([ , [ kind, msgs, replaceLast ] ]: [any, [string, MessageEvent[], boolean]]) => {
-  // TODO: what is replaceLast?
-  console.log('MSG OF:', kind, replaceLast)
-	// `replace_last` controls how multiple messages should be displayed.
-	// If `replace_last` is false, this message should be displayed together
-	// with all previous messages that are still visible. If `replace_last`
-	// is true, this message should replace the message in the most recent
-	// `msg_show` call, but any other visible message should still remain.
+  if (replaceLast) messages.neovim.clear()
 
   const messageKind = sillyString(kind)
   const notifyKind = messageNotifyKindMappings.get(messageKind)
   msgs.forEach(([ /*hlid*/, text ]) => notifyKind
     ? messages.neovim.show({ message: sillyString(text), kind: notifyKind })
-    : dispatch.pub('message.status', sillyString(text)))
+    : showStatusMessage(sillyString(text)))
 }
 
 export const msg_history_show = (m: any) => {
@@ -227,14 +229,16 @@ export const cmdline_show = ([ , [content, position, str1, str2, indent, level] 
 
   if (cmdPrompt) dispatch.pub('cmd.update', {
     cmd,
+    prompt,
     kind: prompt ? CommandType.Prompt : kind,
-    position
+    position,
   } as CommandUpdate)
 
   else if (searchPrompt) dispatch.pub('search.update', {
     cmd,
+    prompt,
     kind: prompt ? CommandType.Prompt : kind,
-    position
+    position,
   } as CommandUpdate)
 
   // TODO: do the indentings thingies

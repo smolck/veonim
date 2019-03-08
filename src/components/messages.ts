@@ -89,11 +89,11 @@ const MessageView = ({ kind, message, actions }: IMessage, last: boolean) => h('
       ,h(getIcon(kind))
     ])
 
-    ,h('span', {
+    ,h('div', {
       style: {
         color: cvar('foreground-10'),
       }
-    }, message)
+    }, message.split('\n').map(line => h('div', line)))
 
   ])
 

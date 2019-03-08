@@ -183,6 +183,7 @@ onRedraw(redrawEvents => {
   // because of circular logic/infinite loop. cmdline_show updates UI, UI makes
   // a change in the cmdline, nvim sends redraw again. we cut that shit out
   // with coding and algorithms
+  // TODO: but y tho
   if (renderEvents.doNotUpdateCmdlineIfSame(redrawEvents[0])) return
   const eventCount = redrawEvents.length
   let winUpdates = false
