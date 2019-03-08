@@ -50,7 +50,10 @@ const actions = {
   }),
   appendMessage: (message: IMessage) => (s: S) => {
     const [ firstMessage, ...nextMessages ] = s.messages
-    if (!firstMessage) {
+    const firstNvimMessage = firstMessage && firstMessage.source === MessageSource.Neovim
+      ? firstMessage
+      : null
+    if (!firstNvimMessage) {
       message.actions = addDefaultDismissAction(message)
       return { messages: [message, ...s.messages] }
     }
@@ -283,11 +286,13 @@ export default {
         stealsFocus: message.stealsFocus || false,
       })
     },
-    clear: (matcher?: (message: IMessage) => boolean) => ui.clearMessages(MessageSource.Neovim, matcher),
+    clear: (matcher?: (message: IMessage) => boolean) => {
+      ui.clearMessages(MessageSource.Neovim, matcher)
+    },
   },
   vscode: {
     show: (message: Message, onAction?: (action: string) => void) => {
-      showMessage(MessageSource.Neovim, message, onAction)
+      showMessage(MessageSource.VSCode, message, onAction)
     },
     clear: () => ui.clearMessages(MessageSource.VSCode),
   },
