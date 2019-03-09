@@ -1,7 +1,7 @@
 import { registerOneTimeUseShortcuts } from '../core/input'
 import { MessageKind, Message } from '../protocols/veonim'
+import { uuid, CreateTask } from '../support/utils'
 import * as Icon from 'hyperapp-feather'
-import { uuid } from '../support/utils'
 import { colors } from '../ui/styles'
 import { h, app } from '../ui/uikit'
 import { cvar } from '../ui/css'
@@ -245,8 +245,9 @@ const addDefaultDismissAction = (msg: IMessage | Message) => !msg.stealsFocus
   }]
   : []
 
-const showMessage = (source: MessageSource, message: Message, onAction?: (action: string) => void) => {
+const showMessage = (source: MessageSource, message: Message): Promise<string> => {
   const id = uuid()
+  const task = CreateTask<string>()
 
   const registeredActions = message.actions || []
   if (registeredActions.length > 6) console.error('messages: more than 6 actions - not enough shortcuts!')
@@ -255,7 +256,7 @@ const showMessage = (source: MessageSource, message: Message, onAction?: (action
 
   const callback = (action: string) => {
     ui.removeMessage(id)
-    if (typeof onAction === 'function') onAction(action)
+    task.done(action)
   }
 
   ui.showMessage({
@@ -267,14 +268,12 @@ const showMessage = (source: MessageSource, message: Message, onAction?: (action
     stealsFocus: message.stealsFocus || false,
   })
 
-  return () => ui.removeMessage(id)
+  return task.promise
 }
 
 export default {
   neovim: {
-    show: (message: Message, onAction?: (action: string) => void) => {
-      showMessage(MessageSource.Neovim, message, onAction)
-    },
+    show: (message: Message) => showMessage(MessageSource.Neovim, message),
     append: (message: Message) => {
       const id = uuid()
       ui.appendMessage({
@@ -291,9 +290,7 @@ export default {
     },
   },
   vscode: {
-    show: (message: Message, onAction?: (action: string) => void) => {
-      showMessage(MessageSource.VSCode, message, onAction)
-    },
+    show: (message: Message) => showMessage(MessageSource.VSCode, message),
     clear: () => ui.clearMessages(MessageSource.VSCode),
   },
 }
