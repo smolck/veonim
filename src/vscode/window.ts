@@ -1,4 +1,4 @@
-import { showMessage } from '../extension-host/bridge-api'
+import { showMessage, showStatusBarMessage } from '../extension-host/bridge-api'
 import OutputChannel from '../vscode/output-channel'
 import { StatusBarAlignment } from '../vscode/types'
 import { MessageKind } from '../protocols/veonim'
@@ -161,9 +161,17 @@ const window: typeof vsc.window = {
   createWebviewPanel: () => {
     console.warn('NYI: window.createWebviewPanel')
   },
-  setStatusBarMessage: (text: string) => {
-    console.log('vsc-ext-api (StatusBarMessage):', text)
-    return { dispose: () => {} }
+  setStatusBarMessage: (text: string, timeoutOrThenable?: any) => {
+    showStatusBarMessage(text)
+    // TODO: this is a real shit way of doing because we could be overriding
+    // other messages possibly presented by nvim
+    if (is.number(timeoutOrThenable)) {
+      setTimeout(() => showStatusBarMessage(''), timeoutOrThenable as number)
+    }
+    if (is.promise(timeoutOrThenable)) {
+      (timeoutOrThenable as Promise<any>).then(() => showStatusBarMessage(''))
+    }
+    return { dispose: () => showStatusBarMessage('') }
   },
   // @ts-ignore
   withScmProgress: () => {

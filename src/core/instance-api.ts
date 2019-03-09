@@ -6,6 +6,7 @@ import { colors } from '../render/highlight-attributes'
 import { Functions } from '../neovim/function-types'
 import { WindowMetadata } from '../windows/metadata'
 import { CompletionItem, CodeAction } from 'vscode'
+import * as dispatch from '../messaging/dispatch'
 import { GitStatus } from '../support/git'
 import NeovimState from '../neovim/state'
 import { EventEmitter } from 'events'
@@ -33,6 +34,9 @@ onCreateVim(info => {
   })
   instance.on.showNeovimMessage(async (...a: any[]) => {
     isActive() && require('../components/messages').default.neovim.show(...a)
+  })
+  instance.on.showStatusBarMessage((message: string) => {
+    isActive() && dispatch.pub('message.status', message)
   })
   instance.on.vimrcLoaded(() => isActive() && ee.emit('nvim.load', false))
   instance.on.gitStatus((status: GitStatus) => isActive() && ee.emit('git.status', status))

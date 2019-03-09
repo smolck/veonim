@@ -27,6 +27,7 @@ git.onBranch((onBranch: string) => call.gitBranch(onBranch))
 
 on.showVSCodeMessage(request.showVSCodeMessage)
 on.showNeovimMessage(request.showNeovimMessage)
+on.showStatusBarMessage(call.showStatusBarMessage)
 on.instanceActiveStatus((instanceIsActive: boolean) => Object.assign(state, { instanceIsActive }))
 on.bufferSearch(async (file: string, query: string) => bufferSearch.fuzzy(file, query))
 on.bufferSearchVisible(async (query: string) => bufferSearch.fuzzyVisible(query))

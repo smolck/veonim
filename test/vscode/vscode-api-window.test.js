@@ -27,7 +27,23 @@ const path = require('path')
 // test('registerTreeDataProvider')
 // test('registerUriHandler')
 // test('registerWebviewPanelSerializer')
-// test('setStatusBarMessage')
+test('setStatusBarMessage', () => {
+  vscode.window.setStatusBarMessage('Installing your fancy shiny extensions')
+})
+
+test('setStatusBarMessage + timeout', () => {
+  vscode.window.setStatusBarMessage('Catch me if you can', 1e3)
+})
+
+test('setStatusBarMessage + promise', () => {
+  const promise = new Promise(done => setTimeout(done, 1e3))
+  vscode.window.setStatusBarMessage('Installing your fancy shiny extensions', promise)
+})
+
+test('setStatusBarMessage + dispose', () => {
+  const { dispose } = vscode.window.setStatusBarMessage('Installing your fancy shiny extensions')
+  setTimeout(dispose, 1e3)
+})
 // test('showErrorMessage', ())
 test('showInformationMessage', () => {
   vscode.window.showInformationMessage('Extension not installed. Install?', 'Yes')

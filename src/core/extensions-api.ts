@@ -37,6 +37,7 @@ on.clipboardRead(workerHost.request.clipboardRead)
 on.clipboardWrite(workerHost.call.clipboardWrite)
 on.showVSCodeMessage(workerHost.request.showVSCodeMessage)
 on.showNeovimMessage(workerHost.request.showNeovimMessage)
+on.showStatusBarMessage(workerHost.call.showStatusBarMessage)
 
 const providerBridge: Providers = new Proxy(Object.create(null), {
   get: (_: any, method: string) => (...args: any[]) => {
