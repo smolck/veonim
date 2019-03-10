@@ -1,4 +1,5 @@
 import VscodeTestRunner from '../dev/vscode-test-runner'
+import Playground from '../dev/playground'
 import { createServer } from 'http'
 import nvim from '../neovim/api'
 import { join } from 'path'
@@ -11,6 +12,7 @@ global.nvim = nvim
 
 const server = createServer((req, res) => {
   if (req.url === '/test/vscode') VscodeTestRunner(testDataPath)
+  if (req.url === '/playground') Playground()
 
   res.writeHead(200)
   res.end()

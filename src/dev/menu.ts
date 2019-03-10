@@ -20,6 +20,11 @@ actions.set('v', {
   fn: () => fetch('http://localhost:22444/test/vscode'),
 })
 
+actions.set('p', {
+  desc: 'extension host playground',
+  fn: () => fetch('http://localhost:22444/playground'),
+})
+
 actions.set('s', {
   desc: 'record all keyboard inputs for playback',
   fn: () => setTimeout(record, 150),
