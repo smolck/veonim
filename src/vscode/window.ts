@@ -140,9 +140,12 @@ const window: typeof vsc.window = {
     console.warn('NYI: window.showSaveDialog')
     return Promise.resolve(undefined)
   },
-  showInputBox: () => {
-    console.warn('NYI: window.showInputBox')
-    return Promise.resolve(undefined)
+  showInputBox: (options = {}) => {
+    // TODO: support more options and cancel token with a custom input
+    // prompt instead of the nvim built-in one. i think we can still leverage
+    // the nvim input, we just need to signal the UI some additional properties
+    // for the next cmdline event update
+    return nvim.call.input(options.prompt, options.value)
   },
   // @ts-ignore
   createInputBox: () => {

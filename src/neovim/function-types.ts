@@ -44,6 +44,18 @@ interface Position {
 
 type WindowPosition = [ string, number, number, number ]
 
+interface InputOptions {
+  /** The prompt argument is either a prompt string or a blank string (for no prompt). A '\n' can be used in the prompt to start a new line */
+  prompt?: string
+  /** Default input value - as if the user typed this */
+  default?: string
+  /** Typeof completion supported for the input. Without this completion is not performed. The supported completion types are the same as that can be supplied to a user-defined command using the "-complete=" argument. Refer to :command-completion for more information */
+  completion?: string
+  cancelreturn?: string
+  /** Dunno if this will work. Don't use it just yet */
+  highlight?: () => {}
+}
+
 export interface Functions {
   VeonimState(): Promise<State>
   VeonimPosition(): Promise<Position>
@@ -71,4 +83,5 @@ export interface Functions {
   getcompletion(pattern: string, type: string): Promise<string[]>
   rename(from: string, to: string): Promise<number>
   delete(name: string): Promise<number>
+  input(promptOrOptions?: string | InputOptions, defaultValue?: string, completion?: string): Promise<string>
 }
