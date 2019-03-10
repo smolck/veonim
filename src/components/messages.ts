@@ -1,6 +1,6 @@
+import { MessageKind, Message, MessageReturn, MessageStatusUpdate } from '../protocols/veonim'
+import { uuid, CreateTask, arrReplace } from '../support/utils'
 import { registerOneTimeUseShortcuts } from '../core/input'
-import { MessageKind, Message } from '../protocols/veonim'
-import { uuid, CreateTask } from '../support/utils'
 import * as Icon from 'hyperapp-feather'
 import { colors } from '../ui/styles'
 import { h, app } from '../ui/uikit'
@@ -26,6 +26,12 @@ interface IMessage {
   actions: MessageAction[]
   onAction: (action: string) => void
   stealsFocus: boolean
+  progress?: number
+  progressStatus?: string
+}
+
+interface IMessageStatusUpdate extends MessageStatusUpdate {
+  id: string
 }
 
 const state = {
@@ -40,6 +46,7 @@ const renderIcons = new Map([
   [ MessageKind.Success, Icon.CheckCircle ],
   [ MessageKind.Info, Icon.MessageCircle ],
   [ MessageKind.System, Icon.AlertCircle ],
+  [ MessageKind.Progress, Icon.Clock ],
 ])
 
 const getIcon = (kind: MessageKind) => renderIcons.get(kind)!
@@ -48,6 +55,15 @@ const actions = {
   showMessage: (message: IMessage) => (s: S) => ({
     messages: [message, ...s.messages],
   }),
+  setMessageProgress: ({ id, percentage, status }: IMessageStatusUpdate) => (s: S) => {
+    const messages = arrReplace(s.messages, m => m.id, {
+      progress: percentage,
+      progressStatus: status,
+    })
+
+    if (!messages) return console.error(`can not update message progress because it does not exist ${id}`)
+    return { messages }
+  },
   appendMessage: (message: IMessage) => (s: S) => {
     const [ firstMessage, ...nextMessages ] = s.messages
     const firstNvimMessage = firstMessage && firstMessage.source === MessageSource.Neovim
@@ -73,59 +89,94 @@ const actions = {
 
 type A = typeof actions
 
-const MessageView = ({ kind, message, actions }: IMessage, last: boolean) => h('div', {
+const MessageView = ($: IMessage, last: boolean) => h('div', {
   style: {
     display: 'flex',
     marginTop: '4px',
     padding: '16px 18px',
     background: cvar('background-30'),
     borderLeft: '4px solid',
-    borderColor: Reflect.get(colors, kind),
+    borderColor: Reflect.get(colors, $.kind),
     fontSize: '1.2rem',
-    flexFlow: 'column',
   },
 }, [
 
   ,h('div', {
     style: {
       display: 'flex',
-      alignItems: 'center',
+      paddingRight: '14px',
+      fontSize: '1.6rem',
+      color: Reflect.get(colors, $.kind),
+    }
+  }, [
+    ,h(getIcon($.kind))
+  ])
+
+  ,h('div', {
+    style: {
+      display: 'flex',
+      flexFlow: 'column',
     }
   }, [
 
     ,h('div', {
       style: {
-        display: 'flex',
-        paddingRight: '14px',
-        alignItems: 'center',
-        fontSize: '1.6rem',
-        color: Reflect.get(colors, kind),
-      }
-    }, [
-      ,h(getIcon(kind))
-    ])
-
-    ,h('div', {
-      style: {
         color: cvar('foreground-10'),
       }
-    }, message.split('\n').map(line => h('div', line)))
+    }, $.message.split('\n').map(line => h('div', line)))
+
+    ,$.progress && h('div', {
+      style: {
+        marginTop: '20px',
+        display: 'flex',
+      }
+    }, [
+
+      ,h('div', {
+        style: {
+          height: '5px',
+          background: highlightColorBrighter,
+          filter: 'brighten(90%)',
+          borderRadius: '2px',
+          width: `${$.progress || 1}%`,
+          transition: 'width 0.5s',
+        }
+      })
+
+    ])
+
+    ,$.progressStatus && h('div', {
+      style: {
+        display: 'flex',
+        marginTop: '6px',
+        fontSize: '0.9rem',
+      }
+    }, [
+
+      ,h('div', {
+        style: {
+          color: 'var(--foreground-40)',
+        }
+      }, $.progressStatus)
+
+    ])
+
+    ,last && !!$.actions.length && h('div', {
+      style: {
+        marginTop: '12px',
+        display: 'flex',
+        justifyContent: 'flex-end',
+      }
+    }, $.actions.map(a => Action(a.label, a.shortcutLabel)))
 
   ])
-
-  ,last && h('div', {
-    style: {
-      marginTop: '12px',
-      display: 'flex',
-      justifyContent: 'flex-end',
-    }
-  }, actions.map(a => Action(a.label, a.shortcutLabel)))
 
 ])
 
 // TODO: create a highlight color from vim colorscheme
 // const highlightColor = 'rgb(87, 52, 121)'
 const highlightColor = 'rgb(78, 56, 100)'
+const highlightColorBrighter = 'rgb(129, 84, 174)'
 
 const Action = (label: string, shortcut: string) => h('div', {
   style: {
@@ -237,7 +288,7 @@ const registerFirstMessageShortcuts = (message: IMessage) => {
 const ui = app<S, A>({ name: 'messages', state, actions, view })
 
 // generic close/dismiss message functionality - like the (x) button in the prompt
-const addDefaultDismissAction = (msg: IMessage | Message) => !msg.stealsFocus
+const addDefaultDismissAction = (msg: IMessage | Message) => !msg.stealsFocus && msg.kind !== MessageKind.Progress
   ? [{
     label: 'Dismiss',
     shortcutLabel: 'C S N',
@@ -245,7 +296,7 @@ const addDefaultDismissAction = (msg: IMessage | Message) => !msg.stealsFocus
   }]
   : []
 
-const showMessage = (source: MessageSource, message: Message): Promise<string> => {
+const showMessage = (source: MessageSource, message: Message): MessageReturn => {
   const id = uuid()
   const task = CreateTask<string>()
 
@@ -253,6 +304,12 @@ const showMessage = (source: MessageSource, message: Message): Promise<string> =
   if (registeredActions.length > 6) console.error('messages: more than 6 actions - not enough shortcuts!')
   const definedActions = registeredActions.map((label, ix) => ({ ...getShortcut(ix), label }))
   const actions = [...definedActions, ...addDefaultDismissAction(message)]
+
+  if (message.progressCancellable) actions.push({
+    label: 'Cancel',
+    shortcutLabel: 'C S C',
+    shortcut: '<S-C-c>',
+  })
 
   const callback = (action: string) => {
     ui.removeMessage(id)
@@ -265,11 +322,38 @@ const showMessage = (source: MessageSource, message: Message): Promise<string> =
     source,
     actions,
     onAction: callback,
+    progress: message.progress || 1,
     stealsFocus: message.stealsFocus || false,
   })
 
-  return task.promise
+  const setProgress = (update: MessageStatusUpdate) => ui.setMessageProgress({ ...update, id })
+  const remove = () => ui.removeMessage(id)
+
+  return { remove, setProgress, promise: task.promise }
 }
+
+setTimeout(() => {
+  const { setProgress } = showMessage(MessageSource.VSCode, {
+    kind: MessageKind.Progress,
+    message: 'Downloading and installing VSCode extensions',
+    progressCancellable: true,
+  })
+
+  const loop = () => {
+    setTimeout(() => setProgress({
+      percentage: 20,
+      status: 'downloading vscode.typescript-language-features',
+    }), 2e3)
+
+    setTimeout(() => setProgress({
+      percentage: 75,
+      status: 'installing discombobulator hyperthreading processor',
+    }), 4e3)
+
+    setTimeout(loop, 6e3)
+  }
+  loop()
+}, 1e3)
 
 export default {
   neovim: {

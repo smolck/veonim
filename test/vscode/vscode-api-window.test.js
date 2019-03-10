@@ -55,5 +55,35 @@ test('showInformationMessage', () => {
 // test('showTextDocument')
 // test('showWarningMessage')
 // test('showWorkspaceFolderPick')
-// test('withProgress')
+test('withProgress', () => {
+  vscode.window.withProgress({
+    location: vscode.ProgressLocation.Notification,
+    title: "this is cool",
+    cancellable: true,
+  }, (progress, token) => {
+    token.onCancellationRequested(() => {
+      console.log("CANCELED")
+    })
+
+    setTimeout(() => {
+      progress.report({ percentage: 10, message: "still going..."})
+    }, 1000)
+
+    setTimeout(() => {
+      progress.report({ percentage: 50, message: "still going harder..."})
+    }, 2000)
+
+    setTimeout(() => {
+      progress.report({ percentage: 90, message: "almost there..."})
+    }, 3000)
+
+    var p = new Promise(resolve => {
+      setTimeout(() => {
+        resolve()
+      }, 5000)
+    })
+
+    return p
+  })
+})
 // test('withScmProgress')

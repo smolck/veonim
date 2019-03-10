@@ -114,15 +114,18 @@ const window: typeof vsc.window = {
   },
   showInformationMessage: async (...a: any[]) => {
     const { message, actions } = unifyMessage(a)
-    return showMessage({ message, kind: MessageKind.Info, actions })
+    const { promise } = await showMessage({ message, kind: MessageKind.Info, actions })
+    return promise
   },
   showWarningMessage: async (...a: any[]) => {
     const { message, actions } = unifyMessage(a)
-    return showMessage({ message, kind: MessageKind.Warning, actions })
+    const { promise } = await showMessage({ message, kind: MessageKind.Warning, actions })
+    return promise
   },
   showErrorMessage: async (...a: any[]) => {
     const { message, actions } = unifyMessage(a)
-    return showMessage({ message, kind: MessageKind.Error, actions })
+    const { promise } = await showMessage({ message, kind: MessageKind.Error, actions })
+    return promise
   },
   showQuickPick: () => {
     console.warn('NYI: window.showQuickPick')

@@ -53,6 +53,16 @@ export const getPipeName = (name: string) => process.platform === 'win32'
   ? `\\\\.\\pipe\\${name}${uuid()}-sock`
   : join(tmpdir(), `${name}${uuid()}.sock`)
 
+export const arrReplace = <T>(arr: T[], matcher: (val: T) => any, patch: Partial<T>): T[] | undefined => {
+  const foundIndex = arr.findIndex(matcher)
+  if (!~foundIndex) return
+  const copy = [...arr]
+  const itemToPatch = copy[foundIndex]
+  const patchedItem = { ...itemToPatch, ...patch }
+  copy.splice(foundIndex, 1, patchedItem)
+  return copy
+}
+
 // TODO: remove listof because it's not as performant
 export const genList = <T>(count: number, fn: (index: number) => T) => {
   const resultList: T[] = []

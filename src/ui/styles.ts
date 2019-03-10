@@ -70,6 +70,7 @@ export const colors = {
   success: '#72a940',
   system: '#28b0ff',
   important: '#ffd800',
+  progress: '#c7c7c7',
 }
 
 export const badgeStyle = {
