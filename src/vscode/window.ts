@@ -1,10 +1,11 @@
-import { showMessage, showStatusBarMessage } from '../extension-host/bridge-api'
+import { showMessage, showStatusBarMessage, showProgressMessage } from '../extension-host/bridge-api'
 import OutputChannel from '../vscode/output-channel'
+import { is, Watcher, uuid } from '../support/utils'
 import { StatusBarAlignment } from '../vscode/types'
 import { MessageKind } from '../protocols/veonim'
+import { makeCancelToken } from '../vscode/tools'
 import nvimSync from '../neovim/sync-api-client'
 import TextEditor from '../vscode/text-editor'
-import { is, Watcher } from '../support/utils'
 import Terminal from '../vscode/terminal'
 import nvim from '../neovim/api'
 import * as vsc from 'vscode'
@@ -183,9 +184,26 @@ const window: typeof vsc.window = {
   withScmProgress: () => {
     console.warn('NYI: window.withScmProgress')
   },
-  // @ts-ignore
-  withProgress: () => {
-    console.warn('NYI: window.withProgress')
+  withProgress: async (options, task) => {
+    // TODO: support ProgressLocation.Window (status bar)
+    // TODO: support ProgressLocation.SourceControl
+    const msg = await showProgressMessage({
+      message: options.title || '',
+      kind: MessageKind.Progress,
+      progressCancellable: options.cancellable,
+    })
+
+    const token = makeCancelToken(uuid())
+    msg.promise.then(token.cancel)
+
+    const progress = {
+      report: (update: { message?: string, increment?: number }) => msg.setProgress({
+        status: update.message,
+        percentage: update.increment,
+      }),
+    }
+
+    return task(progress, token.token)
   },
   createStatusBarItem: makeStatusBarItem,
   // @ts-ignore

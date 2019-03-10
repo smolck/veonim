@@ -1,37 +1,33 @@
 const vscode = require('vscode')
 
 const playProgressMessage = () => {
-  vscode.window.showWarningMessage('u gonna receiv a paddlin fo dat son!', 'Oh no')
+  const m1 = vscode.window.showWarningMessage('u gonna receiv a paddlin fo dat son!', 'Oh no')
+  // @ts-ignore
+  m1.then(m => console.log('warn res:', m))
 
   vscode.window.withProgress({
     location: vscode.ProgressLocation.Notification,
-    title: "this is cool",
-    cancellable: true,
+    title: 'Downloading and installing VSCode extensions',
+    // cancellable: true,
     // @ts-ignore
   }, (progress, token) => {
     token.onCancellationRequested(() => {
-      console.log("CANCELED")
+      console.log('STOP! hammer time!')
     })
 
     setTimeout(() => {
-      progress.report({ percentage: 10, message: "still going..."})
+      progress.report({ increment: 10, message: 'downloading extensions'})
     }, 1000)
 
     setTimeout(() => {
-      progress.report({ percentage: 50, message: "still going harder..."})
+      progress.report({ increment: 50, message: 'unzip extensions'})
     }, 2000)
 
     setTimeout(() => {
-      progress.report({ percentage: 90, message: "almost there..."})
+      progress.report({ increment: 90, message: 'install extensions'})
     }, 3000)
 
-    var p = new Promise(resolve => {
-      setTimeout(() => {
-        resolve()
-      }, 5000)
-    })
-
-    return p
+    return new Promise(done => setTimeout(done, 5e3))
   })
 }
 

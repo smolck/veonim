@@ -35,16 +35,24 @@ onCreateVim(info => {
   instance.on.showVSCodeMessage(async (...a: any[]) => {
     // TODO: this undefined return gonna be a big problem
     if (!isActive()) return
-    const msg = require('../components/messages').default.vscode.show(...a)
-    messageTracker.push(msg)
-    msg.promise.then(() => messageTracker = messageTracker.filter(m => m === msg))
-    return msg.promise
+    const [ internalId, ...args ] = a
+    const msg = require('../components/messages').default.vscode.show(...args)
+    messageTracker.push({ ...msg, internalId })
+    msg.promise.then(() => messageTracker = messageTracker.filter(m => m.internalId !== internalId))
+    const res = await msg.promise
+    return res
   })
 
   instance.on.updateVSCodeMessageProgress((id: string, update: MessageStatusUpdate) => {
-    const msg = messageTracker.find(m => m.id === id)
+    const msg = messageTracker.find(m => m.internalId === id)
     if (!msg) return console.error('cant find vscode message to update progress', id, update)
     msg.setProgress(update)
+  })
+
+  instance.on.removeVSCodeMessageProgress((id: string) => {
+    const msg = messageTracker.find(m => m.internalId === id)
+    if (!msg) return console.error('cant find vscode message to remove', id)
+    msg.remove()
   })
 
   instance.on.showNeovimMessage(async (...a: any[]) => {

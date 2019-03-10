@@ -36,6 +36,8 @@ on.notify(workerHost.call.notify)
 on.clipboardRead(workerHost.request.clipboardRead)
 on.clipboardWrite(workerHost.call.clipboardWrite)
 on.showVSCodeMessage(workerHost.request.showVSCodeMessage)
+on.updateVSCodeMessageProgress(workerHost.request.updateVSCodeMessageProgress)
+on.removeVSCodeMessageProgress(workerHost.request.removeVSCodeMessageProgress)
 on.showNeovimMessage(workerHost.request.showNeovimMessage)
 on.showStatusBarMessage(workerHost.call.showStatusBarMessage)
 

@@ -1,5 +1,5 @@
 import { record, replay, recordingExists } from '../dev/recorder'
-import messages, { MessageKind } from '../components/messages'
+// import messages, { MessageKind } from '../components/messages'
 import { stealInput, registerShortcut } from '../core/input'
 import { VimMode } from '../neovim/types'
 import { is } from '../support/utils'
@@ -93,10 +93,10 @@ registerShortcut('S-C-k', VimMode.Normal, () => {
         return
       }
 
-      messages.vscode.show({
-        message: `running: ${action.desc}`,
-        kind: MessageKind.System,
-      })
+      // messages.vscode.show({
+      //   message: `running: ${action.desc}`,
+      //   kind: MessageKind.System,
+      // })
       action.fn()
     }
 

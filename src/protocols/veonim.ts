@@ -23,7 +23,7 @@ export interface MessageStatusUpdate {
 }
 
 export interface MessageReturn {
-  id: string
+  internalId?: string
   setProgress: (update: MessageStatusUpdate) => void
   remove: () => void
   promise: Promise<string>

@@ -116,6 +116,7 @@ const MessageView = ($: IMessage, last: boolean) => h('div', {
     style: {
       display: 'flex',
       flexFlow: 'column',
+      width: '100%',
     }
   }, [
 
@@ -288,7 +289,7 @@ const registerFirstMessageShortcuts = (message: IMessage) => {
 const ui = app<S, A>({ name: 'messages', state, actions, view })
 
 // generic close/dismiss message functionality - like the (x) button in the prompt
-const addDefaultDismissAction = (msg: IMessage | Message) => !msg.stealsFocus && msg.kind !== MessageKind.Progress
+const addDefaultDismissAction = (msg: IMessage | Message) => !msg.stealsFocus
   ? [{
     label: 'Dismiss',
     shortcutLabel: 'C S N',
@@ -329,8 +330,7 @@ const showMessage = (source: MessageSource, message: Message): MessageReturn => 
   const setProgress = (update: MessageStatusUpdate) => ui.setMessageProgress({ ...update, id })
   const remove = () => ui.removeMessage(id)
 
-  // TODO: exposing id should be temporary until we get a better rpc framework in place
-  return { id, remove, setProgress, promise: task.promise }
+  return { remove, setProgress, promise: task.promise }
 }
 
 export default {

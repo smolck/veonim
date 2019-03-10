@@ -26,6 +26,8 @@ git.onBranch((onBranch: string) => call.gitBranch(onBranch))
 // nvim.onVimrcLoad(sourcedFile => call.vimrcLoaded(sourcedFile))
 
 on.showVSCodeMessage(request.showVSCodeMessage)
+on.updateVSCodeMessageProgress(request.updateVSCodeMessageProgress)
+on.removeVSCodeMessageProgress(request.removeVSCodeMessageProgress)
 on.showNeovimMessage(request.showNeovimMessage)
 on.showStatusBarMessage(call.showStatusBarMessage)
 on.instanceActiveStatus((instanceIsActive: boolean) => Object.assign(state, { instanceIsActive }))
