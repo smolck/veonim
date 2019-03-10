@@ -125,7 +125,7 @@ const MessageView = ($: IMessage, last: boolean) => h('div', {
       }
     }, $.message.split('\n').map(line => h('div', line)))
 
-    ,$.progress && h('div', {
+    ,$.kind === MessageKind.Progress && h('div', {
       style: {
         marginTop: '20px',
         display: 'flex',
@@ -329,31 +329,9 @@ const showMessage = (source: MessageSource, message: Message): MessageReturn => 
   const setProgress = (update: MessageStatusUpdate) => ui.setMessageProgress({ ...update, id })
   const remove = () => ui.removeMessage(id)
 
-  return { remove, setProgress, promise: task.promise }
+  // TODO: exposing id should be temporary until we get a better rpc framework in place
+  return { id, remove, setProgress, promise: task.promise }
 }
-
-setTimeout(() => {
-  const { setProgress } = showMessage(MessageSource.VSCode, {
-    kind: MessageKind.Progress,
-    message: 'Downloading and installing VSCode extensions',
-    progressCancellable: true,
-  })
-
-  const loop = () => {
-    setTimeout(() => setProgress({
-      percentage: 20,
-      status: 'downloading vscode.typescript-language-features',
-    }), 2e3)
-
-    setTimeout(() => setProgress({
-      percentage: 75,
-      status: 'installing discombobulator hyperthreading processor',
-    }), 4e3)
-
-    setTimeout(loop, 6e3)
-  }
-  loop()
-}, 1e3)
 
 export default {
   neovim: {
