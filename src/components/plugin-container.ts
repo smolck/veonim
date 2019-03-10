@@ -24,7 +24,7 @@ const dialog = {
   flexFlow: 'column',
 }
 
-export const Plugin = (visible: boolean, children: any[]) => h('div', {
+export const Plugin = (visible: boolean, ...args: any[]) => h('div', {
   style: normal,
 }, [
 
@@ -33,8 +33,9 @@ export const Plugin = (visible: boolean, children: any[]) => h('div', {
       ...dialog,
       width: '600px',
       display: visible ? 'flex' : 'none',
+      ...args.find(is.object),
     }
-  }, children)
+  }, args.find(is.array))
 
 ])
 

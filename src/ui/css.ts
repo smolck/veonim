@@ -181,7 +181,6 @@ const shadeColor = (color: string, percent: number) => {
     .slice(1)
 }
 
-
 export const contrast = (color: string, contrastAgainst: string, amount: number) => {
   (amount)
   const [ r, g, b ] = hexToRGB(contrastAgainst)

@@ -82,6 +82,7 @@ const mapMods = $<string>(handleMods, userModRemaps, joinModsWithDash)
 const mapKey = $<string>(bypassEmptyMod, toVimKey)
 const formatInput = $<string>(combineModsWithKey, wrapKey)
 const shortcuts = new Map<string, Function>()
+const globalShortcuts = new Map<string, () => void>()
 
 const resetInputState = () => {
   xformed = false
@@ -99,7 +100,7 @@ export const blur = () => {
   resetInputState()
 }
 
-const setupRemapModifiers = (mappings: RemapModifer[]) => {
+export const setupRemapModifiers = (mappings: RemapModifer[]) => {
   remaps.clear()
   mappings.forEach(mapping => remapModifier(mapping.from, mapping.to))
 }
@@ -130,7 +131,7 @@ const setupTransforms = (transforms: KeyTransform[]) => {
   })
 }
 
-export const remapModifier = (from: string, to: string) => remaps.set(from, to)
+const remapModifier = (from: string, to: string) => remaps.set(from, to)
 
 type Transformer = (input: KeyboardEvent) => KeyboardEvent
 export const xfrmHold = new Map<string, Transformer>()
@@ -175,6 +176,8 @@ const sendToVim = (inputKeys: string) => {
     }
   }
 
+  if (globalShortcuts.has(inputKeys)) return globalShortcuts.get(inputKeys)!()
+
   // TODO: this might need more attention. i think s-space can be a valid
   // vim keybind. s-space was causing issues in terminal mode, sending weird
   // term esc char.
@@ -190,6 +193,14 @@ const sendToVim = (inputKeys: string) => {
 
 export const registerShortcut = (keys: string, mode: VimMode, cb: Function) => {
   shortcuts.set(`${mode}:<${keys}>`, cb)
+}
+
+export const registerOneTimeUseShortcuts = (shortcuts: string[], cb: (shortcut: string) => void) => {
+  const done = (shortcut: string) => {
+    shortcuts.forEach(s => globalShortcuts.delete(s))
+    cb(shortcut)
+  }
+  shortcuts.forEach(s => globalShortcuts.set(s, () => done(s)))
 }
 
 const sendKeys = async (e: KeyboardEvent, inputType: InputType) => {
@@ -283,10 +294,5 @@ remote.getCurrentWindow().on('blur', async () => {
   if (fixTermEscape) shouldClearEscapeOnNextAppFocus = true
 })
 
-api.nvim.onLoad(async () => {
-  const mappings = await api.nvim.getVar('veonim_remap_modifiers')
-  setupRemapModifiers(mappings)
-
-  const transforms = await api.nvim.getVar('veonim_key_transforms')
-  setupTransforms(transforms)
-})
+api.onConfig.inputRemapModifiersDidChange(setupRemapModifiers)
+api.onConfig.inputKeyTransformsDidChange(setupTransforms)

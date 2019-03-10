@@ -236,6 +236,10 @@ const view = ($: S, a: typeof actions) => PluginRight($.visible, [
 
     ,pos === $.ix && h('div', items.map((f, itemPos) => h(RowNormal, {
       active: pos === $.ix && itemPos === $.subix,
+      style: {
+        fontFamily: 'var(--font)',
+        fontSize: 'var(--font-size)px',
+      }
     }, highlightPattern(f.text, $.value, {
 
       normal: (text, last) => h('span', {

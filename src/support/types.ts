@@ -3,6 +3,8 @@ export type UnPromisify<T> = T extends Promise<infer U> ? U : T
 export type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
 export type ReturnTypeOf<T> = T extends (...args: any[]) => infer R ? R : T
 
+// to make interface properties optional use built-in Partial<>
+
 // type AlterReturnType<T extends (...args: any[]) => any, R> =
 export type AlterReturnType<T, R> =
     T extends () => any ? () => R :

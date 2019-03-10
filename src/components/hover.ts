@@ -74,6 +74,8 @@ const view = ($: S) => Overlay({
     style: {
       color: color || cvar('foreground'),
       whiteSpace: 'pre',
+      fontFamily: 'var(--font)',
+      fontSize: 'var(--font-size)px',
     }
   }, text)))))
 

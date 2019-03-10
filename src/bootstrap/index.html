@@ -6,16 +6,21 @@
     <title>veonim</title>
     <style>
 @font-face {
-  font-family: 'Roboto Mono Builtin';
+  font-family: 'Roboto Mono Veonim';
   src: url('../assets/roboto-mono.ttf');
 }
 
 html {
-  --font: 'Roboto Mono Builtin';
+  --font: 'Roboto Mono Veonim';
   --font-size: 14;
   --line-height: 1.5;
   font-family: var(--font);
   font-size: calc(var(--font-size) * 1px);
+}
+
+body {
+  font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen-Sans,Ubuntu,Cantarell,"Helvetica Neue",sans-serif;
+  font-size: 14px;
 }
 
 code {
@@ -41,8 +46,6 @@ body {
 }
 
 input {
-  font-family: var(--font);
-  font-size: calc(var(--font-size) * 1px);
   width: 100%;
   box-sizing: border-box;
   outline: none;

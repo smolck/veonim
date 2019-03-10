@@ -14,6 +14,7 @@ const row = {
   display: 'flex',
   color: cvar('foreground-30'),
   minHeight: '1.4rem',
+  fontSize: '1.1rem',
 }
 
 const activeRow = {
@@ -60,6 +61,8 @@ export const RowComplete = (o: Options, children: any[]) => h('div', {
     ...paddingVH(0, 0),
     paddingRight: '8px',
     lineHeight: cvar('line-height'),
+    fontFamily: 'var(--font)',
+    fontSize: 'var(--font-size)px',
     ...o.style,
   }
 }, children)

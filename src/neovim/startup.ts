@@ -33,6 +33,7 @@ export const startupCmds = CmdGroup`
   set background=dark
   set nocursorline
   set noshowmode
+  set noruler
   set completefunc=VeonimComplete
   ino <expr> <tab> VeonimCompleteScroll(1)
   ino <expr> <s-tab> VeonimCompleteScroll(0)

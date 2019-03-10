@@ -1,6 +1,6 @@
 import { VimMode, HyperspaceCoordinates } from '../neovim/types'
+import { call, on, request } from '../messaging/worker-client'
 import * as bufferSearch from '../services/buffer-search'
-import { call, on } from '../messaging/worker-client'
 import getWindowMetadata from '../windows/metadata'
 import { GitStatus } from '../support/git'
 import * as git from '../support/git'
@@ -25,6 +25,11 @@ git.onBranch((onBranch: string) => call.gitBranch(onBranch))
 // TODO: need another way to fix this
 // nvim.onVimrcLoad(sourcedFile => call.vimrcLoaded(sourcedFile))
 
+on.showVSCodeMessage(request.showVSCodeMessage)
+on.updateVSCodeMessageProgress(request.updateVSCodeMessageProgress)
+on.removeVSCodeMessageProgress(request.removeVSCodeMessageProgress)
+on.showNeovimMessage(request.showNeovimMessage)
+on.showStatusBarMessage(call.showStatusBarMessage)
 on.instanceActiveStatus((instanceIsActive: boolean) => Object.assign(state, { instanceIsActive }))
 on.bufferSearch(async (file: string, query: string) => bufferSearch.fuzzy(file, query))
 on.bufferSearchVisible(async (query: string) => bufferSearch.fuzzyVisible(query))

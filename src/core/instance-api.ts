@@ -1,5 +1,6 @@
 import { getActiveInstance, onSwitchVim, onCreateVim, instances } from '../core/instance-manager'
 import { VimMode, BufferInfo, HyperspaceCoordinates } from '../neovim/types'
+import { MessageStatusUpdate, MessageReturn } from '../protocols/veonim'
 import { AIClient, WorkspaceSymbol } from '../ai/protocol'
 import { onFnCall, pascalCase } from '../support/utils'
 import { colors } from '../render/highlight-attributes'
@@ -7,7 +8,6 @@ import { Functions } from '../neovim/function-types'
 import { WindowMetadata } from '../windows/metadata'
 import { CompletionItem, CodeAction } from 'vscode'
 import * as dispatch from '../messaging/dispatch'
-import { NotifyKind } from '../protocols/veonim'
 import { GitStatus } from '../support/git'
 import NeovimState from '../neovim/state'
 import { EventEmitter } from 'events'
@@ -30,7 +30,39 @@ onCreateVim(info => {
     Object.assign(state, stateDiff)
   })
 
-  instance.on.notify((msg: string, kind: NotifyKind, actions?: string[]) => isActive() && dispatch.pub('notify', { msg, kind, actions }))
+  // TODO: this is so shite we need a better way to send stuff across threads
+  let messageTracker: MessageReturn[] = []
+  instance.on.showVSCodeMessage(async (...a: any[]) => {
+    // TODO: this undefined return gonna be a big problem
+    if (!isActive()) return
+    const [ internalId, ...args ] = a
+    const msg = require('../components/messages').default.vscode.show(...args)
+    messageTracker.push({ ...msg, internalId })
+    msg.promise.then(() => messageTracker = messageTracker.filter(m => m.internalId !== internalId))
+    const res = await msg.promise
+    return res
+  })
+
+  instance.on.updateVSCodeMessageProgress((id: string, update: MessageStatusUpdate) => {
+    const msg = messageTracker.find(m => m.internalId === id)
+    if (!msg) return console.error('cant find vscode message to update progress', id, update)
+    msg.setProgress(update)
+  })
+
+  instance.on.removeVSCodeMessageProgress((id: string) => {
+    const msg = messageTracker.find(m => m.internalId === id)
+    if (!msg) return console.error('cant find vscode message to remove', id)
+    msg.remove()
+  })
+
+  instance.on.showNeovimMessage(async (...a: any[]) => {
+    if (!isActive()) return
+    const msg = require('../components/messages').default.vscode.show(...a)
+    return msg.promise
+  })
+  instance.on.showStatusBarMessage((message: string) => {
+    isActive() && dispatch.pub('message.status', message)
+  })
   instance.on.vimrcLoaded(() => isActive() && ee.emit('nvim.load', false))
   instance.on.gitStatus((status: GitStatus) => isActive() && ee.emit('git.status', status))
   instance.on.gitBranch((branch: string) => isActive() && ee.emit('git.branch', branch))
@@ -66,6 +98,11 @@ onSwitchVim(async () => {
   ee.emit('git.status', gitInfo.status)
   ee.emit('git.branch', gitInfo.branch)
   ee.emit('nvim.load', true)
+
+  const mappings = await instance.request.nvimGetVar('veonim_remap_modifiers')
+  ee.emit('input.remap.modifiers', mappings)
+  const transforms = await instance.request.nvimGetVar('veonim_key_transforms')
+  ee.emit('input.key.transforms', transforms)
 })
 
 const getBufferInfo = (): Promise<BufferInfo[]> => getActiveInstance().request.getBufferInfo()
@@ -150,10 +187,16 @@ const ai: AIAPI = new Proxy(Object.create(null), {
   })
 })
 
+const onConfig = {
+  inputRemapModifiersDidChange: (fn: (modifiers: any[]) => void) => ee.on('input.remap.modifiers', fn),
+  inputKeyTransformsDidChange: (fn: (transforms: any[]) => void) => ee.on('input.key.transforms', fn),
+}
+
 const api = {
   ai,
   git,
   onAction,
+  onConfig,
   getWindowMetadata,
   bufferSearch,
   bufferSearchVisible,

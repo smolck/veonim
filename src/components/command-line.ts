@@ -19,6 +19,7 @@ const state = {
   value: '',
   ix: 0,
   position: 0,
+  prompt: '',
   kind: CommandType.Ex,
 }
 
@@ -37,12 +38,13 @@ const actions = {
     showCursor()
     return { visible: false }
   },
-  updateCommand: ({ cmd, kind, position }: CommandUpdate) => (s: S) => {
+  updateCommand: ({ cmd, kind, position, prompt }: CommandUpdate) => (s: S) => {
     hideCursor()
     disableCursor()
 
     return {
       kind,
+      prompt,
       position,
       visible: true,
       options: cmd ? s.options : [],
@@ -60,7 +62,28 @@ const actions = {
 
 type A = typeof actions
 
-const view = ($: S) => Plugin($.visible, [
+const view = ($: S) => Plugin($.visible, {
+  position: 'relative'
+}, [
+
+  ,$.prompt && h('div', {
+    style: {
+      position: 'absolute',
+      width: '100%',
+      background: 'var(--background-50)',
+      marginTop: '-40px',
+      height: '40px',
+      display: 'flex',
+      alignItems: 'center',
+    }
+  }, [
+    ,h('div', {
+      style: {
+        padding: '0 15px',
+        fontSize: '1.1rem',
+      }
+    }, $.prompt)
+  ])
 
   ,Input({
     focus: true,

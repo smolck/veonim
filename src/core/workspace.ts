@@ -30,7 +30,7 @@ const ee = new EventEmitter()
 const container = document.getElementById('workspace') as HTMLElement
 const sandboxCanvas = document.createElement('canvas')
 const canvas = sandboxCanvas.getContext('2d', { alpha: false }) as CanvasRenderingContext2D
-const DEFAULT_FONT = 'Roboto Mono Builtin'
+const DEFAULT_FONT = 'Roboto Mono Veonim'
 const DEFAULT_FONT_SIZE = 14
 const DEFAULT_LINESPACE = 14 / 2
 

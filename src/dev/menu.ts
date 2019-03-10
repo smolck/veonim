@@ -1,7 +1,6 @@
 import { record, replay, recordingExists } from '../dev/recorder'
+// import messages, { MessageKind } from '../components/messages'
 import { stealInput, registerShortcut } from '../core/input'
-import { NotifyKind } from '../protocols/veonim'
-import { notify } from '../ui/notifications'
 import { VimMode } from '../neovim/types'
 import { is } from '../support/utils'
 import { h, app } from '../ui/uikit'
@@ -19,6 +18,11 @@ const actions = new Map()
 actions.set('v', {
   desc: 'run VSCODE api tests',
   fn: () => fetch('http://localhost:22444/test/vscode'),
+})
+
+actions.set('p', {
+  desc: 'extension host playground',
+  fn: () => fetch('http://localhost:22444/playground'),
 })
 
 actions.set('s', {
@@ -88,7 +92,11 @@ registerShortcut('S-C-k', VimMode.Normal, () => {
         container.remove()
         return
       }
-      notify(`running: ${action.desc}`, NotifyKind.System)
+
+      // messages.vscode.show({
+      //   message: `running: ${action.desc}`,
+      //   kind: MessageKind.System,
+      // })
       action.fn()
     }
 

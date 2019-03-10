@@ -59,6 +59,13 @@ export default class extends Transform {
     // this based on the nvim api protocol types, so anywhere where we expect
     // strings we can check for a number and convert it to str.
     if (length === 1 && this.skipStringAllocationBecauseMsgpackIsFuckingSlow) return raw[this.ix - 1]
+
+    if (this.ix > raw.length) {
+      this.incomplete = true
+      this.partialBuffer = raw
+      return ''
+    }
+
     return raw.toString('utf8', this.ix - length, this.ix)
   }
 

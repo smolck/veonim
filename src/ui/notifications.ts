@@ -1,7 +1,7 @@
 import { NotifyKind, Notification, FlexibleExpire } from '../protocols/veonim'
 import { PluginTop } from '../components/plugin-container'
+import { addMessage } from '../components/message-history'
 import { merge, uuid, debounce } from '../support/utils'
-import { addMessage } from '../components/messages'
 import { colors, badgeStyle } from '../ui/styles'
 import * as dispatch from '../messaging/dispatch'
 import { animate, cvar } from '../ui/css'

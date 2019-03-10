@@ -183,10 +183,12 @@ onRedraw(redrawEvents => {
   // because of circular logic/infinite loop. cmdline_show updates UI, UI makes
   // a change in the cmdline, nvim sends redraw again. we cut that shit out
   // with coding and algorithms
+  // TODO: but y tho
   if (renderEvents.doNotUpdateCmdlineIfSame(redrawEvents[0])) return
-  const eventCount = redrawEvents.length
   let winUpdates = false
+  const messageEvents = []
 
+  const eventCount = redrawEvents.length
   for (let ix = 0; ix < eventCount; ix++) {
     const ev = redrawEvents[ix]
     const e = ev[0]
@@ -215,14 +217,30 @@ onRedraw(redrawEvents => {
     else if (e === 'wildmenu_show') renderEvents.wildmenu_show(ev)
     else if (e === 'wildmenu_select') renderEvents.wildmenu_select(ev)
     else if (e === 'wildmenu_hide') renderEvents.wildmenu_hide()
-    else if (e === 'msg_show') renderEvents.msg_show(ev)
+    else if (e.startsWith('msg_')) messageEvents.push(ev)
+    else if (e === 'set_title') renderEvents.set_title(ev)
+  }
+
+  // we queue the message events because we are interested to know
+  // if the cursor is visible or not when the message will be displayed.
+  // this is kind of a hack - we do this because certain messages will
+  // steal input (like spell window/inputlist()) and we want the message
+  // UI to indicate that focus has been changed. ideally nvim would
+  // send some sort of message kind ("return_prompt" maybe?)
+  const messageEventsCount = messageEvents.length
+  for (let ix = 0; ix < messageEventsCount; ix++) {
+    const ev = messageEvents[ix]
+    const e = ev[0]
+
+    if (e === 'msg_show') renderEvents.msg_show(ev, state_cursorVisible)
     else if (e === 'msg_showmode') renderEvents.msg_showmode(ev)
     else if (e === 'msg_showcmd') renderEvents.msg_showcmd(ev)
     else if (e === 'msg_history_show') renderEvents.msg_history_show(ev)
     else if (e === 'msg_clear') renderEvents.msg_clear(ev)
     else if (e === 'msg_ruler') renderEvents.msg_ruler(ev)
-    else if (e === 'set_title') renderEvents.set_title(ev)
   }
+
+  renderEvents.messageClearPromptsMaybeHack(state_cursorVisible)
 
   requestAnimationFrame(() => {
     state_cursorVisible ? showCursor() : hideCursor()

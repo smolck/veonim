@@ -1,12 +1,11 @@
 import { CursorShape, setCursorColor, setCursorShape } from '../core/cursor'
 import { forceRegenerateFontAtlas } from '../render/font-texture-atlas'
+import messages, { MessageKind } from '../components/messages'
 import { getColorById } from '../render/highlight-attributes'
 import { normalizeVimMode } from '../support/neovim-utils'
 import * as windows from '../windows/window-manager'
 import * as dispatch from '../messaging/dispatch'
-import { NotifyKind } from '../protocols/veonim'
 import * as workspace from '../core/workspace'
-import { notify } from '../ui/notifications'
 import api from '../core/instance-api'
 
 interface Mode {
@@ -54,6 +53,7 @@ export enum CommandType {
 
 export interface CommandUpdate {
   cmd: string
+  prompt?: string
   kind: CommandType
   position: number
 }
@@ -74,52 +74,71 @@ const cursorShapeType = (shape?: string) => {
 }
 
 const messageNotifyKindMappings = new Map([
-  ['echo', NotifyKind.Info],
-  ['emsg', NotifyKind.Error],
-  ['echoerr', NotifyKind.Error],
-  ['echomsg', NotifyKind.Info],
-  ['quickfix', NotifyKind.System],
+  ['echo', MessageKind.Info],
+  ['emsg', MessageKind.Error],
+  ['echoerr', MessageKind.Error],
+  ['echomsg', MessageKind.Info],
+  ['quickfix', MessageKind.System],
   // TODO: handle prompts
-  ['return_prompt', NotifyKind.System],
+  ['return_prompt', MessageKind.System],
 ])
 
-// TODO: handle multi-line messages
-type MessageEvent = [number, string]
-export const msg_show = ([ , [ kind, msgs, flag ] ]: [any, [string, MessageEvent[], boolean]]) => {
-  // TODO: what is flag?
-  console.log('MSG OF:', kind, flag)
+const showStatusMessage = (message: string) => {
+  // TODO: \n on all platforms?
+  const newlineCount = (message.match(/\n/g) || []).length
+  if (newlineCount) return messages.neovim.show({ message, kind: MessageKind.Info })
+  dispatch.pub('message.status', message)
+}
 
-  const messageKind = sillyString(kind)
-  const notifyKind = messageNotifyKindMappings.get(messageKind) || NotifyKind.System
-  // TODO: do something with hlid or ignore?
-  msgs.forEach(([ /*hlid*/, text ]) => notify(sillyString(text), notifyKind))
+let state_MessagePromptVisible = false
+type MessageEvent = [number, string]
+export const msg_show = ([ , [ msgKind, msgs, replaceLast ] ]: [any, [string, MessageEvent[], boolean]], cursorVisible: boolean) => {
+  const messageKind = sillyString(msgKind)
+  const kind = messageNotifyKindMappings.get(messageKind)
+  state_MessagePromptVisible = !cursorVisible
+  const message = msgs.reduce((res, [ /*hlid*/, text ]) => res += sillyString(text), '')
+
+  if (!kind && replaceLast) return showStatusMessage(message)
+
+  const msginfo = {
+    message,
+    kind: kind || MessageKind.System,
+    stealsFocus: !cursorVisible,
+  }
+
+  replaceLast
+    ? messages.neovim.show(msginfo)
+    : messages.neovim.append(msginfo)
 }
 
 export const msg_history_show = (m: any) => {
   console.warn('NYI: messages', m)
 }
 
-// TODO: wat do here lol - macro msg and shit?
-// export const msg_showmode = ([, [ msgs ]]: any) => {
-//   msgs.forEach((m: [number, string]) => console.log('MSG_SHOWMODE:', m[0], m[1]))
-// }
-
-export const msg_showmode = (m: any) => {
-  // TODO: on empty msg_showmode clear out any previous recording messages
-  // see docs for more info
-  console.warn('NYI: msg_showmode', m)
+export const msg_showmode = ([ , [ msgs ] ]: [any, [MessageEvent[]]]) => {
+  if (!msgs.length) return dispatch.pub('message.control', '')
+  msgs.forEach(([ /*hlid*/, text ]) => dispatch.pub('message.control', text))
 }
 
-export const msg_showcmd = (m: any) => {
-  console.warn('NYI: msg_showcmd', m)
+export const msg_showcmd = ([ , [ msgs ] ]: [any, [MessageEvent[]]]) => {
+  if (!msgs.length) return dispatch.pub('message.control', '')
+  msgs.forEach(([ /*hlid*/, text ]) => dispatch.pub('message.control', text))
 }
 
-export const msg_ruler = (m: any) => {
-  console.warn('NYI: msg_ruler', m)
+export const msg_clear = ([, [ content ]]: [any, [string]]) => {
+  messages.neovim.clear()
+  dispatch.pub('message.status', content)
 }
 
-export const msg_clear = (m: any) => {
-  console.warn('NYI: msg_clear:', m)
+// we display our own ruler based on cursor position. why use this?  i think
+// maybe we could use 'set noruler' or 'set ruler' to determine if we show the
+// ruler block in the statusline (with these msg_ruler events)
+export const msg_ruler = (_: any) => {}
+
+// ideally nvim would tell us when to clear message prompts like spell window and inputlist()
+export const messageClearPromptsMaybeHack = (cursorVisible: boolean) => {
+  if (!state_MessagePromptVisible) return
+  if (cursorVisible) messages.neovim.clear(m => m.stealsFocus)
 }
 
 export const mode_change = ([ , [ m ] ]: [any, [string]]) => {
@@ -225,14 +244,16 @@ export const cmdline_show = ([ , [content, position, str1, str2, indent, level] 
 
   if (cmdPrompt) dispatch.pub('cmd.update', {
     cmd,
+    prompt,
     kind: prompt ? CommandType.Prompt : kind,
-    position
+    position,
   } as CommandUpdate)
 
   else if (searchPrompt) dispatch.pub('search.update', {
     cmd,
+    prompt,
     kind: prompt ? CommandType.Prompt : kind,
-    position
+    position,
   } as CommandUpdate)
 
   // TODO: do the indentings thingies

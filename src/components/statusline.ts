@@ -31,7 +31,8 @@ const state = {
   active: -1,
   filetype: '',
   runningServers: new Set<string>(),
-  mode: 'NORMAL',
+  message: '',
+  controlMessage: '',
   line: 0,
   column: 0,
   cwd: '',
@@ -40,7 +41,6 @@ const state = {
   branch: '',
   additions: 0,
   deletions: 0,
-  macro: '',
   baseColor: '#4e415a',
 }
 
@@ -76,6 +76,8 @@ Object.assign(container.style, {
 })
 
 const actions = {
+  setMessage: (message: string) => ({ message }),
+  setControlMessage: (controlMessage: string) => ({ controlMessage }),
   updateTabs: ({ active, tabs }: any) => ({ active, tabs }),
   setFiletype: (filetype: any) => ({ filetype }),
   setLine: (line: any) => ({ line }),
@@ -84,12 +86,17 @@ const actions = {
   setDiagnostics: ({ errors = 0, warnings = 0 }: any) => ({ errors, warnings }),
   setGitBranch: (branch: any) => ({ branch }),
   setGitStatus: ({ additions, deletions }: any) => ({ additions, deletions }),
-  setMacro: (macro = '') => ({ macro }),
   setColor: (baseColor: any) => ({ baseColor }),
   aiStart: ({ cwd, filetype }: any) => (s: S) => ({ runningServers: new Set([...s.runningServers, cwd + filetype]) }),
 }
 
 const iconStyle = { style: { fontSize: '1.15rem' } }
+
+const Label = (label: string) => h('div', {
+  style: {
+    paddingBottom: '1px',
+  }
+}, label)
 
 const Tab = ({ id, label, active }: TabView) => h('div', {
   key: id,
@@ -98,6 +105,7 @@ const Tab = ({ id, label, active }: TabView) => h('div', {
     paddingLeft: '20px',
     paddingRight: '20px',
     marginRight: '-14px',
+    paddingBottom: '1px',
     clipPath: 'polygon(15px 0, 100% 0, calc(100% - 15px) 100%, 0 100%)',
     color: cvar('foreground-40'),
     ...(active ? {
@@ -125,6 +133,7 @@ const view = ($: S) => h('div', {
     ,h('div', {
       style: {
         ...itemStyle,
+        paddingLeft: '15px',
         color: brighten($.baseColor, 90),
         background: darken($.baseColor, 20),
         paddingRight: '30px',
@@ -138,7 +147,7 @@ const view = ($: S) => h('div', {
         ,h(Icon.HardDrive, iconStyle)
       ])
 
-      ,h('span', $.cwd || 'main')
+      ,Label($.cwd || 'main')
     ])
 
     ,$.branch && h('div', {
@@ -155,13 +164,14 @@ const view = ($: S) => h('div', {
       ,h('div', {
         style: {
           ...iconBoxStyle,
+          paddingTop: '4px',
           display: $.branch ? '' : 'none',
         },
       }, [
         h(Icon.GitBranch, iconStyle),
       ])
 
-      ,h('span', $.branch)
+      ,Label($.branch)
     ])
 
     ,$.branch && h('div', {
@@ -188,6 +198,7 @@ const view = ($: S) => h('div', {
       ,h('div', {
         style: {
           color: $.additions > 0 ? colors.success : undefined,
+          paddingBottom: '1px',
         }
       }, `${$.additions}`)
 
@@ -205,8 +216,38 @@ const view = ($: S) => h('div', {
       ,h('div', {
         style: {
           color: $.deletions > 0 ? colors.error : undefined,
+          paddingBottom: '1px',
         },
       }, `${$.deletions}`)
+    ])
+
+    // STATUSBAR MESSAGE
+    ,h('div', [
+      ,h('div', {
+        style: {
+          marginLeft: '26px',
+          color: cvar('foreground-60'),
+          paddingBottom: '1px',
+        },
+      }, $.message)
+    ])
+
+  ])
+
+  // RIGHT
+  ,h('div', {
+    style: statusGroupStyle,
+  }, [
+
+    // STATUSBAR CONTROL MESSAGE
+    ,h('div', [
+      ,h('div', {
+        style: {
+          marginRight: '10px',
+          color: cvar('foreground-60'),
+          paddingBottom: '1px',
+        },
+      }, $.controlMessage)
     ])
 
     ,$.runningServers.has(api.nvim.state.cwd + $.filetype) && h('div', {
@@ -216,39 +257,6 @@ const view = ($: S) => h('div', {
         ,h(Icon.Zap, { color: '#555', ...iconStyle })
       ])
     ])
-
-  ])
-
-  // CENTER
-  ,h('div', {
-    style: statusGroupStyle,
-  }, [
-
-    ,$.macro && h('div', {
-      style: itemStyle,
-    }, [
-      ,h('div', {
-        style: {
-          ...iconBoxStyle,
-          color: colors.error,
-        }
-      }, [
-        ,h(Icon.Target, iconStyle)
-      ])
-
-      ,h('div', {
-        style: {
-          color: colors.error,
-        }
-      }, $.macro)
-    ])
-
-  ])
-
-  // RIGHT
-  ,h('div', {
-    style: statusGroupStyle,
-  }, [
 
     ,h('div', {
       style: {
@@ -274,6 +282,7 @@ const view = ($: S) => h('div', {
       ,h('div', {
         style: {
           color: $.errors > 0 ? colors.error : undefined,
+          paddingBottom: '1px',
         },
       }, `${$.errors}`)
 
@@ -291,6 +300,7 @@ const view = ($: S) => h('div', {
       ,h('div', {
         style: {
           color: $.warnings > 0 ? colors.warning : undefined,
+          paddingBottom: '1px',
         },
       }, `${$.warnings}`)
     ])
@@ -304,6 +314,7 @@ const view = ($: S) => h('div', {
         background: darken($.baseColor, 30),
         marginRight: '-15px',
         clipPath: 'polygon(15px 0, 100% 0, calc(100% - 15px) 100%, 0 100%)',
+        paddingBottom: '1px',
       }
     }, [
       ,h('div', `${$.line + 1}:${$.column + 1}`)
@@ -347,10 +358,10 @@ sub('tabs', async ({ curtab, tabs }: { curtab: ExtContainer, tabs: Tab[] }) => {
 
 api.git.onBranch(branch => ui.setGitBranch(branch))
 api.git.onStatus(status => ui.setGitStatus(status))
-sub('ai:diagnostics.count', count => ui.setDiagnostics(count))
-sub('ai:start', opts => ui.aiStart(opts))
-sub('vim:macro.start', reg => ui.setMacro(reg))
-sub('vim:macro.end', () => ui.setMacro())
+sub('ai.diagnostics.count', count => ui.setDiagnostics(count))
+sub('ai.start', opts => ui.aiStart(opts))
+sub('message.status', msg => ui.setMessage(msg))
+sub('message.control', msg => ui.setControlMessage(msg))
 onSwitchVim(() => ui.updateTabs({ active: -1, tabs: [] }))
 
 api.nvim.watchState.colorscheme(async () => {

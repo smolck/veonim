@@ -1,10 +1,11 @@
+import { showMessage, showStatusBarMessage, showProgressMessage } from '../extension-host/bridge-api'
 import OutputChannel from '../vscode/output-channel'
+import { is, Watcher, uuid } from '../support/utils'
 import { StatusBarAlignment } from '../vscode/types'
-import { call } from '../messaging/worker-client'
-import { NotifyKind } from '../protocols/veonim'
+import { MessageKind } from '../protocols/veonim'
+import { makeCancelToken } from '../vscode/tools'
 import nvimSync from '../neovim/sync-api-client'
 import TextEditor from '../vscode/text-editor'
-import { is, Watcher } from '../support/utils'
 import Terminal from '../vscode/terminal'
 import nvim from '../neovim/api'
 import * as vsc from 'vscode'
@@ -25,14 +26,18 @@ interface Events {
 interface UnifiedMessage {
   message: string
   isModal: boolean
-  actionItems: string[]
+  actions: string[]
 }
 
-const unifyMessage = ([ message, optionsOrItems, itemsMaybe ]: any[]): UnifiedMessage => {
-  const isModal: boolean = is.object(optionsOrItems) ? <any>optionsOrItems.modal : false
-  const items: string[] = is.array(optionsOrItems) ? optionsOrItems : itemsMaybe || []
-  const actionItems: string[] = items.map((item: any) => item.title || item)
-  return { message, isModal, actionItems }
+// (message: string, ...items: string[])
+// (message: string, ...items: { title: string }[])
+// (message: string, options: {}, ...items: { title: string }[])
+const unifyMessage = ([ message, ...stuff ]: any[]): UnifiedMessage => {
+  const [ firstItem, ...restOfItems ] = stuff || [] as any[]
+  const isModal: boolean = is.object(firstItem) ? <any>firstItem.modal : false
+  const items: string[] = is.object(firstItem) ? restOfItems : stuff
+  const actions: string[] = items.map((item: any) => item.title || item)
+  return { message, isModal, actions }
 }
 
 const makeStatusBarItem = (alignment = StatusBarAlignment.Left, priority = 0): vsc.StatusBarItem => {
@@ -108,22 +113,20 @@ const window: typeof vsc.window = {
 
     return terminalBufferIds.map(bufid => Terminal(bufid))
   },
-  // TODO: maybe we can use nvim inputlist() for this?
-  // TODO: we need to return the selected dialog button action item thingy value
   showInformationMessage: async (...a: any[]) => {
-    const { message, actionItems } = unifyMessage(a)
-    call.notify(message, NotifyKind.Info, actionItems)
-    return Promise.resolve(undefined)
+    const { message, actions } = unifyMessage(a)
+    const { promise } = await showMessage({ message, kind: MessageKind.Info, actions })
+    return promise
   },
   showWarningMessage: async (...a: any[]) => {
-    const { message, actionItems } = unifyMessage(a)
-    call.notify(message, NotifyKind.Info, actionItems)
-    return Promise.resolve(undefined)
+    const { message, actions } = unifyMessage(a)
+    const { promise } = await showMessage({ message, kind: MessageKind.Warning, actions })
+    return promise
   },
   showErrorMessage: async (...a: any[]) => {
-    const { message, actionItems } = unifyMessage(a)
-    call.notify(message, NotifyKind.Info, actionItems)
-    return Promise.resolve(undefined)
+    const { message, actions } = unifyMessage(a)
+    const { promise } = await showMessage({ message, kind: MessageKind.Error, actions })
+    return promise
   },
   showQuickPick: () => {
     console.warn('NYI: window.showQuickPick')
@@ -141,9 +144,12 @@ const window: typeof vsc.window = {
     console.warn('NYI: window.showSaveDialog')
     return Promise.resolve(undefined)
   },
-  showInputBox: () => {
-    console.warn('NYI: window.showInputBox')
-    return Promise.resolve(undefined)
+  showInputBox: (options = {}) => {
+    // TODO: support more options and cancel token with a custom input
+    // prompt instead of the nvim built-in one. i think we can still leverage
+    // the nvim input, we just need to signal the UI some additional properties
+    // for the next cmdline event update
+    return nvim.call.input(options.prompt, options.value)
   },
   // @ts-ignore
   createInputBox: () => {
@@ -162,17 +168,42 @@ const window: typeof vsc.window = {
   createWebviewPanel: () => {
     console.warn('NYI: window.createWebviewPanel')
   },
-  setStatusBarMessage: (text: string) => {
-    console.log('vsc-ext-api (StatusBarMessage):', text)
-    return { dispose: () => {} }
+  setStatusBarMessage: (text: string, timeoutOrThenable?: any) => {
+    showStatusBarMessage(text)
+    // TODO: this is a real shit way of doing because we could be overriding
+    // other messages possibly presented by nvim
+    if (is.number(timeoutOrThenable)) {
+      setTimeout(() => showStatusBarMessage(''), timeoutOrThenable as number)
+    }
+    if (is.promise(timeoutOrThenable)) {
+      (timeoutOrThenable as Promise<any>).then(() => showStatusBarMessage(''))
+    }
+    return { dispose: () => showStatusBarMessage('') }
   },
   // @ts-ignore
   withScmProgress: () => {
     console.warn('NYI: window.withScmProgress')
   },
-  // @ts-ignore
-  withProgress: () => {
-    console.warn('NYI: window.withProgress')
+  withProgress: async (options, task) => {
+    // TODO: support ProgressLocation.Window (status bar)
+    // TODO: support ProgressLocation.SourceControl
+    const msg = await showProgressMessage({
+      message: options.title || '',
+      kind: MessageKind.Progress,
+      progressCancellable: options.cancellable,
+    })
+
+    const token = makeCancelToken(uuid())
+    msg.promise.then(token.cancel)
+
+    const progress = {
+      report: (update: { message?: string, increment?: number }) => msg.setProgress({
+        status: update.message,
+        percentage: update.increment,
+      }),
+    }
+
+    return task(progress, token.token)
   },
   createStatusBarItem: makeStatusBarItem,
   // @ts-ignore
