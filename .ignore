@@ -1,8 +1,5 @@
 package-lock.json
-src/icons
-src/memes
 docs
 art
 dist
-bindeps
 LICENSE

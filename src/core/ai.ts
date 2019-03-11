@@ -24,7 +24,7 @@ nvim.on.cursorMoveInsert(async () => {
   // once we add a setImmediate to wait for render pass, we're back to the same
   // amount of time it took to simply query nvim with 'get_current_line'
   //
-  // if we had a nvim notification for mode change, we could send events after
+  // if we used the nvim notification for mode change, we could send events after
   // a render pass. this event would then contain both the current window grid
   // contents + current vim mode. we could then easily improve this action here
   // and perhaps others in the app
