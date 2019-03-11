@@ -1,7 +1,7 @@
 import { isOnline, exists, getDirs, configPath, remove as removePath } from '../support/utils'
 import * as downloader from '../support/download'
 import { call } from '../messaging/worker-client'
-import { NotifyKind } from '../protocols/veonim'
+import { MessageKind } from '../protocols/veonim'
 import nvim from '../neovim/api'
 import { join } from 'path'
 
@@ -51,14 +51,24 @@ const download = async (pluginText: string[]) => {
   const pluginsNotInstalled = plugins.filter(plug => !plug.installed)
   if (!pluginsNotInstalled.length) return removeExtraneous(plugins)
 
-  call.notify(`Found ${pluginsNotInstalled.length} Veonim plugins. Installing...`, NotifyKind.System)
+  call.showVSCodeMessage({
+    message: `Found ${pluginsNotInstalled.length} Veonim plugins. Installing...`,
+    kind: MessageKind.System,
+  })
 
   const installed = await Promise.all(plugins.map(p => downloader.download(downloader.url.github(p.user, p.repo), p.path)))
   const installedOk = installed.filter(m => m).length
   const installedFail = installed.filter(m => !m).length
 
-  if (installedOk) call.notify(`Installed ${installedOk} plugins!`, NotifyKind.Success)
-  if (installedFail) call.notify(`Failed to install ${installedFail} plugins. See devtools console for more info.`, NotifyKind.Error)
+  if (installedOk) call.showVSCodeMessage({
+    message: `Installed ${installedOk} plugins!`,
+    kind: MessageKind.Success,
+  })
+
+  if (installedFail) call.showVSCodeMessage({
+    message: `Failed to install ${installedFail} plugins. See devtools console for more info.`,
+    kind: MessageKind.Error,
+  })
 
   removeExtraneous(plugins)
   nvim.cmd(`packloadall!`)

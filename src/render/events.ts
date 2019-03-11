@@ -1,5 +1,6 @@
 import { CursorShape, setCursorColor, setCursorShape } from '../core/cursor'
 import { forceRegenerateFontAtlas } from '../render/font-texture-atlas'
+import { showMessageHistory } from '../components/message-history'
 import messages, { MessageKind } from '../components/messages'
 import { getColorById } from '../render/highlight-attributes'
 import { normalizeVimMode } from '../support/neovim-utils'
@@ -111,8 +112,15 @@ export const msg_show = ([ , [ msgKind, msgs, replaceLast ] ]: [any, [string, Me
     : messages.neovim.append(msginfo)
 }
 
-export const msg_history_show = (m: any) => {
-  console.warn('NYI: messages', m)
+type MessageHistory = [string, [number, string][]]
+export const msg_history_show = ([ , [ messages ] ]: [any, [MessageHistory[]]]) => {
+  const mappedMessages = messages.map(([ msgKind, msgs ]) => {
+    const messageKind = sillyString(msgKind)
+    const kind = messageNotifyKindMappings.get(messageKind)
+    const message = msgs.reduce((res, [ /*hlid*/, text ]) => res += sillyString(text), '')
+    return { message, kind: kind || MessageKind.Info }
+  })
+  showMessageHistory(mappedMessages)
 }
 
 export const msg_showmode = ([ , [ msgs ] ]: [any, [MessageEvent[]]]) => {

@@ -1,16 +1,15 @@
-import { NotifyKind, Notification } from '../protocols/veonim'
+import { MessageKind, Message } from '../protocols/veonim'
 import { RowNormal } from '../components/row-container'
 import { h, app, vimBlur, vimFocus } from '../ui/uikit'
 import Input from '../components/text-input'
 import { filter } from 'fuzzaldrin-plus'
 import * as Icon from 'hyperapp-feather'
-import api from '../core/instance-api'
 import { colors } from '../ui/styles'
 
 const state = {
   query: '',
-  messages: [] as Notification[],
-  cache: [] as Notification[],
+  messages: [] as Message[],
+  cache: [] as Message[],
   vis: false,
   ix: 0,
 }
@@ -22,36 +21,28 @@ const SCROLL_AMOUNT = 0.4
 
 const iconStyle = { fontSize: '1.2rem' }
 
-// TODO: maybe this can be shared with notifications.ts component
 const icons = new Map([
-  ['error', h(Icon.XCircle, { color: colors.error, style: iconStyle })],
-  ['warning', h(Icon.AlertTriangle, { color: colors.warning, style: iconStyle })],
-  ['success', h(Icon.CheckCircle, { color: colors.success, style: iconStyle })],
-  ['info', h(Icon.MessageCircle, { color: colors.info, style: iconStyle })],
-  ['hidden', h(Icon.MessageCircle, { color: colors.info, style: iconStyle })],
-  ['system', h(Icon.AlertCircle, { color: colors.system, style: iconStyle })],
+  [MessageKind.Error, h(Icon.XCircle, { color: colors.error, style: iconStyle })],
+  [MessageKind.Warning, h(Icon.AlertTriangle, { color: colors.warning, style: iconStyle })],
+  [MessageKind.Success, h(Icon.CheckCircle, { color: colors.success, style: iconStyle })],
+  [MessageKind.Info, h(Icon.MessageCircle, { color: colors.info, style: iconStyle })],
+  [MessageKind.Hidden, h(Icon.MessageCircle, { color: colors.info, style: iconStyle })],
+  [MessageKind.System, h(Icon.AlertCircle, { color: colors.system, style: iconStyle })],
 ])
 
-const getIcon = (kind: NotifyKind) => icons.get(kind) || icons.get('info')
+const getIcon = (kind: MessageKind) => icons.get(kind) || icons.get(MessageKind.Info)
 
 const actions = {
-  toggle: () => (s: S) => {
-    const next = !s.vis
-    next ? vimBlur() : vimFocus()
-    return { vis: next }
-  },
-
-  hide: () => (vimFocus(), { vis: false }),
-
-  addMessage: (message: Notification) => (s: S) => ({
-    messages: [message, ...s.messages].slice(0, 500),
-    cache: [message, ...s.messages].slice(0, 500),
-  }),
+  show: (messages: Message[]) => (vimBlur(), { messages, cache: messages, vis: true }),
+  hide: () => (vimFocus(), { vis: false, query: '', ix: 0 }),
 
   change: (query: string) => (s: S) => ({ query, ix: 0, messages: query
     ? filter(s.messages, query, { key: 'message' })
     : s.cache
   }),
+
+  next: () => (s: S) => ({ ix: s.ix + 1 >= s.messages.length ? 0 : s.ix + 1 }),
+  prev: () => (s: S) => ({ ix: s.ix - 1 < 0 ? s.messages.length - 1 : s.ix - 1 }),
 
   down: () => {
     const { height } = elref.getBoundingClientRect()
@@ -72,12 +63,14 @@ const view = ($: S, a: typeof actions) => h('div', {
     flexFlow: 'column',
     position: 'absolute',
     alignSelf: 'flex-end',
-    maxHeight: '70vh',
+    maxHeight: '85vh',
     width: '100%',
   }
 }, [
 
   ,Input({
+    next: a.next,
+    prev: a.prev,
     up: a.up,
     hide: a.hide,
     down: a.down,
@@ -94,22 +87,24 @@ const view = ($: S, a: typeof actions) => h('div', {
       if (e) elref = e
     },
     style: { overflowY: 'hidden' }
-    // TODO: show timestamp and dedup. only dedup nearby?
-  }, $.messages.map(({ id, kind, message }, pos) => h(RowNormal, {
-    key: id,
+  }, $.messages.map(({ kind, message }, pos) => h(RowNormal, {
     active: pos === $.ix
   }, [
     ,h('div', {
-      display: 'flex',
-      alignItems: 'center',
-      paddingRight: '10px',
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        paddingRight: '10px',
+      }
     }, [
       ,getIcon(kind)
     ])
 
-    ,h('span', {
+    ,h('div', {
       style: {
-        color: (icons.get(kind) || icons.get('info'))!.color
+        display: 'flex',
+        alignItems: 'center',
+        color: (icons.get(kind) || icons.get(MessageKind.Info))!.color,
       }
     }, message)
   ])))
@@ -118,9 +113,4 @@ const view = ($: S, a: typeof actions) => h('div', {
 
 const ui = app({ name: 'message-history', state, actions, view })
 
-export const addMessage = (message: Notification) => ui.addMessage(message)
-
-// TODO: this won't be toggled by the user. it will be called via :messages
-// which will come thru msgpack rpc api as 'msg_history' i think
-// look at render/events.ts
-api.onAction('messages', ui.toggle)
+export const showMessageHistory = (messages: Message[]) => ui.show(messages)

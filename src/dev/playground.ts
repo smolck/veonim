@@ -1,5 +1,18 @@
 const vscode = require('vscode')
+import nvim from '../neovim/api'
 
+const playMessageHistory = () => {
+  nvim.cmd('echomsg "hello there"')
+  nvim.cmd('echomsg "general kenobi!"')
+  nvim.cmd('echomsg "we will watch your career with great interest"')
+  nvim.cmd('echoerr "execute order 66"')
+  nvim.cmd('echoerr "just like the simulations"')
+  setTimeout(() => {
+    nvim.cmd('messages')
+  }, 500)
+}
+
+// @ts-ignore
 const playProgressMessage = () => {
   const m1 = vscode.window.showWarningMessage('u gonna receiv a paddlin fo dat son!', 'Oh no')
   // @ts-ignore
@@ -32,5 +45,6 @@ const playProgressMessage = () => {
 }
 
 export default () => {
-  playProgressMessage()
+  // playProgressMessage()
+  playMessageHistory()
 }

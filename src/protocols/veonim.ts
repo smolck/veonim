@@ -32,23 +32,3 @@ export interface MessageReturn {
 export interface FlexibleExpire {
   refresh(): void
 }
-
-// TODO: delet dis
-export enum NotifyKind {
-  Error = 'error',
-  Warning = 'warning',
-  Info = 'info',
-  Success = 'success',
-  System = 'system',
-  Hidden = 'hidden',
-}
-
-// TODO: delet dis
-export interface Notification {
-  id: string
-  kind: NotifyKind
-  message: string
-  count: number
-  expire?: FlexibleExpire
-  time: number
-}
