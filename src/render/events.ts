@@ -91,15 +91,25 @@ const showStatusMessage = (message: string) => {
   dispatch.pub('message.status', message)
 }
 
-let state_MessagePromptVisible = false
+const state = {
+  messagePromptVisible: false,
+  lastMessageTime: Date.now(),
+}
+
 type MessageEvent = [number, string]
 export const msg_show = ([ , [ msgKind, msgs, replaceLast ] ]: [any, [string, MessageEvent[], boolean]], cursorVisible: boolean) => {
+  const lastMessageTime = state.lastMessageTime
+  state.lastMessageTime = Date.now()
   const messageKind = sillyString(msgKind)
   const kind = messageNotifyKindMappings.get(messageKind)
-  state_MessagePromptVisible = !cursorVisible
+  state.messagePromptVisible = !cursorVisible
   const message = msgs.reduce((res, [ /*hlid*/, text ]) => res += sillyString(text), '')
 
-  if (!kind && replaceLast) return showStatusMessage(message)
+  if (!kind) {
+    const timeDiff = Date.now() - lastMessageTime
+    const probablyNeedsToBeAppended = !replaceLast && timeDiff < 100
+    if (!probablyNeedsToBeAppended) return showStatusMessage(message)
+  }
 
   const msginfo = {
     message,
@@ -145,7 +155,7 @@ export const msg_ruler = (_: any) => {}
 
 // ideally nvim would tell us when to clear message prompts like spell window and inputlist()
 export const messageClearPromptsMaybeHack = (cursorVisible: boolean) => {
-  if (!state_MessagePromptVisible) return
+  if (!state.messagePromptVisible) return
   if (cursorVisible) messages.neovim.clear(m => m.stealsFocus)
 }
 

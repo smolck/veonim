@@ -185,6 +185,16 @@ const window: typeof vsc.window = {
     console.warn('NYI: window.withScmProgress')
   },
   withProgress: async (options, task) => {
+    const token = makeCancelToken(uuid())
+
+    if (options.location !== 15) {
+      console.warn('NYI: withProgress - not supported non ProgressLocation.Notification', options)
+      const progress = {
+        report: (_: any) => {},
+      }
+      return task(progress, token.token)
+    }
+
     // TODO: support ProgressLocation.Window (status bar)
     // TODO: support ProgressLocation.SourceControl
     const msg = await showProgressMessage({
@@ -193,7 +203,6 @@ const window: typeof vsc.window = {
       progressCancellable: options.cancellable,
     })
 
-    const token = makeCancelToken(uuid())
     msg.promise.then(token.cancel)
 
     const progress = {

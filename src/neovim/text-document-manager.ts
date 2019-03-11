@@ -79,6 +79,7 @@ const api = (nvim: NeovimAPI, onlyFiletypeBuffers?: string[]) => {
   const subscribeToBufferChanges = (buffer: Buffer, name: string) => {
     if (!name || openDocuments.has(name)) return
     openDocuments.add(name)
+    let lastVersion = 0
 
     const notifyOpen = ({ filetype, lineData, changedTick }: BufferChangeEvent) => {
       sentDidOpen.add(name)
@@ -113,6 +114,12 @@ const api = (nvim: NeovimAPI, onlyFiletypeBuffers?: string[]) => {
     }
 
     buffer.attach({ sendInitialBuffer: true }, changeEvent => {
+      if (changeEvent.changedTick <= lastVersion) {
+        return console.error(`bufevent changed tick outta order! - prev ${lastVersion} - this ${changeEvent.changedTick}`)
+      }
+
+      lastVersion = changeEvent.changedTick
+
       // TODO: handle changeEvent.more (partial change event)
       // what do? buffer in memory? can we send partial change events to
       // language servers and extensions?
