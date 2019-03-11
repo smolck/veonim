@@ -3,6 +3,7 @@ import transformCompletions from '../ai/completion-transforms'
 import { workerData } from '../messaging/worker-client'
 import toVSCodeLanguage from '../vscode/vsc-languages'
 import { CompletionItemKind } from '../vscode/types'
+import { CompletionSource } from '../ai/protocol'
 import { vscode } from '../core/extensions-api'
 import { filter } from 'fuzzaldrin-plus'
 import Worker from '../messaging/worker'
@@ -23,9 +24,13 @@ export enum CompletionKind {
 }
 
 export interface CompletionOption {
+  /** Display text for the UI */
   text: string,
+  /** Text that will be inserted in the buffer */
   insertText: string,
+  /** An enum used to display a fancy icon and color in the completion menu UI */
   kind: CompletionItemKind,
+  /** The entire CompletionItem object. Is used by the UI to get/show documentation. If this does not exist the program will query a completion item provider from a relevant extensions */
   raw?: CompletionItem,
 }
 
@@ -152,7 +157,7 @@ const showCompletionsRaw = (column: number, query: string, startIndex: number, l
     nvim.g.veonim_complete_pos = startIndex
 
     calcMenuPosition(startIndex, column).then(({ row, col }) => {
-      ui.completions.show({ row, col, options })
+      ui.completions.show({ row, col, options, source: CompletionSource.VSCode })
     })
   }
 

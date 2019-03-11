@@ -33,10 +33,22 @@ interface ModeInfo {
 type CmdContent = [any, string]
 
 interface PMenuItem {
+  /** The text that will be inserted */
   word: string,
+  /** Single letter indicating the type of completion */
   kind: string,
+  /** Extra text for the popup menu, displayed after "word" or "abbr" */
   menu: string,
+  /** More information about the item, can be displayed in a preview window */
   info: string,
+}
+
+export interface PopupMenu {
+  row: number
+  col: number
+  grid: number
+  index: number
+  items: PMenuItem[]
 }
 
 interface CommandLineCache {
@@ -212,8 +224,13 @@ export const set_title = ([ , [ title ] ]: [any, [string]]) => dispatch.pub('vim
 
 export const popupmenu_hide = () => dispatch.pub('pmenu.hide')
 export const popupmenu_select = ([ , [ ix ] ]: [any, [number]]) => dispatch.pub('pmenu.select', ix)
-export const popupmenu_show = ([ , [ items, ix, row, col ] ]: [any, [PMenuItem[], number, number, number]]) => {
-  dispatch.pub('pmenu.show', { items, ix, row, col })
+export const popupmenu_show = ([ , [ itemz, index, row, col, grid ] ]: [any, [string[], number, number, number, number]]) => {
+  const items = itemz.map(m => {
+    const [ word, kind, menu, info ] = m
+    return { word, kind, menu, info }
+  })
+  const data: PopupMenu = { row, col, grid, index, items }
+  dispatch.pub('pmenu.show', data)
 }
 
 export const wildmenu_show = ([ , [ items ] ]: any) => dispatch.pub('wildmenu.show', items)

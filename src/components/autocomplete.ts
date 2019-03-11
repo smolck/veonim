@@ -1,12 +1,13 @@
 import { RowNormal, RowComplete } from '../components/row-container'
+import { CompletionShow, CompletionSource } from '../ai/protocol'
 import { resetMarkdownHTMLStyle } from '../ui/styles'
 import { CompletionItemKind } from '../vscode/types'
 import { CompletionOption } from '../ai/completions'
 import { markdownToHTML } from '../support/markdown'
 import * as windows from '../windows/window-manager'
 import * as dispatch from '../messaging/dispatch'
-import { CompletionShow } from '../ai/protocol'
 import * as workspace from '../core/workspace'
+import { PopupMenu } from '../render/events'
 import { paddingVH, cvar } from '../ui/css'
 import Overlay from '../components/overlay'
 import * as Icon from 'hyperapp-feather'
@@ -92,16 +93,21 @@ const actions = {
 
   showDocs: (documentation: any) => ({ documentation }),
 
-  show: ({ anchorAbove, visibleOptions, options, x, y, ix = -1 }: any) => ({
-    visibleOptions,
-    anchorAbove,
-    options,
-    ix,
-    x,
-    y,
-    visible: true,
-    documentation: undefined
-  }),
+  show: ({ anchorAbove, visibleOptions, options, x, y, ix = -1, source }: any) => (s: S) => {
+    // VSCode/Veonim completions take priority over nvim completions
+    if (source === CompletionSource.Neovim && s.visible) return
+
+    return {
+      visibleOptions,
+      anchorAbove,
+      options,
+      ix,
+      x,
+      y,
+      visible: true,
+      documentation: undefined
+    }
+  },
 
   select: (ix: number) => (s: S, a: typeof actions) => {
     const completionItem = (s.options[ix] || {}).raw
@@ -177,11 +183,12 @@ const ui = app<S, typeof actions>({ name: 'autocomplete', state, actions, view }
 
 export const hide = () => ui.hide()
 export const select = (index: number) => ui.select(index)
-export const show = ({ row, col, options }: CompletionShow) => {
+export const show = ({ row, col, options, source }: CompletionShow) => {
   const visibleOptions = Math.min(MAX_VISIBLE_OPTIONS, options.length)
   const anchorAbove = cursor.row + visibleOptions > workspace.size.rows 
 
   ui.show({
+    source,
     anchorAbove,
     visibleOptions,
     options: options.slice(0, visibleOptions),
@@ -194,3 +201,28 @@ api.ai.completions.onHide(hide)
 
 dispatch.sub('pmenu.select', ix => select(ix))
 dispatch.sub('pmenu.hide', hide)
+dispatch.sub('pmenu.show', ({ items, index, row, col }: PopupMenu) => {
+  const options = items.map(m => ({
+    text: `${m.word} ${m.menu}`,
+    insertText: m.word,
+    kind: nvimToVSCodeCompletionKind(m.kind),
+    raw: {
+      documentation: m.info,
+    }
+  } as CompletionOption))
+
+  show({ row, col, options, source: CompletionSource.Neovim })
+  select(index)
+})
+
+const completionKindMappings = new Map([
+  ['v', CompletionItemKind.Variable],
+  ['f', CompletionItemKind.Function],
+  ['m', CompletionItemKind.Property],
+  ['t', CompletionItemKind.TypeParameter],
+  ['d', CompletionItemKind.Interface],
+])
+
+const nvimToVSCodeCompletionKind = (kind: string): CompletionItemKind => {
+  return completionKindMappings.get(kind) || CompletionItemKind.Text
+}

@@ -10,7 +10,10 @@ export type WorkspaceSymbol = NonNullable<UnPromisify<ReturnType<Providers['prov
 export type Reference = NonNullable<UnPromisify<ReturnType<Providers['provideReferences']>['promise']>>[0]
 export type ReferenceResult = [string, LocationResult[]]
 
+export enum CompletionSource { Neovim, VSCode }
+
 export interface CompletionShow {
+  source: CompletionSource
   row: number
   col: number
   options: CompletionOption[]
