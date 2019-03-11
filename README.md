@@ -111,12 +111,12 @@ Discord chat: https://discord.gg/sawWpMr
 ### nyan cat
 ![](https://veonim.github.io/veonim/nyan.png)
 
-## similar projects
+## other cool projects you should check out
 
-the great neovim team have allowed the community to build some kick-ass projects. some of the more interesting ones that i'm excited about are:
-
-- [oni](https://github.com/onivim/oni)
+- [oni](https://github.com/onivim/oni) / [oni2](https://github.com/onivim/oni2)
 - [gonvim](https://github.com/akiyosi/gonvim)
+- [gnvim](https://github.com/vhakulinen/gnvim)
+- [coc.nvim](https://github.com/neoclide/coc.nvim)
 
 ## development
 
