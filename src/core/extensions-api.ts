@@ -32,7 +32,6 @@ const { on, call, request, onContextHandler } = Worker('extension-host', {
 
 onContextHandler(nvimSyncApiHandler)
 
-on.notify(workerHost.call.notify)
 on.clipboardRead(workerHost.request.clipboardRead)
 on.clipboardWrite(workerHost.call.clipboardWrite)
 on.showVSCodeMessage(workerHost.request.showVSCodeMessage)

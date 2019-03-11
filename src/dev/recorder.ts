@@ -1,6 +1,5 @@
 import * as storage from '../support/local-storage'
-import { NotifyKind } from '../protocols/veonim'
-import { notify } from '../ui/notifications'
+import messages, { MessageKind } from '../components/messages'
 import { is } from '../support/utils'
 import { makel } from '../ui/vanilla'
 const finder = require('@medv/finder').default
@@ -49,7 +48,10 @@ export const record = () => {
 
 export const replay = () => {
   const events = storage.getItem<RecordingEvent[]>('veonim-dev-recording')
-  if (!events || !events.length) return notify(`recording does not exist`, NotifyKind.Error)
+  if (!events || !events.length) return messages.vscode.show({
+    message: 'recording does not exist',
+    kind: MessageKind.Error,
+  })
   recordPlayer(events)
 }
 
