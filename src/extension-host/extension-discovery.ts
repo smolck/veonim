@@ -1,5 +1,5 @@
 import { ensureDir, NewlineSplitter, getDirs, readFile, fromJSON, remove as removePath, exists, copy } from '../support/utils'
-import downloadExtensionsIfNotExist, { doneDownloadingForNow } from '../extension-host/download-extensions'
+import downloadExtensionsIfNotExist from '../extension-host/download-extensions'
 import { ExtensionPackageConfig } from '../extension-host/extension'
 import { EXT_PATH, LOG_PATH } from '../support/config-paths'
 import { loadExtensions } from '../vscode/extensions'
@@ -91,7 +91,6 @@ const installMaybe = async (userDefinedExtensions?: string[]) => {
   }
 
   const resolvedExtensions = await recursiveResolveExtensions()
-  doneDownloadingForNow()
   loadExtensions(resolvedExtensions)
   await removeExtraneous(resolvedExtensions.map(m => m.id))
 }

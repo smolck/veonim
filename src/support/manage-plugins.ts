@@ -72,7 +72,6 @@ const download = async (pluginText: string[]) => {
 
   removeExtraneous(plugins)
   nvim.cmd(`packloadall!`)
-  downloader.dispose()
 }
 
 export default () => nvim.getVarCurrentAndFuture('_veonim_plugins', download)
