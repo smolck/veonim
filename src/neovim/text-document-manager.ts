@@ -114,8 +114,14 @@ const api = (nvim: NeovimAPI, onlyFiletypeBuffers?: string[]) => {
     }
 
     buffer.attach({ sendInitialBuffer: true }, changeEvent => {
+      // display only events. from the docs:
+      // When {changedtick} is |v:null| this means the screen lines (display) changed
+      // but not the buffer contents. {linedata} contains the changed screen lines.
+      // This happens when 'inccommand' shows a buffer preview.
+      if (changeEvent.changedTick == null) return
+
       if (changeEvent.changedTick <= lastVersion) {
-        return console.error(`bufevent changed tick outta order! - prev ${lastVersion} - this ${changeEvent.changedTick}`)
+        return console.error(`bufevent changedtick old version! - prev: ${lastVersion} - next: ${changeEvent.changedTick}`)
       }
 
       lastVersion = changeEvent.changedTick
