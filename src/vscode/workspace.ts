@@ -134,9 +134,9 @@ const workspace: typeof vsc.workspace = {
     console.warn('NYI: workspace.registerTextDocumentContentProvider')
     return ({ dispose: () => {} })
   },
-  getConfiguration: (section, resource) => {
+  getConfiguration: (section/*, resource*/) => {
     // TODO: i'm not sure what the resource is used for?
-    if (resource) console.warn('NYI: workspace.getConfiguration - resource param not used:', section, resource)
+    // if (resource) console.warn('NYI: workspace.getConfiguration - resource param not used:', section, resource)
     return WorkspaceConfiguration(section)
   },
   registerTaskProvider: (...a: any[]) => {
