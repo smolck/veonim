@@ -120,6 +120,9 @@ const getSemanticCompletions = (line: number, column: number) => EarlyPromise(as
   // the first request for the current start index. we should find a way to cancel
   // more intelligently based on available/relevant completion cache results
   // nvim.untilEvent.cursorMoveInsert.then(completionBoss.cancelCurrentPromise)
+  //
+  // // TODO: cancel when the startIndex is no longer the same as current
+  nvim.untilEvent.insertLeave.then(completionBoss.cancelCurrentPromise)
   const completions = await completionBoss.schedule(vscode.language.provideCompletionItems({ triggerKind: 0 }), { timeout: 2e3 })
   if (!completions) return done([])
 
