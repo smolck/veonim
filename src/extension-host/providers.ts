@@ -233,7 +233,7 @@ const api = {
 
     return {
       path: ((location as vsc.Location).uri || (location as vsc.LocationLink).targetUri).path,
-      range: (location as vsc.Location).range || (location as vsc.LocationLink).targetRange,
+      range: threadSafeObject((location as vsc.Location).range || (location as vsc.LocationLink).targetRange),
     }
   })()}),
   provideImplementation: (tokenId?: string) => ({ cancel, promise: (async () => {
@@ -248,7 +248,7 @@ const api = {
 
     return {
       path: ((location as vsc.Location).uri || (location as vsc.LocationLink).targetUri).path,
-      range: (location as vsc.Location).range || (location as vsc.LocationLink).targetRange,
+      range: threadSafeObject((location as vsc.Location).range || (location as vsc.LocationLink).targetRange),
     }
   })()}),
   provideTypeDefinition: (tokenId?: string) => ({ cancel, promise: (async () => {
@@ -263,7 +263,7 @@ const api = {
 
     return {
       path: ((location as vsc.Location).uri || (location as vsc.LocationLink).targetUri).path,
-      range: (location as vsc.Location).range || (location as vsc.LocationLink).targetRange,
+      range: threadSafeObject((location as vsc.Location).range || (location as vsc.LocationLink).targetRange),
     }
   })()}),
   provideDeclaration: (tokenId?: string) => ({ cancel, promise: (async () => {
@@ -278,7 +278,7 @@ const api = {
 
     return {
       path: ((location as vsc.Location).uri || (location as vsc.LocationLink).targetUri).path,
-      range: (location as vsc.Location).range || (location as vsc.LocationLink).targetRange,
+      range: threadSafeObject((location as vsc.Location).range || (location as vsc.LocationLink).targetRange),
     }
   })()}),
   provideHover: (tokenId?: string) => ({ cancel, promise: (async () => {
@@ -324,7 +324,8 @@ const api = {
       }
     })
 
-    return dedupOn(symbols, (a, b) => a.name === b.name && rangesEqual(a.range, b.range))
+    const res = dedupOn(symbols, (a, b) => a.name === b.name && rangesEqual(a.range, b.range))
+    return threadSafeObject(res)
   })()}),
   provideWorkspaceSymbols: (query: string, tokenId?: string) => ({ cancel, promise: (async () => {
     const providerSet: MapSetter<string, vsc.WorkspaceSymbolProvider> = Reflect.get(providers.workspaceSymbol, $$GET_PROVIDERS)
@@ -343,7 +344,8 @@ const api = {
       range: m.location.range,
     }))
 
-    return dedupOn(symbols, (a, b) => a.name === b.name && rangesEqual(a.range, b.range))
+    const res = dedupOn(symbols, (a, b) => a.name === b.name && rangesEqual(a.range, b.range))
+    return threadSafeObject(res)
   })()}),
   resolveWorkspaceSymbol: (symbol: vsc.SymbolInformation, tokenId?: string) => ({ cancel, promise: (async () => {
     const providerSet: MapSetter<string, vsc.WorkspaceSymbolProvider> = Reflect.get(providers.workspaceSymbol, $$GET_PROVIDERS)
@@ -367,7 +369,7 @@ const api = {
 
     const references = results.map(m => ({
       path: m.uri.path,
-      range: m.range,
+      range: threadSafeObject(m.range),
     }))
     return dedupOn(references, (a, b) => rangesEqual(a.range, b.range))
   })()}),
@@ -501,5 +503,5 @@ on.provider_cancel((tokenId: string) => api.cancelRequest(tokenId))
 on.provider(async (method: string, args: any[], tokenId?: string) => {
   const func = Reflect.get(api, method)
   if (!func) return console.error('no language feature available for:', method)
-  return func(...args, tokenId).promise.then(threadSafeObject)
+  return func(...args, tokenId).promise
 })
