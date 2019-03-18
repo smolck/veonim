@@ -1,6 +1,6 @@
 # User Guide
 
-Welcome to Veonim. The show will be starting shortly. Please remember to turn off or silence your mobile devices. Please sit back, relax, and enjoy the show. Thank you.
+This user guide is guaranteed to be accurate for the latest release. For previous releases, please checkout the `docs/readme.md` guide under the relevant release tag.
 
 ## quick start copypasta config
 
@@ -12,20 +12,15 @@ if exists('veonim')
 " built-in plugin manager
 Plug 'sheerun/vim-polyglot'
 Plug 'tpope/vim-surround'
-Plug 'tpope/vim-commentary'
 
 " extensions for web dev
-VeonimExt 'veonim/ext-css'
-VeonimExt 'veonim/ext-json'
-VeonimExt 'veonim/ext-html'
-VeonimExt 'vscode:extension/sourcegraph.javascript-typescript'
+let g:vscode_extensions = [
+  \'vscode.typescript-language-features',
+  \'vscode.css-language-features',
+  \'vscode.html-language-features',
+\]
 
-" workspace management
-let g:vn_project_root = '~/proj'
-nno <silent> <c-t>p :call Veonim('vim-create-dir', g:vn_project_root)<cr>
-nno <silent> ,r :call Veonim('change-dir', g:vn_project_root)<cr>
-
-" multiplexed vim instance management
+" multiple nvim instances
 nno <silent> <c-t>c :Veonim vim-create<cr>
 nno <silent> <c-g> :Veonim vim-switch<cr>
 nno <silent> <c-t>, :Veonim vim-rename<cr>
@@ -35,6 +30,7 @@ nno <silent> ,f :Veonim files<cr>
 nno <silent> ,e :Veonim explorer<cr>
 nno <silent> ,b :Veonim buffers<cr>
 nno <silent> ,d :Veonim change-dir<cr>
+"or with a starting dir: nno <silent> ,d :Veonim change-dir ~/proj<cr>
 
 " searching text
 nno <silent> <space>fw :Veonim grep-word<cr>
@@ -43,81 +39,98 @@ nno <silent> <space>fa :Veonim grep<cr>
 nno <silent> <space>ff :Veonim grep-resume<cr>
 nno <silent> <space>fb :Veonim buffer-search<cr>
 
-" color picker
-nno <silent> sc :Veonim pick-color<cr>
-
-" language server functions
+" language features
 nno <silent> sr :Veonim rename<cr>
 nno <silent> sd :Veonim definition<cr>
-nno <silent> st :Veonim type-definition<cr>
 nno <silent> si :Veonim implementation<cr>
+nno <silent> st :Veonim type-definition<cr>
 nno <silent> sf :Veonim references<cr>
 nno <silent> sh :Veonim hover<cr>
 nno <silent> sl :Veonim symbols<cr>
 nno <silent> so :Veonim workspace-symbols<cr>
 nno <silent> sq :Veonim code-action<cr>
-nno <silent> sp :Veonim show-problem<cr>
 nno <silent> sk :Veonim highlight<cr>
 nno <silent> sK :Veonim highlight-clear<cr>
-nno <silent> <c-n> :Veonim next-problem<cr>
-nno <silent> <c-p> :Veonim prev-problem<cr>
 nno <silent> ,n :Veonim next-usage<cr>
 nno <silent> ,p :Veonim prev-usage<cr>
-nno <silent> <space>pt :Veonim problems-toggle<cr>
-nno <silent> <space>pf :Veonim problems-focus<cr>
-nno <silent> <d-o> :Veonim buffer-prev<cr>
-nno <silent> <d-i> :Veonim buffer-next<cr>
+nno <silent> sp :Veonim show-problem<cr>
+nno <silent> <c-n> :Veonim next-problem<cr>
+nno <silent> <c-p> :Veonim prev-problem<cr>
 
 endif
 ```
 
-## design philosophy
+## look & feel
+By default Veonim is bundled with its own custom vim colorscheme and the Roboto Mono font.
 
-The design goal of Veonim is to not replace Vim but extend it. Veonim also tries to leverage existing technologies. Some key points:
-- do not replace core vim functionality unless we can greatly improve on it (e.g. statusline)
-- Veonim is keyboard driven only. there is no mouse support, but that can change
-- configuration is done the vim way: this means all user config happens in the `init.vim` with vimscript/lua or neovim remote plugins (any language)
-- Veonim provides a few set of primitives (commands/functions) and it is up to the user to construct their ideal workflow
-- extending Veonim can either be done "the vim way" with plugins and remote-plugins, or with the vscode extension api. the primary reason for the vscode extension api is to leverage the existing catalog of language server and debugger extensions
-- language support is provided via language-servers (https://langserver.org) loaded via vscode extensions
+### colors
+Any vim colorscheme is supported. Of course since this is a GUI program, true color colorschemes are supported. See `:h colorscheme` for more info.
 
-## language support
+Right now Veonim derives its colors from the colorscheme. Perhaps in the future we will allow the ability for users to customize specific parts of the UI with additional highlight groups.
 
-Language support is provided via language-servers (https://langserver.org). Technically Veonim is compatible with any programming language that has a language server, however the language server will need to be loaded from a vscode extension. Not all language servers have a vscode extension, but that can change.
+### fonts
+Roboto Mono is bundled and included with Veonim. This allows for a consistent out-of-the-box experience across platforms. You can of course use your own font.
 
-The following languages have been "verified" to work with Veonim. More languages are in the process of being verified.
+To use a custom font and line height use `guifont` and `linespace`. See `:h guifont` and `:h linespace`
 
-- typescript - `vscode:extension/sourcegraph.javascript-typescript`
-- javascript - `vscode:extension/sourcegraph.javascript-typescript`
-- html - `veonim/ext-html`
-- json - `veonim/ext-json`
-- css - `veonim/ext-css`
-- scss - `veonim/ext-css`
-- less - `veonim/ext-css`
-
-## extensions
-
-Extensions are installed by adding `VeonimExt 'some-extension-url-here'` to `init.vim`
-
-The extension url can either be a Github `github-user-or-org/repo-name` or a VSCode extension URI.
-
-Example of a VSCode extension hosted on Github:
-```
-VeonimExt 'veonim/ext-css'
+For example:
+```vim
+set guifont=SF\ Mono:h16
+set linespace=10
 ```
 
-Example of a VSCode extension:
+### cursor
+You can change the shape, size, and color of the cursor for each Vim mode. See `:h guicursor` for more info.
+
+Blinking cursor is currently not supported.
+
+This is the default cursor configuration for Veonim:
+
+```vim
+set guicursor=n:block-CursorNormal,i:hor10-CursorInsert,v:block-CursorVisual
+hi! CursorNormal guibg=#f3a082
+hi! CursorInsert guibg=#f3a082
+hi! CursorVisual guibg=#6d33ff
 ```
-VeonimExt 'vscode:extension/sourcegraph.javascript-typescript'
+
+## vscode extensions
+
+VSCode extensions are installed by adding them to the `g:vscode_extensions` list. Example:
+```vim
+let g:vscode_extensions = [
+  \'vscode.typescript-language-features',
+  \'vscode.json-language-features',
+  \'vscode.css-language-features',
+  \'vscode.markdown-language-features',
+  \'vscode.html-language-features',
+  \'vscode.php-language-features',
+  \'rust-lang.rust',
+  \'ms-vscode.go',
+  \'ms-python.python',
+\]
 ```
 
-VSCode extensions can be found on the [Visual Studio Code Marketplace](https://marketplace.visualstudio.com/vscode). The extension URI can be found by grabbing the link from the "Install" button of an extension page in the marketplace.
+VSCode ships with a number of built-in extensions. We have a daily CI job that extracts these out to the Veonim org. You can specify the following built-in VSCode extensions to be downloaded and installed:
 
-The vscode extension API is not yet 100% compatible with Veonim. It may never be 100% as some features do not make sense in Veonim. Compatibility will be improved as needed. Right now the focus is on supporting language server extensions and debugger extensions.
+- TypeScript/JavaScript - `vscode.typescript-language-features`
+- CSS - `vscode.css-language-features`
+- HTML - `vscode.html-language-features`
+- JSON - `vscode.json-language-features`
+- Markdown - `vscode.markdown-language-features`
+- PHP - `vscode.php-language-features`
 
-## keep init.vim compatible with neovim
+To download and install other VSCode extensions you can search for extensions on the [Visual Studio Code Marketplace](https://marketplace.visualstudio.com/vscode). The extension id to use for `g:vscode_extensions` is the `Unique-Identifier` found under the `More Info` section on the extension page.
 
-It is recommended to wrap all Veonim configuration in `exists('veonim')` block(s) so that your 'init.vim' remains compatible when loaded in neovim (or vim).
+![](https://veonim.github.io/veonim/extuid.png)
+
+For example:
+- Rust - `rust-lang.rust`
+- Go - `ms-vscode.go`
+- Python - `ms-python.python`
+
+## keep vimrc compatible with neovim/vim
+
+It is recommended to wrap all Veonim configuration in `exists('veonim')` block(s) so that your vimrc remains compatible when loaded in neovim/vim or other GUIs
 
 ```vim
 if exists('veonim')
@@ -125,33 +138,34 @@ if exists('veonim')
 endif
 ```
 
-## vim plugin manager
+## nvim plugin manager
 
-Veonim will download and install any vim plugins defined with `Plug 'github-user-or-org/repo-name'` in `init.vim`. At this time plugins are downloaded from Github - this may change to allow additional sources. The built-in vim plugin manager is used for loading plugins - see `:h packages`
+Veonim will download and install any nvim plugins defined with `Plug 'github-user-or-org/repo-name'` in your vimrc. At this time plugins are downloaded from Github - this may change to allow additional sources. The built-in nvim plugin manager is used for loading plugins - see `:h packages`
 
 Example:
 ```
+Plug 'sheerun/vim-polyglot'
 Plug 'tpope/vim-surround'
 Plug 'tpope/vim-commentary'
 ```
 
-## recommended vim plugins
-I'm not in the business of telling you how to live your life, but in the spirit of building a "lightweight modal IDE" I would strongly recommend the following vim plugins:
-
-[vim-polygot](https://github.com/sheerun/vim-polyglot) is a mega bundle of all vim language plugins supporting syntax highlighting, indentation, filetypes, etc. Each language plugin is of course lazy loaded only as needed.
+## recommended nvim plugins
+Syntax highlighting and formatting is done by Neovim, thus you will need additional syntax files for languages not already shipped with Neovim. I would recommend [vim-polygot](https://github.com/sheerun/vim-polyglot) which is a mega bundle of all vim language plugins supporting syntax highlighting, indentation, filetypes, etc. Each language plugin is of course lazy loaded only as needed.
 
 ```vim
 Plug 'sheerun/vim-polyglot'
 ```
 
 ## recommended project workspace workflow
-It is recommended to set the workspace / current working directory (`:cd` / `:pwd`) to the project you are currently working on. This workflow is similar to opening a folder as the workspace in VSCode.
+VSCode extensions work on the concept of folders/workspaces. Thus it is a good idea to limit your current working directory to the current project you are working on. Otherwise extensions could be processing more files than needed.
 
-Some features of Veonim will work best with this workflow. For example `:Veonim grep` or `:Veonim files` will look at `:pwd` as a starting point, otherwise default to the user home root.
+See `:h :cd` and `:h :pwd`
 
-You can use Veonim workspace features like `:Veonim change-dir` to easily assign workspaces to the current vim instance. With multiplexed vim instances it is trivial to maintain multiple project workspaces open: one project workspace per vim instance.
+Also checkout `:Veonim change-dir` and `:Veonim explorer`
 
-## features
+To open up multiple projects you can run multiple Neovim instances. See `:Veonim vim-create`, `:Veonim vim-switch`, and `:Veonim vim-rename`
+
+## veonim features
 Veonim features are accessible under the `:Veonim` command or `Veonim()` function call. For example, this is how you would use the file fuzzy find with a keybinding:
 ```
 nnoremap <silent> ,f :Veonim files<cr>
@@ -173,12 +187,12 @@ You can always explore/run all available Veonim features in the command line wit
 - `vim-create-dir` (dir?) - like `change-dir` but create a new multiplexed instance of vim with a directory selected from the fuzzy menu
   - optionally accepts a directory path to start from. e.g. `:Veonim vim-create-dir ~/proj`
 
-### multiplexed vim sessions
-Veonim supports the ability to run multiple instances of neovim at a time. In my development workflow I prefer to maintain one project per vim instance. To switch between projects I simply switch to the respective vim instance that has that project loaded. This way I maintain all tabs, windows, buffers, settings, colorschemes, etc. with its respective project.
+### multiple concurrent neovim instances
+Veonim supports the ability to run multiple instances of Neovim at a time. In my development workflow I prefer to maintain one project per Neovim instance. To switch between projects I simply switch to the respective Neovim instance that has that project loaded. This way I maintain all tabs, windows, buffers, settings, colorschemes, etc. with its respective project.
 
 When switching between instances the "background" instances are still running, but they are not wired up the user interface.
 
-This feature is like going to a multiplex movie theater, where there are multiple cinema theaters under a single roof - but you can only be in one theater at a time. It is the same idea as tmux sessions, i3 workspaces, mac os spaces, etc.
+This feature is analogous to tmux sessions, i3 workspaces, MacOS spaces, etc.
 
 - `vim-create` - create a new vim instance with the given name
 - `vim-rename` - rename the current vim instance
@@ -197,30 +211,31 @@ Realtime fuzzy search in the current project workspace using Ripgrep
 
 ### buffer features
 - `buffer-search` - fuzzy search lines in the current buffer
-- `viewport-search` - fuzzy search lines in the current buffer viewport
 - `buffer-prev` - jump to previous visited buffer. this is similar to `<C-O>` except it does not include any intermediary jumps
 - `buffer-next` - jump to next visited buffer. this is similar to `<C-I>` except it does not include any intermediary jumps
 
 ### language features
-The following features require a language server extension to be installed and activated for the current filetype.
+The following features require a VSCode language extension to be installed and activated for the current filetype. Activation is done automatically if you have a matching filetype for the current buffer. For example, when entering a `.ts` file, if you have a vim plugin that sets that filetype (or you set it manually) to `typescript` then the VSCode Typescript extension will be activated.
 
-Autocomplete is triggered automatically. Choosing completions can be done with `Tab` and `Shift-Tab`. Matching is done with a fuzzy-search engine. Keybinds and auto-trigger will be changed soon to be opt-in and configurable.
+Autocomplete is triggered automatically if you have **not** overridden `completefunc`. Veonim will set `completefunc` on startup, but you can of course opt-out of autocomplete and use your own completion engines by setting `completefunc` in your vimrc.
+
+Choosing completions can be done with `Tab` and `Shift-Tab`. Matching is done with a fuzzy-search engine. Keybinds and auto-trigger will be changed soon to be opt-in and configurable.
 
 Autocompletion has two data sources for completion candidates:
 - current buffer keywords (available in any buffer)
-- intellisense provided by language servers (available only if language support configured)
+- intellisense provided by VSCode extensions
 
-Signature help (provides an overlay tooltip for function parameters and documentation) is triggered automatically (if supported)
+Signature help (provides an overlay tooltip for function parameters and documentation) is triggered automatically (if supported and `completefunc` has not been overridden)
 
 - `definition` - jump to definition
-- `type-definition` - jump to type definition
 - `implementation` - jump to implementation
+- `type-definition` - jump to type definition
 - `references` - find references
   - opens up side menu similar to the grep menu. see [fuzzy menu keybindings](#fuzzy-menu-keybindings)
 - `rename` - rename current symbol under cursor
 - `hover` - show symbol information (and docs) in an overlay
 - `symbols` - bring up a fuzzy menu to choose a symbol in the current buffer to jump to
-- `workspace-symbols` - like `symbols` but across the entire project workspace. this can be pretty slow on large projects, especially on first usage. this is a limitation of the language server
+- `workspace-symbols` - like `symbols` but across the entire project workspace. this can be pretty slow on large projects, especially on first usage
 - `highlight` - highlight the current symbol in the buffer
 - `highlight-clear` - clear symbol highlight
 - `next-usage` - jump to the next usage of the symbol under the cursor
@@ -229,23 +244,14 @@ Signature help (provides an overlay tooltip for function parameters and document
 - `show-problem` - bring up an overlay describing the problem with the highlighted (underlined) text
 - `next-problem` - jump to the next problem in the current file. if there are no problems in the current file, jump to another file
 - `prev-problem` - jump to the previous problem in the current file. if there are no problems in the current file, jump to another file
-- `problems-toggle` - open or close the Problems list as an overlay at the bottom of the screen. does not focus the menu list
-- `problems-focus` - focus the Problems list. if the Problems list is not open, it will also open it.
 
 ### bonus ~~meme~~ features
-- `fullscreen` - open the Dark Portal and go fullscreen
-- `pick-color` - open a color picker and change the current value under the cursor
 - `devtools` - open up the devtools if ur an U83R1337H4XX0R
-- `nc` - ehehehehe
+- `nc` - sadly it does not play the song...
 
 ### experimental/wip features
-- `TermOpen` - open up a terminal that can be attached
-- `TermAttach` - attach to a terminal session and parse the output for any compiler output adding any errors/warnings to the Problems system in Veonim (underline highlights, problems menu, jump between problems, etc.). this can be really useful for incremental compilers (btw: incremental compiler !== lang serv diagnostics or linter)
-- `TermDetach` - stop parsing terminal output for compiler output
-- `divination` - mark each line with a label. inputting the label keys will jump to that line. like easymotion
-- `divination-search` - mark each search result in the buffer with a label that can be used to jump to (easymotion style)
 - `viewport-search` - fuzzy search in the current buffer viewport only. on search completion, display jump-to labels like easymotion (`divination-search`). useful for quickly jumping to another place currently visible in the viewport
-- `modify-colorscheme-live` - open a colorscheme file. move cursor to color value. trigger this command. a color picker is opened, and whenever the color is changed in the color picker, the colors are updated across all of vim LIVE. WE'LL DO IT LIVE!
+- `pick-color` - open a color picker and change the current value under the cursor
 
 ## fuzzy menu keybindings
 In general all fuzzy menus share the same keybindings. These are hardcoded right now, but they will be configurable in the future (once I figure out a good way to do it)
@@ -339,40 +345,38 @@ $ vvim new-js-framework.js
 
 ## remapping input keys
 
-### bind keys that vim can't
-Vim can't bind key combinations like `ctrl + shift + e`. Veonim can bind any combination of `cmd/ctrl`, `shift`, `alt`, `meta/super`. We can use the `VK` function to achieve this. For example:
-
-```vim
-"shift + ctrl/cmd + |
-call VK('s-c-|', 'normal', {->execute('Veonim devtools')})
-"shift + ctrl/cmd + n
-call VK('s-c-n', 'insert', {->execute('Veonim signature-help-next')})
-"shift + ctrl/cmd + p
-call VK('s-c-p', 'insert', {->execute('Veonim signature-help-prev')})
-```
-
 ### remap modifiers
-It is possible to change keyboard modifiers with `remap-modifier`. For example to swap `ctrl` and `meta`:
+It is possible to change keyboard modifiers with `g:veonim_remap_modifiers`. For example to swap `ctrl` and `meta`:
 ```vim
-Veonim remap-modifier C D
-Veonim remap-modifier D C
+let g:veonim_remap_modifiers = [
+  \{"from": "C", "to": "D"},
+  \{"from": "D", "to": "C"}
+\]
 ```
 
 ### transform key events
 
-If you are familar with key remapping in karabiner/xmodmap/xfb then this concept will be familiar. Basically since we are in a GUI we have access to both `keydown` + `keyup` keyboard events. This allows us to implement some clever remappings. For example:
+If you are familar with key remapping in karabiner/xmodmap/xfb then this concept will be straightforward. Basically since we are in a GUI we have access to both `keydown` + `keyup` keyboard events. This allows us to implement some clever remappings. For example:
 
 Remap 'Command' to be 'Command' or 'Escape'. If 'Command' is pressed with another key, send 'Command'. If 'Command' is pressed alone, send 'Escape'.
 ```vim
-Veonim key-transform up {"key":"Meta","metaKey":true} e=>({key:'<Esc>'})
+let g:veonim_key_transforms = [
+  \{'mode': 'all', 'event': 'up', 'match': {'key': 'Meta', 'metaKey': 'true'}, 'transform': "e=>({key:'<Esc>'})"}
+\]
 ```
 
-Turn `;` key into an extra modifier key. When `;` is being held down, send `semicolon` + the typed key. This allows me to create a mapping like `nno ;n :Veonim next-problem<cr>` and then I can hold down `;` and spam `n` to jump between problems.
+Turn `;` key into an extra modifier key. When `;` is being held down, send `semicolon` + the typed key. This allows us to create a mapping like `nno ;n :Veonim next-problem<cr>` and then we can hold down `;` and spam `n` to jump between problems.
 ```vim
-Veonim key-transform hold {"key":";"} e=>({key:';'+e.key})
+let g:veonim_key_transforms = [
+  \{'mode': 'all', 'event': 'hold', 'match': {'key': ';'}, 'transform': "e=>({key:';'+e.key})"},
+\]
 ```
+
+Currently nvim mode is not supported but is planned. That means in the future you can specifiy remapping granularity on keyup/keydown events and conditions on keys and nvim modes (normal, insert, visual, etc.)
 
 ## statusline
+
+Currently the statusline is not customizable. Neovim does not yet provide a way to externalize the statusline, but it is planned. See Neovim issue [#9421](https://github.com/neovim/neovim/issues/9421)
 
 ### left section
 - current working directory `:pwd` relative to `g:vn_project_root`
@@ -387,65 +391,6 @@ Veonim key-transform hold {"key":";"} e=>({key:';'+e.key})
 - problem count / warning count
 - cursor line number / column number
 - list of vim tabs (only tab number displayed to condense space - think of it like i3 workspaces)
-
-## look & feel
-By default Veonim is bundled with its own custom vim colorscheme and the Roboto Mono font. 
-
-### colors
-Any vim colorscheme is supported. Of course since this is a GUI program, true color colorschemes are supported. See `:h colorscheme` for more info.
-
-Right now Veonim derives its colors from the colorscheme. Perhaps in the future we will allow the ability for users to customize specific parts of the UI with additional highlight groups.
-
-### fonts
-Roboto Mono is bundled and included with Veonim. This allows for a consistent out-of-the-box experience across platforms. You can of course use your own font.
-
-To customize your font, use the following global variables in `init.vim`. Please note that these variables will be deprecated soon as we receive `guifont` support from Neovim.
-
-```vim
-let g:vn_font = 'Roboto Mono'
-let g:vn_font_size = 14
-let g:vn_line_height = '1.5'
-```
-
-### cursor
-You can change the shape, size, and color of the cursor for each Vim mode. See `:h guicursor` for more info.
-
-Blinking cursor is currently not supported.
-
-This is the default cursor configuration for Veonim:
-
-```vim
-set guicursor=n:block-CursorNormal,i:hor10-CursorInsert,v:block-CursorVisual
-hi! CursorNormal guibg=#f3a082
-hi! CursorInsert guibg=#f3a082
-hi! CursorVisual guibg=#6d33ff
-```
-
-### other flags
-Some flags to further customize how Veonim behaves.
-
-## ignored dirs/files for explorer
-Ignore directories and/or files from the explorer menu
-
-Default config values are found here: [src/config/default-configs.ts]()
-
-```vim
-let g:vn_explorer_ignore_dirs = ['.git']
-let g:vn_explorer_ignore_files = ['.DS_Store']
-```
-
-Exclude language server Workspace Symbols from the specified directories.
-
-For example, in the Veonim working repo there is the `src` folder which includes Typescript files. There is also a temporary `build` folder including transpiled Javascript files. I believe by default language servers will return symbols from all folders in the current working directory. This variable flag is a way to exclude Workspace Symbols from specific directories. There might be a better way to do this...
-
-```vim
-let g:vn_workspace_ignore_dirs = ['build', 'dist']
-```
-
-### other behavior
-
-## how to ignore files and directories in the fuzzy file finder
-By default the fuzzy file finder will ignore any paths specified in `.gitignore` and `.ignore`
 
 ## how to ignore files and directories in grep
 Grep is powered by Ripgrep, so ignore behavior will be deferred to Ripgrep. I believe by default it ignores any paths from `.gitignore` and `.ignore`

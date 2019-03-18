@@ -1,114 +1,100 @@
 ![](https://veonim.github.io/veonim/header.png)
 
-veonim is a simple modal IDE built on neovim. the goal is to create my ideal programming environment
+Veonim is a simple modal IDE built on Neovim and VSCode extensions. The goal is to create my ideal programming environment
 
 ![](https://veonim.github.io/veonim/smart.png)
 
-## project status
-
-veonim is still very early alpha and experimental. nothing is guaranteed. UX is lacking.
-
-if you are feeling brave, maybe checkout the [User Guide](docs/readme.md)
-
-Discord chat: https://discord.gg/sawWpMr
-
-## currently in progress
-- WebGL renderer (~30-60ms canvas render -> under 1ms webgl render lolololololol)
-- super fast custom msgpack decoder (faster render, less GC/memory pressure)
-- implement neovim `ext_multigrid` API (much faster render/more accurate than previous window splits logic) - https://github.com/neovim/neovim/pull/8455
-
-## coming soon
-- built-in debugger via debug adapter protocol & vscode extensions
-- advanced neovim-native window management
-- vscode extension api <-> neovim/veonim api bridge
-
 ## features
+- Superfast with things like WebGL GPU rendering and multithreading
+- Support VSCode extensions (work in progress, but can try today in 0.22.0+)
+- Aims to be 100% compatible with Neovim (see [#9421](https://github.com/neovim/neovim/issues/9421))
+- All configuration done via vimrc with vimscript/Lua/remote plugins
+- All Veonim features opt-in. Use as much or as little of the IDE features as you want and customize your workflow
+- Fuzzy search files, buffers, buffer text, project text search (powered by ripgrep)
+- Multiple concurrent Neovim instances (like tmux sessions)
+- Fully keyboard driven (no mouse support)
+- But wait, there's more! See the [User Guide](docs/readme.md)
 
-- rich language integration built on language servers (any language supporting LSP can work - see http://langserver.org)
-    - auto completion
-    - go to definition
-    - go to type definition
-    - go to implementation
-    - find references
-    - symbol search
-    - show hover information
-    - provide signature hint info
-    - diagnostics (errors/warnings)
-    - refactoring (rename, quick fix, code actions, etc.)
-    - highlight symbols
-- multiple concurrent multiplexed vim instances (kinda like tmux sessions/windows. in fact this feature originated from the desire to use a neovim gui with the same workflow as tmux)
-- built-in vim plugin manager
-- (limited) vscode extension support - should support language server extensions - more api support can be added as needed
-- rich key mapping support with support for keyup + keydown events (think karabiner) - for example:
-  - remap caps lock to escape
-  - map commands to all modifiers such as ctrl + shift + alt + key
-  - swap modifiers -> switch command and control
-  - create additional modifiers with custom key transforms (e.g. create layers: mappings like `<c-s>` `<c-m>` but with another key `;s` `;m`)
-- project find based on ripgrep
-- fuzzy find for files and buffers
-- fuzzy viewport search
-- fuzzy buffer search
-- improved vim search UI
-- high performance optimized GPU rendering
-- keyboard driven fuzzy file/directory explorer
-- built-in "easymotion-style" jump to labels and jump to search results
-- graphical neovim ui including windows, tabs, command line, status line, messages, cursor, cursorline, colorscheme adaptable interface etc.
-- project/workspace/cd management
-- reload vim buffers when modified (e.g. when edited in another program)
-- open file from :terminal in current vim window
-- everything configured via vim config file (init.vim) and scriptable from vimscript or remote plugins (any language)
-- create fuzzy overlay menus and floating overlay menus with user defined options (built-in FZF.vim alternative)
-- built-in statusline (displays current project, git branch, git changes, warning/problem count, cursor position, and tabpages)
-- color picker + live vim colorscheme editing
-- (experimental) parse :term compiler output and display problems in editor
-    - the idea is that you may have an incremental compiler build script (i.e. npm scripts + typescript watch mode) that is running in the background, and you want to parse the compiler output and add it to IDE problems. compiler output may be different than language server diagnostics (and the compiler is the source of truth). also there may be other tasks that are happening in the incremental build script that would not occur with langserv diagnostics.
-- and more!
+## getting started
+See the [User Guide](docs/readme.md)
 
-## screenshots
+## project status
+Veonim is in heavy development. Alpha status at best.
+
+Currently in progress:
+- fix/polish VSCode language extension support
+- support VSCode debug adapter extensions
+- explore removing electron
+- inventory menu (spacemacs-like mapping menu guides)
+- `ext_windows` support
+
+## show & tell
 
 ### auto completion
+Auto complete with documentation powered by VSCode extensions. If you want autocompletion, make sure `completefunc` is not overridden in your vimrc
 ![](https://veonim.github.io/veonim/completion.png)
 
 ### fuzzy file finder
+Fuzzy search to open any file in the current working directory
+- `:Veonim files`
 ![](https://veonim.github.io/veonim/files.png)
 
 ### find in project
+Fuzzy project text search and filter - powered by Ripgrep
+- `:Veonim grep`
+- `:Veonim grep-word`
+- `:Veonim grep-selection`
+- `:Veonim grep-resume`
 ![](https://veonim.github.io/veonim/grep.png)
 
 ### symbol search
+Fuzzy menu for all current symbols in buffer or workspace. Requires a relevant VSCode language extension
+- `:Veonim symbols`
+- `:Veonim workspace-symbols`
 ![](https://veonim.github.io/veonim/symbols.png)
 
 ### signature hint
+Show function signature help and documentation when using Veonim autocompletion. Requires a relevant VSCode language extension. Requires `completefunc` to not be overriden
 ![](https://veonim.github.io/veonim/hint.png)
 
 ### hover information
+Show hover information and documentation about the current symbol under the cursor. Requires a relevant VSCode language extension
+- `:Veonim hover`
 ![](https://veonim.github.io/veonim/hover.png)
 
 ### problems
+Underline problems, view error details, navigate between errors, and apply refactoring fixes as reported by a VSCode language extension
+- `:Veonim show-problem`
+- `:Veonim next-problem`
+- `:Veonim prev-problem`
+- `:Veonim code-action`
 ![](https://veonim.github.io/veonim/problems.png)
 
 ### explorer
+Fuzzy find and navigate files and directories
+- `:Veonim explorer`
 ![](https://veonim.github.io/veonim/explorer.png)
 
 ### references
+Find all references, jump between references, goto definition/implementation/typedef, and highlight document symbols. Requires a relevant VSCode language extension
+- `:Veonim references`
+- `:Veonim next-usage`
+- `:Veonim prev-usage`
+- `:Veonim definition`
+- `:Veonim implementation`
+- `:Veonim type-definition`
+- `:Veonim highlight`
+- `:Veonim highlight-clear`
 ![](https://veonim.github.io/veonim/references.png)
 
-### user defined menus
-![](https://veonim.github.io/veonim/user-menu.png)
-
-### custom task menus
-![](https://veonim.github.io/veonim/tasks.png)
-
-### color support
-![](https://veonim.github.io/veonim/colors.png)
-
-### vim command line
-![](https://veonim.github.io/veonim/cmdline.png)
-
-### notifications
-![](https://veonim.github.io/veonim/echo.png)
+### buffer search
+Fuzzy search current buffer text
+- `:Veonim buffer-search`
+![](https://veonim.github.io/veonim/buffer-search.png)
 
 ### nyan cat
+Currently the only Neovim GUI that has nyan cat
+- `:Veonim nc`
 ![](https://veonim.github.io/veonim/nyan.png)
 
 ## other cool projects you should check out
@@ -120,24 +106,16 @@ Discord chat: https://discord.gg/sawWpMr
 
 ## development
 
+### stuff you need
+- node
+- npm
+
 install dependencies and start automagic watch build and live reload instance
 
 ```
 npm i
 npm start
 ```
-
-### neovim configuration
-
-when starting the development build of veonim (via `npm start`) the app is configured to load configurations from a local folder instead of the default `XDG_CONFIG_HOME` location. in other words, pretend this is your `~/.config` folder when running veonim in dev mode.
-
-for example, place/copy your neovim configurations **relative to the veonim source folder**
-- `./xdg_config/nvim/init.vim` - init.vim
-- `./xdg_config/nvim/colors/gruvbox.vim` - colors
-
-veonim will also download and install neovim plugins and veonim extensions to this local dev config folder.
-
-if the folder does not exist, an empty one will be created. the default veonim configurations will be used (same configurations that would apply if no `~/.config`/`XDG_CONFIG_HOME` folder existed)
 
 ### release build
 
@@ -152,25 +130,21 @@ test it out
 npm run start:release
 ```
 
-### creating releases
+create binary package
+```
+npm run package
+```
 
-travis/appveyor will publish new github releases on tags
+binaries available in `dist`
 
-you can use npm to upversion package.json and create a tag:
-- `npm version patch`
-- `npm version minor`
-- `npm version major`
+### development neovim configuration
 
-or manually create tag (note that the package release version is lifted from package.json)
+when starting the development build of veonim (via `npm start`) the app is configured to load configurations from a local folder instead of the default `XDG_CONFIG_HOME` location. in other words, pretend this is your `~/.config` folder when running veonim in dev mode.
 
-`git tag v0.8.0-alpha.1`
+for example, place/copy your neovim configurations **relative to the veonim source folder**
+- `./xdg_config/nvim/init.vim` - init.vim
+- `./xdg_config/nvim/colors/gruvbox.vim` - colors
 
-then push the git tag
+veonim will also download and install vim plugins and vscode extensions to this local dev config folder.
 
-`git push origin v0.8.0-alpha.1`
-
-to create a local release package for your current operating system:
-
-`npm run package`
-
-you will find various binaries available for testing under `dist` folder
+if the folder does not exist, an empty one will be created. the default veonim configurations will be used (same configurations that would apply if no `~/.config`/`XDG_CONFIG_HOME` folder existed)
