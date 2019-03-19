@@ -47,7 +47,12 @@ Object.assign(cursorEl.style, {
   alignItems: 'center',
 })
 
-cursorChar.style.filter = 'invert(1) grayscale(1)'
+Object.assign(cursorChar.style, {
+  filter: 'invert(1) grayscale(1)',
+  fontFamily: 'var(--font)',
+  fontSize: 'calc(var(--font-size) * 1px)',
+})
+
 cursorEl.appendChild(cursorChar)
 
 export const getCursorBoundingClientRect = () => cursorline.getBoundingClientRect()
