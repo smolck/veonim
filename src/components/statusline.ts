@@ -90,7 +90,7 @@ const actions = {
   aiStart: ({ cwd, filetype }: any) => (s: S) => ({ runningServers: new Set([...s.runningServers, cwd + filetype]) }),
 }
 
-const iconStyle = { style: { fontSize: '1.15rem' } }
+const iconStyle = { style: { fontSize: '16px' } }
 
 const Label = (label: string) => h('div', {
   style: {
