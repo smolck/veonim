@@ -101,6 +101,7 @@ export const blur = () => {
 }
 
 export const setupRemapModifiers = (mappings: RemapModifer[]) => {
+  if (!mappings) return
   remaps.clear()
   mappings.forEach(mapping => remapModifier(mapping.from, mapping.to))
 }
@@ -113,6 +114,7 @@ const vimscriptObjectToECMA = (obj: any) => Object.entries(obj).reduce((res, [ke
 }, {})
 
 const setupTransforms = (transforms: KeyTransform[]) => {
+  if (!transforms) return
   xfrmHold.clear()
   xfrmDown.clear()
   xfrmUp.clear()
