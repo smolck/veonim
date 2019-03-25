@@ -34,6 +34,8 @@ export default (initialSection?: string): vsc.WorkspaceConfiguration => {
     configStore.update(path, value)
   }
 
+  const prefix = initialSection && initialSection + "." || "";
+
   return new Proxy(Object.create(null), {
     get: (_: any, key: string) => {
       if (key === 'get') return get
@@ -41,7 +43,17 @@ export default (initialSection?: string): vsc.WorkspaceConfiguration => {
       if (key === 'inspect') return inspect
       if (key === 'update') return update
 
+      if (!key.startsWith(prefix)) {
+        key = prefix + key
+      }
       return Reflect.get(store, key)
-    }
-  })
+    },
+  ownKeys: () => Reflect.ownKeys(store).filter(
+      (key: PropertyKey) => key.toString().startsWith(prefix)
+    ).map(
+      (key: PropertyKey) => key.toString().slice(prefix.length)
+    ),
+  getOwnPropertyDescriptor: (_: object, key: PropertyKey) =>
+      Reflect.getOwnPropertyDescriptor(store, prefix + key.toString())
+    })
 }
