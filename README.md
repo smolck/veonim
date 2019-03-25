@@ -54,7 +54,7 @@ Fuzzy menu for all current symbols in buffer or workspace. Requires a relevant V
 ![](https://veonim.github.io/veonim/symbols.png)
 
 ### signature hint
-Show function signature help and documentation when using Veonim autocompletion. Requires a relevant VSCode language extension. Requires `completefunc` to not be overriden
+Show function signature help and documentation when using Veonim autocompletion. Requires a relevant VSCode language extension. Requires `completefunc` to not be overridden
 ![](https://veonim.github.io/veonim/hint.png)
 
 ### hover information
