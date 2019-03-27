@@ -126,6 +126,19 @@ app.on('ready', async () => {
   }
 })
 
+app.on('before-quit', () => {
+  // Before quitting everything, take a snapshot for the current settings on this session
+  const [ width, height ] = win.getSize();
+  const [ pageX, pageY ] = win.getPosition();
+  settingsHandler().set({
+    width,
+    height,
+    pageX,
+    pageY,
+    isFullscreen: win.isFullScreen() || false,
+  })
+})
+
 const openProcessExplorer = () => {
   if (winProcessExplorer) {
     winProcessExplorer.close()
