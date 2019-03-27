@@ -22,6 +22,7 @@ const cursorline = document.getElementById('cursorline') as HTMLElement
 export const debugline = document.getElementById('debugline') as HTMLElement
 let cursorRequestedToBeHidden = false
 let cursorEnabled = true
+let cursorCharVisible = true
 
 Object.assign(cursorline.style, {
   background: 'rgba(var(--background-alpha), 0.2)',
@@ -110,11 +111,14 @@ export const updateCursorChar = () => {
   cursorChar.innerText = cursor.shape === CursorShape.block
     ? windows.getActive().editor.getChar(cursor.row, cursor.col)
     : ''
+
+  if (cursor.shape === CursorShape.block && !cursorCharVisible) cursorChar.style.display = ''
 }
 
 const updateCursorCharInternal = (gridId: number, row: number, col: number) => {
   if (cursor.shape !== CursorShape.block) {
     cursorChar.style.display = 'none'
+    cursorCharVisible = false
     cursorChar.innerText = ''
     return
   }
@@ -122,6 +126,7 @@ const updateCursorCharInternal = (gridId: number, row: number, col: number) => {
   const char = windows.get(gridId).editor.getChar(row, col)
   cursorChar.innerText = char
   cursorChar.style.display = ''
+  cursorCharVisible = true
 }
 
 export const moveCursor = (gridId: number, row: number, col: number) => {
