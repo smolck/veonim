@@ -49,15 +49,15 @@ const vscodeTypings = () => new Promise(async (done, fail) => {
 })
 
 require.main === module && go(async () => {
-  $`installing binary dependencies`
-  await binaryDependencies()
-  $`installed binary dependencies`
+  $`installing vscode extension api typings`
+  await vscodeTypings().catch(err => console.log('failed to install vscode typings', err))
+  $`installed vscode extension api typings`
 
   $`installing extension dependencies`
   await extensionDependencies()
   $`installed extension dependencies`
 
-  $`installing vscode extension api typings`
-  await vscodeTypings().catch(err => console.log('failed to install vscode typings', err))
-  $`installed vscode extension api typings`
+  $`installing binary dependencies`
+  await binaryDependencies()
+  $`installed binary dependencies`
 })
