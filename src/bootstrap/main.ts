@@ -1,4 +1,5 @@
 import { app, BrowserWindow, Menu, shell } from 'electron'
+import settingsHandler from '../support/settings-handler'
 
 let win: any
 let winProcessExplorer: any
