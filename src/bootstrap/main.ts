@@ -12,6 +12,8 @@ const comscan = (() => {
   return { register, dispatch }
 })()
 
+const settingsObject = settingsHandler().get()
+
 app.on('ready', async () => {
   const menuTemplate = [{
     label: 'Window',
