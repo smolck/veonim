@@ -29,5 +29,6 @@ deploy:
     repo: veonim/veonim
 cache:
   directories:
+  - binaries
   - node_modules
   - $HOME/.electron
