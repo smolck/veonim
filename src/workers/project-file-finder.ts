@@ -25,9 +25,9 @@ const getFilesWithRipgrep = (cwd: string) => {
   const rg = Ripgrep(['--files', '--hidden', '--glob', '!node_modules', '--glob', '!.git'], { cwd })
   let initialSent = false
 
-  rg.stderr.pipe(new NewlineSplitter()).on('data', console.error)
+  rg.stderr!.pipe(new NewlineSplitter()).on('data', console.error)
 
-  rg.stdout.pipe(new NewlineSplitter()).on('data', (path: string) => {
+  rg.stdout!.pipe(new NewlineSplitter()).on('data', (path: string) => {
     const shouldSendInitialBatch = !initialSent && results.size >= AMOUNT 
     results.add(path)
 

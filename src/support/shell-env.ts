@@ -22,7 +22,7 @@ export default (shell = defaultShell()) => new Promise(done => {
     'echo -n "_SHELL_ENV_DELIMITER_"; env; echo -n "_SHELL_ENV_DELIMITER_"; exit',
   ])
 
-  proc.stdout.pipe(new NewlineSplitter()).on('data', (line: string) => {
+  proc.stdout!.pipe(new NewlineSplitter()).on('data', (line: string) => {
     if (!line) return
     const cleanLine = cleanup(line)
     const [ key, ...valParts ] = cleanLine.split('=')

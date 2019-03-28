@@ -1,4 +1,5 @@
 import { createServer, Server, IncomingMessage, ServerResponse } from 'http'
+import { AddressInfo } from 'net'
 
 interface HttpServer {
   server: Server,
@@ -19,7 +20,7 @@ const attemptStart = (port = 8001, srv = createServer()): Promise<HttpServer> =>
 
   srv.listen(port, () => fin({
     server: srv,
-    port: srv.address().port,
+    port: (srv.address() as AddressInfo).port,
     onRequest: cb => srv.on('request', cb),
     onJsonRequest: cb => srv.on('request', (req: IncomingMessage, res: ServerResponse) => {
       if (req.headers.host !== `localhost:${port}`) return console.warn(`blocked request with invalid host header`)

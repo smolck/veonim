@@ -47,13 +47,13 @@ const proc = Neovim.run([
 ])
 
 proc.on('error', (e: any) => console.error('vim colorizer err', e))
-proc.stdout.on('error', (e: any) => console.error('vim colorizer stdout err', e+''))
-proc.stdin.on('error', (e: any) => console.error('vim colorizer stdin err', e+''))
-proc.stderr.on('data', (e: any) => console.error('vim colorizer stderr', e+''))
+proc.stdout!.on('error', (e: any) => console.error('vim colorizer stdout err', e+''))
+proc.stdin!.on('error', (e: any) => console.error('vim colorizer stdin err', e+''))
+proc.stderr!.on('data', (e: any) => console.error('vim colorizer stderr', e+''))
 proc.on('exit', () => console.error('vim colorizer exit'))
 
-encoder.pipe(proc.stdin)
-proc.stdout.pipe(decoder)
+encoder.pipe(proc.stdin!)
+proc.stdout!.pipe(decoder)
 
 const { notify, request, onData } = SetupRPC(m => encoder.write(m))
 decoder.on('data', ([type, ...d]: [number, any]) => onData(type, d))

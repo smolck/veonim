@@ -10,8 +10,8 @@ import nvim from '../neovim/api'
 const findPackageJson = (path: string): Promise<string> => new Promise((done, fail) => {
   const results = [] as string[]
   const rg = Ripgrep(['--files', '--glob', '!node_modules', '--glob', '**/package.json'], { cwd: path })
-  rg.stderr.pipe(new NewlineSplitter()).on('data', fail)
-  rg.stdout.pipe(new NewlineSplitter()).on('data', (pkgpath: string) => results.push(pkgpath))
+  rg.stderr!.pipe(new NewlineSplitter()).on('data', fail)
+  rg.stdout!.pipe(new NewlineSplitter()).on('data', (pkgpath: string) => results.push(pkgpath))
 
   rg.on('close', () => {
     if (!results.length) return done()

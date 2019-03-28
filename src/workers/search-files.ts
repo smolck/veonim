@@ -64,7 +64,7 @@ const searchFiles = ({ query, cwd }: Request) => {
   const timer = setInterval(() => sendResults(), INTERVAL)
   const rg = Ripgrep([query, '--vimgrep'], { cwd })
 
-  rg.stdout.pipe(new NewlineSplitter()).on('data', (m: string) => {
+  rg.stdout!.pipe(new NewlineSplitter()).on('data', (m: string) => {
     const [ , path = '', line = 0, column = 0, text = '' ] = m.match(/^(.*?):(\d+):(\d+):(.*?)$/) || []
 
     // ripgrep results (line/column) are 1-index based. veonim uses 0-index based

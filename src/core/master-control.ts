@@ -73,8 +73,9 @@ const createNewVimInstance = (): number => {
   vimInstances.set(id, { id, proc, pipeName, attached: false })
 
   proc.on('error', (e: any) => console.error(`vim ${id} err ${e}`))
-  proc.stdout.on('error', (e: any) => console.error(`vim ${id} stdout err ${(JSON.stringify(e))}`))
-  proc.stdin.on('error', (e: any) => console.error(`vim ${id} stdin err ${(JSON.stringify(e))}`))
+  // someone fucked up the types so i gotta do this shit with the !!!!! symbols
+  proc.stdout!.on('error', (e: any) => console.error(`vim ${id} stdout err ${(JSON.stringify(e))}`))
+  proc.stdin!.on('error', (e: any) => console.error(`vim ${id} stdin err ${(JSON.stringify(e))}`))
   proc.on('exit', (c: any) => onExitFn(id, c))
 
   return id
@@ -86,12 +87,12 @@ export const switchTo = (id: number) => {
 
   if (ids.activeVim > -1) {
     msgpackEncoder.unpipe()
-    vimInstances.get(ids.activeVim)!.proc.stdout.unpipe()
+    vimInstances.get(ids.activeVim)!.proc.stdout!.unpipe()
   }
 
-  msgpackEncoder.pipe(proc.stdin)
+  msgpackEncoder.pipe(proc.stdin!)
   // don't kill decoder stream when this stdout stream ends (need for other stdouts)
-  proc.stdout.pipe(msgpackDecoder, { end: false })
+  proc.stdout!.pipe(msgpackDecoder, { end: false })
   ids.activeVim = id
 
   // sending resize (even of the same size) makes vim instance clear/redraw screen

@@ -18,4 +18,4 @@ const server = createServer((req, res) => {
   res.end()
 })
 
-server.listen(22444, () => console.log(`ext-host-dev server ${server.address().port}`))
+server.listen(22444, () => console.log(`ext-host-dev server ${server.address()}`))

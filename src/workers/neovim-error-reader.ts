@@ -31,13 +31,13 @@ const proc = Neovim.run([
 ])
 
 proc.on('error', e => console.error('vim error-reader err', e))
-proc.stdout.on('error', e => console.error('vim error-reader stdout err', e))
-proc.stdin.on('error', e => console.error('vim error-reader stdin err', e))
-proc.stderr.on('data', e => console.error('vim error-reader stderr', e))
+proc.stdout!.on('error', e => console.error('vim error-reader stdout err', e))
+proc.stdin!.on('error', e => console.error('vim error-reader stdin err', e))
+proc.stderr!.on('data', e => console.error('vim error-reader stderr', e))
 proc.on('exit', () => console.error('vim error-reader exit'))
 
-encoder.pipe(proc.stdin)
-proc.stdout.pipe(decoder)
+encoder.pipe(proc.stdin!)
+proc.stdout!.pipe(decoder)
 
 const { notify, request, onData } = SetupRPC(m => encoder.write(m))
 decoder.on('data', ([type, ...d]: [number, any]) => onData(type, d))
