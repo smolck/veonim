@@ -126,7 +126,8 @@ const actions = {
       a.showDocs(richFormatDocs)
     })()
 
-    return { ix, documentation: documentation || detail }
+    if (documentation) parseDocs(documentation).then(a.showDocs)
+    return { ix, documentation: detail }
   },
 }
 
