@@ -1,17 +1,26 @@
 import { readFileSync, writeFileSync, existsSync } from 'fs'
+import { fromJSON } from '../support/utils'
 import { resolve } from 'path'
 
 interface basicIOState {
     configPath: string,
 }
 
-function parseConfigFile(configPath: string): object {
+interface Settings {
+    width?: number
+    height?: number
+    pageX?: number
+    pageY?: number
+    isFullscreen?: boolean
+}
+
+const parseConfigFile = (configPath: string): Settings => {
     if (existsSync(configPath)) {
-        const settingsConfigString: string = readFileSync(configPath, 'utf8');
-        const settingsJsonObject: object = JSON.parse(settingsConfigString)
-        return settingsJsonObject || null
+        const settingsConfigString: string = readFileSync(configPath, 'utf8')
+        const settingsJsonObject: Settings = fromJSON(settingsConfigString).or({})
+        return settingsJsonObject
     } else {
-        return {};
+        return {}
     }
 }
 
