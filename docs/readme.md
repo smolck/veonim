@@ -128,6 +128,17 @@ For example:
 - Go - `ms-vscode.go`
 - Python - `ms-python.python`
 
+## configure vscode extensions
+
+Configuring VSCode extensions can be done with `g:vscode_config` variable.
+
+```vim
+let g:vscode_config = {
+  \'tsserver.trace.server': 'verbose',
+  \'typescript.tsserver.trace': 'verbose'
+\}
+```
+
 ## keep vimrc compatible with neovim/vim
 
 It is recommended to wrap all Veonim configuration in `exists('veonim')` block(s) so that your vimrc remains compatible when loaded in neovim/vim or other GUIs
