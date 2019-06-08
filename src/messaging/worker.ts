@@ -1,6 +1,7 @@
 import { onFnCall, proxyFn, uuid, CreateTask } from '../support/utils'
 import { EventEmitter } from 'events'
 import { join } from 'path'
+import { platform } from 'os'
 
 type EventFn = { [index: string]: (...args: any[]) => void }
 type RequestEventFn = { [index: string]: (...args: any[]) => Promise<any> }
@@ -14,10 +15,14 @@ interface WorkerOptions {
 export default (name: string, opts = {} as WorkerOptions) => {
   const modulePath = join(__dirname, '..', 'workers', `${name}.js`)
 
-  const loaderScript = `
+  let loaderScript = `
     global.workerData = JSON.parse('${JSON.stringify(opts.workerData || {})}')
     require('${modulePath}')
   `
+
+  if (platform() === 'win32') {
+    loaderScript = loaderScript.replace(/\\/g, '\\\\')
+  }
 
   const scriptBlobbyBluberBlob = new Blob([ loaderScript ], { type: 'application/javascript' })
   const objectUrl = URL.createObjectURL(scriptBlobbyBluberBlob)
