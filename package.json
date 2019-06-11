@@ -45,7 +45,7 @@
     "hyperapp": "1.2.9",
     "hyperapp-feather": "0.4.0",
     "hyperapp-seti": "0.2.0",
-    "marked": "0.5.0"
+    "marked": "0.6.2"
   },
   "devDependencies": {
     "@deomitrus/hyperapp-redux-devtools": "1.2.0",
@@ -56,7 +56,7 @@
     "@types/webgl2": "0.0.4",
     "all-other-unzip-libs-suck": "0.0.3",
     "electron": "4.1.0",
-    "electron-builder": "20.39.0",
+    "electron-builder": "20.43.0",
     "electron-devtools-installer": "2.2.4",
     "fs-extra": "5.0.0",
     "mocha": "5.2.0",
