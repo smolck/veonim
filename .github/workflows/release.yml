@@ -50,7 +50,7 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
+      with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./dist/*.zip
           asset_name: veonim-${{ github.ref }}-linux.zip
@@ -59,7 +59,7 @@ jobs:
       if: matrix.os == 'windows-latest'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
+      with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./dist/*.zip
           asset_name: veonim-${{ github.ref }}-windows.zip
