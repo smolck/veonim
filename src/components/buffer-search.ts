@@ -169,6 +169,8 @@ const view = ($: S, a: A) => h('div', {
     active: pos === $.index,
   }, res.colorizedLine.map(({ color, text, highlight }) => h('span', {
     style: {
+      fontSize: 'calc(var(--font-size) * 1px)',
+      fontFamily: 'var(--font)',
       whiteSpace: 'pre',
       color: color || cvar('foreground'),
       background: highlight && 'rgba(255, 255, 255, 0.1)',
