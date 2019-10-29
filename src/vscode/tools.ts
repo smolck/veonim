@@ -13,7 +13,7 @@ const cancelTokens = new EventEmitter()
 export const cancelTokenById = (id: string) => cancelTokens.emit(id)
 
 export const makeCancelToken = (id: string): vsc.CancellationTokenSource => {
-  const onCancelFns = new Set()
+  const onCancelFns = new Set<Function>()
 
   const token: vsc.CancellationToken = {
     isCancellationRequested: false,

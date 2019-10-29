@@ -59,6 +59,6 @@ tdm.on.didOpen(({ name, textLines }) => harvest(name, textLines))
 tdm.on.didChange(({ name, textLines }) => harvest(name, textLines))
 tdm.on.didClose(({ name }) => keywords.delete(name))
 
-on.query(async (file: string, query: string, maxResults = 20) => {
+on.query(async (file: string, query: string, maxResults: number = 25) => {
   return fuzzy(keywords.get(file) || [], query, { maxResults })
 })

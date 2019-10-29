@@ -5,6 +5,7 @@
     "xdg_config"
   ],
   "compilerOptions": {
+    "skipLibCheck": true,
     "target": "esnext",
     "module": "commonjs",
     "outDir": "../build",

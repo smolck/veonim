@@ -74,7 +74,7 @@ const api = (nvim: NeovimAPI, onlyFiletypeBuffers?: string[]) => {
   const watchers = new EventEmitter()
   const filetypes = new Set(onlyFiletypeBuffers)
   const invalidFiletype = (ft: string) => filetypes.size && !filetypes.has(ft)
-  const dsp = new Set()
+  const dsp = new Set<Function>()
 
   const subscribeToBufferChanges = (buffer: Buffer, name: string) => {
     if (!name || openDocuments.has(name)) return
@@ -136,9 +136,9 @@ const api = (nvim: NeovimAPI, onlyFiletypeBuffers?: string[]) => {
       notifyChange(changeEvent)
     })
 
-    dsp.add(buffer.onChangedTick(revision => {
+    buffer.onChangedTick(revision => {
       buffersLastRevisionSent.set(name, revision)
-    }))
+    })
 
     buffer.onDetach(() => {
       openDocuments.delete(name)

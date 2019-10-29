@@ -5,8 +5,9 @@ let win: any
 app.setName('veonim')
 
 const comscan = (() => {
-  const windows = new Set()
-  const register = (fn: (ch: string, msg: any) => void) => windows.add(fn)
+  type DispatchFn = (ch: string, message: any) => void
+  const windows = new Set<DispatchFn>()
+  const register = (fn: DispatchFn) => windows.add(fn)
   const dispatch = (ch: string, message: any) => windows.forEach(cb => cb(ch, message))
   return { register, dispatch }
 })()
