@@ -121,7 +121,10 @@ const api = (nvim: NeovimAPI, onlyFiletypeBuffers?: string[]) => {
       if (changeEvent.changedTick == null) return
 
       if (changeEvent.changedTick <= lastVersion) {
-        return console.error(`bufevent changedtick old version! - prev: ${lastVersion} - next: ${changeEvent.changedTick}`)
+        if (process.env.VEONIM_DEV) {
+          console.warn(`bufevent changedtick old version! - prev: ${lastVersion} - next: ${changeEvent.changedTick}`)
+        }
+        return
       }
 
       lastVersion = changeEvent.changedTick
