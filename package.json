@@ -71,7 +71,7 @@
     {
       "org": "neovim",
       "repo": "neovim",
-      "tag": "nightly",
+      "tag": "v0.4.2",
       "mac": "nvim-macos.tar.gz",
       "win": "nvim-win64.zip",
       "linux": "nvim-linux64.tar.gz"
