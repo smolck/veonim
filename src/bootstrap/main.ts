@@ -2,7 +2,6 @@ import { app, BrowserWindow, Menu, shell } from 'electron'
 import settingsHandler from '../support/settings-handler'
 
 let win: any
-let winProcessExplorer: any
 app.setName('veonim')
 
 const comscan = (() => {
@@ -34,14 +33,11 @@ app.on('ready', async () => {
     }, {
       type: 'separator',
     }, {
-      label: 'Process Explorer',
-      click: () => openProcessExplorer(),
-    }, {
       label: 'Developer Tools',
       accelerator: 'CmdOrCtrl+|',
       click: () => win.webContents.toggleDevTools(),
     }] as any // electron is stupid,
-  }]
+  } as any]
 
   if (process.platform === 'darwin') menuTemplate.unshift({
     label: 'veonim',
@@ -56,9 +52,9 @@ app.on('ready', async () => {
     }, {
       type: 'separator',
     }, {
-      role: 'quit',
+      role: 'quit' as any,
     }] as any // electron is stupid
-  })
+  } as any)
 
   Menu.setApplicationMenu(Menu.buildFromTemplate(menuTemplate))
 
@@ -138,21 +134,3 @@ app.on('before-quit', () => {
     isFullscreen: win.isFullScreen() || false,
   })
 })
-
-const openProcessExplorer = () => {
-  if (winProcessExplorer) {
-    winProcessExplorer.close()
-    winProcessExplorer = null
-    return
-  }
-
-  winProcessExplorer = new BrowserWindow({
-    width: 850,
-    height: 600,
-  })
-
-  winProcessExplorer.on('close', () => winProcessExplorer = null)
-  winProcessExplorer.loadURL(`file:///${__dirname}/process-explorer.html`)
-
-  if (process.env.VEONIM_DEV) winProcessExplorer.openDevTools()
-}
