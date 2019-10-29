@@ -45,7 +45,7 @@
     "hyperapp": "1.2.9",
     "hyperapp-feather": "0.4.0",
     "hyperapp-seti": "0.2.0",
-    "marked": "0.6.2"
+    "marked": "^0.7.0"
   },
   "devDependencies": {
     "@deomitrus/hyperapp-redux-devtools": "1.2.0",
