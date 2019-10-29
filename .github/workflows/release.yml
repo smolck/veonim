@@ -38,6 +38,7 @@ jobs:
         draft: true
         prerelease: true
     - name: upload macOS release asset
+      uses: actions/upload-release-asset@v1.0.1
       if: matrix.os == 'macOS-latest'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -47,6 +48,7 @@ jobs:
         asset_name: veonim-${{ github.ref }}-mac.zip
         asset_content_type: application/zip
     - name: upload linux release asset
+      uses: actions/upload-release-asset@v1.0.1
       if: matrix.os == 'ubuntu-latest'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -56,6 +58,7 @@ jobs:
           asset_name: veonim-${{ github.ref }}-linux.zip
           asset_content_type: application/zip
     - name: upload windows release asset
+      uses: actions/upload-release-asset@v1.0.1
       if: matrix.os == 'windows-latest'
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
