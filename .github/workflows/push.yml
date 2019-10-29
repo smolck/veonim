@@ -1,4 +1,4 @@
-name: build veonim
+name: push
 
 on: [push]
 
@@ -16,11 +16,10 @@ jobs:
       uses: actions/setup-node@v1
       with:
         node-version: '12.x'
-    - name: npm install, build, and test
-      run: |
-        npm ci
-        npm run build --if-present
-        npm test
-      env:
-        CI: true
+    - name: npm install
+      run: npm ci
+    - name: build
+      run: npm run build
+    - name: test
+      run: npm test
 
