@@ -65,7 +65,7 @@ jobs:
       uses: actions/download-artifact@master
       with:
         name: ${{ github.ref }}-windows
-    - name: release
+    - name: create release
       id: create_release
       uses: actions/create-release@master
       env:
