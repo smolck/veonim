@@ -1,6 +1,6 @@
 {
   "name": "veonim",
-  "version": "0.23.3",
+  "version": "0.23.4",
   "description": "simple modal IDE built on neovim",
   "main": "build/bootstrap/main.js",
   "scripts": {

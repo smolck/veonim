@@ -26,7 +26,45 @@ jobs:
     - name: test
       run: npm test
     - name: package
-      run: npm run package
+      run: |
+        npm run package
+        ls -l dist
+    - name: archive binary (macOS)
+      if: matrix.os == 'macOS-latest'
+      uses: actions/upload-artifact@master
+      with:
+        name: ${{ github.ref }}-mac
+        path: dist/veonim-${{ github.ref }}-mac.zip
+    - name: archive binary (linux)
+      if: matrix.os == 'ubuntu-latest'
+      uses: actions/upload-artifact@master
+      with:
+        name: ${{ github.ref }}-linux
+        path: dist/veonim-${{ github.ref }}-linux.zip
+    - name: archive binary (windows)
+      if: matrix.os == 'windows-latest'
+      uses: actions/upload-artifact@master
+      with:
+        name: ${{ github.ref }}-windows
+        path: dist/veonim-${{ github.ref }}-win.zip
+
+  release:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: download binary MacOS
+      uses: actions/download-artifact@master
+      with:
+        name: ${{ github.ref }}-mac
+    - name: download binary Linux
+      uses: actions/download-artifact@master
+      with:
+        name: ${{ github.ref }}-linux
+    - name: download binary Windows
+      uses: actions/download-artifact@master
+      with:
+        name: ${{ github.ref }}-windows
     - name: release
       id: create_release
       uses: actions/create-release@master
@@ -37,33 +75,33 @@ jobs:
         release_name: ${{ github.ref }}
         draft: true
         prerelease: true
-    - name: upload macOS release asset
-      uses: actions/upload-release-asset@v1.0.1
+    - name: upload release asset MacOS
       if: matrix.os == 'macOS-latest'
+      uses: actions/upload-release-asset@v1.0.1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./dist/*.zip
+        asset_path: ${{ github.ref }}-mac
         asset_name: veonim-${{ github.ref }}-mac.zip
         asset_content_type: application/zip
-    - name: upload linux release asset
-      uses: actions/upload-release-asset@v1.0.1
+    - name: upload release asset Linux
       if: matrix.os == 'ubuntu-latest'
+      uses: actions/upload-release-asset@v1.0.1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/*.zip
+          asset_path: ${{ github.ref }}-linux
           asset_name: veonim-${{ github.ref }}-linux.zip
           asset_content_type: application/zip
-    - name: upload windows release asset
-      uses: actions/upload-release-asset@v1.0.1
+    - name: upload release asset Windows
       if: matrix.os == 'windows-latest'
+      uses: actions/upload-release-asset@v1.0.1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./dist/*.zip
+          asset_path: ${{ github.ref }}-windows
           asset_name: veonim-${{ github.ref }}-windows.zip
           asset_content_type: application/zip
