@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-
+    name: Build Veonim release package
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -49,7 +49,8 @@ jobs:
         path: dist/veonim-${{ github.ref }}-win.zip
 
   release:
-
+    name: Create and upload github release
+    needs: build
     runs-on: ubuntu-latest
 
     steps:
