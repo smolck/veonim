@@ -16,6 +16,11 @@ Veonim is a simple modal IDE built on Neovim and VSCode extensions. The goal is 
 - But wait, there's more! See the [User Guide](docs/readme.md)
 
 ## getting started
+
+### Installing
+Download the latest release from the [Github Releases](https://github.com/veonim/veonim/releases/latest) section
+
+### Using
 See the [User Guide](docs/readme.md)
 
 ## project status
