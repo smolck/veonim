@@ -26,14 +26,6 @@ app.on('ready', async () => {
   }, {
     role: 'help',
     submenu: [{
-      label: 'User Guide',
-      click: () => shell.openExternal('https://github.com/veonim/veonim/blob/master/docs/readme.md'),
-    }, {
-      label: 'Report Issue',
-      click: () => shell.openExternal('https://github.com/veonim/veonim/issues'),
-    }, {
-      type: 'separator',
-    }, {
       label: 'Developer Tools',
       accelerator: 'CmdOrCtrl+|',
       click: () => win.webContents.toggleDevTools(),
