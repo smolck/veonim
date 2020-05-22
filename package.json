@@ -1,7 +1,9 @@
 {
   "name": "veonim",
+  "author": "veonim",
+  "license": "AGPL-3.0-only",
   "version": "0.23.6",
-  "description": "simple modal IDE built on neovim",
+  "description": "neovim GUI with 100x more memory usage",
   "main": "build/bootstrap/main.js",
   "scripts": {
     "postinstall": "node tools/postinstall.js",
@@ -30,8 +32,6 @@
     "https://veonim@gitlab.com/veonim/veonim.git",
     "https://veonim@bitbucket.org/veonim/veonim.git"
   ],
-  "author": "veonim",
-  "license": "MIT",
   "bugs": {
     "url": "https://github.com/veonim/veonim/issues"
   },
