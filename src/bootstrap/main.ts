@@ -1,5 +1,4 @@
-import { app, BrowserWindow, Menu, shell } from 'electron'
-import settingsHandler from '../support/settings-handler'
+import { app, BrowserWindow, Menu } from 'electron'
 
 let win: any
 app.setName('veonim')
@@ -12,7 +11,6 @@ const comscan = (() => {
   return { register, dispatch }
 })()
 
-const settingsObject = settingsHandler().get()
 
 app.on('ready', async () => {
   const menuTemplate = [{
@@ -52,8 +50,8 @@ app.on('ready', async () => {
   Menu.setApplicationMenu(Menu.buildFromTemplate(menuTemplate))
 
   win = new BrowserWindow({
-    width: settingsObject.width || 950,
-    height: settingsObject.height || 700,
+    width: 950,
+    height: 700,
     minWidth: 600,
     minHeight: 400,
     frame: true,
@@ -68,10 +66,6 @@ app.on('ready', async () => {
 
   win.loadURL(`file:///${__dirname}/index.html`)
   comscan.register((ch, msg) => win.webContents.send(ch, msg))
-
-  if (settingsObject.pageX && settingsObject.pageY) win.setPosition(settingsObject.pageX, settingsObject.pageY)
-  
-  if (settingsObject.isFullscreen === true && win.isFullScreenable()) win.setFullScreen(true)
 
   if (process.env.VEONIM_DEV) {
     function debounce (fn: Function, wait = 1) {
@@ -113,17 +107,4 @@ app.on('ready', async () => {
     win.webContents.on('devtools-opened', () => setImmediate(() => win.focus()))
     win.webContents.openDevTools()
   }
-})
-
-app.on('before-quit', () => {
-  // Before quitting everything, take a snapshot for the current settings on this session
-  const [ width, height ] = win.getSize();
-  const [ pageX, pageY ] = win.getPosition();
-  settingsHandler().set({
-    width,
-    height,
-    pageX,
-    pageY,
-    isFullscreen: win.isFullScreen() || false,
-  })
 })
