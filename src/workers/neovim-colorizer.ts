@@ -3,8 +3,8 @@ import MsgpackStreamDecoder from '../messaging/msgpack-decoder'
 import MsgpackStreamEncoder from '../messaging/msgpack-encoder'
 import { Api, Prefixes } from '../neovim/protocol'
 import { on } from '../messaging/worker-client'
-import { Neovim } from '../support/binaries'
 import SetupRPC from '../messaging/rpc'
+import { spawn } from 'child_process'
 import { resolve } from 'path'
 const marked = require('marked')
 
@@ -36,8 +36,8 @@ const runtimeDir = resolve(__dirname, '..', 'runtime')
 const encoder = new MsgpackStreamEncoder()
 const decoder = new MsgpackStreamDecoder()
 
-const proc = Neovim.run([
-  '--cmd', `let $VIM = '${Neovim.$VIM}' | let $VIMRUNTIME = '${Neovim.$VIMRUNTIME}' | let &runtimepath .= ',${runtimeDir}' | let g:veonim = 1 | let g:vn_loaded = 0 | let g:vn_ask_cd = 0`,
+const proc = spawn('nvim', [
+  '--cmd', `let &runtimepath .= ',${runtimeDir}' | let g:veonim = 1 | let g:vn_loaded = 0 | let g:vn_ask_cd = 0`,
   '--cmd', `colorscheme veonim`,
   '--cmd', `exe ":fun! Veonim(...)\\n endfun"`,
   '--cmd', `exe ":fun! VK(...)\\n endfun"`,

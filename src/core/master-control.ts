@@ -4,10 +4,8 @@ import MsgpackStreamEncoder from '../messaging/msgpack-encoder'
 import { startupFuncs, startupCmds } from '../neovim/startup'
 import { Api, Prefixes } from '../neovim/protocol'
 import { Color, Highlight } from '../neovim/types'
-import { Neovim } from '../support/binaries'
-import { ChildProcess } from 'child_process'
+import { ChildProcess, spawn } from 'child_process'
 import SetupRPC from '../messaging/rpc'
-import { homedir } from 'os'
 
 type RedrawFn = (m: any[]) => void
 type ExitFn = (id: number, code: number) => void
@@ -50,19 +48,13 @@ const vimInstances = new Map<number, VimInstance>()
 const msgpackDecoder = new MsgpackStreamDecoder()
 const msgpackEncoder = new MsgpackStreamEncoder()
 
-const spawnVimInstance = (pipeName: string) => Neovim.run([
+const spawnVimInstance = (pipeName: string) => spawn('nvim', [
   '--cmd', `com! -nargs=+ -range -complete=custom,VeonimCmdCompletions Veonim call Veonim(<f-args>)`,
   '--cmd', `com! -nargs=1 Plug call add(g:_veonim_plugins, <args>)`,
   '--embed',
   '--listen',
   pipeName
-], {
-  env: {
-    ...process.env,
-    VIM: Neovim.$VIM,
-    VIMRUNTIME: Neovim.$VIMRUNTIME,
-  },
-})
+])
 
 const createNewVimInstance = (): number => {
   const pipeName = getPipeName('veonim-instance')

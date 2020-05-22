@@ -69,14 +69,6 @@
   },
   "binaryDependencies": [
     {
-      "org": "neovim",
-      "repo": "neovim",
-      "tag": "v0.4.2",
-      "mac": "nvim-macos.tar.gz",
-      "win": "nvim-win64.zip",
-      "linux": "nvim-linux64.tar.gz"
-    },
-    {
       "org": "mholt",
       "repo": "archiver",
       "tag": "v3.1.1",
