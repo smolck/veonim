@@ -106,39 +106,19 @@ Currently the only Neovim GUI that has nyan cat
 - [gnvim](https://github.com/vhakulinen/gnvim)
 - [coc.nvim](https://github.com/neoclide/coc.nvim)
 
-## development
+## build
 
-### stuff you need
-- node
-- npm
+Install the following things:
+- node/npm
 - latest neovim
 
-install dependencies and start automagic watch build and live reload instance
+Then run:
+- `npm install` - standard issue download 5 million node_modules
+- `npm run build` - release build of the code
+- `npm run start:release` (optional) - run the release code without packaging
+- `npm run package` - use electron-builder to create a binary package
 
-```
-npm i
-npm start
-```
-
-### release build
-
-build with release configuration
-
-```
-npm run build
-```
-
-test it out
-```
-npm run start:release
-```
-
-create binary package
-```
-npm run package
-```
-
-binaries available in `dist`
+Binaries available in `dist`
 
 ### development neovim configuration
 
