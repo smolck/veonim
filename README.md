@@ -1,8 +1,8 @@
-![](https://raw.githubusercontent.com/veonim/veonim/release/docs/header.png)
+![](./docs/header.png)
 
 Veonim is a simple modal IDE built on Neovim and VSCode extensions. The goal is to create my ideal programming environment
 
-![](https://raw.githubusercontent.com/veonim/veonim/release/docs/smart.png)
+![](./docs/smart.png)
 
 ## features
 - Superfast with things like WebGL GPU rendering and multithreading
@@ -13,7 +13,6 @@ Veonim is a simple modal IDE built on Neovim and VSCode extensions. The goal is 
 - Fuzzy search files, buffers, buffer text, project text search (powered by ripgrep)
 - Multiple concurrent Neovim instances (like tmux sessions)
 - Fully keyboard driven (no mouse support)
-- But wait, there's more! See the [User Guide](docs/readme.md)
 
 ## getting started
 
@@ -36,12 +35,12 @@ Currently in progress:
 
 ### auto completion
 Auto complete with documentation powered by VSCode extensions. If you want autocompletion, make sure `completefunc` is not overridden in your vimrc
-![](https://raw.githubusercontent.com/veonim/veonim/release/docs/completion.png)
+![](./docs/completion.png)
 
 ### fuzzy file finder
 Fuzzy search to open any file in the current working directory
 - `:Veonim files`
-![](https://raw.githubusercontent.com/veonim/veonim/release/docs/files.png)
+![](./docs/files.png)
 
 ### find in project
 Fuzzy project text search and filter - powered by Ripgrep
@@ -49,22 +48,22 @@ Fuzzy project text search and filter - powered by Ripgrep
 - `:Veonim grep-word`
 - `:Veonim grep-selection`
 - `:Veonim grep-resume`
-![](https://raw.githubusercontent.com/veonim/veonim/release/docs/grep.png)
+![](./docs/grep.png)
 
 ### symbol search
 Fuzzy menu for all current symbols in buffer or workspace. Requires a relevant VSCode language extension
 - `:Veonim symbols`
 - `:Veonim workspace-symbols`
-![](https://raw.githubusercontent.com/veonim/veonim/release/docs/symbols.png)
+![](./docs/symbols.png)
 
 ### signature hint
 Show function signature help and documentation when using Veonim autocompletion. Requires a relevant VSCode language extension. Requires `completefunc` to not be overridden
-![](https://raw.githubusercontent.com/veonim/veonim/release/docs/hint.png)
+![](./docs/hint.png)
 
 ### hover information
 Show hover information and documentation about the current symbol under the cursor. Requires a relevant VSCode language extension
 - `:Veonim hover`
-![](https://raw.githubusercontent.com/veonim/veonim/release/docs/hover.png)
+![](./docs/hover.png)
 
 ### problems
 Underline problems, view error details, navigate between errors, and apply refactoring fixes as reported by a VSCode language extension
@@ -72,12 +71,12 @@ Underline problems, view error details, navigate between errors, and apply refac
 - `:Veonim next-problem`
 - `:Veonim prev-problem`
 - `:Veonim code-action`
-![](https://raw.githubusercontent.com/veonim/veonim/release/docs/problems.png)
+![](./docs/problems.png)
 
 ### explorer
 Fuzzy find and navigate files and directories
 - `:Veonim explorer`
-![](https://raw.githubusercontent.com/veonim/veonim/release/docs/explorer.png)
+![](./docs/explorer.png)
 
 ### references
 Find all references, jump between references, goto definition/implementation/typedef, and highlight document symbols. Requires a relevant VSCode language extension
@@ -89,17 +88,17 @@ Find all references, jump between references, goto definition/implementation/typ
 - `:Veonim type-definition`
 - `:Veonim highlight`
 - `:Veonim highlight-clear`
-![](https://raw.githubusercontent.com/veonim/veonim/release/docs/references.png)
+![](./docs/references.png)
 
 ### buffer search
 Fuzzy search current buffer text
 - `:Veonim buffer-search`
-![](https://raw.githubusercontent.com/veonim/veonim/release/docs/buffer-search.png)
+![](./docs/buffer-search.png)
 
 ### nyan cat
 Currently the only Neovim GUI that has nyan cat
 - `:Veonim nc`
-![](https://raw.githubusercontent.com/veonim/veonim/release/docs/nyan.png)
+![](./docs/nyan.png)
 
 ## other cool projects you should check out
 
