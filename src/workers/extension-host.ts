@@ -10,8 +10,8 @@ import '../extension-host/extension-discovery'
 process.env.ELECTRON_RUN_AS_NODE = '1'
 if (process.env.VEONIM_DEV) require('../dev/ext-host-development')
 
-// TODO: ALL THIS SHIT BELOW relates to debuggers. we need to clean it up once we get vscode extensions
-// setup properly. we should move all this shit to their own modules. extension-host should only be
+// TODO: ALL THESE THINGS BELOW relate to debuggers. we need to clean it up once we get vscode extensions
+// setup properly. we should move all these things to their own modules. extension-host should only be
 // a loader for all extension-host modules
 
 // import { DebugConfiguration, collectDebuggersFromExtensions,

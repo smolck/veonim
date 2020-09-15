@@ -245,7 +245,7 @@ const buffers = {
   find: async (path: string) => {
     const buffers = await getNamedBuffers()
     // it appears that buffers name will have a fullpath, like
-    // `/Users/anna/${name}` so we will try to substring match 
+    // `/Users/anna/${name}` so we will try to substring match
     // the end of the name
     const found = buffers.find(b => b.name.endsWith(path)) || { buffer: dummy.buf }
     return found.buffer

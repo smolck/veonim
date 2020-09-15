@@ -64,7 +64,6 @@ const createNewVimInstance = (): number => {
   vimInstances.set(id, { id, proc, pipeName, attached: false })
 
   proc.on('error', (e: any) => console.error(`vim ${id} err ${e}`))
-  // someone fucked up the types so i gotta do this shit with the !!!!! symbols
   proc.stdout!.on('error', (e: any) => console.error(`vim ${id} stdout err ${(JSON.stringify(e))}`))
   proc.stdin!.on('error', (e: any) => console.error(`vim ${id} stdin err ${(JSON.stringify(e))}`))
   proc.on('exit', (c: any) => onExitFn(id, c))

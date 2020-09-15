@@ -140,7 +140,7 @@ menus. e.g. (floating windows maybe?)
 - auto add to quick fix list (to allow :cdo commands):
   - references
   - problems
-  - grep 
+  - grep
 
 - improved perf of completions overlay menu
   - its "fast enough" to not feel laggy
@@ -201,7 +201,7 @@ menus. e.g. (floating windows maybe?)
 
 - [requires: *floating windows*] terminal scratch buffers/editors
   - use floating window for terminal scratch buffer. say i want to type a super fancy and long git commit msg, open scratch buffer, do the edits and whatnot, then "save" buffer to terminal prompt (this is like c-x, c-e, but it is sized only to fit the content of the prompt)
-  - can also be used for $VISUAL and $EDITOR. make a floating window like 80% of the parent window. this could be a command like `vvim` that can be set and used for git merge messages and other shit.
+  - can also be used for $VISUAL and $EDITOR. make a floating window like 80% of the parent window. this could be a command like `vvim` that can be set and used for git merge messages and such.
   - replace `C-X, C-E` with a small neovim buffer overlay
     - one line+auto resizing to num of written lines
 
@@ -289,7 +289,7 @@ menus. e.g. (floating windows maybe?)
 - visual test results
   - at least somehow to show total number of fail/pass, last run, and jumplist for error files. would be nice to have desc and errors as well. maybe json output? maybe a common format( tap? is it machine readable, containsa ll info? )
 
-- multi-monitor support? 
+- multi-monitor support?
   - with shada and edge detection (when c-w l on right most window, go to next monitor)
   - problem is how do we share veonim state between windows.
   - REAL PROBLEM is how to share low-latency functions between windows (render/input/etc)

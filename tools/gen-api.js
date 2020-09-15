@@ -20,7 +20,7 @@ const mix = (...a) => Object.assign({}, ...a)
 const { stdin, stdout } = Neovim(['--embed', '-u', 'NORC'])
 const stupidEncoder = createEncodeStream()
 const encoder = stupidEncoder.pipe(stdin)
-const toVim = m => encoder.write(encode(m)) // <-- lol wtf?!
+const toVim = m => encoder.write(encode(m))
 
 const decoder = createDecodeStream()
 stdout.pipe(decoder)

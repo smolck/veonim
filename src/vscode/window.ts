@@ -170,7 +170,7 @@ const window: typeof vsc.window = {
   },
   setStatusBarMessage: (text: string, timeoutOrThenable?: any) => {
     showStatusBarMessage(text)
-    // TODO: this is a real shit way of doing because we could be overriding
+    // TODO: this is a really bad way of doing this because we could be overriding
     // other messages possibly presented by nvim
     if (is.number(timeoutOrThenable)) {
       setTimeout(() => showStatusBarMessage(''), timeoutOrThenable as number)

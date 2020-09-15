@@ -34,7 +34,7 @@ const runTask = (task: vsc.Task): vsc.TaskExecution => {
   }
 
   // TODO: actually start the task
-  // start the task process and shit
+  // start the task process and stuff
   // emit taskstartprocess and taskendprocess events
 
   const taskExec = { task, terminate }

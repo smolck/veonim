@@ -162,7 +162,7 @@ const ui = app<S, A>({ name: 'inventory', state, view, actions })
 // is called dynamically and asynchronously.
 //
 // we can require modules on demand for onAction param. eg
-// { 
+// {
 //  layer: Language,
 //  keybind: 'h',
 //  name: 'hover',
@@ -255,7 +255,7 @@ const doIntenvory = async () => {
     restoreInput()
     ui.hide()
 
-    // some actions funcs will switch input modes. need to cleanup our shit
+    // some actions funcs will switch input modes. need to cleanup things
     // and only then call the action callback function.
     //
     if (actionFn) setImmediate(actionFn)

@@ -168,7 +168,7 @@ const api = {
     }, [] as vsc.CompletionItem[])
 
     // the CompletionItem returned from the extensions has a bunch of extra
-    // shit tacked onto it that is not part of the CompletionItem interface.
+    // stuff tacked onto it that is not part of the CompletionItem interface.
     // we don't want to transfer all the extra memes across threads as it makes
     // serialization take much too long, and some stuff is lost during the
     // serialization process.

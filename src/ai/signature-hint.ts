@@ -90,7 +90,7 @@ const getSignatureHint = async (lineContent: string) => {
 
   // TODO: should probably also hide if we jumped to another line
   // how do we determine the difference between multiline signatures and exit signature?
-  // would need to check if cursor is outside of func brackets doShit(    )   | <- cursor
+  // would need to check if cursor is outside of func brackets doStuff(    )   | <- cursor
   const closeSignatureHint = shouldCloseSignatureHint(cache.totalParams, cache.currentParam, triggerChars, leftChar)
   if (closeSignatureHint) return ui.signatureHint.hide()
 
