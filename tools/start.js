@@ -1,7 +1,7 @@
 'use strict'
 
 const { $, go, run, fromRoot, createTask } = require('./runner')
-const { copy, copyAll, unfuckTypescript } = require('./build')
+const { copy, copyAll, fixTypescript } = require('./build')
 const fs = require('fs-extra')
 
 const devConfig = fromRoot('xdg_config')
@@ -19,7 +19,7 @@ go(async () => {
   run('tsc -p src/tsconfig.json --watch --preserveWatchOutput', {
     outputMatch: 'watching for file changes',
     onOutputMatch: async () => {
-      await unfuckTypescript()
+      await fixTypescript()
       copy.index()
       copy.processExplorer()
       tsc.done()

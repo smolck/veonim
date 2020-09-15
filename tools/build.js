@@ -40,10 +40,9 @@ const copy = {
   },
 }
 
-const wtfTypescriptSucks = 'Object.defineProperty(exports, "__esModule", { value: true });'
+const typescriptThing = 'Object.defineProperty(exports, "__esModule", { value: true });'
 
-const unfuckTypescript = async () => {
-  $`unfucking typescript exports shit javascript/electron is cancer programming sucks`
+const fixTypescript = async () => {
   const dirs = await getDirFiles(fromRoot('build'))
   const filesReq = dirs.reduce((files, dir) => {
     return [...files, getDirFiles(dir.path)]
@@ -58,8 +57,8 @@ const unfuckTypescript = async () => {
 
   const requests = jsFiles.map(async f => {
     const filedata = await fs.readFile(f, 'utf8')
-    const unfucked = filedata.replace(wtfTypescriptSucks, '')
-    return fs.writeFile(f, unfucked)
+    const fixed = filedata.replace(typescriptThing, '')
+    return fs.writeFile(f, fixed)
   })
 
   return Promise.all(requests)
@@ -79,8 +78,8 @@ require.main === module && go(async () => {
   $`cleaning build folder`
   await fs.emptyDir(fromRoot('build'))
   await run('ttsc -p src/tsconfig.json')
-  await unfuckTypescript()
+  await fixTypescript()
   await copyAll()
 })
 
-module.exports = { paths, copy, copyAll, unfuckTypescript }
+module.exports = { paths, copy, copyAll, fixTypescript }
