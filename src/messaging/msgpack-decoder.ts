@@ -160,7 +160,7 @@ export default class extends Transform {
     // float32
     else if (m === 0xca) {
       const val = raw.readFloatBE(this.ix + 1);
-      this.ix += 9
+      this.ix += 5
       return val
     }
 
