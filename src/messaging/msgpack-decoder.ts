@@ -157,6 +157,13 @@ export default class extends Transform {
       return val
     }
 
+    // float32
+    else if (m === 0xca) {
+      const val = raw.readFloatBE(this.ix + 1);
+      this.ix += 9
+      return val
+    }
+
     // str32
     else if (m === 0xdb) {
       const length = (raw[this.ix + 1] * 16777216) + (raw[this.ix + 2] << 16) + (raw[this.ix + 3] << 8) + raw[this.ix + 4]
@@ -221,6 +228,13 @@ export default class extends Transform {
     // int64
     else if (m === 0xd3) {
       const val = this.toBigInt(raw, this.ix + 1)
+      this.ix += 9
+      return val
+    }
+
+    // float64
+    else if (m === 0xcb) {
+      const val = raw.readDoubleBE(this.ix + 1);
       this.ix += 9
       return val
     }
