@@ -60,7 +60,7 @@ const nutella = () => {
       const width = cols * cell.width
       const height = rows * cell.height
 
-      const sameGridSize = gridSize.rows === rows && gridSize.cols === cols 
+      const sameGridSize = gridSize.rows === rows && gridSize.cols === cols
       const sameViewportSize = viewport.height === height && viewport.width === width
       if (sameGridSize || sameViewportSize) return
 

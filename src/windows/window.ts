@@ -16,6 +16,7 @@ export interface WindowInfo {
   width: number
   height: number
   visible: boolean
+  is_float: boolean
 }
 
 interface GridStyle {
@@ -159,6 +160,22 @@ export default () => {
   }
 
   api.setWindowInfo = info => {
+    if (info.is_float) {
+      const { x, y } = api.positionToWorkspacePixels(info.row, info.col)
+
+      Object.assign(nameplate.element.style, {
+        display: 'none'
+      })
+
+      Object.assign(container.style, {
+        position: 'absolute',
+        width: '100%',
+        height: '100%',
+        top: `${y}px`,
+        left: `${x}px`
+      })
+    }
+
     if (!wininfo.visible) {
       container.style.display = 'flex'
       webgl.renderGridBuffer()
@@ -171,8 +188,8 @@ export default () => {
 
   api.getWindowInfo = () => ({ ...wininfo })
 
-  api.positionToWorkspacePixels = (row, col, fuckTypescript) => {
-    const { within = false, padding = true } = fuckTypescript || {} as PosOpts
+  api.positionToWorkspacePixels = (row, col, maybeOpts) => {
+    const { within = false, padding = true } = maybeOpts || {} as PosOpts
     const winX = Math.floor(col * cell.width)
     const winY = Math.floor(row * cell.height)
 
@@ -234,9 +251,11 @@ export default () => {
     Object.assign(layout, { x, y, width, height })
     webgl.layout(x + paddingX, y + paddingY, width, height)
 
-    Object.assign(container.style, {
-      border: '1px solid var(--background-30)',
-    }, edgeDetection(container))
+    if (!wininfo.is_float) {
+      Object.assign(container.style, {
+        border: '1px solid var(--background-30)',
+      }, edgeDetection(container))
+    }
   }
 
   api.addOverlayElement = element => {
@@ -294,8 +313,8 @@ export default () => {
 
       return results
     },
-    positionToEditorPixels: (line, col, fuckTypescript) => {
-      const { within = false, padding = true } = fuckTypescript || {} as PosOpts
+    positionToEditorPixels: (line, col, maybeOpts) => {
+      const { within = false, padding = true } = maybeOpts || {} as PosOpts
       const row = line - instanceAPI.nvim.state.editorTopLine
       const winX = Math.floor(col * cell.width)
       const winY = Math.floor(row * cell.height)

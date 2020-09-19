@@ -179,11 +179,55 @@ const tabline_update = ([ , [ curtab, tabs ] ]: any) => {
   requestAnimationFrame(() => dispatch.pub('tabs', { curtab, tabs }))
 }
 
+const win_close = (e: any) => {
+  windows.remove(e[1])
+  requestAnimationFrame(() => windows.layout())
+}
+
+const win_float_pos = (e: any) => {
+  const count = e.length
+
+  for (let ix = 1; ix < count; ix++) {
+    const [ gridId, { id: windowId }, anchor, anchor_grid, anchor_row, anchor_col, focusable ] = e[ix]
+    if (anchor_grid !== 1) {
+      // Position relative to anchor window
+      const anchorWindow = windows.get(anchor_grid)
+
+      // TODO(smolck): Implement
+      console.warn("Anchor window relative float positioning not implemented yet!")
+      return
+    }
+
+    const grid = windows.get(gridId)
+    const gridInfo = grid.getWindowInfo()
+
+    switch (anchor) {
+      case "NW": // northwest
+        // console.log(`cols: ${activeGrid.cols - grid.cols}, rows: ${activeGrid.rows - grid.rows}`)
+        windows.set(windowId,
+                    gridId,
+                    anchor_row,
+                    anchor_col,
+                    gridInfo.width,
+                    gridInfo.height,
+                    true)
+        break
+      case "NE": // northeast
+        break
+      case "SW": // southwest
+        break
+      case "SE": // southeast
+        break
+    }
+  }
+}
+
 onRedraw(redrawEvents => {
   // because of circular logic/infinite loop. cmdline_show updates UI, UI makes
   // a change in the cmdline, nvim sends redraw again. we cut that stuff out
   // with coding and algorithms
   // TODO: but y tho
+
   if (renderEvents.doNotUpdateCmdlineIfSame(redrawEvents[0])) return
   let winUpdates = false
   const messageEvents = []
@@ -198,6 +242,8 @@ onRedraw(redrawEvents => {
     else if (e === 'grid_scroll') grid_scroll(ev)
     else if (e === 'grid_cursor_goto') grid_cursor_goto(ev)
     else if (e === 'win_pos') (winUpdates = true, win_pos(ev))
+    else if (e === 'win_float_pos') win_float_pos(ev)
+    else if (e === 'win_close') win_close(ev)
     else if (e === 'win_hide') (winUpdates = true, win_hide(ev))
     else if (e === 'grid_resize') (winUpdates = true, grid_resize(ev))
     else if (e === 'grid_clear') grid_clear(ev)
