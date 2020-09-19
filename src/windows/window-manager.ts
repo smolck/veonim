@@ -47,11 +47,11 @@ export const getActive = () => {
   return win
 }
 
-export const set = (id: number, gridId: number, row: number, col: number, width: number, height: number, is_float: boolean = false) => {
+export const set = (id: number, gridId: number, row: number, col: number, width: number, height: number, is_float: boolean = false, anchor = '') => {
   const wid = superid(id)
   const gid = superid(gridId)
   const win = windows.get(gid) || CreateWindow()
-  win.setWindowInfo({  is_float, row, col, width, height, visible: true, id: wid, gridId: gid, })
+  win.setWindowInfo({ anchor, is_float, row, col, width, height, visible: true, id: wid, gridId: gid, })
 
   if (!windows.has(gid)) windows.set(gid, win)
   if (!windowsById.has(wid)) windowsById.set(wid, win)

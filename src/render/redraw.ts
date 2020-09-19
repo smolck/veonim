@@ -201,24 +201,40 @@ const win_float_pos = (e: any) => {
     const grid = windows.get(gridId)
     const gridInfo = grid.getWindowInfo()
 
-    switch (anchor) {
-      case "NW": // northwest
-        // console.log(`cols: ${activeGrid.cols - grid.cols}, rows: ${activeGrid.rows - grid.rows}`)
-        windows.set(windowId,
-                    gridId,
-                    anchor_row,
-                    anchor_col,
-                    gridInfo.width,
-                    gridInfo.height,
-                    true)
-        break
-      case "NE": // northeast
-        break
-      case "SW": // southwest
-        break
-      case "SE": // southeast
-        break
-    }
+    windows.set(windowId,
+                gridId,
+                anchor_row,
+                anchor_col,
+                gridInfo.width,
+                gridInfo.height,
+                true,
+                anchor)
+    // switch (anchor) {
+    //   case "NW": // northwest
+    //     windows.set(windowId,
+    //                 gridId,
+    //                 anchor_row,
+    //                 anchor_col,
+    //                 gridInfo.width,
+    //                 gridInfo.height,
+    //                 true,
+    //                 anchor)
+    //     break
+    //   case "NE": // northeast
+    //     windows.set(windowId,
+    //                 gridId,
+    //                 anchor_row,
+    //                 anchor_col,
+    //                 gridInfo.width,
+    //                 gridInfo.height,
+    //                 true,
+    //                 anchor)
+    //     break
+    //   case "SW": // southwest
+    //     break
+    //   case "SE": // southeast
+    //     break
+    // }
   }
 }
 

@@ -17,6 +17,7 @@ export interface WindowInfo {
   height: number
   visible: boolean
   is_float: boolean
+  anchor: string
 }
 
 interface GridStyle {
@@ -162,6 +163,8 @@ export default () => {
   api.setWindowInfo = info => {
     if (info.is_float) {
       const { x, y } = api.positionToWorkspacePixels(info.row, info.col)
+      const xPx = `${x}px`
+      const yPx = `${y}px`
 
       Object.assign(nameplate.element.style, {
         display: 'none'
@@ -171,9 +174,18 @@ export default () => {
         position: 'absolute',
         width: '100%',
         height: '100%',
-        top: `${y}px`,
-        left: `${x}px`
       })
+
+      // TODO(smolck): How to handle windows positioned outside editor window?
+      // Clamp it to editor width, or let it go outside? TUI clamps it, so
+      // that's probably safest bet.
+      switch (info.anchor) {
+        case 'NW':
+          Object.assign(container.style, { top: yPx, left: xPx })
+        case 'NE':
+          Object.assign(container.style, { top: yPx, right: xPx })
+          break
+      }
     }
 
     if (!wininfo.visible) {
