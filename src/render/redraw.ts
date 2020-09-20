@@ -189,52 +189,60 @@ const win_float_pos = (e: any) => {
 
   for (let ix = 1; ix < count; ix++) {
     const [ gridId, { id: windowId }, anchor, anchor_grid, anchor_row, anchor_col, focusable ] = e[ix]
-    if (anchor_grid !== 1) {
-      // Position relative to anchor window
-      const anchorWindow = windows.get(anchor_grid)
 
-      // TODO(smolck): Implement
-      console.warn("Anchor window relative float positioning not implemented yet!")
+    // TODO(smolck): How to handle windows positioned outside editor window?
+    // Clamp it to the editor width & height, or let it go outside the editor window
+    // (as it does now)? TUI clamps it, so that's probably safest bet.
+
+    // Handle floats not relative to editor.
+    if (anchor_grid !== 1) {
+      // TODO(smolck): I think the main grid is always id 2 (in Veonim). Could be wrong
+      // though, so maybe verify somehow?
+      const mainGridInfo = windows.get(2).getWindowInfo()
+      const gridInfo = windows.get(gridId).getWindowInfo()
+
+      // Position relative to anchor window
+      const anchorGrid = windows.get(anchor_grid)
+
+      let row, col
+      let rowOffset = anchorGrid.row === mainGridInfo.row ? 0 : anchorGrid.row
+      let colOffset = anchorGrid.col === mainGridInfo.col ? 0 : anchorGrid.col
+
+      if (anchor === 'NE') (row = anchor_row + rowOffset, col = anchor_col + colOffset - gridInfo.width)
+      else if (anchor === 'NW') (row = anchor_row + rowOffset, col = anchor_col + colOffset)
+      else if (anchor === 'SE') (row = anchor_row + rowOffset - gridInfo.height, col = anchor_col + colOffset - gridInfo.width)
+      else if (anchor === 'SW') (row = anchor_row + rowOffset - gridInfo.height, col = anchor_col + colOffset)
+      else throw new Error('Anchor was not one of the four possible values, this should not be possible.')
+
+      windows.set(windowId,
+                  gridId,
+                  row,
+                  col,
+                  gridInfo.width,
+                  gridInfo.height,
+                  true,
+                  anchor)
       return
     }
 
     const grid = windows.get(gridId)
     const gridInfo = grid.getWindowInfo()
 
+    let row, col
+    if (anchor === 'NE') (row = anchor_row, col = anchor_col - gridInfo.width)
+    else if (anchor === 'NW') (row = anchor_row, col = anchor_col)
+    else if (anchor === 'SE') (row = anchor_row - gridInfo.height, col = anchor_col - gridInfo.width)
+    else if (anchor === 'SW') (row = anchor_row - gridInfo.height, col = anchor_col)
+    else throw new Error('Anchor was not one of the four possible values, this should not be possible.')
+
     windows.set(windowId,
                 gridId,
-                anchor_row,
-                anchor_col,
+                row,
+                col,
                 gridInfo.width,
                 gridInfo.height,
                 true,
                 anchor)
-    // switch (anchor) {
-    //   case "NW": // northwest
-    //     windows.set(windowId,
-    //                 gridId,
-    //                 anchor_row,
-    //                 anchor_col,
-    //                 gridInfo.width,
-    //                 gridInfo.height,
-    //                 true,
-    //                 anchor)
-    //     break
-    //   case "NE": // northeast
-    //     windows.set(windowId,
-    //                 gridId,
-    //                 anchor_row,
-    //                 anchor_col,
-    //                 gridInfo.width,
-    //                 gridInfo.height,
-    //                 true,
-    //                 anchor)
-    //     break
-    //   case "SW": // southwest
-    //     break
-    //   case "SE": // southeast
-    //     break
-    // }
   }
 }
 

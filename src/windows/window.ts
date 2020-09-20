@@ -174,24 +174,9 @@ export default () => {
         position: 'absolute',
         width: '100%',
         height: '100%',
+        top: yPx,
+        left: xPx
       })
-
-      // TODO(smolck): How to handle windows positioned outside editor window?
-      // Clamp it to the editor width & height, or let it go outside the editor window
-      // (as it does now)? TUI clamps it, so that's probably safest bet.
-      switch (info.anchor) {
-        case 'NW':
-          Object.assign(container.style, { top: yPx, left: xPx })
-        case 'NE':
-          Object.assign(container.style, { top: yPx, right: xPx })
-          break
-        case 'SW':
-          Object.assign(container.style, { bottom: yPx, left: xPx })
-          break
-        case 'SE':
-          Object.assign(container.style, { bottom: yPx, right: xPx })
-          break
-      }
     }
 
     if (!wininfo.visible) {
