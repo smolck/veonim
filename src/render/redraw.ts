@@ -181,7 +181,6 @@ const tabline_update = ([ , [ curtab, tabs ] ]: any) => {
 
 const win_close = (e: any) => {
   windows.remove(e[1])
-  requestAnimationFrame(() => windows.layout())
 }
 
 const win_float_pos = (e: any) => {
@@ -266,8 +265,8 @@ onRedraw(redrawEvents => {
     else if (e === 'grid_scroll') grid_scroll(ev)
     else if (e === 'grid_cursor_goto') grid_cursor_goto(ev)
     else if (e === 'win_pos') (winUpdates = true, win_pos(ev))
-    else if (e === 'win_float_pos') win_float_pos(ev)
-    else if (e === 'win_close') win_close(ev)
+    else if (e === 'win_float_pos') (winUpdates = true, win_float_pos(ev))
+    else if (e === 'win_close') (winUpdates = true, win_close(ev))
     else if (e === 'win_hide') (winUpdates = true, win_hide(ev))
     else if (e === 'grid_resize') (winUpdates = true, grid_resize(ev))
     else if (e === 'grid_clear') grid_clear(ev)
