@@ -185,6 +185,12 @@ export default () => {
         case 'NE':
           Object.assign(container.style, { top: yPx, right: xPx })
           break
+        case 'SW':
+          Object.assign(container.style, { bottom: yPx, left: xPx })
+          break
+        case 'SE':
+          Object.assign(container.style, { bottom: yPx, right: xPx })
+          break
       }
     }
 
