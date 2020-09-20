@@ -45,7 +45,7 @@ export default class extends Transform {
     this.ix += length
     if (length === 0) return EMPTY_STR
     // this is probably the most clever line in this module. deserializing
-    // msgpack is fucking slow in v8. outside of JSON, allocating strings is
+    // msgpack is really slow in v8. outside of JSON, allocating strings is
     // super slow and the bulk of our string allocs come from "grid_line" events
     // which contain 1 char strings.
     //
