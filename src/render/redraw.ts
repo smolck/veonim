@@ -197,7 +197,6 @@ const win_float_pos = (e: any) => {
     if (anchor_grid !== 1) {
       // TODO(smolck): I think the main grid is always id 2 (in Veonim). Could be wrong
       // though, so maybe verify somehow?
-      const mainGridInfo = windows.get(2).getWindowInfo()
       const gridInfo = windows.get(gridId).getWindowInfo()
 
       // Position relative to anchor window
@@ -206,14 +205,15 @@ const win_float_pos = (e: any) => {
       let row, col
 
       // Vim lines are zero-indexed, so . . . add 1
-      let rowOffset = anchorGrid.row === mainGridInfo.row ? 0 : anchorGrid.row + 1
-      let colOffset = anchorGrid.col === mainGridInfo.col ? 0 : anchorGrid.col + 1
+      let rowOffset, colOffset
+      rowOffset = anchorGrid.row + 1
+      colOffset = anchorGrid.col
 
-      // Vim lines are zero-indexed, so . . . add 1 to the rows & cols
-      if (anchor === 'NE') (row = 1 + anchor_row + rowOffset, col = anchor_col + colOffset - gridInfo.width)
-      else if (anchor === 'NW') (row = 1 + anchor_row + rowOffset, col = anchor_col + colOffset)
-      else if (anchor === 'SE') (row = 1 + anchor_row + rowOffset - gridInfo.height, col = anchor_col + colOffset - gridInfo.width)
-      else if (anchor === 'SW') (row = 1 + anchor_row + rowOffset - gridInfo.height, col = anchor_col + colOffset)
+      // Vim lines are zero-indexed, so . . . add 1 to the rows
+      if (anchor === 'NE') (row = anchor_row + rowOffset, col = anchor_col + colOffset - gridInfo.width)
+      else if (anchor === 'NW') (row = anchor_row + rowOffset, col = anchor_col + colOffset)
+      else if (anchor === 'SE') (row = anchor_row + rowOffset - gridInfo.height, col = anchor_col + colOffset - gridInfo.width)
+      else if (anchor === 'SW') (row = anchor_row + rowOffset - gridInfo.height, col = anchor_col + colOffset)
       else throw new Error('Anchor was not one of the four possible values, this should not be possible.')
 
       windows.set(windowId,
@@ -224,6 +224,8 @@ const win_float_pos = (e: any) => {
                   gridInfo.height,
                   true,
                   anchor)
+
+      windows.calculateGlobalOffset(anchorGrid, windows.get(gridId))
       continue
     }
 

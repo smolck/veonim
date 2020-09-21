@@ -34,6 +34,26 @@ const refreshWebGLGrid = () => {
   getInstanceWindows().forEach(w => w.redrawFromGridBuffer())
 }
 
+export const calculateGlobalOffset = (anchorWin: Window, float: Window) => {
+  // TODO(smolck): Throw error?
+  if (!anchorWin.element.style.gridArea) throw new Error("Anchor doesn't have grid-area css")
+  if (!float.element.style.top) throw new Error("Floating window doesn't have top positioning")
+  if (!float.element.style.left) throw new Error("Floating window doesn't have left positioning")
+
+  const [ rowStart, colStart ] = anchorWin.element.style.gridArea.split('/')
+
+  const nTop = parseInt(rowStart, 10) - 1
+  const nLeft = parseInt(colStart, 10) - 1
+
+  // TODO(smolck): These calculations are *slightly* off, so . . . fix that.
+  const newTop =
+    parseInt(float.element.style.top, 10) + (nTop * workspace.size.nameplateHeight) + (nTop === 0 ? 3 : nTop * 3) + "px"
+  Object.assign(float.element.style, {
+    top: newTop,
+    left: parseInt(float.element.style.left, 10) + (nLeft * (workspace.pad.x + 2)) + "px"
+  })
+}
+
 export const createWebGLView = () => webgl.createView()
 
 export const setActiveGrid = (id: number) => Object.assign(state, {

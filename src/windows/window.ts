@@ -172,11 +172,9 @@ export default () => {
 
   api.setWindowInfo = info => {
     if (info.is_float) {
-      const { x, y } = api.positionToWorkspacePixels(info.row, info.col, { within: true, padding: false})
+      const { x, y } = api.positionToWorkspacePixels(info.row, info.col, { within: true, padding: false })
       const xPx = `${x}px`
-
-      // Add just y padding
-      const yPx = `${y+paddingY}px`
+      const yPx = `${y}px`
 
       Object.assign(nameplate.element.style, {
         display: 'none'
