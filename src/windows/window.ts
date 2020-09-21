@@ -105,7 +105,17 @@ export const paddingX = 5
 export const paddingY = 4
 
 export default () => {
-  const wininfo: WindowInfo = { id: '0', gridId: '0', row: 0, col: 0, width: 0, height: 0, visible: true }
+  const wininfo: WindowInfo = {
+    id: '0',
+    gridId: '0',
+    row: 0,
+    col: 0,
+    width: 0,
+    height: 0,
+    visible: true,
+    is_float: false,
+    anchor: ''
+  }
   const layout = { x: 0, y: 0, width: 0, height: 0 }
   const webgl = createWebGLView()
 
@@ -162,7 +172,7 @@ export default () => {
 
   api.setWindowInfo = info => {
     if (info.is_float) {
-      const { x, y } = api.positionToWorkspacePixels(info.row, info.col)
+      const { x, y } = api.positionToWorkspacePixels(info.row, info.col, { within: true })
       const xPx = `${x}px`
       const yPx = `${y}px`
 
