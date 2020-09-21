@@ -204,13 +204,20 @@ const win_float_pos = (e: any) => {
       const anchorGrid = windows.get(anchor_grid)
 
       let row, col
-      let rowOffset = anchorGrid.row === mainGridInfo.row ? 0 : anchorGrid.row
-      let colOffset = anchorGrid.col === mainGridInfo.col ? 0 : anchorGrid.col
 
-      if (anchor === 'NE') (row = anchor_row + rowOffset, col = anchor_col + colOffset - gridInfo.width)
-      else if (anchor === 'NW') (row = anchor_row + rowOffset, col = anchor_col + colOffset)
-      else if (anchor === 'SE') (row = anchor_row + rowOffset - gridInfo.height, col = anchor_col + colOffset - gridInfo.width)
-      else if (anchor === 'SW') (row = anchor_row + rowOffset - gridInfo.height, col = anchor_col + colOffset)
+      // Vim lines are zero-indexed, so . . . add 1
+      let rowOffset = anchorGrid.row === mainGridInfo.row ? 0 : anchorGrid.row + 1
+      let colOffset = anchorGrid.col === mainGridInfo.col ? 0 : anchorGrid.col + 1
+
+      // Vim lines are zero-indexed, so . . . add 1 to the rows & cols
+      if (anchor === 'NE')
+        (row = 1 + anchor_row + rowOffset, col = 1 + anchor_col + colOffset - gridInfo.width)
+      else if (anchor === 'NW')
+        (row = 1 + anchor_row + rowOffset, col = 1 + anchor_col + colOffset)
+      else if (anchor === 'SE')
+        (row = 1 + anchor_row + rowOffset - gridInfo.height, col = 1 + anchor_col + colOffset - gridInfo.width)
+      else if (anchor === 'SW')
+        (row = 1 + anchor_row + rowOffset - gridInfo.height, col = 1 + anchor_col + colOffset)
       else throw new Error('Anchor was not one of the four possible values, this should not be possible.')
 
       windows.set(windowId,
@@ -228,10 +235,12 @@ const win_float_pos = (e: any) => {
     const gridInfo = grid.getWindowInfo()
 
     let row, col
-    if (anchor === 'NE') (row = anchor_row, col = anchor_col - gridInfo.width)
-    else if (anchor === 'NW') (row = anchor_row, col = anchor_col)
-    else if (anchor === 'SE') (row = anchor_row - gridInfo.height, col = anchor_col - gridInfo.width)
-    else if (anchor === 'SW') (row = anchor_row - gridInfo.height, col = anchor_col)
+
+    // Vim lines are zero-indexed, so . . . add 1
+    if (anchor === 'NE') (row = 1 + anchor_row, col = 1 + anchor_col - gridInfo.width)
+    else if (anchor === 'NW') (row = 1 + anchor_row, col = 1 + anchor_col)
+    else if (anchor === 'SE') (row = 1 + anchor_row - gridInfo.height, col = 1 + anchor_col - gridInfo.width)
+    else if (anchor === 'SW') (row = 1 + anchor_row - gridInfo.height, col = 1 + anchor_col)
     else throw new Error('Anchor was not one of the four possible values, this should not be possible.')
 
     windows.set(windowId,

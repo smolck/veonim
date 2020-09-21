@@ -172,7 +172,7 @@ export default () => {
 
   api.setWindowInfo = info => {
     if (info.is_float) {
-      const { x, y } = api.positionToWorkspacePixels(info.row, info.col, { within: true })
+      const { x, y } = api.positionToWorkspacePixels(info.row, info.col, { within: true, padding: false })
       const xPx = `${x}px`
       const yPx = `${y}px`
 
