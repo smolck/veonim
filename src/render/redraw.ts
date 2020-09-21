@@ -210,14 +210,10 @@ const win_float_pos = (e: any) => {
       let colOffset = anchorGrid.col === mainGridInfo.col ? 0 : anchorGrid.col + 1
 
       // Vim lines are zero-indexed, so . . . add 1 to the rows & cols
-      if (anchor === 'NE')
-        (row = 1 + anchor_row + rowOffset, col = 1 + anchor_col + colOffset - gridInfo.width)
-      else if (anchor === 'NW')
-        (row = 1 + anchor_row + rowOffset, col = 1 + anchor_col + colOffset)
-      else if (anchor === 'SE')
-        (row = 1 + anchor_row + rowOffset - gridInfo.height, col = 1 + anchor_col + colOffset - gridInfo.width)
-      else if (anchor === 'SW')
-        (row = 1 + anchor_row + rowOffset - gridInfo.height, col = 1 + anchor_col + colOffset)
+      if (anchor === 'NE') (row = 1 + anchor_row + rowOffset, col = anchor_col + colOffset - gridInfo.width)
+      else if (anchor === 'NW') (row = 1 + anchor_row + rowOffset, col = anchor_col + colOffset)
+      else if (anchor === 'SE') (row = 1 + anchor_row + rowOffset - gridInfo.height, col = anchor_col + colOffset - gridInfo.width)
+      else if (anchor === 'SW') (row = 1 + anchor_row + rowOffset - gridInfo.height, col = anchor_col + colOffset)
       else throw new Error('Anchor was not one of the four possible values, this should not be possible.')
 
       windows.set(windowId,
@@ -237,10 +233,10 @@ const win_float_pos = (e: any) => {
     let row, col
 
     // Vim lines are zero-indexed, so . . . add 1
-    if (anchor === 'NE') (row = 1 + anchor_row, col = 1 + anchor_col - gridInfo.width)
-    else if (anchor === 'NW') (row = 1 + anchor_row, col = 1 + anchor_col)
-    else if (anchor === 'SE') (row = 1 + anchor_row - gridInfo.height, col = 1 + anchor_col - gridInfo.width)
-    else if (anchor === 'SW') (row = 1 + anchor_row - gridInfo.height, col = 1 + anchor_col)
+    if (anchor === 'NE') (row = 1 + anchor_row, col = anchor_col - gridInfo.width)
+    else if (anchor === 'NW') (row = 1 + anchor_row, col = anchor_col)
+    else if (anchor === 'SE') (row = 1 + anchor_row - gridInfo.height, col = anchor_col - gridInfo.width)
+    else if (anchor === 'SW') (row = 1 + anchor_row - gridInfo.height, col = anchor_col)
     else throw new Error('Anchor was not one of the four possible values, this should not be possible.')
 
     windows.set(windowId,
