@@ -221,7 +221,7 @@ const win_float_pos = (e: any) => {
                   gridInfo.height,
                   true,
                   anchor)
-      return
+      continue
     }
 
     const grid = windows.get(gridId)
