@@ -1,6 +1,6 @@
 import { generateColorLookupAtlas } from '../render/highlight-attributes'
 import { onSwitchVim, instances } from '../core/instance-manager'
-import CreateWindow, { Window } from '../windows/window'
+import CreateWindow, { Window, paddingX, paddingY } from '../windows/window'
 import { cursor, moveCursor } from '../core/cursor'
 import CreateWebGLRenderer from '../render/webgl'
 import { onElementResize } from '../ui/vanilla'
@@ -42,16 +42,23 @@ export const calculateGlobalOffset = (anchorWin: Window, float: Window) => {
 
   const [ rowStart, colStart ] = anchorWin.element.style.gridArea.split('/')
 
-  const nTop = parseInt(rowStart, 10) - 1
-  const nLeft = parseInt(colStart, 10) - 1
+  let nTop = parseInt(rowStart, 10)
+  let nLeft = parseInt(colStart, 10)
 
-  // TODO(smolck): These calculations are *slightly* off, so . . . fix that.
-  const newTop =
-    parseInt(float.element.style.top, 10) + (nTop * workspace.size.nameplateHeight) + (nTop === 0 ? 3 : nTop * 3) + "px"
-  Object.assign(float.element.style, {
-    top: newTop,
-    left: parseInt(float.element.style.left, 10) + (nLeft * (workspace.pad.x + 2)) + "px"
-  })
+  if (nTop > 1) {
+    // Move the float down so it doesn't intersect with the nameplate.
+    Object.assign(float.element.style, {
+      top: parseInt(float.element.style.top, 10) + workspace.size.nameplateHeight + "px"
+    })
+  }
+
+  if (nLeft > 1) {
+    // Move the float over because . . . it isn't positioned right otherwise?
+    // TODO(smolck): This isn't perfect . . .
+    Object.assign(float.element.style, {
+      left: parseInt(float.element.style.left, 10) + workspace.pad.x + paddingX + "px"
+    })
+  }
 }
 
 export const createWebGLView = () => webgl.createView()

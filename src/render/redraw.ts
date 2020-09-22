@@ -207,7 +207,7 @@ const win_float_pos = (e: any) => {
       // Vim lines are zero-indexed, so . . . add 1
       let rowOffset, colOffset
       rowOffset = anchorGrid.row + 1
-      colOffset = anchorGrid.col
+      colOffset = anchorGrid.col + 1
 
       // Vim lines are zero-indexed, so . . . add 1 to the rows
       if (anchor === 'NE') (row = anchor_row + rowOffset, col = anchor_col + colOffset - gridInfo.width)
