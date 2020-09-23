@@ -16,6 +16,8 @@ export interface WindowInfo {
   width: number
   height: number
   visible: boolean
+  is_float: boolean
+  anchor: string
 }
 
 interface GridStyle {
@@ -103,7 +105,17 @@ export const paddingX = 5
 export const paddingY = 4
 
 export default () => {
-  const wininfo: WindowInfo = { id: '0', gridId: '0', row: 0, col: 0, width: 0, height: 0, visible: true }
+  const wininfo: WindowInfo = {
+    id: '0',
+    gridId: '0',
+    row: 0,
+    col: 0,
+    width: 0,
+    height: 0,
+    visible: true,
+    is_float: false,
+    anchor: ''
+  }
   const layout = { x: 0, y: 0, width: 0, height: 0 }
   const webgl = createWebGLView()
 
@@ -159,6 +171,25 @@ export default () => {
   }
 
   api.setWindowInfo = info => {
+    if (info.is_float) {
+      const { x, y } = api.positionToWorkspacePixels(info.row, info.col, { within: true, padding: false })
+      const xPx = `${x}px`
+      const yPx = `${y + paddingY}px`
+
+      // TODO(smolck): Remove nameplate completely for floats?
+      Object.assign(nameplate.element.style, {
+        display: 'none'
+      })
+
+      Object.assign(container.style, {
+        position: 'absolute',
+        width: '100%',
+        height: '100%',
+        top: yPx,
+        left: xPx
+      })
+    }
+
     if (!wininfo.visible) {
       container.style.display = 'flex'
       webgl.renderGridBuffer()
@@ -171,8 +202,8 @@ export default () => {
 
   api.getWindowInfo = () => ({ ...wininfo })
 
-  api.positionToWorkspacePixels = (row, col, fuckTypescript) => {
-    const { within = false, padding = true } = fuckTypescript || {} as PosOpts
+  api.positionToWorkspacePixels = (row, col, maybeOpts) => {
+    const { within = false, padding = true } = maybeOpts || {} as PosOpts
     const winX = Math.floor(col * cell.width)
     const winY = Math.floor(row * cell.height)
 
@@ -234,9 +265,12 @@ export default () => {
     Object.assign(layout, { x, y, width, height })
     webgl.layout(x + paddingX, y + paddingY, width, height)
 
-    Object.assign(container.style, {
-      border: '1px solid var(--background-30)',
-    }, edgeDetection(container))
+    // Don't add border to floats.
+    if (!wininfo.is_float) {
+      Object.assign(container.style, {
+        border: '1px solid var(--background-30)',
+      }, edgeDetection(container))
+    }
   }
 
   api.addOverlayElement = element => {
@@ -294,8 +328,8 @@ export default () => {
 
       return results
     },
-    positionToEditorPixels: (line, col, fuckTypescript) => {
-      const { within = false, padding = true } = fuckTypescript || {} as PosOpts
+    positionToEditorPixels: (line, col, maybeOpts) => {
+      const { within = false, padding = true } = maybeOpts || {} as PosOpts
       const row = line - instanceAPI.nvim.state.editorTopLine
       const winX = Math.floor(col * cell.width)
       const winY = Math.floor(row * cell.height)

@@ -1,4 +1,4 @@
-// TODO: this whole file is fucked right now. need to rework it once we have vscode extensions setup
+// TODO: this whole file is messed up right now. need to rework it once we have vscode extensions setup
 // import { Extension, activateExtension } from '../extensions/extensions'
 import pleaseGet from '../support/please-get'
 import { merge } from '../support/utils'

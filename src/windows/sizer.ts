@@ -5,7 +5,13 @@ import { size } from '../core/workspace'
 const getSplits = (wins: WindowInfo[]) => {
   const vertical = new Set<number>()
   const horizontal = new Set<number>()
-  wins.forEach(w => (vertical.add(w.col), horizontal.add(w.row)))
+  wins.forEach(w => {
+    if (w.is_float)
+      return
+
+    vertical.add(w.col)
+    horizontal.add(w.row)
+  })
   return { vertical, horizontal }
 }
 

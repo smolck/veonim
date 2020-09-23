@@ -24,7 +24,7 @@ const getTableSize = (): number => {
 // TODO: need to determine the max amount of characters we store in the
 // texture atlas. at some predetermined point we need to recycle texture
 // slots for new characters. this remains to be seen if we use a LILO
-// or LRU cache eviction strategy. cache invalidation... fuuuu
+// or LRU cache eviction strategy. cache invalidation...
 export const getCharIndex = (char: string, width = 1) => {
   const uChar = unicodeTable.get(char)
   if (uChar) return uChar.index

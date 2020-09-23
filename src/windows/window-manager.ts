@@ -1,6 +1,6 @@
 import { generateColorLookupAtlas } from '../render/highlight-attributes'
 import { onSwitchVim, instances } from '../core/instance-manager'
-import CreateWindow, { Window } from '../windows/window'
+import CreateWindow, { Window, paddingX, paddingY } from '../windows/window'
 import { cursor, moveCursor } from '../core/cursor'
 import CreateWebGLRenderer from '../render/webgl'
 import { onElementResize } from '../ui/vanilla'
@@ -34,6 +34,33 @@ const refreshWebGLGrid = () => {
   getInstanceWindows().forEach(w => w.redrawFromGridBuffer())
 }
 
+export const calculateGlobalOffset = (anchorWin: Window, float: Window) => {
+  // TODO(smolck): Throw error?
+  if (!anchorWin.element.style.gridArea) throw new Error("Anchor doesn't have grid-area css")
+  if (!float.element.style.top) throw new Error("Floating window doesn't have top positioning")
+  if (!float.element.style.left) throw new Error("Floating window doesn't have left positioning")
+
+  const [ rowStart, colStart ] = anchorWin.element.style.gridArea.split('/')
+
+  let nTop = parseInt(rowStart, 10)
+  let nLeft = parseInt(colStart, 10)
+
+  if (nTop > 1) {
+    // Move the float down so it doesn't intersect with the nameplate.
+    Object.assign(float.element.style, {
+      top: parseInt(float.element.style.top, 10) + workspace.size.nameplateHeight + "px"
+    })
+  }
+
+  if (nLeft > 1) {
+    // Move the float over because . . . it isn't positioned right otherwise?
+    // TODO(smolck): This isn't perfect . . .
+    Object.assign(float.element.style, {
+      left: parseInt(float.element.style.left, 10) + workspace.pad.x + paddingX + "px"
+    })
+  }
+}
+
 export const createWebGLView = () => webgl.createView()
 
 export const setActiveGrid = (id: number) => Object.assign(state, {
@@ -47,11 +74,11 @@ export const getActive = () => {
   return win
 }
 
-export const set = (id: number, gridId: number, row: number, col: number, width: number, height: number) => {
+export const set = (id: number, gridId: number, row: number, col: number, width: number, height: number, is_float: boolean = false, anchor = '') => {
   const wid = superid(id)
   const gid = superid(gridId)
   const win = windows.get(gid) || CreateWindow()
-  win.setWindowInfo({ id: wid, gridId: gid, row, col, width, height, visible: true })
+  win.setWindowInfo({ anchor, is_float, row, col, width, height, visible: true, id: wid, gridId: gid, })
 
   if (!windows.has(gid)) windows.set(gid, win)
   if (!windowsById.has(wid)) windowsById.set(wid, win)

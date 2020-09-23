@@ -179,6 +179,78 @@ const tabline_update = ([ , [ curtab, tabs ] ]: any) => {
   requestAnimationFrame(() => dispatch.pub('tabs', { curtab, tabs }))
 }
 
+const win_close = (e: any) => {
+  windows.remove(e[1])
+}
+
+const win_float_pos = (e: any) => {
+  const count = e.length
+
+  for (let ix = 1; ix < count; ix++) {
+    const [ gridId, { id: windowId }, anchor, anchor_grid, anchor_row, anchor_col ] = e[ix]
+
+    // TODO(smolck): How to handle windows positioned outside editor window?
+    // Clamp it to the editor width & height, or let it go outside the editor window
+    // (as it does now)? TUI clamps it, so that's probably safest bet.
+
+    // Handle floats not relative to editor.
+    if (anchor_grid !== 1) {
+      // TODO(smolck): I think the main grid is always id 2 (in Veonim). Could be wrong
+      // though, so maybe verify somehow?
+      const gridInfo = windows.get(gridId).getWindowInfo()
+
+      // Position relative to anchor window
+      const anchorGrid = windows.get(anchor_grid)
+
+      let row, col
+
+      // Vim lines are zero-indexed, so . . . add 1
+      let rowOffset, colOffset
+      rowOffset = anchorGrid.row + 1
+      colOffset = anchorGrid.col + 1
+
+      if (anchor === 'NE') (row = anchor_row + rowOffset, col = anchor_col + colOffset - gridInfo.width)
+      else if (anchor === 'NW') (row = anchor_row + rowOffset, col = anchor_col + colOffset)
+      else if (anchor === 'SE') (row = anchor_row + rowOffset - gridInfo.height, col = anchor_col + colOffset - gridInfo.width)
+      else if (anchor === 'SW') (row = anchor_row + rowOffset - gridInfo.height, col = anchor_col + colOffset)
+      else throw new Error('Anchor was not one of the four possible values, this should not be possible.')
+
+      windows.set(windowId,
+                  gridId,
+                  row,
+                  col,
+                  gridInfo.width,
+                  gridInfo.height,
+                  true,
+                  anchor)
+
+      windows.calculateGlobalOffset(anchorGrid, windows.get(gridId))
+      continue
+    }
+
+    const grid = windows.get(gridId)
+    const gridInfo = grid.getWindowInfo()
+
+    let row, col
+
+    // Vim lines are zero-indexed, so . . . add 1 to the rows
+    if (anchor === 'NE') (row = 1 + anchor_row, col = anchor_col - gridInfo.width)
+    else if (anchor === 'NW') (row = 1 + anchor_row, col = anchor_col)
+    else if (anchor === 'SE') (row = 1 + anchor_row - gridInfo.height, col = anchor_col - gridInfo.width)
+    else if (anchor === 'SW') (row = 1 + anchor_row - gridInfo.height, col = anchor_col)
+    else throw new Error('Anchor was not one of the four possible values, this should not be possible.')
+
+    windows.set(windowId,
+                gridId,
+                row,
+                col,
+                gridInfo.width,
+                gridInfo.height,
+                true,
+                anchor)
+  }
+}
+
 onRedraw(redrawEvents => {
   // because of circular logic/infinite loop. cmdline_show updates UI, UI makes
   // a change in the cmdline, nvim sends redraw again. we cut that stuff out
@@ -198,6 +270,8 @@ onRedraw(redrawEvents => {
     else if (e === 'grid_scroll') grid_scroll(ev)
     else if (e === 'grid_cursor_goto') grid_cursor_goto(ev)
     else if (e === 'win_pos') (winUpdates = true, win_pos(ev))
+    else if (e === 'win_float_pos') (winUpdates = true, win_float_pos(ev))
+    else if (e === 'win_close') (winUpdates = true, win_close(ev))
     else if (e === 'win_hide') (winUpdates = true, win_hide(ev))
     else if (e === 'grid_resize') (winUpdates = true, grid_resize(ev))
     else if (e === 'grid_clear') grid_clear(ev)
