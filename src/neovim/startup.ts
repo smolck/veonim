@@ -85,6 +85,14 @@ export type Autocmds = keyof Autocmd
 const autocmdsText = Object.entries(autocmds)
   .map(([ cmd, arg ]) => {
     const argtext = arg ? `, ${arg}` : ''
+
+    // TODO(smolck): Is this accurate? And is it a (good) fix?
+    // Avoid calling rpcnotify if buffer is readonly to prevent errors.
+    if (cmd === 'OptionSet') {
+      return `au VeonimAU ${cmd} * if (&ro != 1) | call rpcnotify(0, 'veonim-autocmd', '${cmd}'${argtext}) | endif`
+    }
+
+
     return `au VeonimAU ${cmd} * call rpcnotify(0, 'veonim-autocmd', '${cmd}'${argtext})`
   })
   .join('\n')
