@@ -3,36 +3,37 @@ import { exists } from '../support/utils'
 import { createReadStream } from 'fs'
 
 export interface LineContents {
-  ix: number,
-  line: string,
+  ix: number
+  line: string
 }
 
-const fileReader = (path: string, targetLines: number[]) => new Promise(done => {
-  const collectedLines: LineContents[] = []
-  const linesOfInterest = new Set(targetLines)
-  const maxLineIndex = Math.max(...targetLines)
-  let currentLineIndex = 0
-  let buffer = ''
+const fileReader = (path: string, targetLines: number[]) =>
+  new Promise((done) => {
+    const collectedLines: LineContents[] = []
+    const linesOfInterest = new Set(targetLines)
+    const maxLineIndex = Math.max(...targetLines)
+    let currentLineIndex = 0
+    let buffer = ''
 
-  // not using NewlineSplitter here because it filters out empty lines
-  // we need the empty lines, since we track the line index
-  const readStream = createReadStream(path).on('data', raw => {
-    const lines = (buffer + raw).split(/\r?\n/)
-    buffer = lines.pop() || ''
+    // not using NewlineSplitter here because it filters out empty lines
+    // we need the empty lines, since we track the line index
+    const readStream = createReadStream(path).on('data', (raw) => {
+      const lines = (buffer + raw).split(/\r?\n/)
+      buffer = lines.pop() || ''
 
-    lines.forEach(line => {
-      const needThisLine = linesOfInterest.has(currentLineIndex)
-      if (needThisLine) collectedLines.push({ ix: currentLineIndex, line })
+      lines.forEach((line) => {
+        const needThisLine = linesOfInterest.has(currentLineIndex)
+        if (needThisLine) collectedLines.push({ ix: currentLineIndex, line })
 
-      const reachedMaximumLine = currentLineIndex === maxLineIndex
-      if (reachedMaximumLine) readStream.close()
+        const reachedMaximumLine = currentLineIndex === maxLineIndex
+        if (reachedMaximumLine) readStream.close()
 
-      currentLineIndex++
+        currentLineIndex++
+      })
     })
-  })
 
-  readStream.on('close', () => done(collectedLines))
-})
+    readStream.on('close', () => done(collectedLines))
+  })
 
 on.getLines(async (path: string, lines: number[]) => {
   const fileExists = await exists(path)

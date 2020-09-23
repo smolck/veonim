@@ -34,13 +34,13 @@ type CmdContent = [any, string]
 
 interface PMenuItem {
   /** The text that will be inserted */
-  word: string,
+  word: string
   /** Single letter indicating the type of completion */
-  kind: string,
+  kind: string
   /** Extra text for the popup menu, displayed after "word" or "abbr" */
-  menu: string,
+  menu: string
   /** More information about the item, can be displayed in a preview window */
-  info: string,
+  info: string
 }
 
 export interface PopupMenu {
@@ -74,7 +74,8 @@ export interface CommandUpdate {
 // because we skip allocating 1-char strings in msgpack decode. so if we have a 1-char
 // string it might be a code point number - need to turn it back into a string. see
 // msgpack-decoder for more info on how this works.
-const sillyString = (s: any): string => typeof s === 'number' ? String.fromCodePoint(s) : s
+const sillyString = (s: any): string =>
+  typeof s === 'number' ? String.fromCodePoint(s) : s
 
 const modes = new Map<string, Mode>()
 const options = new Map<string, any>()
@@ -99,7 +100,8 @@ const messageNotifyKindMappings = new Map([
 const showStatusMessage = (message: string) => {
   // TODO: \n on all platforms?
   const newlineCount = (message.match(/\n/g) || []).length
-  if (newlineCount) return messages.neovim.show({ message, kind: MessageKind.Info })
+  if (newlineCount)
+    return messages.neovim.show({ message, kind: MessageKind.Info })
   dispatch.pub('message.status', message)
 }
 
@@ -109,13 +111,19 @@ const state = {
 }
 
 type MessageEvent = [number, string]
-export const msg_show = ([ , [ msgKind, msgs, replaceLast ] ]: [any, [string, MessageEvent[], boolean]], cursorVisible: boolean) => {
+export const msg_show = (
+  [, [msgKind, msgs, replaceLast]]: [any, [string, MessageEvent[], boolean]],
+  cursorVisible: boolean
+) => {
   const lastMessageTime = state.lastMessageTime
   state.lastMessageTime = Date.now()
   const messageKind = sillyString(msgKind)
   const kind = messageNotifyKindMappings.get(messageKind)
   state.messagePromptVisible = !cursorVisible
-  const message = msgs.reduce((res, [ /*hlid*/, text ]) => res += sillyString(text), '')
+  const message = msgs.reduce(
+    (res, [, /*hlid*/ text]) => (res += sillyString(text)),
+    ''
+  )
 
   if (!kind) {
     const timeDiff = Date.now() - lastMessageTime
@@ -129,33 +137,34 @@ export const msg_show = ([ , [ msgKind, msgs, replaceLast ] ]: [any, [string, Me
     stealsFocus: !cursorVisible,
   }
 
-  replaceLast
-    ? messages.neovim.show(msginfo)
-    : messages.neovim.append(msginfo)
+  replaceLast ? messages.neovim.show(msginfo) : messages.neovim.append(msginfo)
 }
 
 type MessageHistory = [string, [number, string][]]
-export const msg_history_show = ([ , [ messages ] ]: [any, [MessageHistory[]]]) => {
-  const mappedMessages = messages.map(([ msgKind, msgs ]) => {
+export const msg_history_show = ([, [messages]]: [any, [MessageHistory[]]]) => {
+  const mappedMessages = messages.map(([msgKind, msgs]) => {
     const messageKind = sillyString(msgKind)
     const kind = messageNotifyKindMappings.get(messageKind)
-    const message = msgs.reduce((res, [ /*hlid*/, text ]) => res += sillyString(text), '')
+    const message = msgs.reduce(
+      (res, [, /*hlid*/ text]) => (res += sillyString(text)),
+      ''
+    )
     return { message, kind: kind || MessageKind.Info }
   })
   showMessageHistory(mappedMessages)
 }
 
-export const msg_showmode = ([ , [ msgs ] ]: [any, [MessageEvent[]]]) => {
+export const msg_showmode = ([, [msgs]]: [any, [MessageEvent[]]]) => {
   if (!msgs.length) return dispatch.pub('message.control', '')
-  msgs.forEach(([ /*hlid*/, text ]) => dispatch.pub('message.control', text))
+  msgs.forEach(([, /*hlid*/ text]) => dispatch.pub('message.control', text))
 }
 
-export const msg_showcmd = ([ , [ msgs ] ]: [any, [MessageEvent[]]]) => {
+export const msg_showcmd = ([, [msgs]]: [any, [MessageEvent[]]]) => {
   if (!msgs.length) return dispatch.pub('message.control', '')
-  msgs.forEach(([ /*hlid*/, text ]) => dispatch.pub('message.control', text))
+  msgs.forEach(([, /*hlid*/ text]) => dispatch.pub('message.control', text))
 }
 
-export const msg_clear = ([, [ content ]]: [any, [string]]) => {
+export const msg_clear = ([, [content]]: [any, [string]]) => {
   messages.neovim.clear()
   dispatch.pub('message.status', content)
 }
@@ -168,10 +177,10 @@ export const msg_ruler = (_: any) => {}
 // ideally nvim would tell us when to clear message prompts like spell window and inputlist()
 export const messageClearPromptsMaybeHack = (cursorVisible: boolean) => {
   if (!state.messagePromptVisible) return
-  if (cursorVisible) messages.neovim.clear(m => m.stealsFocus)
+  if (cursorVisible) messages.neovim.clear((m) => m.stealsFocus)
 }
 
-export const mode_change = ([ , [ m ] ]: [any, [string]]) => {
+export const mode_change = ([, [m]]: [any, [string]]) => {
   const mode = sillyString(m)
   api.nvim.setMode(normalizeVimMode(mode))
   const info = modes.get(mode)
@@ -191,10 +200,10 @@ const updateFont = () => {
   const lineSpace = options.get('linespace')
   const guifont = options.get('guifont')
 
-  const [ font ] = guifont.match(/(?:\\,|[^,])+/g) || ['']
-  const [ face, ...settings] = font.split(':')
+  const [font] = guifont.match(/(?:\\,|[^,])+/g) || ['']
+  const [face, ...settings] = font.split(':')
   const height = settings.find((s: string) => s.startsWith('h'))
-  const size = Math.round(<any>(height || '').slice(1)-0)
+  const size = Math.round(<any>(height || '').slice(1) - 0)
 
   const changed = workspace.updateEditorFont({ face, size, lineSpace })
   if (!changed) return
@@ -206,44 +215,52 @@ const updateFont = () => {
 }
 
 export const option_set = (e: any) => {
-  e.slice(1).forEach(([ k, value ]: any) => options.set(sillyString(k), value))
+  e.slice(1).forEach(([k, value]: any) => options.set(sillyString(k), value))
   updateFont()
 }
 
-export const mode_info_set = ([ , [ , infos ] ]: any) => infos.forEach((m: ModeInfo) => {
-  const info = {
-    shape: cursorShapeType(sillyString(m.cursor_shape)),
-    size: m.cell_percentage,
-    hlid: m.attr_id,
-  }
+export const mode_info_set = ([, [, infos]]: any) =>
+  infos.forEach((m: ModeInfo) => {
+    const info = {
+      shape: cursorShapeType(sillyString(m.cursor_shape)),
+      size: m.cell_percentage,
+      hlid: m.attr_id,
+    }
 
-  modes.set(m.name, info)
-})
+    modes.set(m.name, info)
+  })
 
-export const set_title = ([ , [ title ] ]: [any, [string]]) => dispatch.pub('vim:title', sillyString(title))
+export const set_title = ([, [title]]: [any, [string]]) =>
+  dispatch.pub('vim:title', sillyString(title))
 
 export const popupmenu_hide = () => dispatch.pub('pmenu.hide')
-export const popupmenu_select = ([ , [ ix ] ]: [any, [number]]) => dispatch.pub('pmenu.select', ix)
-export const popupmenu_show = ([ , [ itemz, index, row, col, grid ] ]: [any, [string[], number, number, number, number]]) => {
-  const items = itemz.map(m => {
-    const [ word, kind, menu, info ] = m
+export const popupmenu_select = ([, [ix]]: [any, [number]]) =>
+  dispatch.pub('pmenu.select', ix)
+export const popupmenu_show = ([, [itemz, index, row, col, grid]]: [
+  any,
+  [string[], number, number, number, number]
+]) => {
+  const items = itemz.map((m) => {
+    const [word, kind, menu, info] = m
     return { word, kind, menu, info }
   })
   const data: PopupMenu = { row, col, grid, index, items }
   dispatch.pub('pmenu.show', data)
 }
 
-export const wildmenu_show = ([ , [ items ] ]: any) => dispatch.pub('wildmenu.show', items)
+export const wildmenu_show = ([, [items]]: any) =>
+  dispatch.pub('wildmenu.show', items)
 export const wildmenu_hide = () => dispatch.pub('wildmenu.hide')
-export const wildmenu_select = ([ , [ selected ] ]: [any, [number]]) => {
+export const wildmenu_select = ([, [selected]]: [any, [number]]) => {
   dispatch.pub('wildmenu.select', selected)
 }
 
-const cmdlineIsSame = (...args: any[]) => cmdcache.active && cmdcache.position === args[1]
+const cmdlineIsSame = (...args: any[]) =>
+  cmdcache.active && cmdcache.position === args[1]
 
 export const doNotUpdateCmdlineIfSame = (args: any[]) => {
   if (!args || !Array.isArray(args)) return false
-  const [ cmd, data ] = args
+  const [cmd, data] = args
   if (cmd !== 'cmdline_show') return false
   return cmdlineIsSame(...data)
 }
@@ -254,42 +271,51 @@ const cmdcache: CommandLineCache = {
   position: -999,
 }
 
-type CmdlineShow = [ CmdContent[], number, string, string, number, number ]
-export const cmdline_show = ([ , [content, position, str1, str2, indent, level] ]: [any, CmdlineShow]) => {
+type CmdlineShow = [CmdContent[], number, string, string, number, number]
+export const cmdline_show = ([
+  ,
+  [content, position, str1, str2, indent, level],
+]: [any, CmdlineShow]) => {
   const opChar = sillyString(str1)
   const prompt = sillyString(str2)
   cmdcache.active = true
   cmdcache.position = position
 
   // TODO: process attributes!
-  const cmd = content.reduce((str, [ _, item ]) => str + sillyString(item), '')
+  const cmd = content.reduce((str, [_, item]) => str + sillyString(item), '')
   if (cmdcache.cmd === cmd) return
   cmdcache.cmd = cmd
 
-  const kind: CommandType = Reflect.get({
-    ':': CommandType.Ex,
-    '/': CommandType.SearchForward,
-    '?': CommandType.SearchBackward,
-  }, opChar) || CommandType.Ex
+  const kind: CommandType =
+    Reflect.get(
+      {
+        ':': CommandType.Ex,
+        '/': CommandType.SearchForward,
+        '?': CommandType.SearchBackward,
+      },
+      opChar
+    ) || CommandType.Ex
 
   currentCommandMode = kind
 
   const cmdPrompt = kind === CommandType.Ex
-  const searchPrompt = kind === CommandType.SearchForward || kind === CommandType.SearchBackward
+  const searchPrompt =
+    kind === CommandType.SearchForward || kind === CommandType.SearchBackward
 
-  if (cmdPrompt) dispatch.pub('cmd.update', {
-    cmd,
-    prompt,
-    kind: prompt ? CommandType.Prompt : kind,
-    position,
-  } as CommandUpdate)
-
-  else if (searchPrompt) dispatch.pub('search.update', {
-    cmd,
-    prompt,
-    kind: prompt ? CommandType.Prompt : kind,
-    position,
-  } as CommandUpdate)
+  if (cmdPrompt)
+    dispatch.pub('cmd.update', {
+      cmd,
+      prompt,
+      kind: prompt ? CommandType.Prompt : kind,
+      position,
+    } as CommandUpdate)
+  else if (searchPrompt)
+    dispatch.pub('search.update', {
+      cmd,
+      prompt,
+      kind: prompt ? CommandType.Prompt : kind,
+      position,
+    } as CommandUpdate)
 
   // TODO: do the indentings thingies
   indent && console.log('indent:', indent)
@@ -302,7 +328,8 @@ export const cmdline_hide = () => {
   dispatch.pub('search.hide')
 }
 
-export const cmdline_pos = ([ , [ position ] ]: [any, [number]]) => {
-  if (currentCommandMode === CommandType.Ex) dispatch.pub('cmd.update', { position })
+export const cmdline_pos = ([, [position]]: [any, [number]]) => {
+  if (currentCommandMode === CommandType.Ex)
+    dispatch.pub('cmd.update', { position })
   else dispatch.pub('search.update', { position })
 }

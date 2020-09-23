@@ -24,7 +24,9 @@ export default (name: string, opts = {} as WorkerOptions) => {
     loaderScript = loaderScript.replace(/\\/g, '\\\\')
   }
 
-  const scriptBlobbyBluberBlob = new Blob([ loaderScript ], { type: 'application/javascript' })
+  const scriptBlobbyBluberBlob = new Blob([loaderScript], {
+    type: 'application/javascript',
+  })
   const objectUrl = URL.createObjectURL(scriptBlobbyBluberBlob)
   const worker = new Worker(objectUrl)
   URL.revokeObjectURL(objectUrl)
@@ -42,14 +44,19 @@ export default (name: string, opts = {} as WorkerOptions) => {
     const jsonString = JSON.stringify(data) || 'null'
     const buffer = Buffer.from(jsonString)
     const length = buffer.byteLength
-    for (let ix = 0; ix < length; ix++) Atomics.store(sharedArray, ix + 2, buffer[ix])
+    for (let ix = 0; ix < length; ix++)
+      Atomics.store(sharedArray, ix + 2, buffer[ix])
     Atomics.store(sharedArray, 1, length)
     Atomics.store(sharedArray, 0, id)
     wakeThread()
   }
 
-  const call: EventFn = onFnCall((event: string, args: any[]) => worker.postMessage([event, args]))
-  const on = proxyFn((event: string, cb: (data: any) => void) => ee.on(event, cb))
+  const call: EventFn = onFnCall((event: string, args: any[]) =>
+    worker.postMessage([event, args])
+  )
+  const on = proxyFn((event: string, cb: (data: any) => void) =>
+    ee.on(event, cb)
+  )
   const request: RequestEventFn = onFnCall((event: string, args: any[]) => {
     const task = CreateTask()
     const id = uuid()
@@ -58,17 +65,26 @@ export default (name: string, opts = {} as WorkerOptions) => {
     return task.promise
   })
 
-  const onContextHandler: OnContextHandler = fn => ee.on('context-handler', fn)
+  const onContextHandler: OnContextHandler = (fn) =>
+    ee.on('context-handler', fn)
 
-  worker.onmessage = async ({ data: [e, data, id, requestSync, func] }: MessageEvent) => {
+  worker.onmessage = async ({
+    data: [e, data, id, requestSync, func],
+  }: MessageEvent) => {
     if (e === '@@request-sync-context') {
       const listener = ee.listeners('context-handler')[0]
-      if (!listener) throw new Error('no "onContextHandler" function registered for synchronous RPC requests. you should register a function handler with "onContextHandler"')
+      if (!listener)
+        throw new Error(
+          'no "onContextHandler" function registered for synchronous RPC requests. you should register a function handler with "onContextHandler"'
+        )
       try {
         const result = await listener(func, data)
         return writeSharedArray(id, result)
-      } catch(err) {
-        console.error('worker request-sync-context response listener failed:', err)
+      } catch (err) {
+        console.error(
+          'worker request-sync-context response listener failed:',
+          err
+        )
         return writeSharedArray(id, undefined)
       }
     }
@@ -94,14 +110,14 @@ export default (name: string, opts = {} as WorkerOptions) => {
     try {
       const result = await listener(...data)
       worker.postMessage([e, result, id])
-    } catch(err) {
+    } catch (err) {
       console.error('worker request response listener failed:', err)
     }
   }
 
   const terminate = () => worker.terminate()
 
-  worker.postMessage(['@@sab', [ sharedBuffer ]])
+  worker.postMessage(['@@sab', [sharedBuffer]])
 
   return { on, call, request, onContextHandler, terminate }
 }

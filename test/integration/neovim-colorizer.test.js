@@ -5,18 +5,19 @@ const childProcess = require('child_process')
 describe.skip('markdown to HTML with syntax highlighting', () => {
   const watchers = new EventEmitter()
 
-  const request = (method, ...data) => new Promise(done => {
-    const reqId = Date.now()
-    global.onmessage({ data: [ method, data, reqId ] })
-    watchers.once(reqId, done)
-  })
+  const request = (method, ...data) =>
+    new Promise((done) => {
+      const reqId = Date.now()
+      global.onmessage({ data: [method, data, reqId] })
+      watchers.once(reqId, done)
+    })
 
   let undoGlobalProxy
   let nvimProc
 
   before(() => {
     global.onmessage = () => {}
-    global.postMessage = ([ ev, args, id ]) => watchers.emit(id, args)
+    global.postMessage = ([ev, args, id]) => watchers.emit(id, args)
 
     undoGlobalProxy = globalProxy('child_process', {
       ...childProcess,
@@ -24,7 +25,7 @@ describe.skip('markdown to HTML with syntax highlighting', () => {
         const proc = childProcess.spawn(...args)
         if (args[0].includes('nvim')) nvimProc = proc
         return proc
-      }
+      },
     })
 
     src('workers/neovim-colorizer')

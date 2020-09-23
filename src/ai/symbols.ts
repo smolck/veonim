@@ -10,7 +10,10 @@ nvim.onAction('symbols', async () => {
   ui.symbols.show([])
   // TODO: show pending spinner
   // show symbol cache on load?
-  const symbols = await symbolBoss.schedule(vscode.language.provideDocumentSymbols(), { timeout: 3e3 })
+  const symbols = await symbolBoss.schedule(
+    vscode.language.provideDocumentSymbols(),
+    { timeout: 3e3 }
+  )
   if (!symbols) return
   ui.symbols.show(symbols)
 })
@@ -22,5 +25,8 @@ nvim.onAction('workspace-symbols', () => {
 })
 
 export const getWorkspaceSymbols = (query: string) => {
-  return workspaceBoss.schedule(vscode.language.provideWorkspaceSymbols(query), { timeout: 10e3 })
+  return workspaceBoss.schedule(
+    vscode.language.provideWorkspaceSymbols(query),
+    { timeout: 10e3 }
+  )
 }

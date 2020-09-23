@@ -58,5 +58,9 @@ const mouseTrap = () => {
   hideCursor()
 }
 
-win.on('enter-full-screen', () => window.addEventListener('mousemove', mouseTrap))
-win.on('leave-full-screen', () => window.removeEventListener('mousemove', mouseTrap))
+win.on('enter-full-screen', () =>
+  window.addEventListener('mousemove', mouseTrap)
+)
+win.on('leave-full-screen', () =>
+  window.removeEventListener('mousemove', mouseTrap)
+)

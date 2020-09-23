@@ -6,9 +6,14 @@ const boss = PromiseBoss()
 
 const doDefinition = async () => {
   nvim.untilEvent.cursorMove.then(boss.cancelCurrentPromise)
-  const result = await boss.schedule(vscode.language.provideTypeDefinition(), { timeout: 3e3 })
+  const result = await boss.schedule(vscode.language.provideTypeDefinition(), {
+    timeout: 3e3,
+  })
   if (!result) return
-  const { path, range: { start } } = result
+  const {
+    path,
+    range: { start },
+  } = result
 
   nvim.jumpTo({
     path,

@@ -5,28 +5,36 @@ export default (testDataPath: string) => {
   console.log(
     '%c TESTING --> %cVSCODE API ',
     'color: #aaa; background: #000',
-    'color: yellow; background: #000',
+    'color: yellow; background: #000'
   )
 
   const results = { pass: 0, fail: 0 }
   const q: any[] = []
 
   const eq = (a: any, b: any) => {
-    try { require('assert').deepStrictEqual(a, b); return true }
-    catch (_) { return false }
+    try {
+      require('assert').deepStrictEqual(a, b)
+      return true
+    } catch (_) {
+      return false
+    }
   }
 
-  (global as any).test = (name: string, func: Function) => {
+  ;(global as any).test = (name: string, func: Function) => {
     const assert = (result: any, expected: any, msg?: any) => {
       const ok = eq(result, expected)
       ok ? results.pass++ : results.fail++
       if (msg) return console.assert(ok, `${name} --> ${msg}`)
-      console.assert(ok, `${name} --> expected ${JSON.stringify(result)} to equal ${JSON.stringify(expected)}`)
+      console.assert(
+        ok,
+        `${name} --> expected ${JSON.stringify(
+          result
+        )} to equal ${JSON.stringify(expected)}`
+      )
     }
 
     typeof func === 'function' && q.push(func(assert))
   }
-
 
   nvim.untilStateValue.cwd.is(testDataPath).then(async () => {
     console.time('VSCODE API TESTS')

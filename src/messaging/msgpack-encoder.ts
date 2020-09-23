@@ -3,28 +3,20 @@
 import { is, type } from '../support/utils'
 import { Transform } from 'stream'
 
-const i8_max = 2**8 - 1
-const i16_max = 2**16 - 1
-const i32_max = 2**32 - 1
-const u8_min = -1 * 2**(8 - 1)
-const u16_min = -1 * 2**(16 - 1)
-const u32_min = -1 * 2**(32 - 1)
-const negativeFixInt_min = -(2**5)
-const u8_max = 2**(8 - 1) - 1
+const i8_max = 2 ** 8 - 1
+const i16_max = 2 ** 16 - 1
+const i32_max = 2 ** 32 - 1
+const u8_min = -1 * 2 ** (8 - 1)
+const u16_min = -1 * 2 ** (16 - 1)
+const u32_min = -1 * 2 ** (32 - 1)
+const negativeFixInt_min = -(2 ** 5)
+const u8_max = 2 ** (8 - 1) - 1
 
-const length2 = (code: number, length: number): Buffer => Buffer.from([
-  code,
-  length >>> 8,
-  length,
-])
+const length2 = (code: number, length: number): Buffer =>
+  Buffer.from([code, length >>> 8, length])
 
-const length4 = (code: number, length: number): Buffer => Buffer.from([
-  code,
-  length >>> 24,
-  length >>> 16,
-  length >>> 8,
-  length,
-])
+const length4 = (code: number, length: number): Buffer =>
+  Buffer.from([code, length >>> 24, length >>> 16, length >>> 8, length])
 
 const sizeof = {
   str: ({ length }: { length: number }) => {
@@ -131,7 +123,7 @@ const fromArr = (arr: any[]): Buffer => {
 const fromObj = (obj: any): Buffer => {
   const kv = Object.entries(obj)
 
-  const raw = kv.reduce((res, [ key, val ]) => {
+  const raw = kv.reduce((res, [key, val]) => {
     return [...res, ...fromStr(key), ...encode(val)]
   }, [] as any[])
 

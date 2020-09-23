@@ -20,7 +20,7 @@ interface LocationMeta extends Location {
 const worker = Worker('get-file-lines')
 
 const getLinesFromBuffers = async (locations: LocationMeta[]) => {
-  const requests = locations.map(async location => ({
+  const requests = locations.map(async (location) => ({
     path: location.path,
     range: location.range,
     lineContents: await location.buffer!.getLine(location.range.start.line),
@@ -36,26 +36,35 @@ const getLinesFromFilesystem = async (locations: LocationMeta[]) => {
 
     group.has(path)
       ? group.get(path)!.push(lineNumber)
-      : group.set(path, [ lineNumber ])
+      : group.set(path, [lineNumber])
 
     return group
   }, new Map<string, number[]>())
 
-  const locationsWithContentRequests = [...locationsGroupedByPath.entries()]
-    .map(async ([ path, lineNumbers ]) => ({
+  const locationsWithContentRequests = [
+    ...locationsGroupedByPath.entries(),
+  ].map(async ([path, lineNumbers]) => ({
+    path,
+    lineContents: (await worker.request.getLines(
       path,
-      lineContents: await worker.request.getLines(path, lineNumbers) as LineContents[],
-    }))
+      lineNumbers
+    )) as LineContents[],
+  }))
 
   const locationsWithContents = await Promise.all(locationsWithContentRequests)
 
-  const locationContentMap = locationsWithContents.reduce((map, { path, lineContents }) => {
-    lineContents.forEach(({ ix, line }) => map.set(`${path}:${ix}`, line))
-    return map
-  }, new Map<string, string>())
+  const locationContentMap = locationsWithContents.reduce(
+    (map, { path, lineContents }) => {
+      lineContents.forEach(({ ix, line }) => map.set(`${path}:${ix}`, line))
+      return map
+    },
+    new Map<string, string>()
+  )
 
-  return locations.map(location => {
-    const lineContents = locationContentMap.get(`${location.path}:${location.range.start.line}`) || ''
+  return locations.map((location) => {
+    const lineContents =
+      locationContentMap.get(`${location.path}:${location.range.start.line}`) ||
+      ''
     return {
       lineContents,
       path: location.path,
@@ -66,24 +75,28 @@ const getLinesFromFilesystem = async (locations: LocationMeta[]) => {
 
 export default async (locations: Location[]): Promise<LocationResult[]> => {
   const bufs = await nvim.buffers.list()
-  const buffers = await Promise.all(bufs.map(async buffer => ({
-    buffer,
-    name: await buffer.name,
-  })))
+  const buffers = await Promise.all(
+    bufs.map(async (buffer) => ({
+      buffer,
+      name: await buffer.name,
+    }))
+  )
 
-  const locationsMeta = locations.map(location => {
-    const foundBuffer = buffers.find(b => b.name === location.path)
+  const locationsMeta = locations.map((location) => {
+    const foundBuffer = buffers.find((b) => b.name === location.path)
     return {
       ...location,
       buffer: foundBuffer ? foundBuffer.buffer : undefined,
     } as LocationMeta
   })
 
-  const locationsFromBuffers = locationsMeta.filter(m => !!m.buffer)
-  const locationsFromFilesystem = locationsMeta.filter(m => !m.buffer)
+  const locationsFromBuffers = locationsMeta.filter((m) => !!m.buffer)
+  const locationsFromFilesystem = locationsMeta.filter((m) => !m.buffer)
 
   const bufferResults = await getLinesFromBuffers(locationsFromBuffers)
-  const filesystemResults = await getLinesFromFilesystem(locationsFromFilesystem)
+  const filesystemResults = await getLinesFromFilesystem(
+    locationsFromFilesystem
+  )
 
   return [...bufferResults, ...filesystemResults]
 }

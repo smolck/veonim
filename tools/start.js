@@ -34,6 +34,6 @@ go(async () => {
       ...process.env,
       VEONIM_DEV: 42,
       XDG_CONFIG_HOME: devConfig,
-    }
+    },
   })
 })

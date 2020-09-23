@@ -3,15 +3,24 @@ import { Readable, Writable } from 'stream'
 import { ID, Watchers } from '../support/utils'
 
 export interface DebugAdapterConnection {
-  sendRequest: <T extends DP.Response>(command: string, args?: any) => Promise<T['body']>
+  sendRequest: <T extends DP.Response>(
+    command: string,
+    args?: any
+  ) => Promise<T['body']>
   sendNotification: (response: DP.Response) => void
-  onNotification: <T extends DP.Event>(method: string, cb: (event: T['body']) => void) => void
+  onNotification: <T extends DP.Event>(
+    method: string,
+    cb: (event: T['body']) => void
+  ) => void
   onRequest: (cb: (request: DP.Request) => void) => void
   onError: (cb: (error: any) => void) => void
   onClose: (cb: () => void) => void
 }
 
-export default (readable: Readable, writable: Writable): DebugAdapterConnection => {
+export default (
+  readable: Readable,
+  writable: Writable
+): DebugAdapterConnection => {
   const pendingRequests = new Map()
   const watchers = new Watchers()
   const id = ID()
@@ -24,10 +33,11 @@ export default (readable: Readable, writable: Writable): DebugAdapterConnection 
   writable.on('close', () => onCloseFn())
 
   const onMessage = (msg: DP.ProtocolMessage) => {
-    if (msg.type === 'event') return watchers.notify((msg as DP.Event).event, (msg as DP.Event).body)
+    if (msg.type === 'event')
+      return watchers.notify((msg as DP.Event).event, (msg as DP.Event).body)
     if (msg.type === 'request') return onRequestFn(msg as DP.Request)
     if (msg.type === 'response') {
-      const m = (msg as DP.Response)
+      const m = msg as DP.Response
       if (!pendingRequests.has(m.request_seq)) return
 
       const { done, fail } = pendingRequests.get(m.request_seq)
@@ -38,8 +48,11 @@ export default (readable: Readable, writable: Writable): DebugAdapterConnection 
 
   const api = {} as DebugAdapterConnection
 
-  api.sendNotification = response => {
-    if (response.seq > 0) return onErrorFn(new Error(`don't send more than one response for: ${response.command}`))
+  api.sendNotification = (response) => {
+    if (response.seq > 0)
+      return onErrorFn(
+        new Error(`don't send more than one response for: ${response.command}`)
+      )
     const seq = id.next()
     connection.send({ seq, type: 'response', command: response.command })
   }
@@ -51,9 +64,9 @@ export default (readable: Readable, writable: Writable): DebugAdapterConnection 
   }
 
   api.onNotification = (method, cb) => watchers.add(method, cb)
-  api.onRequest = cb => onRequestFn = cb
-  api.onError = cb => onErrorFn = cb
-  api.onClose = cb => onCloseFn = cb
+  api.onRequest = (cb) => (onRequestFn = cb)
+  api.onError = (cb) => (onErrorFn = cb)
+  api.onClose = (cb) => (onCloseFn = cb)
 
   const connection = streamProcessor(readable, writable, onMessage, onErrorFn)
   return api
@@ -65,7 +78,12 @@ const HEADER_FIELD_SEP = /: */
 const TWO_CRLF_LENGTH = TWO_CRLF.length
 
 // stolen from: vscode/blob/master/src/vs/workbench/parts/debug/node/debugAdapter.ts
-const streamProcessor = (readable: Readable, writable: Writable, onMessage: Function, onError: Function) => {
+const streamProcessor = (
+  readable: Readable,
+  writable: Writable,
+  onMessage: Function,
+  onError: Function
+) => {
   let rawData = Buffer.allocUnsafe(0)
   let contentLength = -1
 
@@ -85,16 +103,14 @@ const streamProcessor = (readable: Readable, writable: Writable, onMessage: Func
               const data: DP.ProtocolMessage = JSON.parse(message)
               onMessage(data)
             } catch (e) {
-              const err = new Error(`${(e.message || e)}\n${message}`)
+              const err = new Error(`${e.message || e}\n${message}`)
               onError(err)
             }
           }
 
           continue
         }
-      }
-
-      else {
+      } else {
         const idx = rawData.indexOf(TWO_CRLF)
         if (idx !== -1) {
           const header = rawData.toString('utf8', 0, idx)
@@ -102,7 +118,8 @@ const streamProcessor = (readable: Readable, writable: Writable, onMessage: Func
 
           for (const h of lines) {
             const kvPair = h.split(HEADER_FIELD_SEP)
-            if (kvPair[0] === 'Content-Length') contentLength = Number(kvPair[1])
+            if (kvPair[0] === 'Content-Length')
+              contentLength = Number(kvPair[1])
           }
 
           rawData = rawData.slice(idx + TWO_CRLF_LENGTH)

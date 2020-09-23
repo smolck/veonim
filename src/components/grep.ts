@@ -17,9 +17,9 @@ enum FocusedElement {
 }
 
 interface SearchResult {
-  line: number,
-  column: number,
-  text: string,
+  line: number
+  column: number
+  text: string
 }
 
 let elref: HTMLElement
@@ -42,41 +42,50 @@ const state = {
 type S = typeof state
 
 // scroll after next section has been rendered as expanded (a little hacky)
-const scrollIntoView = (next: number) => setTimeout(() => {
-  const { top: containerTop, bottom: containerBottom } = elref.getBoundingClientRect()
-  const e = els.get(next)
-  if (!e) return
+const scrollIntoView = (next: number) =>
+  setTimeout(() => {
+    const {
+      top: containerTop,
+      bottom: containerBottom,
+    } = elref.getBoundingClientRect()
+    const e = els.get(next)
+    if (!e) return
 
-  const { top, height } = e.getBoundingClientRect()
+    const { top, height } = e.getBoundingClientRect()
 
-  if (top + height > containerBottom) {
-    const offset = top - containerBottom
+    if (top + height > containerBottom) {
+      const offset = top - containerBottom
 
-    if (offset < containerTop) elref.scrollTop += top - containerTop
-    else elref.scrollTop += offset + height + containerTop + 50
-  }
-
-  else if (top < containerTop) elref.scrollTop += top - containerTop
-}, 1)
+      if (offset < containerTop) elref.scrollTop += top - containerTop
+      else elref.scrollTop += offset + height + containerTop + 50
+    } else if (top < containerTop) elref.scrollTop += top - containerTop
+  }, 1)
 
 const selectResult = (results: Result[], ix: number, subix: number) => {
   if (subix < 0) return
-  const [ path, items ] = results[ix]
+  const [path, items] = results[ix]
   const { line, column } = items[subix]
   api.nvim.jumpTo({ path, line, column })
   showCursorline()
 }
 
-const highlightPattern = (text: string, pattern: string, { normal, special }: {
-  normal: TextTransformer,
-  special: TextTransformer,
-}) => {
+const highlightPattern = (
+  text: string,
+  pattern: string,
+  {
+    normal,
+    special,
+  }: {
+    normal: TextTransformer
+    special: TextTransformer
+  }
+) => {
   const stext = special(pattern)
   return text
     .trimLeft()
     .split(pattern)
     .reduce((grp, part, ix, arr) => {
-      if (!part && ix) return (grp.push(stext), grp)
+      if (!part && ix) return grp.push(stext), grp
       if (!part) return grp
       const last = ix === arr.length - 1
       ix ? grp.push(stext, normal(part, last)) : grp.push(normal(part, last))
@@ -91,9 +100,19 @@ const actions = {
   focusFilter: () => ({ focused: FocusedElement.Filter }),
 
   hide: () => (vimFocus(), resetState),
-  show: ({ cwd, value, reset = true }: any) => reset
-    ? (vimBlur(), { visible: true, cwd, value, ix: 0, subix: -1, results: [], loading: !!value })
-    : (vimBlur(), { visible: true }),
+  show: ({ cwd, value, reset = true }: any) =>
+    reset
+      ? (vimBlur(),
+        {
+          visible: true,
+          cwd,
+          value,
+          ix: 0,
+          subix: -1,
+          results: [],
+          loading: !!value,
+        })
+      : (vimBlur(), { visible: true }),
 
   select: () => (s: S) => {
     vimFocus()
@@ -104,16 +123,18 @@ const actions = {
 
   change: (value: string) => (s: S) => {
     value && worker.call.query({ query: value, cwd: s.cwd })
-    return value ? {
-      value,
-      loading: true,
-    } : {
-      value,
-      results: [],
-      ix: 0,
-      subix: 0,
-      loading: false,
-    }
+    return value
+      ? {
+          value,
+          loading: true,
+        }
+      : {
+          value,
+          results: [],
+          ix: 0,
+          subix: 0,
+          loading: false,
+        }
   },
 
   changeFilter: (filterVal: string) => {
@@ -124,8 +145,10 @@ const actions = {
   results: (results: Result[]) => ({ results }),
 
   moreResults: (results: Result[]) => (s: S) => {
-    const merged = [ ...s.results, ...results ]
-    const deduped = merged.filter((m, ix, arr) => arr.findIndex(e => e[0] === m[0]) === ix)
+    const merged = [...s.results, ...results]
+    const deduped = merged.filter(
+      (m, ix, arr) => arr.findIndex((e) => e[0] === m[0]) === ix
+    )
     return { results: deduped }
   },
 
@@ -172,96 +195,133 @@ const actions = {
   }),
 }
 
-const view = ($: S, a: typeof actions) => PluginRight($.visible, [
+const view = ($: S, a: typeof actions) =>
+  PluginRight($.visible, [
+    ,
+    Input({
+      value: $.value,
+      change: a.change,
+      hide: a.hide,
+      tab: a.focusFilter,
+      select: a.select,
+      nextGroup: a.nextGroup,
+      prevGroup: a.prevGroup,
+      next: a.next,
+      prev: a.prev,
+      down: a.down,
+      up: a.up,
+      focus: $.focused === FocusedElement.Search,
+      icon: Icon.Search,
+      desc: 'find in project',
+      loading: $.loading,
+    }),
 
-  ,Input({
-    value: $.value,
-    change: a.change,
-    hide: a.hide,
-    tab: a.focusFilter,
-    select: a.select,
-    nextGroup: a.nextGroup,
-    prevGroup: a.prevGroup,
-    next: a.next,
-    prev: a.prev,
-    down: a.down,
-    up: a.up,
-    focus: $.focused === FocusedElement.Search,
-    icon: Icon.Search,
-    desc: 'find in project',
-    loading: $.loading,
-  }),
+    ,
+    Input({
+      value: $.filterVal,
+      change: a.changeFilter,
+      hide: a.hide,
+      tab: a.focusSearch,
+      select: a.select,
+      nextGroup: a.nextGroup,
+      prevGroup: a.prevGroup,
+      next: a.next,
+      prev: a.prev,
+      down: a.down,
+      up: a.up,
+      focus: $.focused === FocusedElement.Filter,
+      icon: Icon.Filter,
+      small: true,
+      desc: 'filter files',
+    }),
 
-  ,Input({
-    value: $.filterVal,
-    change: a.changeFilter,
-    hide: a.hide,
-    tab: a.focusSearch,
-    select: a.select,
-    nextGroup: a.nextGroup,
-    prevGroup: a.prevGroup,
-    next: a.next,
-    prev: a.prev,
-    down: a.down,
-    up: a.up,
-    focus: $.focused === FocusedElement.Filter,
-    icon: Icon.Filter,
-    small: true,
-    desc: 'filter files',
-  }),
-
-  ,h('div', {
-    oncreate: (e: HTMLElement) => elref = e,
-    style: {
-      maxHeight: '100%',
-      overflowY: 'hidden',
-    },
-  }, $.results.map(([ path, items ], pos) => h('div', {
-    oncreate: (e: HTMLElement) => els.set(pos, e),
-  }, [
-
-    ,h(RowHeader, {
-      active: pos === $.ix,
-    }, [
-      ,h('span', path),
-      ,h('div', {
+    ,
+    h(
+      'div',
+      {
+        oncreate: (e: HTMLElement) => (elref = e),
         style: {
-          ...badgeStyle,
-          marginLeft: '12px',
+          maxHeight: '100%',
+          overflowY: 'hidden',
         },
-      }, [
-        ,h('span', items.length)
-      ])
-    ])
+      },
+      $.results.map(([path, items], pos) =>
+        h(
+          'div',
+          {
+            oncreate: (e: HTMLElement) => els.set(pos, e),
+          },
+          [
+            ,
+            h(
+              RowHeader,
+              {
+                active: pos === $.ix,
+              },
+              [
+                ,
+                h('span', path),
+                ,
+                h(
+                  'div',
+                  {
+                    style: {
+                      ...badgeStyle,
+                      marginLeft: '12px',
+                    },
+                  },
+                  [, h('span', items.length)]
+                ),
+              ]
+            ),
 
-    ,pos === $.ix && h('div', items.map((f, itemPos) => h(RowNormal, {
-      active: pos === $.ix && itemPos === $.subix,
-      style: {
-        fontFamily: 'var(--font)',
-        fontSize: 'var(--font-size)px',
-      }
-    }, highlightPattern(f.text, $.value, {
+            pos === $.ix &&
+              h(
+                'div',
+                items.map((f, itemPos) =>
+                  h(
+                    RowNormal,
+                    {
+                      active: pos === $.ix && itemPos === $.subix,
+                      style: {
+                        fontFamily: 'var(--font)',
+                        fontSize: 'var(--font-size)px',
+                      },
+                    },
+                    highlightPattern(f.text, $.value, {
+                      normal: (text, last) =>
+                        h(
+                          'span',
+                          {
+                            style: {
+                              whiteSpace: 'pre',
+                              textOverflow: last ? 'ellipsis' : undefined,
+                              overflow: last ? 'inherit' : undefined,
+                            },
+                          },
+                          text
+                        ),
 
-      normal: (text, last) => h('span', {
-        style: {
-          whiteSpace: 'pre',
-          textOverflow: last ? 'ellipsis' : undefined,
-          overflow: last ? 'inherit' : undefined,
-        },
-      }, text),
-
-      special: text => h('span', {
-        style: {
-          color: '#aaa',
-          background: 'rgba(255, 255, 255, 0.1)',
-        }
-      }, text)
-
-    }))))
-
-  ])))
-
-])
+                      special: (text) =>
+                        h(
+                          'span',
+                          {
+                            style: {
+                              color: '#aaa',
+                              background: 'rgba(255, 255, 255, 0.1)',
+                            },
+                          },
+                          text
+                        ),
+                    })
+                  )
+                )
+              ),
+          ]
+        )
+      )
+    ),
+  ])
 
 const ui = app({ name: 'grep', state, actions, view })
 
@@ -289,7 +349,7 @@ api.onAction('grep-word', async () => {
 api.onAction('grep-selection', async () => {
   await api.nvim.feedkeys('gv"zy')
   const selection = await api.nvim.expr('@z')
-  const [ query ] = selection.split('\n')
+  const [query] = selection.split('\n')
   const { cwd } = api.nvim.state
   ui.show({ cwd, value: query })
   worker.call.query({ query, cwd })

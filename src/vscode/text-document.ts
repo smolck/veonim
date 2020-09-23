@@ -17,7 +17,9 @@ export interface SuperTextDocument extends vsc.TextDocument {
 let memoize_wordRangeAtPosition: vsc.Range
 
 const api = (bufid: number): SuperTextDocument => ({
-  get _nvimBufferId() { return bufid },
+  get _nvimBufferId() {
+    return bufid
+  },
   get isUntitled() {
     return !nvimSync((nvim, id) => nvim.Buffer(id).name).call(bufid)
   },
@@ -60,12 +62,14 @@ const api = (bufid: number): SuperTextDocument => ({
     return fileFormat === 'dos' ? 2 : 1
   },
   save: async () => {
-    console.error('not possible in neovim to save a buffer in the background (when i wrote this)')
+    console.error(
+      'not possible in neovim to save a buffer in the background (when i wrote this)'
+    )
     return false
   },
   lineAt: (lineOrPosition: number | vsc.Position) => {
     const line = is.number(lineOrPosition)
-      ? lineOrPosition as number
+      ? (lineOrPosition as number)
       : (lineOrPosition as vsc.Position).line
 
     const lineData = nvimSync((nvim, id, line) => {
@@ -74,15 +78,17 @@ const api = (bufid: number): SuperTextDocument => ({
 
     return TextLine(line, lineData)
   },
-  offsetAt: position => {
+  offsetAt: (position) => {
     const offset: number = nvimSync((nvim, id, line) => {
       return nvim.Buffer(id).getOffset(line)
     }).call(bufid, position.line)
 
     return offset + position.character
   },
-  positionAt: offset => {
-    const lines = nvimSync((nvim, id) => nvim.Buffer(id).getAllLines()).call(bufid)
+  positionAt: (offset) => {
+    const lines = nvimSync((nvim, id) => nvim.Buffer(id).getAllLines()).call(
+      bufid
+    )
     const lineCount = lines.length
     let countingOffset = 0
     let lineNumber = -1
@@ -90,7 +96,7 @@ const api = (bufid: number): SuperTextDocument => ({
 
     for (let ix = 0; ix < lineCount; ix++) {
       const lineContents = lines[ix]
-      const nextOffset = countingOffset += lineContents.length
+      const nextOffset = (countingOffset += lineContents.length)
 
       if (offset >= countingOffset && offset <= nextOffset) {
         lineNumber = ix
@@ -102,9 +108,11 @@ const api = (bufid: number): SuperTextDocument => ({
 
     return new Position(lineNumber, columnNumber)
   },
-  getText: range => {
+  getText: (range) => {
     if (!range) {
-      const lines = nvimSync((nvim, id) => nvim.Buffer(id).getAllLines()).call(bufid)
+      const lines = nvimSync((nvim, id) => nvim.Buffer(id).getAllLines()).call(
+        bufid
+      )
       return lines.join('\n')
     }
 
@@ -124,19 +132,29 @@ const api = (bufid: number): SuperTextDocument => ({
     // getting completions makes the typescript extension call new CompletionItem()
     // which in turn calls getWordRangeAtPosition in the constructor. but y tho?
     // since the position is the same for every call i'm gonna memoize this (kinda)
-    if (completionRequest.active && completionRequest.line === givenPosition.line && completionRequest.character === givenPosition.character) {
+    if (
+      completionRequest.active &&
+      completionRequest.line === givenPosition.line &&
+      completionRequest.character === givenPosition.character
+    ) {
       return memoize_wordRangeAtPosition
     }
 
     const position = validatePosition(bufid, givenPosition)
-    const filetype: string = nvimSync((nvim, id) => nvim.Buffer(id).getOption('filetype')).call(bufid)
+    const filetype: string = nvimSync((nvim, id) =>
+      nvim.Buffer(id).getOption('filetype')
+    ).call(bufid)
     const languageId = filetypeToVSCLanguage(filetype)
-    const currentLineText = nvimSync((nvim, id, line) => nvim.Buffer(id).getLine(line)).call(bufid, position.line)
+    const currentLineText = nvimSync((nvim, id, line) =>
+      nvim.Buffer(id).getLine(line)
+    ).call(bufid, position.line)
     let regex = givenRegex
 
     if (!regex) regex = wordDefinitions.get(languageId)
     else if (regExpLeadsToEndlessLoop(regex)) {
-      console.warn(`vscode.TextDocument.getWordRangeAtPosition: ignoring custom regexp '${regex.source}' because it matches the empty string`)
+      console.warn(
+        `vscode.TextDocument.getWordRangeAtPosition: ignoring custom regexp '${regex.source}' because it matches the empty string`
+      )
       regex = wordDefinitions.get(languageId)
     }
 
@@ -153,7 +171,7 @@ const api = (bufid: number): SuperTextDocument => ({
       position.line,
       wordAtText.startColumn - 1,
       position.line,
-      wordAtText.endColumn - 1,
+      wordAtText.endColumn - 1
     )
 
     if (completionRequest.active) memoize_wordRangeAtPosition = result
@@ -161,14 +179,18 @@ const api = (bufid: number): SuperTextDocument => ({
     return result
   },
   // assumes given range starts a line:0, character: 0
-  validateRange: range => {
+  validateRange: (range) => {
     const lastLineText = nvimSync((nvim, id, line) => {
       return nvim.Buffer(id).getLine(line)
     }).call(bufid, range.end.line)
 
     if (!lastLineText) {
-      const lineCount = nvimSync((nvim, id) => nvim.Buffer(id).length).call(bufid)
-      const lastLine = nvimSync((nvim, id, line) => nvim.Buffer(id).getLine(line)).call(bufid)
+      const lineCount = nvimSync((nvim, id) => nvim.Buffer(id).length).call(
+        bufid
+      )
+      const lastLine = nvimSync((nvim, id, line) =>
+        nvim.Buffer(id).getLine(line)
+      ).call(bufid)
 
       return new Range(
         new Position(range.start.line, range.start.character),
@@ -180,10 +202,10 @@ const api = (bufid: number): SuperTextDocument => ({
 
     return new Range(
       new Position(range.start.line, range.start.character),
-      new Position(range.end.line, lastLineText.length),
+      new Position(range.end.line, lastLineText.length)
     )
   },
-  validatePosition: position => validatePosition(bufid, position),
+  validatePosition: (position) => validatePosition(bufid, position),
 })
 
 const validatePosition = (bufid: number, position: vsc.Position) => {
@@ -193,7 +215,9 @@ const validatePosition = (bufid: number, position: vsc.Position) => {
 
   if (!lastLineText) {
     const lineCount = nvimSync((nvim, id) => nvim.Buffer(id).length).call(bufid)
-    const lastLine = nvimSync((nvim, id, line) => nvim.Buffer(id).getLine(line)).call(bufid)
+    const lastLine = nvimSync((nvim, id, line) =>
+      nvim.Buffer(id).getLine(line)
+    ).call(bufid)
     return new Position(lineCount, lastLine.length)
   }
 

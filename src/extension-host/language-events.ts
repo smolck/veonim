@@ -9,7 +9,7 @@ export interface DiagnosticsEvent {
 }
 
 languages.onDidChangeDiagnostics(({ uris }) => {
-  const diagnostics = uris.map(uri => ({
+  const diagnostics = uris.map((uri) => ({
     path: uri.path,
     diagnostics: threadSafeObject(languages.getDiagnostics(uri)),
   }))

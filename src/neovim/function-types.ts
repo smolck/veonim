@@ -4,22 +4,22 @@ export enum BufferVar {
 }
 
 interface VimBuffer {
-  name: string,
-  cur: boolean,
-  mod: boolean,
+  name: string
+  cur: boolean
+  mod: boolean
 }
 
 export interface QuickFixList {
-  text: string,
-  lnum: number,
-  col: number,
-  vcol?: number,
-  pattern?: string,
-  nr?: number,
-  bufnr?: number,
-  filename?: string,
-  type?: string,
-  valid?: boolean,
+  text: string
+  lnum: number
+  col: number
+  vcol?: number
+  pattern?: string
+  nr?: number
+  bufnr?: number
+  filename?: string
+  type?: string
+  valid?: boolean
 }
 
 interface State {
@@ -42,7 +42,7 @@ interface Position {
   editorBottomLine: number
 }
 
-type WindowPosition = [ string, number, number, number ]
+type WindowPosition = [string, number, number, number]
 
 interface InputOptions {
   /** The prompt argument is either a prompt string or a blank string (for no prompt). A '\n' can be used in the prompt to start a new line */
@@ -73,15 +73,32 @@ export interface Functions {
   cursor(line: number, column: number): Promise<void>
   bufname(expr: string | number): Promise<string>
   bufnr(expr: string, create?: number): Promise<number>
-  getbufline(expr: string | number, startLine: number, endLine?: number | string): Promise<string[]>
-  getbufvar(expr: string | number, varname?: string, defaultValue?: any): Promise<any>
+  getbufline(
+    expr: string | number,
+    startLine: number,
+    endLine?: number | string
+  ): Promise<string[]>
+  getbufvar(
+    expr: string | number,
+    varname?: string,
+    defaultValue?: any
+  ): Promise<any>
   termopen(cmd: string, options: object): void
   jobpid(jobId: number): Promise<number>
   chansend(id: number, data: string | string[]): Promise<number>
-  matchadd(hlgrp: string, pattern: string, priority?: number, id?: number): Promise<number>
+  matchadd(
+    hlgrp: string,
+    pattern: string,
+    priority?: number,
+    id?: number
+  ): Promise<number>
   matchdelete(id: number): Promise<number>
   getcompletion(pattern: string, type: string): Promise<string[]>
   rename(from: string, to: string): Promise<number>
   delete(name: string): Promise<number>
-  input(promptOrOptions?: string | InputOptions, defaultValue?: string, completion?: string): Promise<string>
+  input(
+    promptOrOptions?: string | InputOptions,
+    defaultValue?: string,
+    completion?: string
+  ): Promise<string>
 }

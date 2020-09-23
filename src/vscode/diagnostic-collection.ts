@@ -8,18 +8,23 @@ export default (name = ''): vsc.DiagnosticCollection => {
 
   type DiagEntries = [vsc.Uri, vsc.Diagnostic[] | undefined][]
   const api: vsc.DiagnosticCollection = {
-    get name() { return name },
-    set: (uriOrEntries: vsc.Uri | DiagEntries, givenDiagnostics?: vsc.Diagnostic[]) => {
+    get name() {
+      return name
+    },
+    set: (
+      uriOrEntries: vsc.Uri | DiagEntries,
+      givenDiagnostics?: vsc.Diagnostic[]
+    ) => {
       if (!uriOrEntries) return diagnostics.clear()
 
       const modifiedUris: vsc.Uri[] = []
 
-      if (is.array(uriOrEntries)) (uriOrEntries as DiagEntries).forEach(([ uri, diags ]) => {
-        if (!diags) return diagnostics.delete(uri.path)
-        diagnostics.add(uri.path, diags)
-        modifiedUris.push(uri)
-      })
-
+      if (is.array(uriOrEntries))
+        (uriOrEntries as DiagEntries).forEach(([uri, diags]) => {
+          if (!diags) return diagnostics.delete(uri.path)
+          diagnostics.add(uri.path, diags)
+          modifiedUris.push(uri)
+        })
       else if (is.object(uriOrEntries)) {
         const path = (uriOrEntries as vsc.Uri).path
         if (!givenDiagnostics) return diagnostics.delete(path)
@@ -29,25 +34,26 @@ export default (name = ''): vsc.DiagnosticCollection => {
 
       emitDidChangeDiagnostics(modifiedUris)
     },
-    delete: uri => {
+    delete: (uri) => {
       diagnostics.delete(uri.path)
       emitDidChangeDiagnostics([uri])
     },
     clear: () => {
       const paths = [...diagnostics.keys()]
-      const uris = paths.map(path => URI.file(path))
+      const uris = paths.map((path) => URI.file(path))
       diagnostics.clear()
       emitDidChangeDiagnostics(uris)
     },
-    forEach: fn => diagnostics.forEach((diags, path) => {
-      fn(URI.parse(path), diags, api)
-    }),
-    get: uri => {
+    forEach: (fn) =>
+      diagnostics.forEach((diags, path) => {
+        fn(URI.parse(path), diags, api)
+      }),
+    get: (uri) => {
       const diags = diagnostics.get(uri.path)
       if (!diags) return
       return [...diags]
     },
-    has: uri => diagnostics.has(uri.path),
+    has: (uri) => diagnostics.has(uri.path),
     dispose: () => diagnostics.clear(),
   }
 

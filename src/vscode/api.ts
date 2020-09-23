@@ -1,4 +1,8 @@
-import { TextEditorCursorStyle, OverviewRulerLane, IndentAction } from '../vscode/enums'
+import {
+  TextEditorCursorStyle,
+  OverviewRulerLane,
+  IndentAction,
+} from '../vscode/enums'
 import { CancellationTokenSource } from '../vscode/cancellation'
 import { Emitter as EventEmitter } from '../vscode/event'
 import packageInfo from '../support/package-info'
@@ -19,7 +23,7 @@ export enum FileType {
   Unknown = 0,
   File = 1,
   Directory = 2,
-  SymbolicLink = 64
+  SymbolicLink = 64,
 }
 
 const api: typeof vsc = {

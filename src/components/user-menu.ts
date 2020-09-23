@@ -30,40 +30,58 @@ const actions = {
   },
 
   // TODO: not hardcoded 14
-  change: (value: string) => (s: S) => ({ value, index: 0, items: value
-    ? filter(s.cache, value).slice(0, 14)
-    : s.cache.slice(0, 14)
+  change: (value: string) => (s: S) => ({
+    value,
+    index: 0,
+    items: value ? filter(s.cache, value).slice(0, 14) : s.cache.slice(0, 14),
   }),
 
   hide: () => (vimFocus(), resetState),
-  show: ({ id, items, desc }: any) => (vimBlur(), { id, desc, items, cache: items, visible: true }),
-  next: () => (s: S) => ({ index: s.index + 1 > Math.min(s.items.length - 1, 13) ? 0 : s.index + 1 }),
-  prev: () => (s: S) => ({ index: s.index - 1 < 0 ? Math.min(s.items.length - 1, 13) : s.index - 1 }),
+  show: ({ id, items, desc }: any) => (
+    vimBlur(), { id, desc, items, cache: items, visible: true }
+  ),
+  next: () => (s: S) => ({
+    index: s.index + 1 > Math.min(s.items.length - 1, 13) ? 0 : s.index + 1,
+  }),
+  prev: () => (s: S) => ({
+    index: s.index - 1 < 0 ? Math.min(s.items.length - 1, 13) : s.index - 1,
+  }),
 }
 
-const view = ($: S, a: typeof actions) => Plugin($.visible, [
+const view = ($: S, a: typeof actions) =>
+  Plugin($.visible, [
+    ,
+    Input({
+      select: a.select,
+      change: a.change,
+      hide: a.hide,
+      next: a.next,
+      prev: a.prev,
+      value: $.value,
+      desc: $.desc,
+      focus: true,
+      icon: Icon.User,
+    }),
 
-  ,Input({
-    select: a.select,
-    change: a.change,
-    hide: a.hide,
-    next: a.next,
-    prev: a.prev,
-    value: $.value,
-    desc: $.desc,
-    focus: true,
-    icon: Icon.User,
-  })
-
-  ,h('div', $.items.map((item, ix) => h(RowNormal, {
-    key: item,
-    active: ix === $.index,
-  }, [
-    ,h('span', item)
-  ])))
-
-])
+    h(
+      'div',
+      $.items.map((item, ix) =>
+        h(
+          RowNormal,
+          {
+            key: item,
+            active: ix === $.index,
+          },
+          [, h('span', item)]
+        )
+      )
+    ),
+  ])
 
 const ui = app({ name: 'user-menu', state, actions, view })
 
-api.onAction('user-menu', (id: number, desc: string, items = []) => items.length && ui.show({ id, items, desc }))
+api.onAction(
+  'user-menu',
+  (id: number, desc: string, items = []) =>
+    items.length && ui.show({ id, items, desc })
+)

@@ -26,8 +26,6 @@ if (process.env.VEONIM_DEV) require('../dev/ext-host-development')
 // import pleaseGet from '../support/please-get'
 // import { dirname, join } from 'path'
 
-
-
 // interface Debugger {
 //   type: string
 //   label: string
@@ -37,8 +35,6 @@ if (process.env.VEONIM_DEV) require('../dev/ext-host-development')
 
 // TODO: on filetype change activate extensions
 // nvim.on.filetype(filetype => filetypeDetectedStartServerMaybe(nvim.state.cwd, filetype))
-
-
 
 // TODO: move to separate module
 
@@ -115,8 +111,7 @@ on.debug_onClose(({ serverId }: any) => {
  * package.json and/or via DebugConfigurationProvider
  */
 
-
- /*
+/*
 const startDebugWithType = async (cwd: string, type: string) => {
   const launchConfig = await getDebuggerConfig(cwd, type)
   if (!launchConfig) return console.error(`can not start debugger ${type}`)

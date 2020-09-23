@@ -2,7 +2,10 @@ import HttpServer from '../support/http-server'
 import api from '../core/instance-api'
 import { relative, join } from 'path'
 
-interface RemoteRequest { cwd: string, file: string }
+interface RemoteRequest {
+  cwd: string
+  file: string
+}
 
 const load = async ({ cwd, file }: RemoteRequest) => {
   if (!file) return

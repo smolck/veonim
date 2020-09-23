@@ -1,4 +1,9 @@
-import { hideCursor, showCursor, disableCursor, enableCursor } from '../core/cursor'
+import {
+  hideCursor,
+  showCursor,
+  disableCursor,
+  enableCursor,
+} from '../core/cursor'
 import { CommandType, CommandUpdate } from '../render/events'
 import * as windows from '../windows/window-manager'
 import { WindowOverlay } from '../windows/window'
@@ -32,17 +37,16 @@ const actions = {
     hideCursor()
     disableCursor()
 
-    !s.visible && setImmediate(() => {
-      winOverlay = windows.getActive().addOverlayElement(containerEl)
-    })
+    !s.visible &&
+      setImmediate(() => {
+        winOverlay = windows.getActive().addOverlayElement(containerEl)
+      })
 
     return {
       position,
       kind: cmdKind,
       visible: true,
-      value: is.string(cmd) && s.value !== cmd
-        ? cmd
-        : s.value
+      value: is.string(cmd) && s.value !== cmd ? cmd : s.value,
     }
   },
 }
@@ -56,37 +60,43 @@ const printCommandType = (kind: CommandType) => {
   else return 'search'
 }
 
-const view = ($: S, a: A) => h('div', {
-  style: {
-    display: $.visible ? 'flex' : 'none',
-    flex: 1,
-  },
-}, [
+const view = ($: S, a: A) =>
+  h(
+    'div',
+    {
+      style: {
+        display: $.visible ? 'flex' : 'none',
+        flex: 1,
+      },
+    },
+    [
+      ,
+      h(
+        'div',
+        {
+          style: {
+            ...paddingV(20),
+            display: 'flex',
+            alignItems: 'center',
+            // TODO: figure out a good color from the colorscheme... StatusLine?
+            background: rgba(217, 150, 255, 0.17),
+          },
+        },
+        [, h('span', printCommandType($.kind))]
+      ),
 
-  ,h('div', {
-    style: {
-      ...paddingV(20),
-      display: 'flex',
-      alignItems: 'center',
-      // TODO: figure out a good color from the colorscheme... StatusLine?
-      background: rgba(217, 150, 255, 0.17),
-    }
-  }, [
-    ,h('span', printCommandType($.kind))
-  ])
-
-  ,Input({
-    small: true,
-    focus: $.visible,
-    desc: 'search query',
-    value: $.value,
-    icon: Icon.Search,
-    position: $.position,
-    hide: a.hide,
-    select: a.hide,
-  })
-
-])
+      Input({
+        small: true,
+        focus: $.visible,
+        desc: 'search query',
+        value: $.value,
+        icon: Icon.Search,
+        position: $.position,
+        hide: a.hide,
+        select: a.hide,
+      }),
+    ]
+  )
 
 const containerEl = makel({
   position: 'absolute',
@@ -95,7 +105,13 @@ const containerEl = makel({
   background: 'var(--background-30)',
 })
 
-const ui = app<S, A>({ name: 'vim-search', state, actions, view, element: containerEl })
+const ui = app<S, A>({
+  name: 'vim-search',
+  state,
+  actions,
+  view,
+  element: containerEl,
+})
 
 sub('search.hide', ui.hide)
 sub('search.update', ui.updateQuery)

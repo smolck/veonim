@@ -1,4 +1,8 @@
-import { showMessage, showStatusBarMessage, showProgressMessage } from '../extension-host/bridge-api'
+import {
+  showMessage,
+  showStatusBarMessage,
+  showProgressMessage,
+} from '../extension-host/bridge-api'
 import OutputChannel from '../vscode/output-channel'
 import { is, Watcher, uuid } from '../support/utils'
 import { StatusBarAlignment } from '../vscode/types'
@@ -32,31 +36,54 @@ interface UnifiedMessage {
 // (message: string, ...items: string[])
 // (message: string, ...items: { title: string }[])
 // (message: string, options: {}, ...items: { title: string }[])
-const unifyMessage = ([ message, ...stuff ]: any[]): UnifiedMessage => {
-  const [ firstItem, ...restOfItems ] = stuff || [] as any[]
+const unifyMessage = ([message, ...stuff]: any[]): UnifiedMessage => {
+  const [firstItem, ...restOfItems] = stuff || ([] as any[])
   const isModal: boolean = is.object(firstItem) ? <any>firstItem.modal : false
   const items: string[] = is.object(firstItem) ? restOfItems : stuff
   const actions: string[] = items.map((item: any) => item.title || item)
   return { message, isModal, actions }
 }
 
-const makeStatusBarItem = (alignment = StatusBarAlignment.Left, priority = 0): vsc.StatusBarItem => {
+const makeStatusBarItem = (
+  alignment = StatusBarAlignment.Left,
+  priority = 0
+): vsc.StatusBarItem => {
   let text = ''
   let tooltip: string | undefined
   let color: string | vsc.ThemeColor | undefined
   let command: string | undefined
 
   const api: vsc.StatusBarItem = {
-    get alignment() { return alignment },
-    get priority() { return priority },
-    get text() { return text },
-    set text(m) { text = m },
-    get tooltip() { return tooltip },
-    set tooltip(m) { tooltip = m },
-    get color() { return color },
-    set color(m) { color = m },
-    get command() { return command },
-    set command(m) { command = m },
+    get alignment() {
+      return alignment
+    },
+    get priority() {
+      return priority
+    },
+    get text() {
+      return text
+    },
+    set text(m) {
+      text = m
+    },
+    get tooltip() {
+      return tooltip
+    },
+    set tooltip(m) {
+      tooltip = m
+    },
+    get color() {
+      return color
+    },
+    set color(m) {
+      color = m
+    },
+    get command() {
+      return command
+    },
+    set command(m) {
+      command = m
+    },
     // TODO: hookup to UI
     show: () => console.warn('NYI: StatusBarItem.show()', api),
     // TODO: is hide supposed to also call dispose()? the typings docs
@@ -91,10 +118,10 @@ const window: typeof vsc.window = {
     // for example, visual selections in nvim are not preserved when
     // switching windows. in vscode that is indeed possible.
     // so for now, we will only return the current active window
-    return [ TextEditor(nvim.current.window.id) ]
+    return [TextEditor(nvim.current.window.id)]
   },
   get activeTerminal() {
-    const { bufferId, isTerminal } = nvimSync(async nvim => {
+    const { bufferId, isTerminal } = nvimSync(async (nvim) => {
       const currentBuffer = await nvim.current.window.buffer
       return {
         bufferId: currentBuffer.id,
@@ -105,27 +132,41 @@ const window: typeof vsc.window = {
     if (isTerminal) return Terminal(bufferId)
   },
   get terminals() {
-    const terminalBufferIds = nvimSync(async nvim => {
+    const terminalBufferIds = nvimSync(async (nvim) => {
       const buffers = await nvim.buffers.list()
-      const terminalBuffers = await Promise.all(buffers.filter(b => b.isTerminal()))
-      return terminalBuffers.map(b => b.id)
+      const terminalBuffers = await Promise.all(
+        buffers.filter((b) => b.isTerminal())
+      )
+      return terminalBuffers.map((b) => b.id)
     }).call()
 
-    return terminalBufferIds.map(bufid => Terminal(bufid))
+    return terminalBufferIds.map((bufid) => Terminal(bufid))
   },
   showInformationMessage: async (...a: any[]) => {
     const { message, actions } = unifyMessage(a)
-    const { promise } = await showMessage({ message, kind: MessageKind.Info, actions })
+    const { promise } = await showMessage({
+      message,
+      kind: MessageKind.Info,
+      actions,
+    })
     return promise
   },
   showWarningMessage: async (...a: any[]) => {
     const { message, actions } = unifyMessage(a)
-    const { promise } = await showMessage({ message, kind: MessageKind.Warning, actions })
+    const { promise } = await showMessage({
+      message,
+      kind: MessageKind.Warning,
+      actions,
+    })
     return promise
   },
   showErrorMessage: async (...a: any[]) => {
     const { message, actions } = unifyMessage(a)
-    const { promise } = await showMessage({ message, kind: MessageKind.Error, actions })
+    const { promise } = await showMessage({
+      message,
+      kind: MessageKind.Error,
+      actions,
+    })
     return promise
   },
   showQuickPick: () => {
@@ -163,7 +204,7 @@ const window: typeof vsc.window = {
   createQuickPick: () => {
     console.warn('NYI: window.createQuickPick')
   },
-  createOutputChannel: name => OutputChannel(name),
+  createOutputChannel: (name) => OutputChannel(name),
   // @ts-ignore
   createWebviewPanel: () => {
     console.warn('NYI: window.createWebviewPanel')
@@ -176,7 +217,7 @@ const window: typeof vsc.window = {
       setTimeout(() => showStatusBarMessage(''), timeoutOrThenable as number)
     }
     if (is.promise(timeoutOrThenable)) {
-      (timeoutOrThenable as Promise<any>).then(() => showStatusBarMessage(''))
+      ;(timeoutOrThenable as Promise<any>).then(() => showStatusBarMessage(''))
     }
     return { dispose: () => showStatusBarMessage('') }
   },
@@ -188,7 +229,10 @@ const window: typeof vsc.window = {
     const token = makeCancelToken(uuid())
 
     if (options.location !== 15) {
-      console.warn('NYI: withProgress - not supported non ProgressLocation.Notification', options)
+      console.warn(
+        'NYI: withProgress - not supported non ProgressLocation.Notification',
+        options
+      )
       const progress = {
         report: (_: any) => {},
       }
@@ -206,10 +250,11 @@ const window: typeof vsc.window = {
     msg.promise.then(token.cancel)
 
     const progress = {
-      report: (update: { message?: string, increment?: number }) => msg.setProgress({
-        status: update.message,
-        percentage: update.increment,
-      }),
+      report: (update: { message?: string; increment?: number }) =>
+        msg.setProgress({
+          status: update.message,
+          percentage: update.increment,
+        }),
     }
 
     return task(progress, token.token)
@@ -247,7 +292,9 @@ const window: typeof vsc.window = {
   onDidChangeVisibleTextEditors: eventreg('didChangeVisibleTextEditors'),
 
   onDidChangeTextEditorSelection: eventreg('didChangeTextEditorSelection'),
-  onDidChangeTextEditorVisibleRanges: eventreg('didChangeTextEditorVisibleRanges'),
+  onDidChangeTextEditorVisibleRanges: eventreg(
+    'didChangeTextEditorVisibleRanges'
+  ),
   onDidChangeTextEditorOptions: eventreg('didChangeTextEditorOptions'),
   onDidChangeTextEditorViewColumn: eventreg('didChangeTextEditorViewColumn'),
   onDidChangeActiveTerminal: eventreg('didChangeActiveTerminal'),

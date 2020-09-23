@@ -31,7 +31,16 @@ stopButton.innerText = 'STOP RECORDING'
 
 const heyBigGuySunsGettingRealLow = () => stopButton.remove()
 
-const monitorEvents = ['keydown', 'keyup', 'keypress', 'input', 'beforeinput', 'change', 'focus', 'blur']
+const monitorEvents = [
+  'keydown',
+  'keyup',
+  'keypress',
+  'input',
+  'beforeinput',
+  'change',
+  'focus',
+  'blur',
+]
 
 let recordedEvents = [] as RecordingEvent[]
 let captureEvents = false
@@ -48,14 +57,16 @@ export const record = () => {
 
 export const replay = () => {
   const events = storage.getItem<RecordingEvent[]>('veonim-dev-recording')
-  if (!events || !events.length) return messages.vscode.show({
-    message: 'recording does not exist',
-    kind: MessageKind.Error,
-  })
+  if (!events || !events.length)
+    return messages.vscode.show({
+      message: 'recording does not exist',
+      kind: MessageKind.Error,
+    })
   recordPlayer(events)
 }
 
-export const recordingExists = () => is.array(storage.getItem('veonim-dev-recording'))
+export const recordingExists = () =>
+  is.array(storage.getItem('veonim-dev-recording'))
 
 const createEvent = (kind: string, event: Event) => {
   // InputEvent is still experimental - not widely supported but used in Chrome. No typings in TS lib
@@ -65,45 +76,81 @@ const createEvent = (kind: string, event: Event) => {
 }
 
 const recordPlayer = async (events: RecordingEvent[]) => {
-  const replays = events.map(m => ({
-    target: document.querySelector(m.selector),
-    event: createEvent(m.kind, m.event),
-    timeout: m.offsetStart,
-  })).filter(m => m.target)
+  const replays = events
+    .map((m) => ({
+      target: document.querySelector(m.selector),
+      event: createEvent(m.kind, m.event),
+      timeout: m.offsetStart,
+    }))
+    .filter((m) => m.target)
 
-  const replayFinished = Promise.all(replays.map(m => new Promise(done => setTimeout(() => {
-    m.target!.dispatchEvent(m.event)
-    done()
-  }, m.timeout))))
+  const replayFinished = Promise.all(
+    replays.map(
+      (m) =>
+        new Promise((done) =>
+          setTimeout(() => {
+            m.target!.dispatchEvent(m.event)
+            done()
+          }, m.timeout)
+        )
+    )
+  )
 
   await replayFinished
   heyBigGuySunsGettingRealLow()
 }
 
-monitorEvents.forEach(ev => window.addEventListener(ev, e => {
-  if (!captureEvents) return
-  if (!recordedEvents.length) recordingStartTime = Date.now()
+monitorEvents.forEach((ev) =>
+  window.addEventListener(ev, (e) => {
+    if (!captureEvents) return
+    if (!recordedEvents.length) recordingStartTime = Date.now()
 
-  recordedEvents.push({
-    kind: e.type,
-    when: Date.now(),
-    offsetPrevious: Date.now() - lastRecordedAt,
-    offsetStart: Date.now() - recordingStartTime,
-    selector: finder(e.target as Element),
-    event: evvy(e),
+    recordedEvents.push({
+      kind: e.type,
+      when: Date.now(),
+      offsetPrevious: Date.now() - lastRecordedAt,
+      offsetStart: Date.now() - recordingStartTime,
+      selector: finder(e.target as Element),
+      event: evvy(e),
+    })
+
+    lastRecordedAt = Date.now()
   })
-
-  lastRecordedAt = Date.now()
-}))
+)
 
 const props = [
-  'altKey', 'bubbles', 'cancelBubble', 'cancelable', 'charCode', 'code',
-  'composed', 'ctrlKey', 'data', 'dataTransfer', 'defaultPrevented', 'detail',
-  'eventPhase', 'inputType', 'isComposing', 'isTrusted', 'key', 'keyCode',
-  'location', 'metaKey', 'repeat', 'returnValue', 'shiftKey', 'type', 'which',
+  'altKey',
+  'bubbles',
+  'cancelBubble',
+  'cancelable',
+  'charCode',
+  'code',
+  'composed',
+  'ctrlKey',
+  'data',
+  'dataTransfer',
+  'defaultPrevented',
+  'detail',
+  'eventPhase',
+  'inputType',
+  'isComposing',
+  'isTrusted',
+  'key',
+  'keyCode',
+  'location',
+  'metaKey',
+  'repeat',
+  'returnValue',
+  'shiftKey',
+  'type',
+  'which',
 ]
 
-const evvy = (eo: any) => props.reduce((res, prop) => Object.assign(res, { [prop]: eo[prop] }), {}) as Event
+const evvy = (eo: any) =>
+  props.reduce(
+    (res, prop) => Object.assign(res, { [prop]: eo[prop] }),
+    {}
+  ) as Event
 
 stopButton.addEventListener('click', () => {
   heyBigGuySunsGettingRealLow()

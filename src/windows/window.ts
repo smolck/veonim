@@ -1,4 +1,7 @@
-import { createWebGLView, size as windowsGridSize } from '../windows/window-manager'
+import {
+  createWebGLView,
+  size as windowsGridSize,
+} from '../windows/window-manager'
 import CreateWindowNameplate, { NameplateState } from '../windows/nameplate'
 import { highlightLookup } from '../render/highlight-attributes'
 import { getCharFromIndex } from '../render/font-texture-atlas'
@@ -56,7 +59,11 @@ export interface Editor {
   getLine(row: number): string
   getAllLines(): string[]
   findHighlightCells(highlightGroup: string): HighlightCell[]
-  positionToEditorPixels(editorLine: number, editorColumn: number, opts?: PosOpts): Position
+  positionToEditorPixels(
+    editorLine: number,
+    editorColumn: number,
+    opts?: PosOpts
+  ): Position
 }
 
 export interface Window {
@@ -96,7 +103,8 @@ const edgeDetection = (el: HTMLElement) => {
 
   if (left === 0) edges.borderLeft = 'none'
   if (top === titleSpecs.height) edges.borderTop = 'none'
-  if (bottom - titleSpecs.height === windowsGridSize.height) edges.borderBottom = 'none'
+  if (bottom - titleSpecs.height === windowsGridSize.height)
+    edges.borderBottom = 'none'
   if (right === windowsGridSize.width) edges.borderRight = 'none'
   return edges
 }
@@ -114,7 +122,7 @@ export default () => {
     height: 0,
     visible: true,
     is_float: false,
-    anchor: ''
+    anchor: '',
   }
   const layout = { x: 0, y: 0, width: 0, height: 0 }
   const webgl = createWebGLView()
@@ -154,15 +162,33 @@ export default () => {
   container.appendChild(content)
 
   const api = {
-    get id() { return wininfo.id },
-    get gridId() { return wininfo.gridId },
-    get row() { return wininfo.row },
-    get col() { return wininfo.col },
-    get rows() { return wininfo.height },
-    get cols() { return wininfo.width },
-    get visible() { return wininfo.visible },
-    get webgl() { return webgl },
-    get element() { return container },
+    get id() {
+      return wininfo.id
+    },
+    get gridId() {
+      return wininfo.gridId
+    },
+    get row() {
+      return wininfo.row
+    },
+    get col() {
+      return wininfo.col
+    },
+    get rows() {
+      return wininfo.height
+    },
+    get cols() {
+      return wininfo.width
+    },
+    get visible() {
+      return wininfo.visible
+    },
+    get webgl() {
+      return webgl
+    },
+    get element() {
+      return container
+    },
   } as Window
 
   api.resizeWindow = (width, height) => {
@@ -170,15 +196,18 @@ export default () => {
     webgl.resize(height, width)
   }
 
-  api.setWindowInfo = info => {
+  api.setWindowInfo = (info) => {
     if (info.is_float) {
-      const { x, y } = api.positionToWorkspacePixels(info.row, info.col, { within: true, padding: false })
+      const { x, y } = api.positionToWorkspacePixels(info.row, info.col, {
+        within: true,
+        padding: false,
+      })
       const xPx = `${x}px`
       const yPx = `${y + paddingY}px`
 
       // TODO(smolck): Remove nameplate completely for floats?
       Object.assign(nameplate.element.style, {
-        display: 'none'
+        display: 'none',
       })
 
       Object.assign(container.style, {
@@ -186,7 +215,7 @@ export default () => {
         width: '100%',
         height: '100%',
         top: yPx,
-        left: xPx
+        left: xPx,
       })
     }
 
@@ -203,17 +232,13 @@ export default () => {
   api.getWindowInfo = () => ({ ...wininfo })
 
   api.positionToWorkspacePixels = (row, col, maybeOpts) => {
-    const { within = false, padding = true } = maybeOpts || {} as PosOpts
+    const { within = false, padding = true } = maybeOpts || ({} as PosOpts)
     const winX = Math.floor(col * cell.width)
     const winY = Math.floor(row * cell.height)
 
-    const x = winX
-      + (padding ? paddingX : 0)
-      + (within ? 0 : layout.x)
+    const x = winX + (padding ? paddingX : 0) + (within ? 0 : layout.x)
 
-    const y = winY
-      + (padding ? paddingY : 0)
-      + (within ? 0 : layout.y)
+    const y = winY + (padding ? paddingY : 0) + (within ? 0 : layout.y)
 
     return { x, y }
   }
@@ -255,10 +280,11 @@ export default () => {
     const x = left
     const y = top - titleSpecs.height
 
-    const same = layout.x === x
-      && layout.y === y
-      && layout.width === width
-      && layout.height === height
+    const same =
+      layout.x === x &&
+      layout.y === y &&
+      layout.width === width &&
+      layout.height === height
 
     if (same) return
 
@@ -267,36 +293,40 @@ export default () => {
 
     // Don't add border to floats.
     if (!wininfo.is_float) {
-      Object.assign(container.style, {
-        border: '1px solid var(--background-30)',
-      }, edgeDetection(container))
+      Object.assign(
+        container.style,
+        {
+          border: '1px solid var(--background-30)',
+        },
+        edgeDetection(container)
+      )
     }
   }
 
-  api.addOverlayElement = element => {
+  api.addOverlayElement = (element) => {
     overlay.appendChild(element)
     return {
       remove: () => element.remove(),
       move: (row: number, col: number) => {
         // TODO: i like to move it move it
         console.warn('NYI: overlay element move', row, col)
-      }
+      },
     }
   }
 
   api.redrawFromGridBuffer = () => webgl.renderGridBuffer()
 
-  api.updateNameplate = data => nameplate.update(data)
+  api.updateNameplate = (data) => nameplate.update(data)
 
   api.editor = {
     getChar: (row, col) => {
       const buf = webgl.getGridCell(row, col)
       return getCharFromIndex(buf[3] || 0)
     },
-    getLine: row => {
+    getLine: (row) => {
       const buf = webgl.getGridLine(row)
       let line = ''
-      for (let ix = 0; ix < buf.length; ix+=4) {
+      for (let ix = 0; ix < buf.length; ix += 4) {
         const charIndex = buf[ix + 3]
         line += getCharFromIndex(charIndex)
       }
@@ -309,8 +339,8 @@ export default () => {
       }
       return lines
     },
-    findHighlightCells: highlightGroup => {
-      const highlights = highlightLookup(highlightGroup).map(m => m.hlid)
+    findHighlightCells: (highlightGroup) => {
+      const highlights = highlightLookup(highlightGroup).map((m) => m.hlid)
       if (!highlights.length) return []
 
       const results = []
@@ -318,29 +348,26 @@ export default () => {
       for (let row = 0; row < wininfo.height; row++) {
         for (let col = 0; col < wininfo.width; col++) {
           const buf = webgl.getGridCell(row, col)
-          if (highlights.includes(buf[2])) results.push({
-            col: buf[0],
-            row: buf[1],
-            char: getCharFromIndex(buf[3])
-          })
+          if (highlights.includes(buf[2]))
+            results.push({
+              col: buf[0],
+              row: buf[1],
+              char: getCharFromIndex(buf[3]),
+            })
         }
       }
 
       return results
     },
     positionToEditorPixels: (line, col, maybeOpts) => {
-      const { within = false, padding = true } = maybeOpts || {} as PosOpts
+      const { within = false, padding = true } = maybeOpts || ({} as PosOpts)
       const row = line - instanceAPI.nvim.state.editorTopLine
       const winX = Math.floor(col * cell.width)
       const winY = Math.floor(row * cell.height)
 
-      const x = winX
-        + (padding ? paddingX : 0)
-        + (within ? 0 : layout.x)
+      const x = winX + (padding ? paddingX : 0) + (within ? 0 : layout.x)
 
-      const y = winY
-        + (padding ? paddingY : 0)
-        + (within ? 0 : layout.y)
+      const y = winY + (padding ? paddingY : 0) + (within ? 0 : layout.y)
 
       return { x, y }
     },

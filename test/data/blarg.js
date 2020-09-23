@@ -3,7 +3,7 @@
 const stuff = {
   one: 1,
   two: 2,
-  three: input => input + 3,
+  three: (input) => input + 3,
 }
 
 const res = stuff.three(stuff.one)

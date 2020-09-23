@@ -10,7 +10,7 @@ const env: typeof vsc.env = {
   sessionId: `Veonim-${Date.now()}`,
   clipboard: {
     readText: async () => request.clipboardRead(),
-    writeText: async value => call.clipboardWrite(value),
+    writeText: async (value) => call.clipboardWrite(value),
   },
   openExternal: async () => {
     console.warn('vscode.env.openExternal is not supported. sorry')

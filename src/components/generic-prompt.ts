@@ -13,15 +13,18 @@ const state = {
 
 type S = typeof state
 
-const resetState = { value: '', visible: false, desc: '' } 
+const resetState = { value: '', visible: false, desc: '' }
 
 const actions = {
-  show: ({ desc, task }: any) => (vimBlur(), {
-    desc,
-    task,
-    value: '',
-    visible: true,
-  }),
+  show: ({ desc, task }: any) => (
+    vimBlur(),
+    {
+      desc,
+      task,
+      value: '',
+      visible: true,
+    }
+  ),
   hide: () => (vimFocus(), resetState),
   change: (value: string) => ({ value }),
   select: () => (s: S) => {
@@ -33,19 +36,19 @@ const actions = {
 
 type A = typeof actions
 
-const view = ($: S, a: A) => Plugin($.visible, [
-
-  ,Input({
-    focus: true,
-    icon: Icon.HelpCircle,
-    hide: a.hide,
-    select: a.select,
-    change: a.change,
-    value: $.value,
-    desc: $.desc,
-  })
-
-])
+const view = ($: S, a: A) =>
+  Plugin($.visible, [
+    ,
+    Input({
+      focus: true,
+      icon: Icon.HelpCircle,
+      hide: a.hide,
+      select: a.select,
+      change: a.change,
+      value: $.value,
+      desc: $.desc,
+    }),
+  ])
 
 const ui = app<S, A>({ name: 'generic-prompt', state, actions, view })
 

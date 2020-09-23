@@ -22,11 +22,11 @@ interface ProcessHistory {
 }
 
 interface ProcessStats {
-	cmd: string
-	pid: number
-	parentPid: number
-	load: number
-	memory: number
+  cmd: string
+  pid: number
+  parentPid: number
+  load: number
+  memory: number
 }
 
 interface ProcessItem extends ProcessStats {
@@ -38,64 +38,68 @@ const CMD = '/bin/ps -ax -o pid=,ppid=,pcpu=,pmem=,command='
 const PID_CMD = /^\s*([0-9]+)\s+([0-9]+)\s+([0-9]+\.[0-9]+)\s+([0-9]+\.[0-9]+)\s+(.+)$/
 const usageHistory = new Map<number, ProcessHistory>()
 const container = document.getElementById('process-list') as HTMLElement
-const historyContainer = document.getElementById('process-history') as HTMLElement
+const historyContainer = document.getElementById(
+  'process-history'
+) as HTMLElement
 const copyHistoryButton = document.getElementById('copy-history') as HTMLElement
 let elapsedTime = 0
 
-const listProcesses = (rootPid: number): Promise<ProcessItem> => new Promise(done => {
-  let rootItem: ProcessItem
-  const map = new Map<number, ProcessItem>()
+const listProcesses = (rootPid: number): Promise<ProcessItem> =>
+  new Promise((done) => {
+    let rootItem: ProcessItem
+    const map = new Map<number, ProcessItem>()
 
-  const addToTree = ({ cmd, pid, parentPid, load, memory }: ProcessStats) => {
-    const parent = map.get(parentPid)
-    const isParent = pid === rootPid || parent
-    if (!isParent) return
+    const addToTree = ({ cmd, pid, parentPid, load, memory }: ProcessStats) => {
+      const parent = map.get(parentPid)
+      const isParent = pid === rootPid || parent
+      if (!isParent) return
 
-    const item: ProcessStats = {
-      cmd,
-      pid,
-      parentPid,
-      load,
-      memory,
-    }
-
-    map.set(pid, item)
-
-    if (pid === rootPid) rootItem = item
-
-    if (parent) {
-      if (!parent.children) {
-        parent.children = []
+      const item: ProcessStats = {
+        cmd,
+        pid,
+        parentPid,
+        load,
+        memory,
       }
-      parent.children.push(item)
-      if (parent.children.length > 1) {
-        parent.children = parent.children.sort((a, b) => a.pid - b.pid)
-      }
-    }
-  }
 
-  exec(CMD, { maxBuffer: 1000 * 1024 }, (err, stdout, stderr) => {
-    if (err || stderr) return console.error(err || stderr.toString())
+      map.set(pid, item)
 
-    stdout
-      .toString()
-      .split('\n')
-      .map(line => {
-        const [ , pid, ppid, load, mem, cmd ] = PID_CMD.exec(line.trim()) || [] as any
-        const stats = {
-          cmd,
-          pid: parseInt(pid),
-          parentPid: parseInt(ppid),
-          load: parseFloat(load),
-          memory: parseFloat(mem),
+      if (pid === rootPid) rootItem = item
+
+      if (parent) {
+        if (!parent.children) {
+          parent.children = []
         }
+        parent.children.push(item)
+        if (parent.children.length > 1) {
+          parent.children = parent.children.sort((a, b) => a.pid - b.pid)
+        }
+      }
+    }
 
-        addToTree(stats)
-      })
+    exec(CMD, { maxBuffer: 1000 * 1024 }, (err, stdout, stderr) => {
+      if (err || stderr) return console.error(err || stderr.toString())
 
-    done(rootItem)
+      stdout
+        .toString()
+        .split('\n')
+        .map((line) => {
+          const [, pid, ppid, load, mem, cmd] =
+            PID_CMD.exec(line.trim()) || ([] as any)
+          const stats = {
+            cmd,
+            pid: parseInt(pid),
+            parentPid: parseInt(ppid),
+            load: parseFloat(load),
+            memory: parseFloat(mem),
+          }
+
+          addToTree(stats)
+        })
+
+      done(rootItem)
+    })
   })
-})
 
 const findName = (cmd: string): string => {
   const SHARED_PROCESS_HINT = /--disable-blink-features=Auxclick/
@@ -115,7 +119,8 @@ const findName = (cmd: string): string => {
   if (WINDOWS_PTY.exec(cmd)) return 'winpty-process'
 
   //find windows console host process
-  if (WINDOWS_CONSOLE_HOST.exec(cmd)) return 'console-window-host (Windows internal process)'
+  if (WINDOWS_CONSOLE_HOST.exec(cmd))
+    return 'console-window-host (Windows internal process)'
 
   // find "--type=xxxx"
   let matches = TYPE.exec(cmd)
@@ -140,11 +145,11 @@ const findName = (cmd: string): string => {
     }
   } while (matches)
 
-    if (result) {
-      if (cmd.indexOf('node ') !== 0) {
-        return `electron_node ${result}`
-      }
+  if (result) {
+    if (cmd.indexOf('node ') !== 0) {
+      return `electron_node ${result}`
     }
+  }
   return cmd
 }
 
@@ -156,26 +161,34 @@ const parseName = (cmd: string, pid: number): string => {
 
   // neovim
   if (cmd.includes('nvim') && cmd.includes('call rpcnotify')) return 'Neovim'
-  if (cmd.includes('nvim') && cmd.includes('--cmd colorscheme veonim')) return 'Neovim - Auxillary Syntax Highlighter'
-  if (cmd.includes('nvim') && cmd.includes('--cmd com! -nargs=+ -range Veonim 1')) return 'Neovim - "errorformat" Parser'
+  if (cmd.includes('nvim') && cmd.includes('--cmd colorscheme veonim'))
+    return 'Neovim - Auxillary Syntax Highlighter'
+  if (
+    cmd.includes('nvim') &&
+    cmd.includes('--cmd com! -nargs=+ -range Veonim 1')
+  )
+    return 'Neovim - "errorformat" Parser'
 
   return findName(cmd)
 }
 
-const objToItem = ({ cmd, pid, load, memory, children = [] }: ProcessItem, list: Process[], depth = 0) => {
-  const mem = process.platform === 'win32'
-    ? memory
-    : (totalmem() * (memory / 100))
+const objToItem = (
+  { cmd, pid, load, memory, children = [] }: ProcessItem,
+  list: Process[],
+  depth = 0
+) => {
+  const mem =
+    process.platform === 'win32' ? memory : totalmem() * (memory / 100)
 
   const item: Process = {
     cmd: '&nbsp;'.repeat(depth * 4) + parseName(cmd, pid),
     cpu: Number(load.toFixed(0)),
-    pid: Number((pid).toFixed(0)),
+    pid: Number(pid.toFixed(0)),
     memory: Number((mem / MB).toFixed(0)),
   }
 
   list.push(item)
-  children.forEach(pi => objToItem(pi, list, depth + 1))
+  children.forEach((pi) => objToItem(pi, list, depth + 1))
 }
 
 const processTreeToList = (processes: ProcessItem): Process[] => {
@@ -185,50 +198,61 @@ const processTreeToList = (processes: ProcessItem): Process[] => {
   return list
 }
 
-const rollingAverage = (currentAverage: number, count: number, nextValue: number): number => {
+const rollingAverage = (
+  currentAverage: number,
+  count: number,
+  nextValue: number
+): number => {
   let average = currentAverage
   average -= average / count
   average += nextValue / count
   return Math.round(average)
 }
 
-const collectHistory = (procs: Process[]) => procs.forEach(proc => {
-  const item = usageHistory.get(proc.pid) || {
-    pid: proc.pid,
-    cmd: proc.cmd.replace(/&nbsp;/g, ''),
-    count: 0,
-    maxMemory: proc.memory,
-    maxCPU: proc.cpu,
-    averageMemory: proc.memory,
-    averageCPU: proc.cpu,
-    usages: new Map<number, number>(),
-  }
+const collectHistory = (procs: Process[]) =>
+  procs.forEach((proc) => {
+    const item = usageHistory.get(proc.pid) || {
+      pid: proc.pid,
+      cmd: proc.cmd.replace(/&nbsp;/g, ''),
+      count: 0,
+      maxMemory: proc.memory,
+      maxCPU: proc.cpu,
+      averageMemory: proc.memory,
+      averageCPU: proc.cpu,
+      usages: new Map<number, number>(),
+    }
 
-  item.count += 1
+    item.count += 1
 
-  if (proc.memory > item.maxMemory) item.maxMemory = proc.memory
-  if (proc.cpu > item.maxCPU) item.maxCPU = proc.cpu
+    if (proc.memory > item.maxMemory) item.maxMemory = proc.memory
+    if (proc.cpu > item.maxCPU) item.maxCPU = proc.cpu
 
-  item.averageMemory = rollingAverage(item.averageMemory, item.count, proc.memory)
-  item.averageCPU = rollingAverage(item.averageCPU, item.count, proc.cpu)
+    item.averageMemory = rollingAverage(
+      item.averageMemory,
+      item.count,
+      proc.memory
+    )
+    item.averageCPU = rollingAverage(item.averageCPU, item.count, proc.cpu)
 
-  const roundedUsage = Math.round(proc.cpu / 10) * 10
-  const prevUsage = item.usages.get(roundedUsage) || 0
-  item.usages.set(roundedUsage, prevUsage + 1)
+    const roundedUsage = Math.round(proc.cpu / 10) * 10
+    const prevUsage = item.usages.get(roundedUsage) || 0
+    item.usages.set(roundedUsage, prevUsage + 1)
 
-  usageHistory.set(proc.pid, item)
-})
+    usageHistory.set(proc.pid, item)
+  })
 
 const renderHistory = () => {
   const history = [...usageHistory.values()]
 
-  historyContainer.innerHTML = history.map(hist => {
-    const usageValues = [...hist.usages.entries()]
-    const usages = usageValues
-      .sort((a, b) => b[0] - a[0])
-      .map(u => `<div>${u[0]}% - ${u[1]}s</div>`).join('')
+  historyContainer.innerHTML = history
+    .map((hist) => {
+      const usageValues = [...hist.usages.entries()]
+      const usages = usageValues
+        .sort((a, b) => b[0] - a[0])
+        .map((u) => `<div>${u[0]}% - ${u[1]}s</div>`)
+        .join('')
 
-    return `<div>
+      return `<div>
       <div style="padding-bottom: 10px; padding-top: 40px;">
         <strong style="font-size: 20px">${hist.cmd}</strong>
         <span style="color: #666"> (${hist.pid})<span>
@@ -239,7 +263,8 @@ const renderHistory = () => {
       <div style="padding-top: 10px">${usages}</div>
     </div>
     <br/>`
-  }).join('')
+    })
+    .join('')
 }
 
 const renderProcesses = (procs: Process[]) => {
@@ -272,7 +297,7 @@ const renderProcesses = (procs: Process[]) => {
   </table>`
 }
 
-container.addEventListener('click', e => {
+container.addEventListener('click', (e) => {
   const el = e.target as HTMLElement
   const action = el.getAttribute('action')
   const id = el.getAttribute('id')
@@ -280,20 +305,18 @@ container.addEventListener('click', e => {
   if (!id) return alert('no PID exists for this process?? wat')
   if (!action) return alert('no kill action exists for this process?? wat')
 
-  const kaput = action === 'force-kill'
-    ? 'SIGKILL'
-    : 'SIGTERM'
+  const kaput = action === 'force-kill' ? 'SIGKILL' : 'SIGTERM'
 
-  process.kill(<any>id-0, kaput)
+  process.kill(<any>id - 0, kaput)
 })
 
 copyHistoryButton.addEventListener('click', () => {
-  const collected = [...usageHistory.values()].map(hist => ({
+  const collected = [...usageHistory.values()].map((hist) => ({
     ...hist,
-    usages: [...hist.usages.entries()].map(m => ({
+    usages: [...hist.usages.entries()].map((m) => ({
       percentage: m[0],
       time: m[1],
-    }))
+    })),
   }))
 
   const data = JSON.stringify({
@@ -310,7 +333,9 @@ const refresh = async () => {
   const processTree = await listProcesses(remote.process.pid)
   const processList = processTreeToList(processTree)
   renderProcesses(processList)
-  const relevantProcesses = processList.filter(p => !p.cmd.includes('/bin/ps -ax'))
+  const relevantProcesses = processList.filter(
+    (p) => !p.cmd.includes('/bin/ps -ax')
+  )
   collectHistory(relevantProcesses)
   renderHistory()
 }

@@ -13,8 +13,13 @@ export const makel: EL1 & EL2 = (...args: any[]) => {
   return el
 }
 
-export const onElementResize = (el: HTMLElement, fn: (width: number, height: number) => void) => {
+export const onElementResize = (
+  el: HTMLElement,
+  fn: (width: number, height: number) => void
+) => {
   // ResizeObserver only exists in Chrome
-  const r = new (window as any).ResizeObserver(([ { contentRect: e } ]: any) => fn(e.width, e.height))
+  const r = new (window as any).ResizeObserver(([{ contentRect: e }]: any) =>
+    fn(e.width, e.height)
+  )
   r.observe(el)
 }

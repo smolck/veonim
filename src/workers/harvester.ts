@@ -14,7 +14,7 @@ let isInsertMode = false
 
 const addKeywords = (file: string, words: string[]) => {
   const e = keywords.get(file) || []
-  words.forEach(word => {
+  words.forEach((word) => {
     if (e.includes(word)) return
     keywords.set(file, (e.push(word), e))
   })
@@ -42,11 +42,11 @@ const harvest = (file: string, textLines: string[]) => {
     }
   }
 
-  const nextKeywords = new Set([...keywords.get(file) || [], ...harvested])
+  const nextKeywords = new Set([...(keywords.get(file) || []), ...harvested])
   keywords.set(file, [...nextKeywords])
 }
 
-nvim.on.insertEnter(() => isInsertMode = true)
+nvim.on.insertEnter(() => (isInsertMode = true))
 nvim.on.insertLeave(async () => {
   isInsertMode = false
   const changedText = patchAllTexts(insertChanges.changes)

@@ -19,10 +19,22 @@ const state = {
 
 export type NeovimState = typeof state
 type StateKeys = keyof NeovimState
-type WatchState = { [Key in StateKeys]: (fn: (value: NeovimState[Key], previousValue: NeovimState[Key]) => void) => void }
+type WatchState = {
+  [Key in StateKeys]: (
+    fn: (value: NeovimState[Key], previousValue: NeovimState[Key]) => void
+  ) => void
+}
 
-type OnStateValue1 = { [Key in StateKeys]: (value: NeovimState[Key], fn: () => void) => void }
-type OnStateValue2 = { [Key in StateKeys]: (value: NeovimState[Key], previousValue: NeovimState[Key], fn: () => void) => void }
+type OnStateValue1 = {
+  [Key in StateKeys]: (value: NeovimState[Key], fn: () => void) => void
+}
+type OnStateValue2 = {
+  [Key in StateKeys]: (
+    value: NeovimState[Key],
+    previousValue: NeovimState[Key],
+    fn: () => void
+  ) => void
+}
 type OnStateValue = OnStateValue1 & OnStateValue2
 
 type UntilStateValue1 = {
@@ -33,7 +45,10 @@ type UntilStateValue1 = {
 
 type UntilStateValue2 = {
   [Key in StateKeys]: {
-    is: (value: NeovimState[Key], previousValue: NeovimState[Key]) => Promise<NeovimState[Key]>
+    is: (
+      value: NeovimState[Key],
+      previousValue: NeovimState[Key]
+    ) => Promise<NeovimState[Key]>
   }
 }
 
@@ -44,45 +59,67 @@ export default (stateName: string) => {
   const stateChangeFns = new Set<Function>()
 
   const watchState: WatchState = new Proxy(Object.create(null), {
-    get: (_, key: string) => (fn: (value: any, previousValue: any) => void) => watchers.on(key, fn),
+    get: (_, key: string) => (fn: (value: any, previousValue: any) => void) =>
+      watchers.on(key, fn),
   })
 
-  const onStateChange = (fn: (nextState: NeovimState, key: string, value: any, previousValue: any) => void) => {
+  const onStateChange = (
+    fn: (
+      nextState: NeovimState,
+      key: string,
+      value: any,
+      previousValue: any
+    ) => void
+  ) => {
     stateChangeFns.add(fn)
   }
 
   const onStateValue: OnStateValue = new Proxy(Object.create(null), {
     get: (_, key: string) => (matchValue: any, ...args: any[]) => {
-      const matchPreviousValue = args.find(a => typeof a === 'string')
-      const fn = args.find(a => typeof a === 'function')
+      const matchPreviousValue = args.find((a) => typeof a === 'string')
+      const fn = args.find((a) => typeof a === 'function')
 
       watchers.on(key, (value, previousValue) => {
         const same = value === matchValue
-        const prevSame = typeof matchPreviousValue == null ? true : previousValue === matchPreviousValue
+        const prevSame =
+          typeof matchPreviousValue == null
+            ? true
+            : previousValue === matchPreviousValue
         if (same && prevSame) fn()
       })
-    }
+    },
   })
 
   const untilStateValue: UntilStateValue = new Proxy(Object.create(null), {
-    get: (_, key: string) => ({ is: (matchValue: any, matchPreviousValue?: any) => new Promise(done => {
-      const callback = (value: any, previousValue: any) => {
-        const same = value === matchValue
-        const prevSame = matchPreviousValue == null ? true : previousValue === matchPreviousValue
+    get: (_, key: string) => ({
+      is: (matchValue: any, matchPreviousValue?: any) =>
+        new Promise((done) => {
+          const callback = (value: any, previousValue: any) => {
+            const same = value === matchValue
+            const prevSame =
+              matchPreviousValue == null
+                ? true
+                : previousValue === matchPreviousValue
 
-        if (same && prevSame) {
-          done(value)
-          watchers.removeListener(key, callback)
-        }
-      }
+            if (same && prevSame) {
+              done(value)
+              watchers.removeListener(key, callback)
+            }
+          }
 
-      watchers.on(key, callback)
-    }) }),
+          watchers.on(key, callback)
+        }),
+    }),
   })
 
-  const notifyStateChange = (nextState: NeovimState, key: string, value: any, previousValue: any) => {
+  const notifyStateChange = (
+    nextState: NeovimState,
+    key: string,
+    value: any,
+    previousValue: any
+  ) => {
     watchers.emit(key, value, previousValue)
-    stateChangeFns.forEach(fn => fn(nextState, key, value, previousValue))
+    stateChangeFns.forEach((fn) => fn(nextState, key, value, previousValue))
   }
 
   const stateProxy = new Proxy(state, {
@@ -97,7 +134,7 @@ export default (stateName: string) => {
       notifyStateChange(nextState, key, val, currentVal)
 
       return true
-    }
+    },
   })
 
   if (process.env.VEONIM_DEV) {
@@ -106,8 +143,13 @@ export default (stateName: string) => {
     const { createStore } = require('redux')
     const { composeWithDevTools } = require('redux-devtools-extension')
 
-    const composeEnhancers = composeWithDevTools({ name: `neovim-state-${stateName}` })
-    const reducer = (state: any, action: any) => ({ ...state, ...action.payload })
+    const composeEnhancers = composeWithDevTools({
+      name: `neovim-state-${stateName}`,
+    })
+    const reducer = (state: any, action: any) => ({
+      ...state,
+      ...action.payload,
+    })
     const store = createStore(reducer, state, composeEnhancers())
 
     store.subscribe(() => Object.assign(stateProxy, store.getState()))
@@ -116,5 +158,11 @@ export default (stateName: string) => {
     })
   }
 
-  return { state: stateProxy, watchState, onStateChange, onStateValue, untilStateValue }
+  return {
+    state: stateProxy,
+    watchState,
+    onStateChange,
+    onStateValue,
+    untilStateValue,
+  }
 }

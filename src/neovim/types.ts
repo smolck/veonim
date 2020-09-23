@@ -5,7 +5,7 @@ export type VimOption = { [index: string]: Promise<any> }
 export type Keymap = Map<string, KeymapObject>
 
 interface KeymapObject {
-  mode: VimMode,
+  mode: VimMode
   lhs: string
   rhs: string
   sid: number
@@ -153,7 +153,10 @@ export interface Buffer {
   getOffset(line: number): Promise<number>
   isLoaded(): Promise<boolean>
   isTerminal(): Promise<boolean>
-  attach(options: { sendInitialBuffer: boolean }, onEventFn: (event: BufferChangeEvent) => void): void
+  attach(
+    options: { sendInitialBuffer: boolean },
+    onEventFn: (event: BufferChangeEvent) => void
+  ): void
   detach(): void
   onDetach(onDetachFn: () => void): void
   onChangedTick(onChangedTickFn: (changedTick: number) => void): void
@@ -175,7 +178,13 @@ export interface Buffer {
   setOption(name: string, value: any): void
   setName(name: string): void
   getMark(name: string): Promise<number[]>
-  addHighlight(sourceId: number, highlightGroup: string, line: number, columnStart: number, columnEnd: number): Promise<number>
+  addHighlight(
+    sourceId: number,
+    highlightGroup: string,
+    line: number,
+    columnStart: number,
+    columnEnd: number
+  ): Promise<number>
   clearHighlight(sourceId: number, lineStart: number, lineEnd: number): void
   clearAllHighlights(): void
   highlightProblems(problems: ProblemHighlight[]): Promise<any[]>

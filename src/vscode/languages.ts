@@ -1,4 +1,6 @@
-import filetypeToVscLanguage, { vscLanguageToFiletypes } from '../vscode/vsc-languages'
+import filetypeToVscLanguage, {
+  vscLanguageToFiletypes,
+} from '../vscode/vsc-languages'
 import DiagnosticCollection from '../vscode/diagnostic-collection'
 import { languageSelectorFrom } from '../vscode/type-converters'
 import { Watcher, is, uuid, MapSetter } from '../support/utils'
@@ -16,9 +18,16 @@ interface Events {
 
 const events = Watcher<Events>()
 export const wordDefinitions = new Map<string, RegExp | undefined>()
-export const languageConfigurations = new Map<string, vsc.LanguageConfiguration>()
-export const emitDidChangeDiagnostics = (uris: vsc.Uri[]) => events.emit('didChangeDiagnostics', { uris })
-const diagnosticCollectionRepository = new Map<string, vsc.DiagnosticCollection>()
+export const languageConfigurations = new Map<
+  string,
+  vsc.LanguageConfiguration
+>()
+export const emitDidChangeDiagnostics = (uris: vsc.Uri[]) =>
+  events.emit('didChangeDiagnostics', { uris })
+const diagnosticCollectionRepository = new Map<
+  string,
+  vsc.DiagnosticCollection
+>()
 
 type AM_I_STUPID = {
   (resource: vsc.Uri): vsc.Diagnostic[]
@@ -28,10 +37,11 @@ type AM_I_STUPID = {
 const getDiagnostics_TYPESCRIPT_Y_U_DO_DIS = (resource?: vsc.Uri) => {
   const collections = [...diagnosticCollectionRepository.values()]
 
-  if (resource) return collections.reduce((res, collection) => {
-    const diagnostics = collection.get(resource as vsc.Uri)
-    return diagnostics ? [...res, ...diagnostics] : res
-  }, [] as vsc.Diagnostic[])
+  if (resource)
+    return collections.reduce((res, collection) => {
+      const diagnostics = collection.get(resource as vsc.Uri)
+      return diagnostics ? [...res, ...diagnostics] : res
+    }, [] as vsc.Diagnostic[])
 
   const diagnosticsMapSet = collections.reduce((res, collection) => {
     collection.forEach((uri, diagnostics) => res.addMany(uri, diagnostics))
@@ -62,11 +72,13 @@ const languages: typeof vsc.languages = {
   getDiagnostics: PROGRAMMING_SUCKS_YAY,
   getLanguages: async () => {
     const filetypes = await nvim.call.getcompletion('', 'filetype')
-    return filetypes.map(ft => filetypeToVscLanguage(ft))
+    return filetypes.map((ft) => filetypeToVscLanguage(ft))
   },
   setTextDocumentLanguage: async (document, languageId) => {
     const filetype = vscLanguageToFiletypes(languageId)
-    nvim.Buffer((document as SuperTextDocument)._nvimBufferId).setOption('filetype', filetype)
+    nvim
+      .Buffer((document as SuperTextDocument)._nvimBufferId)
+      .setOption('filetype', filetype)
     return document
   },
   match: (selector, document) => {
@@ -78,7 +90,7 @@ const languages: typeof vsc.languages = {
     return score(languageSelector, document.uri, document.languageId, true)
   },
   onDidChangeDiagnostics: eventreg('didChangeDiagnostics'),
-  createDiagnosticCollection: name => {
+  createDiagnosticCollection: (name) => {
     const id = name || uuid()
     const key = diagnosticCollectionRepository.has(id) ? uuid() : id
     const collection = DiagnosticCollection(key)
@@ -90,23 +102,35 @@ const languages: typeof vsc.languages = {
 
     // check for a valid word pattern
     if (wordPattern && regExpLeadsToEndlessLoop(wordPattern)) {
-      throw new Error(`Invalid language configuration: wordPattern '${wordPattern}' is not allowed to match the empty string.`)
+      throw new Error(
+        `Invalid language configuration: wordPattern '${wordPattern}' is not allowed to match the empty string.`
+      )
     }
 
     wordDefinitions.set(languageId, wordPattern)
     languageConfigurations.set(languageId, configuration)
     return { dispose: () => languageConfigurations.delete(languageId) }
   },
-  registerCompletionItemProvider: (selector, provider, ...triggerCharacters) => {
+  registerCompletionItemProvider: (
+    selector,
+    provider,
+    ...triggerCharacters
+  ) => {
     const filetypes = selectorToFiletypes(selector)
     const d1 = providers.completionItem.register(filetypes, provider)
-    const d2 = providers.completionTriggerCharacters.addMultipleValues(filetypes, triggerCharacters)
+    const d2 = providers.completionTriggerCharacters.addMultipleValues(
+      filetypes,
+      triggerCharacters
+    )
     return { dispose: () => (d1(), d2()) }
   },
   registerCodeActionsProvider: (selector, provider, metadata) => {
     if (metadata) {
       // TODO: metadata includes CodeActionKind like quickfix, refactor, source.organizeImports. wat do wit dis?
-      console.warn('NYI: languages.registerCodeActionsProvider metadata not supported:', metadata)
+      console.warn(
+        'NYI: languages.registerCodeActionsProvider metadata not supported:',
+        metadata
+      )
     }
 
     const filetypes = selectorToFiletypes(selector)
@@ -151,14 +175,17 @@ const languages: typeof vsc.languages = {
   },
   registerDocumentSymbolProvider: (selector, provider, metadata) => {
     if (metadata) {
-      console.warn('NYI: languages.registerDocumentSymbolProvider metadata not supported:', metadata)
+      console.warn(
+        'NYI: languages.registerDocumentSymbolProvider metadata not supported:',
+        metadata
+      )
     }
 
     const filetypes = selectorToFiletypes(selector)
     const dispose = providers.documentSymbol.register(filetypes, provider)
     return { dispose }
   },
-  registerWorkspaceSymbolProvider: provider => {
+  registerWorkspaceSymbolProvider: (provider) => {
     const dispose = providers.workspaceSymbol.register(['*'], provider)
     return { dispose }
   },
@@ -174,36 +201,66 @@ const languages: typeof vsc.languages = {
   },
   registerDocumentFormattingEditProvider: (selector, provider) => {
     const filetypes = selectorToFiletypes(selector)
-    const dispose = providers.documentFormattingEdit.register(filetypes, provider)
+    const dispose = providers.documentFormattingEdit.register(
+      filetypes,
+      provider
+    )
     return { dispose }
   },
   registerDocumentRangeFormattingEditProvider: (selector, provider) => {
     const filetypes = selectorToFiletypes(selector)
-    const dispose = providers.documentRangeFormattingEdit.register(filetypes, provider)
+    const dispose = providers.documentRangeFormattingEdit.register(
+      filetypes,
+      provider
+    )
     return { dispose }
   },
-  registerOnTypeFormattingEditProvider: (selector, provider, ...triggerCharacters: string[]) => {
+  registerOnTypeFormattingEditProvider: (
+    selector,
+    provider,
+    ...triggerCharacters: string[]
+  ) => {
     const filetypes = selectorToFiletypes(selector)
-    const disposeProvider = providers.onTypeFormattingEdit.register(filetypes, provider)
-    const disposeTriggers = providers.onTypeFormattingTriggerCharacters.addMultipleValues(filetypes, triggerCharacters)
+    const disposeProvider = providers.onTypeFormattingEdit.register(
+      filetypes,
+      provider
+    )
+    const disposeTriggers = providers.onTypeFormattingTriggerCharacters.addMultipleValues(
+      filetypes,
+      triggerCharacters
+    )
     return { dispose: () => (disposeProvider(), disposeTriggers()) }
   },
-  registerSignatureHelpProvider: (selector: vsc.DocumentSelector, provider: vsc.SignatureHelpProvider, firstTriggerCharOrMetadata: string | vsc.SignatureHelpProviderMetadata, ...moreTriggerChars: string[]) => {
+  registerSignatureHelpProvider: (
+    selector: vsc.DocumentSelector,
+    provider: vsc.SignatureHelpProvider,
+    firstTriggerCharOrMetadata: string | vsc.SignatureHelpProviderMetadata,
+    ...moreTriggerChars: string[]
+  ) => {
     const filetypes = selectorToFiletypes(selector)
-    const disposeProvider = providers.signatureHelp.register(filetypes, provider)
+    const disposeProvider = providers.signatureHelp.register(
+      filetypes,
+      provider
+    )
     let triggerCharacters: string[] = []
 
     if (is.object(firstTriggerCharOrMetadata)) {
-      const o = (firstTriggerCharOrMetadata as vsc.SignatureHelpProviderMetadata)
+      const o = firstTriggerCharOrMetadata as vsc.SignatureHelpProviderMetadata
       triggerCharacters = [...o.triggerCharacters, ...o.retriggerCharacters]
-    }
-    else triggerCharacters = [(firstTriggerCharOrMetadata as string), ...moreTriggerChars]
+    } else
+      triggerCharacters = [
+        firstTriggerCharOrMetadata as string,
+        ...moreTriggerChars,
+      ]
 
-    triggerCharacters.forEach(char => {
+    triggerCharacters.forEach((char) => {
       providers.signatureHelpTriggerCharacters.addMultiple(filetypes, char)
     })
 
-    const disposeTriggers = providers.signatureHelpTriggerCharacters.addMultipleValues(filetypes, triggerCharacters)
+    const disposeTriggers = providers.signatureHelpTriggerCharacters.addMultipleValues(
+      filetypes,
+      triggerCharacters
+    )
 
     return { dispose: () => (disposeProvider(), disposeTriggers()) }
   },

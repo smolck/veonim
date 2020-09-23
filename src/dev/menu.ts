@@ -36,25 +36,35 @@ actions.set('r', {
   active: recordingExists,
 })
 
-const KeyVal = (key: string, val: string, active: boolean) => h('div', {
-  style: {
-    display: 'flex',
-    alignItems: 'center',
-    marginTop: '5px',
-    marginBottom: '5px',
-    color: active ? '#fff' : '#666',
-  }
-}, [
-  ,h('span', {
-    style: {
-      fontSize: '2rem',
-      fontWeight: 'bold',
-      marginRight: '15px',
+const KeyVal = (key: string, val: string, active: boolean) =>
+  h(
+    'div',
+    {
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        marginTop: '5px',
+        marginBottom: '5px',
+        color: active ? '#fff' : '#666',
+      },
     },
-  }, key.toUpperCase())
+    [
+      ,
+      h(
+        'span',
+        {
+          style: {
+            fontSize: '2rem',
+            fontWeight: 'bold',
+            marginRight: '15px',
+          },
+        },
+        key.toUpperCase()
+      ),
 
-  ,h('span', val)
-])
+      h('span', val),
+    ]
+  )
 
 const container = document.createElement('div')
 container.setAttribute('id', 'dev-menu')
@@ -62,28 +72,38 @@ container.setAttribute('id', 'dev-menu')
 type S = typeof state
 type A = typeof viewActions
 
-const view = ($: S) => h('div', {
-  style: {
-    position: 'absolute',
-    zIndex: 600,
-    padding: '20px',
-    top: '80px',
-    left: '40px',
-    background: '#111',
-  }
-}, $.items.map(([ key, { desc, active } ]: any) => {
-  const isActive = is.function(active) ? active() : true
-  return KeyVal(key, desc, isActive)
-}))
+const view = ($: S) =>
+  h(
+    'div',
+    {
+      style: {
+        position: 'absolute',
+        zIndex: 600,
+        padding: '20px',
+        top: '80px',
+        left: '40px',
+        background: '#111',
+      },
+    },
+    $.items.map(([key, { desc, active }]: any) => {
+      const isActive = is.function(active) ? active() : true
+      return KeyVal(key, desc, isActive)
+    })
+  )
 
-
-const ui = app<S, A>({ name: 'dev-menu', state, actions: viewActions, view, element: container })
+const ui = app<S, A>({
+  name: 'dev-menu',
+  state,
+  actions: viewActions,
+  view,
+  element: container,
+})
 
 registerShortcut('S-C-k', VimMode.Normal, () => {
   ui.refresh([...actions.entries()])
   document.body.appendChild(container)
 
-  const restoreInput = stealInput(key => {
+  const restoreInput = stealInput((key) => {
     const action = actions.get(key)
 
     if (action) {

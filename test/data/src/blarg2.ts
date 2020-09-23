@@ -1,1 +1,2 @@
-export const externalFunction = (someInput: string): number => <any>someInput - 0
+export const externalFunction = (someInput: string): number =>
+  <any>someInput - 0

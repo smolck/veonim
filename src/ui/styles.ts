@@ -1,4 +1,13 @@
-import { setVar, paddingVH, paddingV, contrast, darken, brighten, cvar, hexToRGB } from '../ui/css'
+import {
+  setVar,
+  paddingVH,
+  paddingV,
+  contrast,
+  darken,
+  brighten,
+  cvar,
+  hexToRGB,
+} from '../ui/css'
 import { colors as nvimColors } from '../render/highlight-attributes'
 import { sub } from '../messaging/dispatch'
 import { css } from '../ui/uikit'
@@ -7,12 +16,12 @@ import { css } from '../ui/uikit'
 // then we can use this var in rgba color styles
 // background: rgba(var(--background-40-alpha), 0.8);
 const rgb = (hexColor: string) => {
-  const [ r, g, b ] = hexToRGB(hexColor)
+  const [r, g, b] = hexToRGB(hexColor)
   return `${r}, ${g}, ${b}`
 }
 
 // TODO: investigate if css filters would be better suited for this
-const refreshColors = ({ fg, bg }: { fg: string, bg: string }) => {
+const refreshColors = ({ fg, bg }: { fg: string; bg: string }) => {
   setVar('background-b10', brighten(bg, 10))
   setVar('background-b5', brighten(bg, 5))
   setVar('background', bg)
@@ -51,10 +60,12 @@ const refreshColors = ({ fg, bg }: { fg: string, bg: string }) => {
 
 sub('colors-changed', refreshColors)
 
-requestAnimationFrame(() => refreshColors({
-  fg: nvimColors.foreground,
-  bg: nvimColors.background,
-}))
+requestAnimationFrame(() =>
+  refreshColors({
+    fg: nvimColors.foreground,
+    bg: nvimColors.background,
+  })
+)
 
 setVar('error', '#ef2f2f')
 setVar('warning', '#ffb100')
@@ -88,7 +99,7 @@ export const docStyle = {
   background: cvar('background-45'),
 }
 
-export const resetMarkdownHTMLStyle = css(id => [
+export const resetMarkdownHTMLStyle = css((id) => [
   `.${id} p {
     padding: 0;
     margin: 0;

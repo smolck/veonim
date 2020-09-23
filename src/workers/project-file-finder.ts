@@ -13,7 +13,7 @@ let query = ''
 const sendResults = ({ filter = true } = {}) => {
   if (!filter || !query) return call.results([...results].slice(0, AMOUNT))
 
-  const queries = query.split(' ').filter(m => m)
+  const queries = query.split(' ').filter((m) => m)
   // TODO: might be more performant to cache previous fuzzy results
   const items = queries.reduce((res, qry) => fuzzy(res, qry), [...results])
 
@@ -22,13 +22,16 @@ const sendResults = ({ filter = true } = {}) => {
 
 const getFilesWithRipgrep = (cwd: string) => {
   const timer = setInterval(sendResults, INTERVAL)
-  const rg = Ripgrep(['--files', '--hidden', '--glob', '!node_modules', '--glob', '!.git'], { cwd })
+  const rg = Ripgrep(
+    ['--files', '--hidden', '--glob', '!node_modules', '--glob', '!.git'],
+    { cwd }
+  )
   let initialSent = false
 
   rg.stderr!.pipe(new NewlineSplitter()).on('data', console.error)
 
   rg.stdout!.pipe(new NewlineSplitter()).on('data', (path: string) => {
-    const shouldSendInitialBatch = !initialSent && results.size >= AMOUNT 
+    const shouldSendInitialBatch = !initialSent && results.size >= AMOUNT
     results.add(path)
 
     if (shouldSendInitialBatch) {
@@ -48,7 +51,7 @@ const getFilesWithRipgrep = (cwd: string) => {
     rg.kill()
     clearInterval(timer)
   }
-  
+
   setImmediate(() => sendResults({ filter: false }))
   setTimeout(stop, TIMEOUT)
   return () => (stop(), reset())
@@ -64,7 +67,7 @@ on.load((cwd: string) => {
 
 on.stop(() => {
   query = ''
-  cancelTokens.forEach(cancel => cancel())
+  cancelTokens.forEach((cancel) => cancel())
   cancelTokens.clear()
 })
 

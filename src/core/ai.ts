@@ -15,8 +15,13 @@ import '../ai/rename'
 import '../ai/hover'
 
 let completionEnabled = true
-nvim.watchState.colorscheme((color: string) => colorizer.call.setColorScheme(color))
-nvim.getOptionCurrentAndFuture('completefunc', func => completionEnabled = func === 'VeonimComplete')
+nvim.watchState.colorscheme((color: string) =>
+  colorizer.call.setColorScheme(color)
+)
+nvim.getOptionCurrentAndFuture(
+  'completefunc',
+  (func) => (completionEnabled = func === 'VeonimComplete')
+)
 
 nvim.on.cursorMoveInsert(async () => {
   // tried to get the line contents from the render grid buffer, but it appears
@@ -29,7 +34,8 @@ nvim.on.cursorMoveInsert(async () => {
   // contents + current vim mode. we could then easily improve this action here
   // and perhaps others in the app
   const lineContent = await nvim.getCurrentLine()
-  if (completionEnabled) discoverCompletions(lineContent, nvim.state.line, nvim.state.column)
+  if (completionEnabled)
+    discoverCompletions(lineContent, nvim.state.line, nvim.state.column)
   getSignatureHint(lineContent)
 })
 
@@ -38,7 +44,9 @@ on.aiGetWorkspaceSymbols(getWorkspaceSymbols)
 on.aiRunCodeAction(runCodeAction)
 
 export const ui: AI = new Proxy(Object.create(null), {
-  get: (_: any, namespace: string) => new Proxy(Object.create(null), {
-    get: (_: any, method: string) => (...args: any[]) => call.ai(namespace, method, args)
-  })
+  get: (_: any, namespace: string) =>
+    new Proxy(Object.create(null), {
+      get: (_: any, method: string) => (...args: any[]) =>
+        call.ai(namespace, method, args),
+    }),
 })

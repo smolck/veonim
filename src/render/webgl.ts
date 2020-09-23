@@ -61,7 +61,8 @@ const nutella = () => {
       const height = rows * cell.height
 
       const sameGridSize = gridSize.rows === rows && gridSize.cols === cols
-      const sameViewportSize = viewport.height === height && viewport.width === width
+      const sameViewportSize =
+        viewport.height === height && viewport.width === width
       if (sameGridSize || sameViewportSize) return
 
       Object.assign(gridSize, { rows, cols })
@@ -70,10 +71,11 @@ const nutella = () => {
     }
 
     const layout = (x: number, y: number, width: number, height: number) => {
-      const same = viewport.x === x
-        && viewport.y === y
-        && viewport.width === width
-        && viewport.height === height
+      const same =
+        viewport.x === x &&
+        viewport.y === y &&
+        viewport.width === width &&
+        viewport.height === height
 
       if (same) return
 

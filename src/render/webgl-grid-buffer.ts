@@ -18,7 +18,7 @@ const finetti = () => {
     let row = 0
 
     for (let ix = 0; ix < size; ix += 4) {
-      const oldix = (col * 4) + prevWidth * row * 4
+      const oldix = col * 4 + prevWidth * row * 4
       const prevCol = prevBuffer[oldix]
       const prevRow = prevBuffer[oldix + 1]
       const prevHlid = prevBuffer[oldix + 2]
@@ -63,20 +63,20 @@ const finetti = () => {
   }
 
   const getCell = (row: number, col: number) => {
-    const ix = (col * 4) + width * row * 4
+    const ix = col * 4 + width * row * 4
     return buffer.slice(ix, ix + 4)
   }
 
   const getLine = (row: number) => {
     const start = width * row * 4
-    const end = (width * 4) + width * row * 4
+    const end = width * 4 + width * row * 4
     return buffer.slice(start, end)
   }
 
   const moveRegionUp = (lines: number, top: number, bottom: number) => {
     const startIndex = width * (top + lines) * 4
     const offset = lines * width * 4
-    const bottomIndex = width * bottom * 4 + (width * 4)
+    const bottomIndex = width * bottom * 4 + width * 4
 
     for (let ix = startIndex; ix <= bottomIndex; ix += 4) {
       buffer[ix - offset] = buffer[ix]
@@ -91,7 +91,7 @@ const finetti = () => {
   const moveRegionDown = (lines: number, top: number, bottom: number) => {
     const startIndex = width * top * 4
     const offset = lines * width * 4
-    const bottomIndex = width * bottom * 4 + (width * 4)
+    const bottomIndex = width * bottom * 4 + width * 4
     const endIndex = bottomIndex - offset
 
     for (let ix = endIndex; ix >= startIndex; ix -= 4) {

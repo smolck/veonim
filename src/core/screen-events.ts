@@ -10,7 +10,7 @@ window.matchMedia('screen and (min-resolution: 2dppx)').addListener(() => {
   workspace.resize()
   // TODO: idk why i have to do this but this works
   const win = electron.remote.getCurrentWindow()
-  const [ width, height ] = win.getSize()
+  const [width, height] = win.getSize()
   win.setSize(width + 1, height)
   win.setSize(width, height)
 })

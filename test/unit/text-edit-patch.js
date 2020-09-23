@@ -77,10 +77,7 @@ describe('text edit patch', () => {
     }
 
     const patch = replace(req)
-    same(patch, [
-      'you were the chosen one',
-      'you general kenobi join them',
-    ])
+    same(patch, ['you were the chosen one', 'you general kenobi join them'])
   })
 
   it('replace with newlines', () => {
@@ -118,9 +115,6 @@ describe('text edit patch', () => {
     }
 
     const patch = remove(req)
-    same(patch, [
-      'you were the chosen one',
-      'you not join them',
-    ])
+    same(patch, ['you were the chosen one', 'you not join them'])
   })
 })

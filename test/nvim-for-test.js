@@ -12,19 +12,27 @@ module.exports = (xdgConfigPath) => {
   const SetupRPC = src('messaging/rpc').default
   const pipeName = getPipeName('veonim-test')
 
-  const proc = src('support/binaries').Neovim.run([
-    '--cmd', `${startupFuncs()} | ${startupCmds}`,
-    '--cmd', `com! -nargs=* Plug 1`,
-    '--cmd', `com! -nargs=* VeonimExt 1`,
-    '--cmd', `com! -nargs=+ -range Veonim call Veonim(<f-args>)`,
-    '--embed',
-    '--listen', pipeName,
-  ], {
-    ...process.env,
-    VIM: Neovim.path,
-    VIMRUNTIME: Neovim.runtime,
-    XDG_CONFIG_HOME: xdgConfig,
-  })
+  const proc = src('support/binaries').Neovim.run(
+    [
+      '--cmd',
+      `${startupFuncs()} | ${startupCmds}`,
+      '--cmd',
+      `com! -nargs=* Plug 1`,
+      '--cmd',
+      `com! -nargs=* VeonimExt 1`,
+      '--cmd',
+      `com! -nargs=+ -range Veonim call Veonim(<f-args>)`,
+      '--embed',
+      '--listen',
+      pipeName,
+    ],
+    {
+      ...process.env,
+      VIM: Neovim.path,
+      VIMRUNTIME: Neovim.runtime,
+      XDG_CONFIG_HOME: xdgConfig,
+    }
+  )
 
   const encoder = new Encoder()
   const decoder = new Decoder()
@@ -32,7 +40,7 @@ module.exports = (xdgConfigPath) => {
   proc.stdout.pipe(decoder)
   const { notify, request, onData } = SetupRPC(encoder.write)
 
-  decoder.on('data', ([ type, ...d ]) => onData(type, d))
+  decoder.on('data', ([type, ...d]) => onData(type, d))
 
   const shutdown = () => proc.kill()
 

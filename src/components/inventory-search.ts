@@ -48,33 +48,41 @@ const actions = {
 
 type A = typeof actions
 
-const view = ($: S, a: A) => Plugin($.visible, [
+const view = ($: S, a: A) =>
+  Plugin($.visible, [
+    ,
+    Input({
+      select: a.select,
+      change: a.change,
+      hide: a.hide,
+      next: a.next,
+      prev: a.prev,
+      value: $.value,
+      focus: true,
+      icon: Icon.Compass,
+      desc: 'inventory',
+    }),
 
-  ,Input({
-    select: a.select,
-    change: a.change,
-    hide: a.hide,
-    next: a.next,
-    prev: a.prev,
-    value: $.value,
-    focus: true,
-    icon: Icon.Compass,
-    desc: 'inventory',
-  })
-
-  ,h('div', $.actions.map((action, ix) => h(RowNormal, {
-    active: ix === $.index,
-  }, [
-
-    ,h('div', action.name)
-    ,h('div', action.layer)
-    ,h('div', action.description)
-    ,h('div', action.experimental)
-    ,h('div', action.keybind)
-
-  ])))
-
-])
+    h(
+      'div',
+      $.actions.map((action, ix) =>
+        h(
+          RowNormal,
+          {
+            active: ix === $.index,
+          },
+          [
+            ,
+            h('div', action.name),
+            h('div', action.layer),
+            h('div', action.description),
+            h('div', action.experimental),
+            h('div', action.keybind),
+          ]
+        )
+      )
+    ),
+  ])
 
 const ui = app<S, A>({ name: 'inventory-search', state, actions, view })
 

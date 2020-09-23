@@ -21,7 +21,10 @@ export default (lineNumber: number, text: string): vsc.TextLine => {
   }
 }
 
-const findFirstNonWhitespaceCharIndex = (text: string, startIndex = 0): number => {
+const findFirstNonWhitespaceCharIndex = (
+  text: string,
+  startIndex = 0
+): number => {
   const length = text.length
   for (let ix = startIndex; ix < length; ix++) {
     const char = text.charAt(ix)

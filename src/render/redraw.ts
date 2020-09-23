@@ -1,6 +1,18 @@
-import { addHighlight, generateColorLookupAtlas, setDefaultColors } from '../render/highlight-attributes'
-import { getCharIndex, getUpdatedFontAtlasMaybe } from '../render/font-texture-atlas'
-import { moveCursor, hideCursor, showCursor, updateCursorChar } from '../core/cursor'
+import {
+  addHighlight,
+  generateColorLookupAtlas,
+  setDefaultColors,
+} from '../render/highlight-attributes'
+import {
+  getCharIndex,
+  getUpdatedFontAtlasMaybe,
+} from '../render/font-texture-atlas'
+import {
+  moveCursor,
+  hideCursor,
+  showCursor,
+  updateCursorChar,
+} from '../core/cursor'
 import * as windows from '../windows/window-manager'
 import * as dispatch from '../messaging/dispatch'
 import { onRedraw } from '../core/master-control'
@@ -14,7 +26,7 @@ const default_colors_set = (e: any) => {
   let defaultColorsChanged = false
 
   for (let ix = 1; ix < count; ix++) {
-    const [ fg, bg, sp ] = e[ix]
+    const [fg, bg, sp] = e[ix]
     if (fg < 0 && bg < 0 && sp < 0) continue
     defaultColorsChanged = setDefaultColors(fg, bg, sp)
   }
@@ -29,7 +41,7 @@ const hl_attr_define = (e: any) => {
   const count = e.length
 
   for (let ix = 1; ix < count; ix++) {
-    const [ id, attr, /*cterm_attr*/, info ] = e[ix]
+    const [id, attr /*cterm_attr*/, , info] = e[ix]
     addHighlight(id, attr, info)
   }
 
@@ -41,7 +53,7 @@ const win_pos = (e: any) => {
   const count = e.length
 
   for (let ix = 1; ix < count; ix++) {
-    const [ gridId, { id: windowId }, row, col, width, height ] = e[ix]
+    const [gridId, { id: windowId }, row, col, width, height] = e[ix]
     windows.set(windowId, gridId, row, col, width, height)
   }
 }
@@ -50,7 +62,7 @@ const win_hide = (e: any) => {
   windows.hide(e.slice(1))
 }
 
-const grid_clear = ([ , [ gridId ] ]: any) => {
+const grid_clear = ([, [gridId]]: any) => {
   if (gridId === 1) return
   if (!windows.has(gridId)) return
 
@@ -59,7 +71,7 @@ const grid_clear = ([ , [ gridId ] ]: any) => {
   win.webgl.clearGridBuffer()
 }
 
-const grid_destroy = ([ , [ gridId ] ]: any) => {
+const grid_destroy = ([, [gridId]]: any) => {
   if (gridId === 1) return
   windows.remove(gridId)
 }
@@ -68,7 +80,7 @@ const grid_resize = (e: any) => {
   const count = e.length
 
   for (let ix = 1; ix < count; ix++) {
-    const [ gridId, width, height ] = e[ix]
+    const [gridId, width, height] = e[ix]
     if (gridId === 1) continue
     // grid events show up before win events
     if (!windows.has(gridId)) windows.set(-1, gridId, -1, -1, width, height)
@@ -76,14 +88,17 @@ const grid_resize = (e: any) => {
   }
 }
 
-const grid_cursor_goto = ([ , [ gridId, row, col ] ]: any) => {
+const grid_cursor_goto = ([, [gridId, row, col]]: any) => {
   state_cursorVisible = gridId !== 1
   if (gridId === 1) return
   windows.setActiveGrid(gridId)
   moveCursor(gridId, row, col)
 }
 
-const grid_scroll = ([ , [ gridId, top, bottom, /*left*/, /*right*/, amount ] ]: any) => {
+const grid_scroll = ([
+  ,
+  [gridId, top, bottom /*left*/ /*right*/, , , amount],
+]: any) => {
   if (gridId === 1) return
   // we make the assumption that left & right will always be
   // at the window edges (left == 0 && right == window.width)
@@ -109,7 +124,7 @@ const grid_line = (e: any) => {
   // first item in the event arr is the event name.
   // we skip that because it's cool to do that
   for (let ix = 1; ix < count; ix++) {
-    const [ gridId, row, startCol, charData ] = e[ix]
+    const [gridId, row, startCol, charData] = e[ix]
 
     // TODO: anything of interest on grid 1? messages are supported by ext_messages
     if (gridId === 1) continue
@@ -136,13 +151,12 @@ const grid_line = (e: any) => {
 
       if (typeof char === 'string') {
         const nextCD = charData[cd + 1]
-        const doubleWidth = nextCD
-          && typeof nextCD[0] === 'string'
-          && nextCD[0].codePointAt(0) === undefined
+        const doubleWidth =
+          nextCD &&
+          typeof nextCD[0] === 'string' &&
+          nextCD[0].codePointAt(0) === undefined
         charIndex = getCharIndex(char, doubleWidth ? 2 : 1)
-      }
-
-      else charIndex = char - 32
+      } else charIndex = char - 32
 
       for (let r = 0; r < repeats; r++) {
         buffer[gridRenderIndexes[gridId]] = col
@@ -152,7 +166,7 @@ const grid_line = (e: any) => {
         gridRenderIndexes[gridId] += 4
 
         // TODO: could maybe deffer this to next frame?
-        const bufix = (col * 4) + width * row * 4
+        const bufix = col * 4 + width * row * 4
         gridBuffer[bufix] = col
         gridBuffer[bufix + 1] = row
         gridBuffer[bufix + 2] = hlid
@@ -175,7 +189,7 @@ const grid_line = (e: any) => {
   }
 }
 
-const tabline_update = ([ , [ curtab, tabs ] ]: any) => {
+const tabline_update = ([, [curtab, tabs]]: any) => {
   requestAnimationFrame(() => dispatch.pub('tabs', { curtab, tabs }))
 }
 
@@ -187,7 +201,14 @@ const win_float_pos = (e: any) => {
   const count = e.length
 
   for (let ix = 1; ix < count; ix++) {
-    const [ gridId, { id: windowId }, anchor, anchor_grid, anchor_row, anchor_col ] = e[ix]
+    const [
+      gridId,
+      { id: windowId },
+      anchor,
+      anchor_grid,
+      anchor_row,
+      anchor_col,
+    ] = e[ix]
 
     // TODO(smolck): How to handle windows positioned outside editor window?
     // Clamp it to the editor width & height, or let it go outside the editor window
@@ -209,20 +230,32 @@ const win_float_pos = (e: any) => {
       rowOffset = anchorGrid.row + 1
       colOffset = anchorGrid.col + 1
 
-      if (anchor === 'NE') (row = anchor_row + rowOffset, col = anchor_col + colOffset - gridInfo.width)
-      else if (anchor === 'NW') (row = anchor_row + rowOffset, col = anchor_col + colOffset)
-      else if (anchor === 'SE') (row = anchor_row + rowOffset - gridInfo.height, col = anchor_col + colOffset - gridInfo.width)
-      else if (anchor === 'SW') (row = anchor_row + rowOffset - gridInfo.height, col = anchor_col + colOffset)
-      else throw new Error('Anchor was not one of the four possible values, this should not be possible.')
+      if (anchor === 'NE')
+        (row = anchor_row + rowOffset),
+          (col = anchor_col + colOffset - gridInfo.width)
+      else if (anchor === 'NW')
+        (row = anchor_row + rowOffset), (col = anchor_col + colOffset)
+      else if (anchor === 'SE')
+        (row = anchor_row + rowOffset - gridInfo.height),
+          (col = anchor_col + colOffset - gridInfo.width)
+      else if (anchor === 'SW')
+        (row = anchor_row + rowOffset - gridInfo.height),
+          (col = anchor_col + colOffset)
+      else
+        throw new Error(
+          'Anchor was not one of the four possible values, this should not be possible.'
+        )
 
-      windows.set(windowId,
-                  gridId,
-                  row,
-                  col,
-                  gridInfo.width,
-                  gridInfo.height,
-                  true,
-                  anchor)
+      windows.set(
+        windowId,
+        gridId,
+        row,
+        col,
+        gridInfo.width,
+        gridInfo.height,
+        true,
+        anchor
+      )
 
       windows.calculateGlobalOffset(anchorGrid, windows.get(gridId))
       continue
@@ -234,24 +267,33 @@ const win_float_pos = (e: any) => {
     let row, col
 
     // Vim lines are zero-indexed, so . . . add 1 to the rows
-    if (anchor === 'NE') (row = 1 + anchor_row, col = anchor_col - gridInfo.width)
-    else if (anchor === 'NW') (row = 1 + anchor_row, col = anchor_col)
-    else if (anchor === 'SE') (row = 1 + anchor_row - gridInfo.height, col = anchor_col - gridInfo.width)
-    else if (anchor === 'SW') (row = 1 + anchor_row - gridInfo.height, col = anchor_col)
-    else throw new Error('Anchor was not one of the four possible values, this should not be possible.')
+    if (anchor === 'NE')
+      (row = 1 + anchor_row), (col = anchor_col - gridInfo.width)
+    else if (anchor === 'NW') (row = 1 + anchor_row), (col = anchor_col)
+    else if (anchor === 'SE')
+      (row = 1 + anchor_row - gridInfo.height),
+        (col = anchor_col - gridInfo.width)
+    else if (anchor === 'SW')
+      (row = 1 + anchor_row - gridInfo.height), (col = anchor_col)
+    else
+      throw new Error(
+        'Anchor was not one of the four possible values, this should not be possible.'
+      )
 
-    windows.set(windowId,
-                gridId,
-                row,
-                col,
-                gridInfo.width,
-                gridInfo.height,
-                true,
-                anchor)
+    windows.set(
+      windowId,
+      gridId,
+      row,
+      col,
+      gridInfo.width,
+      gridInfo.height,
+      true,
+      anchor
+    )
   }
 }
 
-onRedraw(redrawEvents => {
+onRedraw((redrawEvents) => {
   // because of circular logic/infinite loop. cmdline_show updates UI, UI makes
   // a change in the cmdline, nvim sends redraw again. we cut that stuff out
   // with coding and algorithms
@@ -269,11 +311,11 @@ onRedraw(redrawEvents => {
     if (e === 'grid_line') grid_line(ev)
     else if (e === 'grid_scroll') grid_scroll(ev)
     else if (e === 'grid_cursor_goto') grid_cursor_goto(ev)
-    else if (e === 'win_pos') (winUpdates = true, win_pos(ev))
-    else if (e === 'win_float_pos') (winUpdates = true, win_float_pos(ev))
-    else if (e === 'win_close') (winUpdates = true, win_close(ev))
-    else if (e === 'win_hide') (winUpdates = true, win_hide(ev))
-    else if (e === 'grid_resize') (winUpdates = true, grid_resize(ev))
+    else if (e === 'win_pos') (winUpdates = true), win_pos(ev)
+    else if (e === 'win_float_pos') (winUpdates = true), win_float_pos(ev)
+    else if (e === 'win_close') (winUpdates = true), win_close(ev)
+    else if (e === 'win_hide') (winUpdates = true), win_hide(ev)
+    else if (e === 'grid_resize') (winUpdates = true), grid_resize(ev)
     else if (e === 'grid_clear') grid_clear(ev)
     else if (e === 'grid_destroy') grid_destroy(ev)
     else if (e === 'tabline_update') tabline_update(ev)

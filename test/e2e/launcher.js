@@ -19,14 +19,14 @@ module.exports = async () => {
 
   const app = new Application({
     path: './node_modules/.bin/electron',
-    args: [ path.join(__dirname, '../../build/bootstrap/main.js') ],
+    args: [path.join(__dirname, '../../build/bootstrap/main.js')],
   })
 
   await app.start()
   await app.client.waitUntilWindowLoaded()
   await delay(500)
 
-  app.input = async m => {
+  app.input = async (m) => {
     await delay(100)
     await app.client.keys(m)
   }
@@ -34,18 +34,18 @@ module.exports = async () => {
   app.input.enter = () => app.input('Enter')
   app.input.esc = () => app.input('Escape')
 
-  app.input.meta = async m => {
+  app.input.meta = async (m) => {
     await app.input('\uE03D')
     await app.input(m)
     await app.input('\uE03D')
   }
 
-  app.veonimAction = async cmd => {
+  app.veonimAction = async (cmd) => {
     await app.input(`:Veonim ${cmd}`)
     await app.input.enter()
   }
 
-  app.screencap = async name => {
+  app.screencap = async (name) => {
     await delay(200)
     const imageBuf = await app.browserWindow.capturePage().catch(console.error)
     if (!imageBuf) return console.error(`faild to screencap "${name}"`)
@@ -55,7 +55,7 @@ module.exports = async () => {
     return imageBuf
   }
 
-  app.snapshotTest = async name => {
+  app.snapshotTest = async (name) => {
     const imageBuf = await app.screencap(name)
     const snapshotLocation = path.join(snapshotsPath, `${name}.png`)
 
@@ -65,9 +65,15 @@ module.exports = async () => {
     }
 
     const snapshotExists = await pathExists(snapshotLocation)
-    if (!snapshotExists) throw new Error(`snapshot "${name}" does not exist. generate snapshots with "--snapshot" flag`)
+    if (!snapshotExists)
+      throw new Error(
+        `snapshot "${name}" does not exist. generate snapshots with "--snapshot" flag`
+      )
 
-    const diff = await compareImages(imageBuf, await fs.readFile(snapshotLocation))
+    const diff = await compareImages(
+      imageBuf,
+      await fs.readFile(snapshotLocation)
+    )
 
     if (diff.rawMisMatchPercentage > 0) {
       fs.writeFile(path.join(resultsPath, `${name}-diff.png`), diff.getBuffer())

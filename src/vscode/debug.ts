@@ -26,14 +26,18 @@ const debug: typeof vsc.debug = {
     console.warn('NYI: debug.activeDebugConsole')
     return {
       append: (value: string) => console.log('vsc-ext-api.debugConsole', value),
-      appendLine: (value: string) => console.log('vsc-ext-api.debugConsole', value),
+      appendLine: (value: string) =>
+        console.log('vsc-ext-api.debugConsole', value),
     }
   },
   get breakpoints() {
     console.warn('NYI: debug.breakpoints')
     return []
   },
-  registerDebugConfigurationProvider: (debugType: string, provider: vsc.DebugConfigurationProvider) => {
+  registerDebugConfigurationProvider: (
+    debugType: string,
+    provider: vsc.DebugConfigurationProvider
+  ) => {
     // @ts-ignore
     const dispose = registerDebugConfigProvider(debugType, provider)
     // TODO: why fail to registerDebugConfigProvider? vscode api assumes this will always return a Disposable?
@@ -59,7 +63,9 @@ const debug: typeof vsc.debug = {
   },
   onDidChangeActiveDebugSession: eventreg('didChangeActiveDebugSession'),
   onDidStartDebugSession: eventreg('didStartDebugSession'),
-  onDidReceiveDebugSessionCustomEvent: eventreg('didReceiveDebugSessionCustomEvent'),
+  onDidReceiveDebugSessionCustomEvent: eventreg(
+    'didReceiveDebugSessionCustomEvent'
+  ),
   onDidTerminateDebugSession: eventreg('didTerminateDebugSession'),
   onDidChangeBreakpoints: eventreg('didChangeBreakpoints'),
 }

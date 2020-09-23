@@ -1,14 +1,23 @@
-import { fromJSON, readFile, writeFile, debounce, exists } from '../support/utils'
+import {
+  fromJSON,
+  readFile,
+  writeFile,
+  debounce,
+  exists,
+} from '../support/utils'
 import * as vsc from 'vscode'
 
 export default async (storagePath: string): Promise<vsc.Memento> => {
   let cache: any
-  const delayedWrite = debounce(() => writeFile(storagePath, JSON.stringify(cache)), 100)
+  const delayedWrite = debounce(
+    () => writeFile(storagePath, JSON.stringify(cache)),
+    100
+  )
 
   const populateCacheIfMissing = async () => {
     if (cache) return
     const dbExists = await exists(storagePath)
-    if (!dbExists) return cache = {}
+    if (!dbExists) return (cache = {})
     const data = await readFile(storagePath)
     cache = fromJSON(data).or({})
   }

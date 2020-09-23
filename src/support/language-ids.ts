@@ -419,4 +419,5 @@ const languages = new Map<string, string>([
 ])
 
 export const getLanguageForExtension = (ext: string) => languages.get(ext)
-export default (path: string): string => (languages.get(extname(path)) || '').replace(/^\./, '')
+export default (path: string): string =>
+  (languages.get(extname(path)) || '').replace(/^\./, '')

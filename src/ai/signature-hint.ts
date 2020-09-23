@@ -15,24 +15,39 @@ const cache = {
   currentParam: 0,
 }
 
-const shouldCloseSignatureHint = (totalParams: number, currentParam: number, triggers: Set<string>, leftChar: string): boolean => {
+const shouldCloseSignatureHint = (
+  totalParams: number,
+  currentParam: number,
+  triggers: Set<string>,
+  leftChar: string
+): boolean => {
   if (currentParam < totalParams - 1) return false
 
   const matching = triggers.has('(') || triggers.has('{') || triggers.has('[')
   if (!matching) return true
 
-  return (leftChar === ')' && triggers.has('('))
-    || (leftChar === '}' && triggers.has('{'))
-    || (leftChar === ']' && triggers.has('['))
+  return (
+    (leftChar === ')' && triggers.has('(')) ||
+    (leftChar === '}' && triggers.has('{')) ||
+    (leftChar === ']' && triggers.has('['))
+  )
 }
 
-const parseDocs = async (docs?: string | MarkdownString): Promise<string | undefined> => {
+const parseDocs = async (
+  docs?: string | MarkdownString
+): Promise<string | undefined> => {
   if (!docs) return
   return typeof docs === 'string' ? docs : markdownToHTML(docs.value)
 }
 
-const showSignature = async (signatures: SignatureInformation[], which?: number | null, param?: number | null) => {
-  const { label = '', documentation = '', parameters = [] } = signatures[which || 0]
+const showSignature = async (
+  signatures: SignatureInformation[],
+  which?: number | null,
+  param?: number | null
+) => {
+  const { label = '', documentation = '', parameters = [] } = signatures[
+    which || 0
+  ]
   const activeParameter = param || 0
 
   const cursorPosition = await nvim.getCursorPosition()
@@ -40,12 +55,14 @@ const showSignature = async (signatures: SignatureInformation[], which?: number 
 
   if (activeParameter < parameters.length) {
     cache.totalParams = parameters.length
-    const { label: paramLabel, documentation: paramDoc } = parameters[activeParameter]
+    const { label: paramLabel, documentation: paramDoc } = parameters[
+      activeParameter
+    ]
     const currentParam = Array.isArray(paramLabel)
       ? label.slice(paramLabel[0], paramLabel[1])
       : paramLabel || ''
 
-    const [ parsedParamDoc, parsedDocumentation ] = await Promise.all([
+    const [parsedParamDoc, parsedDocumentation] = await Promise.all([
       parseDocs(paramDoc),
       parseDocs(documentation),
     ])
@@ -58,20 +75,23 @@ const showSignature = async (signatures: SignatureInformation[], which?: number 
       documentation: parsedDocumentation,
       selectedSignature: (which || 0) + 1,
     })
-  }
-
-  else {
+  } else {
     const nextSignatureIndex = signatures
       .slice()
-      .filter(s => s.parameters && s.parameters.length)
+      .filter((s) => s.parameters && s.parameters.length)
       .sort((a, b) => a.parameters!.length - b.parameters!.length)
-      .findIndex(s => s.parameters!.length > activeParameter)
+      .findIndex((s) => s.parameters!.length > activeParameter)
 
     if (!~nextSignatureIndex) return ui.signatureHint.hide()
 
-    const { label = '', documentation = '', parameters = [] } = signatures[nextSignatureIndex]
+    const { label = '', documentation = '', parameters = [] } = signatures[
+      nextSignatureIndex
+    ]
     const { label: currentParam = '' } = parameters[activeParameter]
-    merge(cache, { selectedSignature: nextSignatureIndex, totalParams: parameters.length })
+    merge(cache, {
+      selectedSignature: nextSignatureIndex,
+      totalParams: parameters.length,
+    })
 
     ui.signatureHint.show({
       ...baseOpts,
@@ -84,29 +104,42 @@ const showSignature = async (signatures: SignatureInformation[], which?: number 
 }
 
 const getSignatureHint = async (lineContent: string) => {
-  const signatureHintTriggerCharacters = await vscode.language.getSignatureHelpTriggerCharacters().promise
+  const signatureHintTriggerCharacters = await vscode.language.getSignatureHelpTriggerCharacters()
+    .promise
   const triggerChars = new Set(signatureHintTriggerCharacters)
   const leftChar = lineContent[Math.max(nvim.state.column - 1, 0)]
 
   // TODO: should probably also hide if we jumped to another line
   // how do we determine the difference between multiline signatures and exit signature?
   // would need to check if cursor is outside of func brackets doStuff(    )   | <- cursor
-  const closeSignatureHint = shouldCloseSignatureHint(cache.totalParams, cache.currentParam, triggerChars, leftChar)
+  const closeSignatureHint = shouldCloseSignatureHint(
+    cache.totalParams,
+    cache.currentParam,
+    triggerChars,
+    leftChar
+  )
   if (closeSignatureHint) return ui.signatureHint.hide()
 
   if (!triggerChars.has(leftChar)) return
-  const hint = await boss.schedule(vscode.language.provideSignatureHelp({
-    triggerKind: SignatureHelpTriggerKind.TriggerCharacter,
-    triggerCharacter: leftChar,
-    // TODO: let the provider know if the signature hint is currently visible or not
-    isRetrigger: false,
-  }), { timeout: 2e3 })
+  const hint = await boss.schedule(
+    vscode.language.provideSignatureHelp({
+      triggerKind: SignatureHelpTriggerKind.TriggerCharacter,
+      triggerCharacter: leftChar,
+      // TODO: let the provider know if the signature hint is currently visible or not
+      isRetrigger: false,
+    }),
+    { timeout: 2e3 }
+  )
   if (!hint) return
 
   const { activeParameter, activeSignature, signatures = [] } = hint
   if (!signatures.length) return
 
-  merge(cache, { signatures, currentParam: activeParameter, selectedSignature: 0 })
+  merge(cache, {
+    signatures,
+    currentParam: activeParameter,
+    selectedSignature: 0,
+  })
   showSignature(signatures, activeSignature, activeParameter)
 }
 

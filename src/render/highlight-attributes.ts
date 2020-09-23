@@ -60,7 +60,8 @@ const defaultAppColors = {
 }
 
 const defaultColorsMap = new Map<number, DefaultColors>()
-const getCurrentDefaultColors = () => defaultColorsMap.get(instances.current) || defaultAppColors
+const getCurrentDefaultColors = () =>
+  defaultColorsMap.get(instances.current) || defaultAppColors
 
 export const colors: DefaultColors = new Proxy(Object.create(null), {
   get: (_: any, key: string) => Reflect.get(getCurrentDefaultColors(), key),
@@ -69,7 +70,8 @@ export const colors: DefaultColors = new Proxy(Object.create(null), {
 // because we skip allocating 1-char strings in msgpack decode. so if we have a 1-char
 // string it might be a code point number - need to turn it back into a string. see
 // msgpack-decoder for more info on how this works.
-const sillyString = (s: any): string => typeof s === 'number' ? String.fromCodePoint(s) : s
+const sillyString = (s: any): string =>
+  typeof s === 'number' ? String.fromCodePoint(s) : s
 
 const highlightInfo = MapSet<number, string, HighlightInfo>()
 const canvas = document.createElement('canvas')
@@ -77,7 +79,8 @@ const ui = canvas.getContext('2d', { alpha: true }) as CanvasRenderingContext2D
 const highlights = MapMap<number, number, HighlightGroup>()
 
 export const setDefaultColors = (fg: number, bg: number, sp: number) => {
-  const defaultColors = defaultColorsMap.get(instances.current) || {} as DefaultColors
+  const defaultColors =
+    defaultColorsMap.get(instances.current) || ({} as DefaultColors)
 
   const nextFG = fg >= 0 ? asColor(fg) : defaultColors.foreground
   const nextBG = bg >= 0 ? asColor(bg) : defaultColors.background
@@ -87,9 +90,10 @@ export const setDefaultColors = (fg: number, bg: number, sp: number) => {
   const background = nextBG || defaultAppColors.background
   const special = nextSP || defaultAppColors.special
 
-  const same = defaultColors.foreground === foreground
-    && defaultColors.background === background
-    && defaultColors.special === special
+  const same =
+    defaultColors.foreground === foreground &&
+    defaultColors.background === background &&
+    defaultColors.special === special
 
   if (same) return false
 
@@ -118,7 +122,11 @@ export const setDefaultColors = (fg: number, bg: number, sp: number) => {
   return true
 }
 
-export const addHighlight = (id: number, attr: Attrs, infos: HighlightInfoEvent[]) => {
+export const addHighlight = (
+  id: number,
+  attr: Attrs,
+  infos: HighlightInfoEvent[]
+) => {
   const foreground = attr.reverse
     ? asColor(attr.background)
     : asColor(attr.foreground)
@@ -135,7 +143,7 @@ export const addHighlight = (id: number, attr: Attrs, infos: HighlightInfoEvent[
     reverse: !!attr.reverse,
   })
 
-  infos.forEach(info => {
+  infos.forEach((info) => {
     const name = sillyString(info.hi_name)
     const builtinName = sillyString(info.ui_name)
 
@@ -160,7 +168,7 @@ export const getColorByName = async (name: string): Promise<Color> => {
 }
 
 export const getColorById = (id: number): Color => {
-  const hlgrp = highlights.get(instances.current, id) || {} as HighlightGroup
+  const hlgrp = highlights.get(instances.current, id) || ({} as HighlightGroup)
   return {
     foreground: hlgrp.foreground,
     background: hlgrp.background,
@@ -169,10 +177,12 @@ export const getColorById = (id: number): Color => {
 
 export const highlightLookup = (name: string): HighlightInfo[] => {
   const info = highlightInfo.get(instances.current, name)
-  if (!info) return (console.error('highlight info does not exist for:', name), [])
+  if (!info)
+    return console.error('highlight info does not exist for:', name), []
   return [...info]
 }
-export const getHighlight = (id: number) => highlights.get(instances.current, id)
+export const getHighlight = (id: number) =>
+  highlights.get(instances.current, id)
 
 export const generateColorLookupAtlas = () => {
   // hlid are 0 indexed, but width starts at 1
