@@ -59,6 +59,10 @@ app.on('ready', async () => {
     backgroundColor: '#222',
     autoHideMenuBar: true,
     webPreferences: {
+      // TODO(smolck): Long-term solution is to stop using `remote` entirely,
+      // see https://github.com/electron/electron/issues/21408 and
+      // https://medium.com/@nornagon/electrons-remote-module-considered-harmful-70d69500f31
+      enableRemoteModule: true,
       nodeIntegration: true,
       nodeIntegrationInWorker: true,
     }
