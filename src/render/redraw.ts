@@ -256,7 +256,6 @@ onRedraw(redrawEvents => {
   // a change in the cmdline, nvim sends redraw again. we cut that stuff out
   // with coding and algorithms
   // TODO: but y tho
-
   if (renderEvents.doNotUpdateCmdlineIfSame(redrawEvents[0])) return
   let winUpdates = false
   const messageEvents = []

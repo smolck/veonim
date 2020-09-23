@@ -265,6 +265,7 @@ export default () => {
     Object.assign(layout, { x, y, width, height })
     webgl.layout(x + paddingX, y + paddingY, width, height)
 
+    // Don't add border to floats.
     if (!wininfo.is_float) {
       Object.assign(container.style, {
         border: '1px solid var(--background-30)',
