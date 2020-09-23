@@ -176,6 +176,7 @@ export default () => {
       const xPx = `${x}px`
       const yPx = `${y + paddingY}px`
 
+      // TODO(smolck): Remove nameplate completely for floats?
       Object.assign(nameplate.element.style, {
         display: 'none'
       })

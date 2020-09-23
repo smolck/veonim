@@ -187,7 +187,7 @@ const win_float_pos = (e: any) => {
   const count = e.length
 
   for (let ix = 1; ix < count; ix++) {
-    const [ gridId, { id: windowId }, anchor, anchor_grid, anchor_row, anchor_col, focusable ] = e[ix]
+    const [ gridId, { id: windowId }, anchor, anchor_grid, anchor_row, anchor_col ] = e[ix]
 
     // TODO(smolck): How to handle windows positioned outside editor window?
     // Clamp it to the editor width & height, or let it go outside the editor window
@@ -209,7 +209,6 @@ const win_float_pos = (e: any) => {
       rowOffset = anchorGrid.row + 1
       colOffset = anchorGrid.col + 1
 
-      // Vim lines are zero-indexed, so . . . add 1 to the rows
       if (anchor === 'NE') (row = anchor_row + rowOffset, col = anchor_col + colOffset - gridInfo.width)
       else if (anchor === 'NW') (row = anchor_row + rowOffset, col = anchor_col + colOffset)
       else if (anchor === 'SE') (row = anchor_row + rowOffset - gridInfo.height, col = anchor_col + colOffset - gridInfo.width)
@@ -234,7 +233,7 @@ const win_float_pos = (e: any) => {
 
     let row, col
 
-    // Vim lines are zero-indexed, so . . . add 1
+    // Vim lines are zero-indexed, so . . . add 1 to the rows
     if (anchor === 'NE') (row = 1 + anchor_row, col = anchor_col - gridInfo.width)
     else if (anchor === 'NW') (row = 1 + anchor_row, col = anchor_col)
     else if (anchor === 'SE') (row = 1 + anchor_row - gridInfo.height, col = anchor_col - gridInfo.width)
