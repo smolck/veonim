@@ -24,7 +24,10 @@ let currentVimID = -1
 
 export const getActiveInstance = () => {
   const nvim = vims.get(currentVimID)
-  if (!nvim) throw new Error(`failed to get active instance. this should probably not happen... ever`)
+  if (!nvim)
+    throw new Error(
+      `failed to get active instance. this should probably not happen... ever`
+    )
   return nvim.instance
 }
 
@@ -35,8 +38,15 @@ export const createVim = async (name: string, dir?: string) => {
     workerData: { id, nvimPath: path },
   })
   currentVimID = id
-  vims.forEach(v => v.active = false)
-  vims.set(id, { id, path, name, instance, active: true, nameFollowsCwd: !!dir })
+  vims.forEach((v) => (v.active = false))
+  vims.set(id, {
+    id,
+    path,
+    name,
+    instance,
+    active: true,
+    nameFollowsCwd: !!dir,
+  })
   ee.emit('create', { id, path })
   attachTo(id)
   switchTo(id)
@@ -48,7 +58,7 @@ export const switchVim = async (id: number) => {
   const lastId = currentVimID
   currentVimID = id
   switchTo(id)
-  vims.forEach(v => {
+  vims.forEach((v) => {
     v.active = v.id === id
     v.instance.call.instanceActiveStatus(v.id === id)
   })
@@ -63,31 +73,36 @@ const renameVim = (id: number, newName: string) => {
 }
 
 export const getCurrentName = () => {
-  const active = [...vims.values()].find(v => v.active)
+  const active = [...vims.values()].find((v) => v.active)
   return active ? active.name : ''
 }
 
 export const renameCurrent = (name: string) => {
-  const active = [...vims.values()].find(v => v.active)
+  const active = [...vims.values()].find((v) => v.active)
   if (!active) return
   renameVim(active.id, name)
 }
 
 export const renameCurrentToCwd = (cwd: string) => {
-  const active = [...vims.values()].find(v => v.active)
+  const active = [...vims.values()].find((v) => v.active)
   if (!active) return
   if (active.nameFollowsCwd) active.name = cwd
 }
 
-export const list = () => [...vims.values()].filter(v => !v.active).map(v => ({ id: v.id, name: v.name }))
+export const list = () =>
+  [...vims.values()]
+    .filter((v) => !v.active)
+    .map((v) => ({ id: v.id, name: v.name }))
 
 export const instances = {
-  get current() { return currentVimID }
+  get current() {
+    return currentVimID
+  },
 }
 
 export const onCreateVim = (fn: (info: NvimInfo) => void) => {
   ee.on('create', (info: NvimInfo) => fn(info))
-  ;[...vims.entries()].forEach(([ id, vim ]) => fn({ id, path: vim.path }))
+  ;[...vims.entries()].forEach(([id, vim]) => fn({ id, path: vim.path }))
 }
 
 export const onSwitchVim = (fn: (id: number, lastId: number) => void) => {
@@ -97,16 +112,18 @@ export const onSwitchVim = (fn: (id: number, lastId: number) => void) => {
 // because of circular dependency chain. master-control exports onExit.
 // master-control imports a series of dependencies which eventually
 // import this module. thus onExit will not be exported yet.
-setImmediate(() => onExit((id: number) => {
-  const vim = vims.get(id)
+setImmediate(() =>
+  onExit((id: number) => {
+    const vim = vims.get(id)
 
-  if (vim) {
-    vim.instance.terminate()
-    vims.delete(id)
-  }
+    if (vim) {
+      vim.instance.terminate()
+      vims.delete(id)
+    }
 
-  if (!vims.size) return remote.app.quit()
+    if (!vims.size) return remote.app.quit()
 
-  const next = Math.max(...vims.keys())
-  switchVim(next)
-}))
+    const next = Math.max(...vims.keys())
+    switchVim(next)
+  })
+)

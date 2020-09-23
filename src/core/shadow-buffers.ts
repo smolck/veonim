@@ -3,12 +3,12 @@ import nvim from '../neovim/api'
 type Callback = () => void
 
 export interface ShadowBuffer {
-  name: string,
-  element: HTMLElement,
-  onFocus?: Callback,
-  onBlur?: Callback,
-  onShow?: Callback,
-  onHide?: Callback,
+  name: string
+  element: HTMLElement
+  onFocus?: Callback
+  onBlur?: Callback
+  onShow?: Callback
+  onHide?: Callback
 }
 
 const shadowBuffers = new Map<string, ShadowBuffer>()
@@ -20,7 +20,7 @@ const shadowBuffers = new Map<string, ShadowBuffer>()
 // a time (that i'm aware of). honestly i'm still undecided if we should have one
 // instance only or allow multiple...
 export const registerShadowComponent = (initFn: () => ShadowBuffer) => {
-  const shadowComponent =  initFn()
+  const shadowComponent = initFn()
   shadowBuffers.set(shadowComponent.name, shadowComponent)
   nvim.buffers.addShadow(shadowComponent.name)
 }

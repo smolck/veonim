@@ -88,7 +88,7 @@ describe('colorize with highlight', () => {
       { color: 'b', text: `(` },
       { color: 'c', text: 'mo' },
       { color: 'b', text: `)` },
-      ]
+    ]
 
     same(res, expected)
   })

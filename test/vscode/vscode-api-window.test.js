@@ -36,17 +36,25 @@ test('setStatusBarMessage + timeout', () => {
 })
 
 test('setStatusBarMessage + promise', () => {
-  const promise = new Promise(done => setTimeout(done, 1e3))
-  vscode.window.setStatusBarMessage('Installing your fancy shiny extensions', promise)
+  const promise = new Promise((done) => setTimeout(done, 1e3))
+  vscode.window.setStatusBarMessage(
+    'Installing your fancy shiny extensions',
+    promise
+  )
 })
 
 test('setStatusBarMessage + dispose', () => {
-  const { dispose } = vscode.window.setStatusBarMessage('Installing your fancy shiny extensions')
+  const { dispose } = vscode.window.setStatusBarMessage(
+    'Installing your fancy shiny extensions'
+  )
   setTimeout(dispose, 1e3)
 })
 // test('showErrorMessage', ())
 test('showInformationMessage', () => {
-  vscode.window.showInformationMessage('Extension not installed. Install?', 'Yes')
+  vscode.window.showInformationMessage(
+    'Extension not installed. Install?',
+    'Yes'
+  )
 })
 // test('showInputBox')
 // test('showOpenDialog')
@@ -56,34 +64,37 @@ test('showInformationMessage', () => {
 // test('showWarningMessage')
 // test('showWorkspaceFolderPick')
 test('withProgress', () => {
-  vscode.window.withProgress({
-    location: vscode.ProgressLocation.Notification,
-    title: "this is cool",
-    cancellable: true,
-  }, (progress, token) => {
-    token.onCancellationRequested(() => {
-      console.log("CANCELED")
-    })
+  vscode.window.withProgress(
+    {
+      location: vscode.ProgressLocation.Notification,
+      title: 'this is cool',
+      cancellable: true,
+    },
+    (progress, token) => {
+      token.onCancellationRequested(() => {
+        console.log('CANCELED')
+      })
 
-    setTimeout(() => {
-      progress.report({ percentage: 10, message: "still going..."})
-    }, 1000)
-
-    setTimeout(() => {
-      progress.report({ percentage: 50, message: "still going harder..."})
-    }, 2000)
-
-    setTimeout(() => {
-      progress.report({ percentage: 90, message: "almost there..."})
-    }, 3000)
-
-    var p = new Promise(resolve => {
       setTimeout(() => {
-        resolve()
-      }, 5000)
-    })
+        progress.report({ percentage: 10, message: 'still going...' })
+      }, 1000)
 
-    return p
-  })
+      setTimeout(() => {
+        progress.report({ percentage: 50, message: 'still going harder...' })
+      }, 2000)
+
+      setTimeout(() => {
+        progress.report({ percentage: 90, message: 'almost there...' })
+      }, 3000)
+
+      var p = new Promise((resolve) => {
+        setTimeout(() => {
+          resolve()
+        }, 5000)
+      })
+
+      return p
+    }
+  )
 })
 // test('withScmProgress')

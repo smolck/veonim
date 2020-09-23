@@ -32,7 +32,13 @@ interface DidChange extends DocInfo {
 
 type On<T> = (params: T) => void
 
-const positionsToRangeData = (startLine: number, startColumn: number, endLine: number, endColumn: number, lineData: string[]) => {
+const positionsToRangeData = (
+  startLine: number,
+  startColumn: number,
+  endLine: number,
+  endColumn: number,
+  lineData: string[]
+) => {
   const start = new Position(startLine, startColumn)
   const end = new Position(endLine, endColumn)
   const range = new Range(start, end)
@@ -42,28 +48,41 @@ const positionsToRangeData = (startLine: number, startColumn: number, endLine: n
   return { range, rangeLength, rangeOffset }
 }
 
-const nvimChangeToLSPChange = ({ firstLine, lastLine, lineData }: BufferChangeEvent): TextDocumentContentChangeEvent[] => {
+const nvimChangeToLSPChange = ({
+  firstLine,
+  lastLine,
+  lineData,
+}: BufferChangeEvent): TextDocumentContentChangeEvent[] => {
   const isEmpty = !lineData.length
 
-  if (isEmpty) return [{
-    ...positionsToRangeData(firstLine, 0, lastLine, 0, lineData),
-    text: ''
-  }]
+  if (isEmpty)
+    return [
+      {
+        ...positionsToRangeData(firstLine, 0, lastLine, 0, lineData),
+        text: '',
+      },
+    ]
 
   const replaceOP = !isEmpty && lastLine - firstLine === 1
 
-  if (replaceOP) return [{
-    ...positionsToRangeData(firstLine, 0, lastLine, 0, lineData),
-    text: '',
-  }, {
-    ...positionsToRangeData(firstLine, 0, firstLine, 0, lineData),
-    text: lineData.map(line => `${line}\n`).join(''),
-  }]
+  if (replaceOP)
+    return [
+      {
+        ...positionsToRangeData(firstLine, 0, lastLine, 0, lineData),
+        text: '',
+      },
+      {
+        ...positionsToRangeData(firstLine, 0, firstLine, 0, lineData),
+        text: lineData.map((line) => `${line}\n`).join(''),
+      },
+    ]
 
-  return [{
-    ...positionsToRangeData(firstLine, 0, lastLine, 0, lineData),
-    text: lineData.map(line => `${line}\n`).join(''),
-  }]
+  return [
+    {
+      ...positionsToRangeData(firstLine, 0, lastLine, 0, lineData),
+      text: lineData.map((line) => `${line}\n`).join(''),
+    },
+  ]
 }
 
 const api = (nvim: NeovimAPI, onlyFiletypeBuffers?: string[]) => {
@@ -81,7 +100,11 @@ const api = (nvim: NeovimAPI, onlyFiletypeBuffers?: string[]) => {
     openDocuments.add(name)
     let lastVersion = 0
 
-    const notifyOpen = ({ filetype, lineData, changedTick }: BufferChangeEvent) => {
+    const notifyOpen = ({
+      filetype,
+      lineData,
+      changedTick,
+    }: BufferChangeEvent) => {
       sentDidOpen.add(name)
       watchers.emit('didOpen', {
         name,
@@ -96,7 +119,13 @@ const api = (nvim: NeovimAPI, onlyFiletypeBuffers?: string[]) => {
     }
 
     const notifyChange = (change: BufferChangeEvent) => {
-      const { filetype, firstLine, lastLine, lineData: textLines, changedTick: version } = change
+      const {
+        filetype,
+        firstLine,
+        lastLine,
+        lineData: textLines,
+        changedTick: version,
+      } = change
       buffersLastRevisionSent.set(name, version)
 
       watchers.emit('didChange', {
@@ -113,7 +142,7 @@ const api = (nvim: NeovimAPI, onlyFiletypeBuffers?: string[]) => {
       } as DidChange)
     }
 
-    buffer.attach({ sendInitialBuffer: true }, changeEvent => {
+    buffer.attach({ sendInitialBuffer: true }, (changeEvent) => {
       // display only events. from the docs:
       // When {changedtick} is |v:null| this means the screen lines (display) changed
       // but not the buffer contents. {linedata} contains the changed screen lines.
@@ -122,7 +151,9 @@ const api = (nvim: NeovimAPI, onlyFiletypeBuffers?: string[]) => {
 
       if (changeEvent.changedTick <= lastVersion) {
         if (process.env.VEONIM_DEV) {
-          console.warn(`bufevent changedtick old version! - prev: ${lastVersion} - next: ${changeEvent.changedTick}`)
+          console.warn(
+            `bufevent changedtick old version! - prev: ${lastVersion} - next: ${changeEvent.changedTick}`
+          )
         }
         return
       }
@@ -136,7 +167,7 @@ const api = (nvim: NeovimAPI, onlyFiletypeBuffers?: string[]) => {
       notifyChange(changeEvent)
     })
 
-    buffer.onChangedTick(revision => {
+    buffer.onChangedTick((revision) => {
       buffersLastRevisionSent.set(name, revision)
     })
 
@@ -158,7 +189,7 @@ const api = (nvim: NeovimAPI, onlyFiletypeBuffers?: string[]) => {
     const filetype = await buffer.getOption('filetype')
     if (invalidFiletype(filetype)) return
 
-    const [ name, revision ] = await Promise.all([
+    const [name, revision] = await Promise.all([
       buffer.name,
       buffer.changedtick,
     ])
@@ -167,61 +198,69 @@ const api = (nvim: NeovimAPI, onlyFiletypeBuffers?: string[]) => {
     subscribeToBufferChanges(buffer, name)
   }
 
-  dsp.add(nvim.on.bufChange(async buffer => {
-    const [ name, revision, filetype ] = await Promise.all([
-      buffer.name,
-      buffer.changedtick,
-      buffer.getOption('filetype'),
-    ])
+  dsp.add(
+    nvim.on.bufChange(async (buffer) => {
+      const [name, revision, filetype] = await Promise.all([
+        buffer.name,
+        buffer.changedtick,
+        buffer.getOption('filetype'),
+      ])
 
-    if (!openDocuments.has(name)) return
-    const lastRevisionSent = buffersLastRevisionSent.get(name) || 0
-    if (lastRevisionSent >= revision) return
+      if (!openDocuments.has(name)) return
+      const lastRevisionSent = buffersLastRevisionSent.get(name) || 0
+      if (lastRevisionSent >= revision) return
 
-    const fullBufferContents = await buffer.getAllLines()
+      const fullBufferContents = await buffer.getAllLines()
 
-    watchers.emit('didClose', {
-      name,
-      id: buffer.id,
-      uri: `file://${name}`,
-    } as Doc)
+      watchers.emit('didClose', {
+        name,
+        id: buffer.id,
+        uri: `file://${name}`,
+      } as Doc)
 
-    watchers.emit('didOpen', {
-      name,
-      filetype,
-      id: buffer.id,
-      version: revision,
-      uri: `file://${name}`,
-      languageId: filetypeToLanguageID(filetype),
-      textLines: fullBufferContents,
-      text: fullBufferContents.join('\n')
-    } as DidOpen)
-  }))
+      watchers.emit('didOpen', {
+        name,
+        filetype,
+        id: buffer.id,
+        version: revision,
+        uri: `file://${name}`,
+        languageId: filetypeToLanguageID(filetype),
+        textLines: fullBufferContents,
+        text: fullBufferContents.join('\n'),
+      } as DidOpen)
+    })
+  )
 
   dsp.add(nvim.on.bufOpen(openBuffer))
 
-  dsp.add(nvim.on.bufLoad(() => {
-    if (invalidFiletype(nvim.state.filetype)) return
-    subscribeToBufferChanges(nvim.current.buffer, nvim.state.absoluteFilepath)
-  }))
+  dsp.add(
+    nvim.on.bufLoad(() => {
+      if (invalidFiletype(nvim.state.filetype)) return
+      subscribeToBufferChanges(nvim.current.buffer, nvim.state.absoluteFilepath)
+    })
+  )
 
-  dsp.add(nvim.on.bufWritePre(buffer => {
-    if (invalidFiletype(nvim.state.filetype)) return
-    watchers.emit('willSave', {
-      id: buffer.id,
-      name: nvim.state.absoluteFilepath,
-      uri: `file://${nvim.state.absoluteFilepath}`,
-    } as Doc)
-  }))
+  dsp.add(
+    nvim.on.bufWritePre((buffer) => {
+      if (invalidFiletype(nvim.state.filetype)) return
+      watchers.emit('willSave', {
+        id: buffer.id,
+        name: nvim.state.absoluteFilepath,
+        uri: `file://${nvim.state.absoluteFilepath}`,
+      } as Doc)
+    })
+  )
 
-  dsp.add(nvim.on.bufWrite(buffer => {
-    if (invalidFiletype(nvim.state.filetype)) return
-    watchers.emit('didSave', {
-      id: buffer.id,
-      name: nvim.state.absoluteFilepath,
-      uri: `file://${nvim.state.absoluteFilepath}`,
-    } as Doc)
-  }))
+  dsp.add(
+    nvim.on.bufWrite((buffer) => {
+      if (invalidFiletype(nvim.state.filetype)) return
+      watchers.emit('didSave', {
+        id: buffer.id,
+        name: nvim.state.absoluteFilepath,
+        uri: `file://${nvim.state.absoluteFilepath}`,
+      } as Doc)
+    })
+  )
 
   const on = {
     didOpen: (fn: On<DidOpen>) => watchers.on('didOpen', fn),
@@ -232,10 +271,10 @@ const api = (nvim: NeovimAPI, onlyFiletypeBuffers?: string[]) => {
   }
 
   const dispose = () => {
-    attachedBuffers.forEach(buffer => buffer.detach())
+    attachedBuffers.forEach((buffer) => buffer.detach())
     attachedBuffers.clear()
     watchers.removeAllListeners()
-    dsp.forEach(dispose => dispose())
+    dsp.forEach((dispose) => dispose())
     dsp.clear()
     filetypes.clear()
     openDocuments.clear()

@@ -8,9 +8,12 @@ import getDebugConfig from '../ai/get-debug-config'
 import * as breakpoints from '../ai/breakpoints'
 import { debugline } from '../core/cursor'
 // TODO: debugUI when ready
-const debugUI: any = new Proxy({}, {
-  get: (_: any, __: string) => () => {},
-})
+const debugUI: any = new Proxy(
+  {},
+  {
+    get: (_: any, __: string) => () => {},
+  }
+)
 // import debugUI from '../components/debug'
 import * as Icon from 'hyperapp-feather'
 // import { translate } from '../ui/css'
@@ -28,7 +31,8 @@ type Threads = DP.Thread[]
 type StackFrames = DP.StackFrame[]
 type Scopes = DP.Scope[]
 type Variables = DP.Variable[]
-type PossibleDebuggerFeatures = string
+type PossibleDebuggerFeatures =
+  | string
   | 'exceptionBreakpointFilters'
   | 'supportsConfigurationDoneRequest'
   | 'supportsSetVariable'
@@ -106,30 +110,40 @@ const Refresher = (dbg: DebugAdapterConnection) => ({
     return threads
   },
   stackFrames: async (threadId: number) => {
-    const { stackFrames } = await dbg.sendRequest<DP.StackTraceResponse>('stackTrace', { threadId })
+    const { stackFrames } = await dbg.sendRequest<DP.StackTraceResponse>(
+      'stackTrace',
+      { threadId }
+    )
     debugUI.updateState({ stackFrames })
     return stackFrames
   },
   scopes: async (frameId: number) => {
-    const { scopes } = await dbg.sendRequest<DP.ScopesResponse>('scopes', { frameId })
+    const { scopes } = await dbg.sendRequest<DP.ScopesResponse>('scopes', {
+      frameId,
+    })
     debugUI.updateState({ scopes })
     return scopes
   },
   variables: async (variablesReference: number) => {
-    const { variables } = await dbg.sendRequest<DP.VariablesResponse>('variables', { variablesReference })
+    const { variables } = await dbg.sendRequest<DP.VariablesResponse>(
+      'variables',
+      { variablesReference }
+    )
     debugUI.updateState({ variables })
     return variables
   },
 })
 
-const listActiveDebuggers = () => [...debuggers.values()].map(d => ({
-  id: d.id,
-  type: d.type,
-}))
+const listActiveDebuggers = () =>
+  [...debuggers.values()].map((d) => ({
+    id: d.id,
+    type: d.type,
+  }))
 
 export const continuee = () => {
   const dbg = debuggers.get(activeDebugger)
-  if (!dbg) return console.warn('debug continue called without an active debugger')
+  if (!dbg)
+    return console.warn('debug continue called without an active debugger')
   dbg.rpc.sendRequest('continue', { threadId: dbg.activeThread })
 }
 
@@ -159,7 +173,8 @@ setTimeout(() => {
 // "verified" rating to change colors of any inactive (not verified) breakpoints
 // and visually see them as gray signs in the vim buffer
 const addOrRemoveVimSign = (bp: breakpoints.Breakpoint) => {
-  if (!fileToID.has(bp.path)) fileToID.set(bp.path, tempVimSignsIDGenerator.next())
+  if (!fileToID.has(bp.path))
+    fileToID.set(bp.path, tempVimSignsIDGenerator.next())
   const line = bp.line + 1
   const fileId = fileToID.get(bp.path)
   const signId = `${fileId}${line}`
@@ -171,7 +186,12 @@ const addOrRemoveVimSign = (bp: breakpoints.Breakpoint) => {
 
 export const toggleBreakpoint = () => {
   const { absoluteFilepath: path, line, column } = nvim.state
-  const breakpoint = { path, line, column, kind: breakpoints.BreakpointKind.Source }
+  const breakpoint = {
+    path,
+    line,
+    column,
+    kind: breakpoints.BreakpointKind.Source,
+  }
 
   addOrRemoveVimSign(breakpoint)
 
@@ -184,7 +204,12 @@ export const toggleBreakpoint = () => {
 
 export const toggleFunctionBreakpoint = () => {
   const { absoluteFilepath: path, line, column } = nvim.state
-  const breakpoint = { path, line, column, kind: breakpoints.BreakpointKind.Function }
+  const breakpoint = {
+    path,
+    line,
+    column,
+    kind: breakpoints.BreakpointKind.Function,
+  }
 
   addOrRemoveVimSign(breakpoint)
 
@@ -200,7 +225,7 @@ const terminateDebugger = (dbg: Debugger) => {
   debuggers.delete(activeDebugger)
   merge(debugline.style, { display: 'none' })
 
-  const [ anotherDebugger ] = [...debuggers.values()]
+  const [anotherDebugger] = [...debuggers.values()]
   if (!anotherDebugger) return debugUI.hide()
 
   activeDebugger = anotherDebugger.id
@@ -222,7 +247,10 @@ export const switchActiveDebugger = (id: string) => {
 
 export const changeStack = async (frameId: number) => {
   const dbg = debuggers.get(activeDebugger)
-  if (!dbg) return console.error('no active debugger found. this is a problem because we already have the debug context present in the UI')
+  if (!dbg)
+    return console.error(
+      'no active debugger found. this is a problem because we already have the debug context present in the UI'
+    )
 
   const refresh = Refresher(dbg.rpc)
   const scopes = await refresh.scopes(frameId)
@@ -235,14 +263,20 @@ export const changeStack = async (frameId: number) => {
     activeScope: scopes[0].variablesReference,
   })
 
-  const chosenStackFrame = dbg.stackFrames.find(sf => sf.id === frameId)
-  if (!chosenStackFrame) return console.error('trying to change to a debug stack frame that does not exist')
+  const chosenStackFrame = dbg.stackFrames.find((sf) => sf.id === frameId)
+  if (!chosenStackFrame)
+    return console.error(
+      'trying to change to a debug stack frame that does not exist'
+    )
   moveDebugLine(getStackFramePosition(chosenStackFrame))
 }
 
 export const changeScope = async (variablesReference: number) => {
   const dbg = debuggers.get(activeDebugger)
-  if (!dbg) return console.error('no active debugger found. this is a problem because we already have the debug context present in the UI')
+  if (!dbg)
+    return console.error(
+      'no active debugger found. this is a problem because we already have the debug context present in the UI'
+    )
 
   const refresh = Refresher(dbg.rpc)
   const variables = await refresh.variables(variablesReference)
@@ -254,7 +288,7 @@ export const changeScope = async (variablesReference: number) => {
 }
 
 const updateDebuggerState = (id: string, state: Partial<Debugger>) => {
-  const dbg = debuggers.get(id) || {} as Debugger
+  const dbg = debuggers.get(id) || ({} as Debugger)
 
   const { rpc, ...next } = merge(dbg, state)
   debuggers.set(id, { rpc, ...next })
@@ -287,13 +321,13 @@ export const startType = async (type: string) => {
   const features = new Map<PossibleDebuggerFeatures, any>()
   const refresh = Refresher(dbg.rpc)
 
-  dbg.rpc.onNotification<DP.StoppedEvent>('stopped', async m => {
+  dbg.rpc.onNotification<DP.StoppedEvent>('stopped', async (m) => {
     // TODO: i think on this notification we SOMETIMES get 'threadId'
     // how do we use 'activeThread'???
 
     // how does it work in VSCode when the user selects a different thread?
     // i don't think it makes any difference in the stopped breakpoints???
-    // 
+    //
     // i guess i'm a noob at debuggers - not sure how you can switch between
     // threads on a breakpoint. isn't a breakpoint per thread??
     console.log('DEBUGGER STOPPED:', m)
@@ -320,7 +354,7 @@ export const startType = async (type: string) => {
   // TODO: this notification is optional
   // if this does not set the active thread, then assign the first thread
   // from 'threads' request/response?
-  dbg.rpc.onNotification<DP.ThreadEvent>('thread', m => {
+  dbg.rpc.onNotification<DP.ThreadEvent>('thread', (m) => {
     console.log('THREAD:', m)
     updateDebuggerState(dbg.id, { activeThread: m.threadId })
     // request: 'threads'
@@ -328,25 +362,35 @@ export const startType = async (type: string) => {
 
   dbg.rpc.onNotification<DP.TerminatedEvent>('terminated', (m) => {
     // TODO: a debug adapter may set 'restart' to true (or to an arbitrary object) to request that the front end restarts the session.
-    if (m && m.restart) console.warn('NYI: debug adapter has requested that we restart the debugger')
+    if (m && m.restart)
+      console.warn(
+        'NYI: debug adapter has requested that we restart the debugger'
+      )
     terminateDebugger(dbg)
   })
 
   dbg.rpc.onNotification<DP.InitializedEvent>('initialized', async () => {
     // TODO: find out what the key is that we are looking for (not sure this is correct)
-    const functionBreakpointsSupported = features.has('supportsFunctionBreakpoints')
+    const functionBreakpointsSupported = features.has(
+      'supportsFunctionBreakpoints'
+    )
     const sourceBreakpoints = breakpoints.listSourceBreakpoints()
     const functionBreakpoints = breakpoints.listFunctionBreakpoints()
 
     // TODO: send function breakpoints
     // TODO: send exception breakpoints
     if (functionBreakpointsSupported) {
-      console.warn('NYI: pls sendRequest for function breakpoints to the debug adapter')
+      console.warn(
+        'NYI: pls sendRequest for function breakpoints to the debug adapter'
+      )
       console.log(functionBreakpoints)
     }
 
-    const breakpointsReq = sourceBreakpoints.map(breakpointSource => {
-      return dbg.rpc.sendRequest<DP.SetBreakpointsResponse>('setBreakpoints', breakpointSource)
+    const breakpointsReq = sourceBreakpoints.map((breakpointSource) => {
+      return dbg.rpc.sendRequest<DP.SetBreakpointsResponse>(
+        'setBreakpoints',
+        breakpointSource
+      )
     })
 
     const breakpointsRes = await Promise.all(breakpointsReq)
@@ -359,9 +403,12 @@ export const startType = async (type: string) => {
     await dbg.rpc.sendRequest('configurationDone')
   })
 
-  dbg.rpc.onNotification<DP.CapabilitiesEvent>('capabilities', ({ capabilities }) => {
-    objToMap(capabilities, features)
-  })
+  dbg.rpc.onNotification<DP.CapabilitiesEvent>(
+    'capabilities',
+    ({ capabilities }) => {
+      objToMap(capabilities, features)
+    }
+  )
 
   dbg.rpc.onNotification<DP.LoadedSourceEvent>('loadedSource', (_m) => {
     // TODO: wat i do wit dis?
@@ -371,8 +418,9 @@ export const startType = async (type: string) => {
     // explored. see vscode debugger for more info
   })
 
-  dbg.rpc.onNotification<DP.OutputEvent>('output', data => {
-    if (data.category === 'console' || data.category === 'stderr') console.log(type, data.output)
+  dbg.rpc.onNotification<DP.OutputEvent>('output', (data) => {
+    if (data.category === 'console' || data.category === 'stderr')
+      console.log(type, data.output)
   })
 
   const initRequest: DP.InitializeRequest['arguments'] = {
@@ -385,7 +433,10 @@ export const startType = async (type: string) => {
     locale: 'en',
   }
 
-  const capabilities = await dbg.rpc.sendRequest<DP.InitializeResponse>('initialize', initRequest)
+  const capabilities = await dbg.rpc.sendRequest<DP.InitializeResponse>(
+    'initialize',
+    initRequest
+  )
   if (capabilities) objToMap(capabilities, features)
 
   const launchConfig = {
@@ -408,7 +459,7 @@ export const startType = async (type: string) => {
 }
 
 const startWithLaunchConfig = async (launchConfigs: DebugConfiguration[]) => {
-  const launchOptions = launchConfigs.map(c => ({
+  const launchOptions = launchConfigs.map((c) => ({
     key: c.type,
     value: c.name,
   }))
@@ -424,7 +475,7 @@ const startWithLaunchConfig = async (launchConfigs: DebugConfiguration[]) => {
 
 const startWithDebugger = async () => {
   const availableDebuggers = await extensions.list.debuggers()
-  const debuggerOptions = availableDebuggers.map(d => ({
+  const debuggerOptions = availableDebuggers.map((d) => ({
     key: d.type,
     value: d.label,
   }))
@@ -436,7 +487,10 @@ const startWithDebugger = async () => {
   })
 
   const folderUri = `file://${nvim.state.cwd}`
-  const { launchConfig, connection } = await extensions.start.debugWithType(folderUri, selectedDebuggerType)
+  const { launchConfig, connection } = await extensions.start.debugWithType(
+    folderUri,
+    selectedDebuggerType
+  )
   console.log('starting debugger wtih type:', launchConfig, connection)
 }
 

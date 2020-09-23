@@ -4,9 +4,13 @@ const { deepStrictEqual: eq } = require('assert')
 const launch = require('./launcher')
 const { delay } = require('../util')
 
-const snapshotTester = m => async name => {
+const snapshotTester = (m) => async (name) => {
   const diffAmount = await m.snapshotTest(name)
-  eq(diffAmount < 1, true, `${name} image snapshot is different by ${diffAmount}% (diff of <1% is ok)`)
+  eq(
+    diffAmount < 1,
+    true,
+    `${name} image snapshot is different by ${diffAmount}% (diff of <1% is ok)`
+  )
 }
 
 describe('features', () => {

@@ -3,21 +3,21 @@ import { NewlineSplitter } from '../support/utils'
 import { Ripgrep } from '../support/binaries'
 
 interface Request {
-  query: string,
-  cwd: string,
+  query: string
+  cwd: string
 }
 
 interface Result {
-  path: string,
-  line: number,
-  column: number,
-  text: string,
+  path: string
+  line: number
+  column: number
+  text: string
 }
 
 interface ResultPart {
-  line: number,
-  column: number,
-  text: string,
+  line: number
+  column: number
+  text: string
 }
 
 const INCREMENT_AMOUNT = 50
@@ -28,18 +28,22 @@ let results: Result[] = []
 let stopSearch = () => {}
 let filterQuery = ''
 
-const groupResults = (m: Result[]) => [...m.reduce((map, { path, text, line, column }: Result) => {
-  if (!map.has(path)) return (map.set(path, [{ text, line, column }]), map)
-  return (map.get(path)!.push({ text, line, column }), map)
-}, new Map<string, ResultPart[]>())]
+const groupResults = (m: Result[]) => [
+  ...m.reduce((map, { path, text, line, column }: Result) => {
+    if (!map.has(path)) return map.set(path, [{ text, line, column }]), map
+    return map.get(path)!.push({ text, line, column }), map
+  }, new Map<string, ResultPart[]>()),
+]
 
 const sendResults = () => {
   if (!results.length) return
 
   const searchResults = filterQuery
-    // in my testing it feels better to not fuzzy search on paths. not accurate enough
-    //? fuzzy(results, filterQuery, { key: 'path' }).slice(range.start, range.end)
-    ? results.filter(m => m.path.toLowerCase().includes(filterQuery)).slice(range.start, range.end)
+    ? // in my testing it feels better to not fuzzy search on paths. not accurate enough
+      //? fuzzy(results, filterQuery, { key: 'path' }).slice(range.start, range.end)
+      results
+        .filter((m) => m.path.toLowerCase().includes(filterQuery))
+        .slice(range.start, range.end)
     : results.slice(range.start, range.end)
 
   if (searchResults.length) {
@@ -65,15 +69,17 @@ const searchFiles = ({ query, cwd }: Request) => {
   const rg = Ripgrep([query, '--vimgrep'], { cwd })
 
   rg.stdout!.pipe(new NewlineSplitter()).on('data', (m: string) => {
-    const [ , path = '', line = 0, column = 0, text = '' ] = m.match(/^(.*?):(\d+):(\d+):(.*?)$/) || []
+    const [, path = '', line = 0, column = 0, text = ''] =
+      m.match(/^(.*?):(\d+):(\d+):(.*?)$/) || []
 
     // ripgrep results (line/column) are 1-index based. veonim uses 0-index based
-    path && results.push({
-      path,
-      text: (text as string).trim(),
-      line: <any>line - 1,
-      column: <any>column - 1,
-    })
+    path &&
+      results.push({
+        path,
+        text: (text as string).trim(),
+        line: <any>line - 1,
+        column: <any>column - 1,
+      })
   })
 
   rg.on('close', () => {

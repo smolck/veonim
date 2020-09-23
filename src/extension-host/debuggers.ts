@@ -28,9 +28,11 @@ const debuggers = new Map<string, Debugger>()
 
 // @ts-ignore
 const getExtensionDebuggers = (extension: Extension): Debugger[] => {
-  const debuggers = pleaseGet(extension.config).contributes.debuggers([]) as any[]
+  const debuggers = pleaseGet(extension.config).contributes.debuggers(
+    []
+  ) as any[]
 
-  return debuggers.map(d => ({
+  return debuggers.map((d) => ({
     extension,
     type: d.type,
     label: d.label,
@@ -56,10 +58,12 @@ const getProviders = (type: string) => {
 
 const activateDebuggersByEvent = async (eventType: string) => {
   const activations = [...debuggers.values()]
-  // @ts-ignore
-    .filter(d => d.extension.activationEvents.some(ae => ae.type === eventType))
     // @ts-ignore
-    .map(d => activateExtension(d.extension))
+    .filter((d) =>
+      d.extension.activationEvents.some((ae) => ae.type === eventType)
+    )
+    // @ts-ignore
+    .map((d) => activateExtension(d.extension))
 
   return Promise.all(activations)
 }
@@ -69,23 +73,26 @@ const getInitialConfig = (dbg: Debugger, cwd: string): DebugConfiguration => {
   const initialConfigsStatic = dbg.initialConfigurations || []
 
   const initialConfigsDynamic = providers
-    .filter(p => p.provideDebugConfigurations)
-  // TODO: hmmm check type here!?
-  // TODO: hmmm check type here!?
-  // TODO: hmmm check type here!?
-  // TODO: hmmm check type here!?
-  // TODO: hmmm check type here!?
-  // TODO: hmmm check type here!?
-  // TODO: hmmm check type here!?
-  // TODO: hmmm check type here!?
-  // TODO: hmmm check type here!?
-  // TODO: hmmm check type here!?
-  // @ts-ignore
-    .map(p => p.provideDebugConfigurations!(cwd))
+    .filter((p) => p.provideDebugConfigurations)
+    // TODO: hmmm check type here!?
+    // TODO: hmmm check type here!?
+    // TODO: hmmm check type here!?
+    // TODO: hmmm check type here!?
+    // TODO: hmmm check type here!?
+    // TODO: hmmm check type here!?
+    // TODO: hmmm check type here!?
+    // TODO: hmmm check type here!?
+    // TODO: hmmm check type here!?
+    // TODO: hmmm check type here!?
+    // @ts-ignore
+    .map((p) => p.provideDebugConfigurations!(cwd))
     .reduce((res, config) => [...res, ...config], [] as DebugConfiguration[])
 
   const initialConfigs = [...initialConfigsStatic, ...initialConfigsDynamic]
-  return initialConfigs.reduce((res, config) => merge(res, config), {} as DebugConfiguration)
+  return initialConfigs.reduce(
+    (res, config) => merge(res, config),
+    {} as DebugConfiguration
+  )
 }
 
 /*
@@ -103,7 +110,9 @@ export const getDebuggerConfig = async (cwd: string, type: string) => {
 export const getAvailableDebuggers = async (): Promise<Debugger[]> => {
   await activateDebuggersByEvent('onDebugInitialConfigurations')
   await activateDebuggersByEvent('onDebug')
-  return [...debuggers.values()].filter(d => d.hasInitialConfiguration || d.hasConfigurationProvider)
+  return [...debuggers.values()].filter(
+    (d) => d.hasInitialConfiguration || d.hasConfigurationProvider
+  )
 }
 
 export const getLaunchConfigs = async (): Promise<DebugConfiguration[]> => {
@@ -120,22 +129,34 @@ export const getLaunchConfigs = async (): Promise<DebugConfiguration[]> => {
  * - We have an initial configuration from "initialConfigurations" or "provideDebugConfigurations"
  * - We have no configuration at all
  */
-export const resolveConfigurationByProviders = async (cwd: string, type: string, config = {} as DebugConfiguration): Promise<DebugConfiguration> => {
+export const resolveConfigurationByProviders = async (
+  cwd: string,
+  type: string,
+  config = {} as DebugConfiguration
+): Promise<DebugConfiguration> => {
   await activateDebuggersByEvent(`onDebugResolve:${type}`)
   return getProviders(type)
-    .filter(p => p.resolveDebugConfiguration)
-    .reduce((q: Promise<DebugConfiguration>, provider: vsc.DebugConfigurationProvider) => q.then(config => config
-      // TODO: hmm?? check type here
-      // TODO: hmm?? check type here
-      // TODO: hmm?? check type here
-      // TODO: hmm?? check type here
-      // TODO: hmm?? check type here
-      // TODO: hmm?? check type here
-      // TODO: hmm?? check type here
-      // @ts-ignore
-      ? provider.resolveDebugConfiguration!(cwd, config)
-      : Promise.resolve(config)
-    ), Promise.resolve(config))
+    .filter((p) => p.resolveDebugConfiguration)
+    .reduce(
+      (
+        q: Promise<DebugConfiguration>,
+        provider: vsc.DebugConfigurationProvider
+      ) =>
+        q.then((config) =>
+          config
+            ? // TODO: hmm?? check type here
+              // TODO: hmm?? check type here
+              // TODO: hmm?? check type here
+              // TODO: hmm?? check type here
+              // TODO: hmm?? check type here
+              // TODO: hmm?? check type here
+              // TODO: hmm?? check type here
+              // @ts-ignore
+              provider.resolveDebugConfiguration!(cwd, config)
+            : Promise.resolve(config)
+        ),
+      Promise.resolve(config)
+    )
 }
 
 /*
@@ -147,25 +168,34 @@ export const resolveConfigurationByProviders = async (cwd: string, type: string,
  * extension loadings
  */
 // @ts-ignore
-export const collectDebuggersFromExtensions = (extensions: Extension[]): void => {
+export const collectDebuggersFromExtensions = (
+  extensions: Extension[]
+): void => {
   debuggers.clear()
 
-  extensions.forEach(ext => {
+  extensions.forEach((ext) => {
     const dbgs = getExtensionDebuggers(ext)
-    dbgs.forEach(dbg => debuggers.set(dbg.type, dbg))
+    dbgs.forEach((dbg) => debuggers.set(dbg.type, dbg))
   })
 }
 
-export const registerDebugConfigProvider = (type: string, provider: vsc.DebugConfigurationProvider) => {
+export const registerDebugConfigProvider = (
+  type: string,
+  provider: vsc.DebugConfigurationProvider
+) => {
   if (!provider) return
 
   const dbg = debuggers.get(type)
-  if (!dbg) return console.error(`can't register debug config provider. debugger ${type} does not exist.`)
+  if (!dbg)
+    return console.error(
+      `can't register debug config provider. debugger ${type} does not exist.`
+    )
 
   dbg.debugConfigProviders.add(provider)
   dbg.hasConfigurationProvider = true
 
   return () => {
-    if (dbg.debugConfigProviders.has(provider)) dbg.debugConfigProviders.delete(provider)
+    if (dbg.debugConfigProviders.has(provider))
+      dbg.debugConfigProviders.delete(provider)
   }
 }

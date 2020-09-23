@@ -7,45 +7,60 @@ const comscan = (() => {
   type DispatchFn = (ch: string, message: any) => void
   const windows = new Set<DispatchFn>()
   const register = (fn: DispatchFn) => windows.add(fn)
-  const dispatch = (ch: string, message: any) => windows.forEach(cb => cb(ch, message))
+  const dispatch = (ch: string, message: any) =>
+    windows.forEach((cb) => cb(ch, message))
   return { register, dispatch }
 })()
 
-
 app.on('ready', async () => {
-  const menuTemplate = [{
-    label: 'Window',
-    submenu: [{
-      role: 'togglefullscreen',
-    }, {
-      label: 'Maximize',
-      click: () => win.maximize(),
-    }],
-  }, {
-    role: 'help',
-    submenu: [{
-      label: 'Developer Tools',
-      accelerator: 'CmdOrCtrl+|',
-      click: () => win.webContents.toggleDevTools(),
-    }] as any // electron is stupid,
-  } as any]
+  const menuTemplate = [
+    {
+      label: 'Window',
+      submenu: [
+        {
+          role: 'togglefullscreen',
+        },
+        {
+          label: 'Maximize',
+          click: () => win.maximize(),
+        },
+      ],
+    },
+    {
+      role: 'help',
+      submenu: [
+        {
+          label: 'Developer Tools',
+          accelerator: 'CmdOrCtrl+|',
+          click: () => win.webContents.toggleDevTools(),
+        },
+      ] as any, // electron is stupid,
+    } as any,
+  ]
 
-  if (process.platform === 'darwin') menuTemplate.unshift({
-    label: 'veonim',
-    submenu: [{
-      role: 'about',
-    }, {
-      type: 'separator',
-    }, {
-      // using 'role: hide' adds cmd+h keybinding which overrides vim keybinds
-      label: 'Hide veonim',
-      click: () => app.hide(),
-    }, {
-      type: 'separator',
-    }, {
-      role: 'quit' as any,
-    }] as any // electron is stupid
-  } as any)
+  if (process.platform === 'darwin')
+    menuTemplate.unshift({
+      label: 'veonim',
+      submenu: [
+        {
+          role: 'about',
+        },
+        {
+          type: 'separator',
+        },
+        {
+          // using 'role: hide' adds cmd+h keybinding which overrides vim keybinds
+          label: 'Hide veonim',
+          click: () => app.hide(),
+        },
+        {
+          type: 'separator',
+        },
+        {
+          role: 'quit' as any,
+        },
+      ] as any, // electron is stupid
+    } as any)
 
   Menu.setApplicationMenu(Menu.buildFromTemplate(menuTemplate))
 
@@ -65,16 +80,16 @@ app.on('ready', async () => {
       enableRemoteModule: true,
       nodeIntegration: true,
       nodeIntegrationInWorker: true,
-    }
+    },
   })
 
   win.loadURL(`file:///${__dirname}/index.html`)
   comscan.register((ch, msg) => win.webContents.send(ch, msg))
 
   if (process.env.VEONIM_DEV) {
-    function debounce (fn: Function, wait = 1) {
+    function debounce(fn: Function, wait = 1) {
       let timeout: NodeJS.Timer
-      return function(this: any, ...args: any[]) {
+      return function (this: any, ...args: any[]) {
         const ctx = this
         clearTimeout(timeout)
         timeout = setTimeout(() => fn.apply(ctx, args), wait)
@@ -100,9 +115,10 @@ app.on('ready', async () => {
       REDUX_DEVTOOLS,
     } = require('electron-devtools-installer')
 
-    const load = (ext: any) => installExtension(ext)
-      .then((n: any) => console.log('loaded ext:', n))
-      .catch((e: any) => console.log('failed to load ext because...', e))
+    const load = (ext: any) =>
+      installExtension(ext)
+        .then((n: any) => console.log('loaded ext:', n))
+        .catch((e: any) => console.log('failed to load ext because...', e))
 
     // TODO: .id is a hack to make it work for electron 2.0+
     load(REACT_DEVELOPER_TOOLS.id)

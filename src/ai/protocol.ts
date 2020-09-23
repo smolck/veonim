@@ -5,12 +5,21 @@ import { ColorData } from '../services/colorizer'
 import { Diagnostic, CodeAction } from 'vscode'
 import { UnPromisify } from '../support/types'
 
-export type Symbol = NonNullable<UnPromisify<ReturnType<Providers['provideDocumentSymbols']>['promise']>>[0]
-export type WorkspaceSymbol = NonNullable<UnPromisify<ReturnType<Providers['provideWorkspaceSymbols']>['promise']>>[0]
-export type Reference = NonNullable<UnPromisify<ReturnType<Providers['provideReferences']>['promise']>>[0]
+export type Symbol = NonNullable<
+  UnPromisify<ReturnType<Providers['provideDocumentSymbols']>['promise']>
+>[0]
+export type WorkspaceSymbol = NonNullable<
+  UnPromisify<ReturnType<Providers['provideWorkspaceSymbols']>['promise']>
+>[0]
+export type Reference = NonNullable<
+  UnPromisify<ReturnType<Providers['provideReferences']>['promise']>
+>[0]
 export type ReferenceResult = [string, LocationResult[]]
 
-export enum CompletionSource { Neovim, VSCode }
+export enum CompletionSource {
+  Neovim,
+  VSCode,
+}
 
 export interface CompletionShow {
   source: CompletionSource

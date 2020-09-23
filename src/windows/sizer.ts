@@ -5,9 +5,8 @@ import { size } from '../core/workspace'
 const getSplits = (wins: WindowInfo[]) => {
   const vertical = new Set<number>()
   const horizontal = new Set<number>()
-  wins.forEach(w => {
-    if (w.is_float)
-      return
+  wins.forEach((w) => {
+    if (w.is_float) return
 
     vertical.add(w.col)
     horizontal.add(w.row)
@@ -55,32 +54,44 @@ export default (wins: WindowInfo[]) => {
     return [...res, colSize]
   }, [] as number[])
 
-  const gridTemplateRows = rr.length < 2 ? '100%' : rr.reduce((s, m) => s + m + '% ', '')
-  const gridTemplateColumns = cc.length < 2 ? '100%' : equalizeTo100(cc).reduce((s, m) => s + m + '% ', '')
+  const gridTemplateRows =
+    rr.length < 2 ? '100%' : rr.reduce((s, m) => s + m + '% ', '')
+  const gridTemplateColumns =
+    cc.length < 2
+      ? '100%'
+      : equalizeTo100(cc).reduce((s, m) => s + m + '% ', '')
 
-  const windowsWithGridInfo = wins.map(w => ({
-    ...w,
-    scol: {
-      start: w.col,
-      end: w.col + w.width === totalColumns ? w.col + w.width : w.col + w.width + 1,
-    },
-    srow: {
-      start: w.row,
-      end: w.row + w.height === totalRows ? w.row + w.height : w.row + w.height + 1,
-    }
-  })).map(w => {
-    const { srow, scol } = w
-    const rowStart = yrows.findIndex(within(srow.start, 2)) + 1
-    const rowEnd = yrows.findIndex(within(srow.end, 2)) + 1
-    const colStart = xcols.findIndex(within(scol.start, 2)) + 1
-    const colEnd = xcols.findIndex(within(scol.end, 2)) + 1
-
-    return {
+  const windowsWithGridInfo = wins
+    .map((w) => ({
       ...w,
-      gridColumn: `${colStart} / ${colEnd}`,
-      gridRow: `${rowStart} / ${rowEnd}`,
-    }
-  })
+      scol: {
+        start: w.col,
+        end:
+          w.col + w.width === totalColumns
+            ? w.col + w.width
+            : w.col + w.width + 1,
+      },
+      srow: {
+        start: w.row,
+        end:
+          w.row + w.height === totalRows
+            ? w.row + w.height
+            : w.row + w.height + 1,
+      },
+    }))
+    .map((w) => {
+      const { srow, scol } = w
+      const rowStart = yrows.findIndex(within(srow.start, 2)) + 1
+      const rowEnd = yrows.findIndex(within(srow.end, 2)) + 1
+      const colStart = xcols.findIndex(within(scol.start, 2)) + 1
+      const colEnd = xcols.findIndex(within(scol.end, 2)) + 1
+
+      return {
+        ...w,
+        gridColumn: `${colStart} / ${colEnd}`,
+        gridRow: `${rowStart} / ${rowEnd}`,
+      }
+    })
 
   return {
     gridTemplateRows,

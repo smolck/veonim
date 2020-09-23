@@ -8,7 +8,8 @@ const watchers = new EventEmitter()
 const watchedParentPaths = new Map<string, string>()
 
 const emptyStat = { isSymbolicLink: () => false }
-const getFSStat = async (path: string) => P(fs.lstat)(path).catch((_) => emptyStat)
+const getFSStat = async (path: string) =>
+  P(fs.lstat)(path).catch((_) => emptyStat)
 
 const getRealPath = async (path: string) => {
   const stat = await getFSStat(path)
@@ -17,10 +18,11 @@ const getRealPath = async (path: string) => {
   return P(fs.readlink)(path)
 }
 
-const watchDir = (path: string) => fs.watch(path, ((_, file) => {
-  const fullpath = join(path, file)
-  watchers.emit(fullpath)
-}))
+const watchDir = (path: string) =>
+  fs.watch(path, (_, file) => {
+    const fullpath = join(path, file)
+    watchers.emit(fullpath)
+  })
 
 export const watchFile = async (path: string, callback: () => void) => {
   const realpath = await getRealPath(path)

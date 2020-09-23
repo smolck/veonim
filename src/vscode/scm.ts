@@ -5,7 +5,8 @@ const scm: typeof vsc.scm = {
     console.warn('DEPRECATED: scm.inputBox. Use SourceControl.inputBox instead')
     return { value: '', placeholder: '' }
   },
-  createSourceControl: (id, label, rootUri) => SourceControl(id, label, rootUri),
+  createSourceControl: (id, label, rootUri) =>
+    SourceControl(id, label, rootUri),
 }
 
 const SourceControl = (id: string, label: string, rootUri?: vsc.Uri) => ({

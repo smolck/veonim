@@ -30,52 +30,69 @@ const state = {
   textSyncEnabled: true,
 }
 
-on.set_text_sync_state((enabled: boolean) => state.textSyncEnabled = enabled)
+on.set_text_sync_state((enabled: boolean) => (state.textSyncEnabled = enabled))
 
-nvim.watchState.cwd((cwd, previousCwd) => events.emit('didChangeWorkspaceFolders', {
-  added: [ WorkspaceFolder(cwd) ],
-  removed: [ WorkspaceFolder(previousCwd) ],
-}))
+nvim.watchState.cwd((cwd, previousCwd) =>
+  events.emit('didChangeWorkspaceFolders', {
+    added: [WorkspaceFolder(cwd)],
+    removed: [WorkspaceFolder(previousCwd)],
+  })
+)
 
 tdm.on.didOpen(({ id }) => events.emit('didOpenTextDocument', TextDocument(id)))
 
-tdm.on.didChange(({ id, contentChanges }) => state.textSyncEnabled && events.emit('didChangeTextDocument', {
-  contentChanges,
-  document: TextDocument(id),
-} as vsc.TextDocumentChangeEvent))
+tdm.on.didChange(
+  ({ id, contentChanges }) =>
+    state.textSyncEnabled &&
+    events.emit('didChangeTextDocument', {
+      contentChanges,
+      document: TextDocument(id),
+    } as vsc.TextDocumentChangeEvent)
+)
 
-tdm.on.willSave(({ id }) => events.emit('willSaveTextDocument', {
-  document: TextDocument(id),
-  reason: 1, // TextDocumentSaveReason.Manual
-  waitUntil: () => console.warn('willSave event waitUntil() not supported'),
-} as vsc.TextDocumentWillSaveEvent))
+tdm.on.willSave(({ id }) =>
+  events.emit('willSaveTextDocument', {
+    document: TextDocument(id),
+    reason: 1, // TextDocumentSaveReason.Manual
+    waitUntil: () => console.warn('willSave event waitUntil() not supported'),
+  } as vsc.TextDocumentWillSaveEvent)
+)
 
 tdm.on.didSave(({ id }) => events.emit('didSaveTextDocument', TextDocument(id)))
 
-tdm.on.didClose(({ id }) => events.emit('didCloseTextDocument', TextDocument(id)))
+tdm.on.didClose(({ id }) =>
+  events.emit('didCloseTextDocument', TextDocument(id))
+)
 
 const eventreg = (name: keyof Events) => (fn: any, thisArg?: any) => ({
   dispose: events.on(name, fn.bind(thisArg)),
 })
 
 const workspace: typeof vsc.workspace = {
-  get rootPath() { return nvim.state.cwd },
-  get workspaceFolders() { return [ WorkspaceFolder(nvim.state.cwd) ] },
-  get name() { return basename(nvim.state.cwd) },
-  get textDocuments() {
-    const buffers = nvimSync(nvim => nvim.buffers.list()).call()
-    const bufferIds = buffers.map(b => b.id)
-    return bufferIds.map(id => TextDocument(id))
+  get rootPath() {
+    return nvim.state.cwd
   },
-  getWorkspaceFolder: uri => {
+  get workspaceFolders() {
+    return [WorkspaceFolder(nvim.state.cwd)]
+  },
+  get name() {
+    return basename(nvim.state.cwd)
+  },
+  get textDocuments() {
+    const buffers = nvimSync((nvim) => nvim.buffers.list()).call()
+    const bufferIds = buffers.map((b) => b.id)
+    return bufferIds.map((id) => TextDocument(id))
+  },
+  getWorkspaceFolder: (uri) => {
     if (!uri.path.startsWith(nvim.state.cwd)) {
       console.error('given uri is not part of cwd', uri.path, nvim.state.cwd)
       return undefined
     }
     return WorkspaceFolder(nvim.state.cwd)
   },
-  asRelativePath: pathOrUri => {
-    const path = pathOrUri instanceof URI ? pathOrUri.path : pathOrUri as string
+  asRelativePath: (pathOrUri) => {
+    const path =
+      pathOrUri instanceof URI ? pathOrUri.path : (pathOrUri as string)
     return pathRelativeToCwd(path, nvim.state.cwd)
   },
   updateWorkspaceFolders: (_start, _deleteCount, folder) => {
@@ -90,19 +107,23 @@ const workspace: typeof vsc.workspace = {
     console.warn('NYI: workspace.findFiles')
     return []
   },
-  applyEdit: async workspaceEdit => {
+  applyEdit: async (workspaceEdit) => {
     // vscode does the same weird hack here, so shush
     const entries = (workspaceEdit as WorkspaceEdit)._allEntries()
 
-    const editRequests = entries.map(async ([ arg1, arg2 ], fileEditIx) => {
+    const editRequests = entries.map(async ([arg1, arg2], fileEditIx) => {
       // create buffer
       if (arg1 == null && URI.isUri(arg2)) return nvim.buffers.add(arg2.path)
       // delete buffer
       if (URI.isUri(arg1) && arg2 == null) return nvim.buffers.delete(arg1.path)
       // rename buffer
-      if (URI.isUri(arg1) && URI.isUri(arg2)) return nvim.buffers.rename(arg1.path, arg2.path)
+      if (URI.isUri(arg1) && URI.isUri(arg2))
+        return nvim.buffers.rename(arg1.path, arg2.path)
       // text edits
-      if (URI.isUri(arg1) && !Array.isArray(arg2)) throw new Error(`workspace edit entry makes no sense. expected [uri, TextEdit[]]`)
+      if (URI.isUri(arg1) && !Array.isArray(arg2))
+        throw new Error(
+          `workspace edit entry makes no sense. expected [uri, TextEdit[]]`
+        )
 
       const uri = arg1 as vsc.Uri
       const edits = arg2 as vsc.TextEdit[]
@@ -114,7 +135,10 @@ const workspace: typeof vsc.workspace = {
       })
     })
 
-    return Promise.all(editRequests).then(() => true, () => false)
+    return Promise.all(editRequests).then(
+      () => true,
+      () => false
+    )
   },
   openTextDocument: async (arg: any) => {
     if (is.object(arg) && arg.path) {
@@ -132,21 +156,23 @@ const workspace: typeof vsc.workspace = {
   },
   registerTextDocumentContentProvider: () => {
     console.warn('NYI: workspace.registerTextDocumentContentProvider')
-    return ({ dispose: () => {} })
+    return { dispose: () => {} }
   },
-  getConfiguration: (section/*, resource*/) => {
+  getConfiguration: (section /*, resource*/) => {
     // TODO: i'm not sure what the resource is used for?
     // if (resource) console.warn('NYI: workspace.getConfiguration - resource param not used:', section, resource)
     return WorkspaceConfiguration(section)
   },
   registerTaskProvider: (...a: any[]) => {
-    console.warn('DEPRECATED: workspace.registerTaskProvider. use the "tasks" namespace instead')
+    console.warn(
+      'DEPRECATED: workspace.registerTaskProvider. use the "tasks" namespace instead'
+    )
     // @ts-ignore - help me typescript you're my only hope
-    return Tasks.registerTaskProvider(...a as any)
+    return Tasks.registerTaskProvider(...(a as any))
   },
   registerFileSystemProvider: () => {
     console.warn('NYI: workspace.registerFileSystemProvider')
-    return ({ dispose: () => {} })
+    return { dispose: () => {} }
   },
   onDidChangeWorkspaceFolders: eventreg('didChangeWorkspaceFolders'),
   onDidOpenTextDocument: eventreg('didOpenTextDocument'),
@@ -160,7 +186,7 @@ const workspace: typeof vsc.workspace = {
   // @ts-ignore
   onDidRenameFile: () => {
     console.warn('NYI: workspace.onDidRenameFile')
-    return ({ dispose: () => {} })
+    return { dispose: () => {} }
   },
 }
 

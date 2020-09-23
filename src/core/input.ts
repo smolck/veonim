@@ -41,14 +41,21 @@ let shouldClearEscapeOnNextAppFocus = false
 let keyListener: OnKeyFn = () => {}
 let sendInputToVim = true
 
-const isStandardAscii = (key: string) => key.charCodeAt(0) > 32 && key.charCodeAt(0) < 127
-const handleMods = ({ ctrlKey, shiftKey, metaKey, altKey, key }: KeyboardEvent) => {
+const isStandardAscii = (key: string) =>
+  key.charCodeAt(0) > 32 && key.charCodeAt(0) < 127
+const handleMods = ({
+  ctrlKey,
+  shiftKey,
+  metaKey,
+  altKey,
+  key,
+}: KeyboardEvent) => {
   const mods: string[] = []
   const onlyShift = shiftKey && !ctrlKey && !metaKey && !altKey
   const notCmdOrCtrl = !metaKey && !ctrlKey
-  const macOSUnicode = process.platform === 'darwin' 
-    && (altKey && notCmdOrCtrl)
-    || (altKey && shiftKey && notCmdOrCtrl)
+  const macOSUnicode =
+    (process.platform === 'darwin' && altKey && notCmdOrCtrl) ||
+    (altKey && shiftKey && notCmdOrCtrl)
 
   if (onlyShift && isStandardAscii(key) && key.length === 1) return mods
   if (macOSUnicode) return mods
@@ -73,10 +80,12 @@ const toVimKey = (key: string): string => {
 }
 
 const isUpper = (char: string) => char.toLowerCase() !== char
-const bypassEmptyMod = (key: string) => modifiers.includes(key) ? '' : key
-const wrapKey = (key: string): string => key.length > 1 && isUpper(key[0]) ? `<${key}>` : key
-const combineModsWithKey = (mods: string, key: string) => mods.length ? `${mods}-${key}` : key
-const userModRemaps = (mods: string[]) => mods.map(m => remaps.get(m) || m)
+const bypassEmptyMod = (key: string) => (modifiers.includes(key) ? '' : key)
+const wrapKey = (key: string): string =>
+  key.length > 1 && isUpper(key[0]) ? `<${key}>` : key
+const combineModsWithKey = (mods: string, key: string) =>
+  mods.length ? `${mods}-${key}` : key
+const userModRemaps = (mods: string[]) => mods.map((m) => remaps.get(m) || m)
 const joinModsWithDash = (mods: string[]) => mods.join('-')
 const mapMods = $<string>(handleMods, userModRemaps, joinModsWithDash)
 const mapKey = $<string>(bypassEmptyMod, toVimKey)
@@ -103,15 +112,16 @@ export const blur = () => {
 export const setupRemapModifiers = (mappings: RemapModifer[]) => {
   if (!mappings) return
   remaps.clear()
-  mappings.forEach(mapping => remapModifier(mapping.from, mapping.to))
+  mappings.forEach((mapping) => remapModifier(mapping.from, mapping.to))
 }
 
-const vimscriptObjectToECMA = (obj: any) => Object.entries(obj).reduce((res, [key, val]) => {
-  if (val === 'true') Reflect.set(res, key, true)
-  else if (val === 'false') Reflect.set(res, key, false)
-  else Reflect.set(res, key, val)
-  return res
-}, {})
+const vimscriptObjectToECMA = (obj: any) =>
+  Object.entries(obj).reduce((res, [key, val]) => {
+    if (val === 'true') Reflect.set(res, key, true)
+    else if (val === 'false') Reflect.set(res, key, false)
+    else Reflect.set(res, key, val)
+    return res
+  }, {})
 
 const setupTransforms = (transforms: KeyTransform[]) => {
   if (!transforms) return
@@ -125,9 +135,10 @@ const setupTransforms = (transforms: KeyTransform[]) => {
     if (!fn) return console.error('can not add key-transform for event:', event)
 
     const transformFn = new Script(transform).runInThisContext()
-    const matchObj = nvimMode !== VimMode.SomeModeThatIProbablyDontCareAbout
-      ? Object.assign(vimscriptObjectToECMA(match), { mode: nvimMode })
-      : vimscriptObjectToECMA(match)
+    const matchObj =
+      nvimMode !== VimMode.SomeModeThatIProbablyDontCareAbout
+        ? Object.assign(vimscriptObjectToECMA(match), { mode: nvimMode })
+        : vimscriptObjectToECMA(match)
 
     if (is.function(fn) && is.function(transformFn)) fn(matchObj, transformFn)
   })
@@ -140,34 +151,42 @@ export const xfrmHold = new Map<string, Transformer>()
 export const xfrmDown = new Map<string, Transformer>()
 export const xfrmUp = new Map<string, Transformer>()
 
-const keToStr = (e: KeyShape) => [
-  e.key,
-  <any>e.ctrlKey|0,
-  <any>e.metaKey|0,
-  <any>e.altKey|0,
-  <any>e.shiftKey|0,
-].join('')
+const keToStr = (e: KeyShape) =>
+  [
+    e.key,
+    (<any>e.ctrlKey) | 0,
+    (<any>e.metaKey) | 0,
+    (<any>e.altKey) | 0,
+    (<any>e.shiftKey) | 0,
+  ].join('')
 
-const defkey = {...new KeyboardEvent('keydown'), key: '', ctrlKey: false, metaKey: false, altKey: false, shiftKey: false}
+const defkey = {
+  ...new KeyboardEvent('keydown'),
+  key: '',
+  ctrlKey: false,
+  metaKey: false,
+  altKey: false,
+  shiftKey: false,
+}
 
 const addTransform = {
   hold: (e: any, fn: Transformer) =>
-    xfrmHold.set(keToStr({...defkey, ...e}), e => ({ ...e, ...fn(e) })),
+    xfrmHold.set(keToStr({ ...defkey, ...e }), (e) => ({ ...e, ...fn(e) })),
 
   down: (e: any, fn: Transformer) =>
-    xfrmDown.set(keToStr({...defkey, ...e}), e => ({ ...e, ...fn(e) })),
+    xfrmDown.set(keToStr({ ...defkey, ...e }), (e) => ({ ...e, ...fn(e) })),
 
   up: (e: any, fn: Transformer) => {
     const before = keToStr({ ...defkey, ...e })
     const now = keToStr({ ...defkey, key: e.key })
-    xfrmUp.set(before + now, e => ({ ...e, ...fn(e) }))
-  }
+    xfrmUp.set(before + now, (e) => ({ ...e, ...fn(e) }))
+  },
 }
 
 export const stealInput = (onKeyFn: OnKeyFn) => {
   sendInputToVim = false
   keyListener = onKeyFn
-  return () => sendInputToVim = true
+  return () => (sendInputToVim = true)
 }
 
 const sendToVim = (inputKeys: string) => {
@@ -197,12 +216,15 @@ export const registerShortcut = (keys: string, mode: VimMode, cb: Function) => {
   shortcuts.set(`${mode}:<${keys}>`, cb)
 }
 
-export const registerOneTimeUseShortcuts = (shortcuts: string[], cb: (shortcut: string) => void) => {
+export const registerOneTimeUseShortcuts = (
+  shortcuts: string[],
+  cb: (shortcut: string) => void
+) => {
   const done = (shortcut: string) => {
-    shortcuts.forEach(s => globalShortcuts.delete(s))
+    shortcuts.forEach((s) => globalShortcuts.delete(s))
     cb(shortcut)
   }
-  shortcuts.forEach(s => globalShortcuts.set(s, () => done(s)))
+  shortcuts.forEach((s) => globalShortcuts.set(s, () => done(s)))
 }
 
 const sendKeys = async (e: KeyboardEvent, inputType: InputType) => {
@@ -214,7 +236,7 @@ const sendKeys = async (e: KeyboardEvent, inputType: InputType) => {
   keyListener(inputKeys, inputType)
 }
 
-window.addEventListener('keydown', e => {
+window.addEventListener('keydown', (e) => {
   if (!windowHasFocus || !isCapturing) return
 
   const es = keToStr(e)
@@ -241,7 +263,7 @@ window.addEventListener('keydown', e => {
   sendKeys(e, InputType.Down)
 })
 
-window.addEventListener('keyup', e => {
+window.addEventListener('keyup', (e) => {
   if (!windowHasFocus || !isCapturing) return
 
   // one of the observed ways in which we can have a 'keyup' event without a
@@ -255,7 +277,8 @@ window.addEventListener('keyup', e => {
   const es = keToStr(e)
 
   const prevKeyAndThisOne = lastDown + es
-  if (xfrmUp.has(prevKeyAndThisOne)) return sendKeys(xfrmUp.get(prevKeyAndThisOne)!(e), InputType.Up)
+  if (xfrmUp.has(prevKeyAndThisOne))
+    return sendKeys(xfrmUp.get(prevKeyAndThisOne)!(e), InputType.Up)
 
   if (holding === es) {
     if (!xformed) sendKeys(e, InputType.Up)

@@ -27,7 +27,7 @@ export enum ActivationKind {
   DebugInitialConfigs = 'onDebugInitialConfigurations',
   DebugResolve = 'onDebugResolve',
   View = 'onView',
-  Always  = '*',
+  Always = '*',
 }
 
 interface ActivationEvent {
@@ -41,23 +41,30 @@ export interface Extension extends vsc.Extension<any> {
   activationEvents: ActivationEvent[]
 }
 
-const collectConfigProperties = (properties: any[]) => Object.entries(properties).reduce((res, [ key, val ]: any) => {
-  const value = val.type === 'array' && val.items
-    ? [ val.items.default ]
-    : val.default
-  return Object.assign(res, { [key]: value })
-}, {})
+const collectConfigProperties = (properties: any[]) =>
+  Object.entries(properties).reduce((res, [key, val]: any) => {
+    const value =
+      val.type === 'array' && val.items ? [val.items.default] : val.default
+    return Object.assign(res, { [key]: value })
+  }, {})
 
 const getContributesConfigurations = (config: ExtensionPackageConfig) => {
   const configuration: any = pleaseGet(config).contributes.configuration()
   if (!configuration) return
 
-  if (Array.isArray(configuration)) return configuration.reduce((res, config) => {
-    return {...res, ...collectConfigProperties(config.properties)}
-  }, {})
+  if (Array.isArray(configuration))
+    return configuration.reduce((res, config) => {
+      return { ...res, ...collectConfigProperties(config.properties) }
+    }, {})
 
-  if (configuration.type !== 'object') return console.error(`extension ${config.id} provided contributes.configuration is not of type object (could also be blank)`)
-  if (!configuration.properties) return console.error(`idk, extension ${config.id} config does not have any properties. what am i supposed to do now?`)
+  if (configuration.type !== 'object')
+    return console.error(
+      `extension ${config.id} provided contributes.configuration is not of type object (could also be blank)`
+    )
+  if (!configuration.properties)
+    return console.error(
+      `idk, extension ${config.id} config does not have any properties. what am i supposed to do now?`
+    )
   return collectConfigProperties(configuration.properties)
 }
 
@@ -77,7 +84,8 @@ export default (config: ExtensionPackageConfig): Extension => {
   }
 
   const contributedConfiguration = getContributesConfigurations(config)
-  if (contributedConfiguration) addExtensionConfiguration(contributedConfiguration)
+  if (contributedConfiguration)
+    addExtensionConfiguration(contributedConfiguration)
 
   const localizer = localizeFile(languageFilePath)
 
@@ -97,7 +105,7 @@ export default (config: ExtensionPackageConfig): Extension => {
     const storagePath = join(EXT_DATA_PATH, `${workspaceId}-${config.id}`)
     await ensureDir(storagePath)
 
-    const [ globalState, workspaceState ] = await Promise.all([
+    const [globalState, workspaceState] = await Promise.all([
       createMemento(join(globalStoragePath, 'db.json')),
       createMemento(join(storagePath, 'db.json')),
     ])
@@ -109,7 +117,7 @@ export default (config: ExtensionPackageConfig): Extension => {
       globalState,
       workspaceState,
       subscriptions: state.subscriptions,
-      asAbsolutePath: relpath => join(extensionPath, relpath),
+      asAbsolutePath: (relpath) => join(extensionPath, relpath),
       logPath: join(LOG_PATH, config.id),
     }
 
@@ -117,7 +125,7 @@ export default (config: ExtensionPackageConfig): Extension => {
       const api = await extension.activate(context)
       state.exports = api
       state.isActive = true
-    } catch(err) {
+    } catch (err) {
       console.error(config.id, err)
     }
   }
@@ -125,7 +133,7 @@ export default (config: ExtensionPackageConfig): Extension => {
   const localize = async (value: string) => (await localizer)(value)
 
   const dispose = () => {
-    state.subscriptions.forEach(m => m())
+    state.subscriptions.forEach((m) => m())
     state.subscriptions = []
     state.exports = undefined
     state.isActive = false
@@ -136,8 +144,12 @@ export default (config: ExtensionPackageConfig): Extension => {
     extensionPath,
     activationEvents,
     packageJSON: { ...config },
-    get isActive () { return state.isActive },
-    get exports () { return state.exports },
+    get isActive() {
+      return state.isActive
+    },
+    get exports() {
+      return state.exports
+    },
     activate,
     dispose,
     localize,

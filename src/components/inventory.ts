@@ -15,7 +15,10 @@ import { h, app } from '../ui/uikit'
 // can provide in layer description that 'this layer requires language server available'
 // the provide current status of lang serv. provide links to where to install langextensions
 
-enum InventoryMode { Main, Layer }
+enum InventoryMode {
+  Main,
+  Layer,
+}
 
 const state = {
   // TODO: don't render this as a normal grid tile. make it separate and
@@ -49,111 +52,160 @@ const styles = {
     display: 'grid',
     // TODO: make this dynamic to fit as many up to maybe 4 items horizontally
     gridTemplateColumns: '1fr 1fr 1fr',
-  }
+  },
 }
 
-const box = (keybind: string, name: string, desc: string) => h('div', {
-  style: {
-    display: 'flex',
-    flexFlow: 'row',
-    background: 'var(--background-b5)',
-    borderRadius: '2px',
-    margin: '10px',
-    width: '320px',
-    height: '60px',
-  }
-}, [
-  ,h('div', {
-    style: {
-      // TODO: try angled side for teh luls
-      display: 'flex',
-      width: '60px',
-      maxWidth: '60px',
-      minWidth: '60px',
-      justifyContent: 'center',
-      alignItems: 'center',
-      background: 'var(--background-10)',
-      fontSize: '3rem',
-      color: 'rgba(255, 255, 255, 0.1)',
-      fontWeight: 'bold',
-    }
-  }, keybind.toUpperCase())
-
-  ,h('div', {
-    style: {
-      padding: '10px',
-      paddingLeft: '13px',
-      display: 'flex',
-      flexFlow: 'column',
-      justifyContent: 'center',
-    }
-  }, [
-    ,h('div', {
-      style: {
-        fontSize: '1.4rem',
-        color: 'var(--foreground)',
-      }
-    }, name)
-
-    ,h('div', {
-      style: {
-        color: 'var(--foreground-50)',
-      }
-    }, desc)
-  ])
-])
-
-const mainView = ($: S) => h('div', {
-  style: styles.grid
-}, $.layers.map(m => box(m.keybind, m.kind, m.description)))
-
-const layerView = (actions: InventoryAction[]) => h('div', {
-  style: styles.grid
-}, actions.map(m => box(m.keybind, m.name, m.description)))
-
-const view = ($: S) => h('div', {
-  style: {
-    display: $.visible ? 'flex' : 'none',
-    height: '100%',
-    // TODO: bundle roboto sans-serif font HWIT IT
-    fontFamily: 'sans-serif',
-  },
-}, [
-  ,h('div', {
-    style: {
-      display: 'flex',
-      flex: 1,
-      flexFlow: 'column',
-      marginBottom: '40px',
-    }
-  }, [
-
-    // breadcrumbs
-    ,h('div', {
+const box = (keybind: string, name: string, desc: string) =>
+  h(
+    'div',
+    {
       style: {
         display: 'flex',
         flexFlow: 'row',
-        background: '#444',
-        borderRadius: '5px',
-      }
-    }, [
-      ,h('div', 'Home')
-      ,$.actions.length ? h('div', $.actions[0].layer) : undefined
-    ])
+        background: 'var(--background-b5)',
+        borderRadius: '2px',
+        margin: '10px',
+        width: '320px',
+        height: '60px',
+      },
+    },
+    [
+      ,
+      h(
+        'div',
+        {
+          style: {
+            // TODO: try angled side for teh luls
+            display: 'flex',
+            width: '60px',
+            maxWidth: '60px',
+            minWidth: '60px',
+            justifyContent: 'center',
+            alignItems: 'center',
+            background: 'var(--background-10)',
+            fontSize: '3rem',
+            color: 'rgba(255, 255, 255, 0.1)',
+            fontWeight: 'bold',
+          },
+        },
+        keybind.toUpperCase()
+      ),
 
-    ,h('div', {
+      h(
+        'div',
+        {
+          style: {
+            padding: '10px',
+            paddingLeft: '13px',
+            display: 'flex',
+            flexFlow: 'column',
+            justifyContent: 'center',
+          },
+        },
+        [
+          ,
+          h(
+            'div',
+            {
+              style: {
+                fontSize: '1.4rem',
+                color: 'var(--foreground)',
+              },
+            },
+            name
+          ),
+
+          h(
+            'div',
+            {
+              style: {
+                color: 'var(--foreground-50)',
+              },
+            },
+            desc
+          ),
+        ]
+      ),
+    ]
+  )
+
+const mainView = ($: S) =>
+  h(
+    'div',
+    {
+      style: styles.grid,
+    },
+    $.layers.map((m) => box(m.keybind, m.kind, m.description))
+  )
+
+const layerView = (actions: InventoryAction[]) =>
+  h(
+    'div',
+    {
+      style: styles.grid,
+    },
+    actions.map((m) => box(m.keybind, m.name, m.description))
+  )
+
+const view = ($: S) =>
+  h(
+    'div',
+    {
       style: {
-        display: 'flex',
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'flex-end',
-      }
-    }, [
-      ,$.actions.length ? layerView($.actions) : mainView($)
-    ])
+        display: $.visible ? 'flex' : 'none',
+        height: '100%',
+        // TODO: bundle roboto sans-serif font HWIT IT
+        fontFamily: 'sans-serif',
+      },
+    },
+    [
+      ,
+      h(
+        'div',
+        {
+          style: {
+            display: 'flex',
+            flex: 1,
+            flexFlow: 'column',
+            marginBottom: '40px',
+          },
+        },
+        [
+          ,
+          // breadcrumbs
+          h(
+            'div',
+            {
+              style: {
+                display: 'flex',
+                flexFlow: 'row',
+                background: '#444',
+                borderRadius: '5px',
+              },
+            },
+            [
+              ,
+              h('div', 'Home'),
+              $.actions.length ? h('div', $.actions[0].layer) : undefined,
+            ]
+          ),
 
-  ])
-])
+          h(
+            'div',
+            {
+              style: {
+                display: 'flex',
+                flex: 1,
+                justifyContent: 'center',
+                alignItems: 'flex-end',
+              },
+            },
+            [, $.actions.length ? layerView($.actions) : mainView($)]
+          ),
+        ]
+      ),
+    ]
+  )
 
 const ui = app<S, A>({ name: 'inventory', state, view, actions })
 
@@ -172,7 +224,6 @@ const ui = app<S, A>({ name: 'inventory', state, view, actions })
 // this solves the problem of delayed component loadings. either way after veonim startup
 // we will lazyload components, so the 'require' will be cached.
 //
-
 
 // mapping logic:
 //
@@ -207,7 +258,6 @@ const ui = app<S, A>({ name: 'inventory', state, view, actions })
 // the keybind combo to nvim and have it handle it. its possible that the user has mapped
 // some <space>xx combo that we do not have a registered action for
 
-
 // TODO: how do we map an internal keybinding with the input registry?
 setImmediate(async () => {
   const keymap = await api.nvim.getKeymap()
@@ -221,7 +271,8 @@ setImmediate(async () => {
   // TODO: we are not ready for inventory yet
   if (process.env.VEONIM_DEV) {
     if (!isMapped.space) api.nvim.cmd('nno <space> :Veonim inventory<cr>')
-    if (!isMapped.spaceSpace) api.nvim.cmd('nno <space><space> :Veonim inventory-search<cr>')
+    if (!isMapped.spaceSpace)
+      api.nvim.cmd('nno <space><space> :Veonim inventory-search<cr>')
 
     console.log('isMapped', isMapped)
     console.log('FINAL keymap', keymap)
@@ -234,7 +285,6 @@ api.onAction('inventory', async () => {
   // console.log('timeoutLength', timeoutLength)
   ui.show()
 })
-
 
 // TODO: how do we support inventory in other modes except normal?
 // it shouldn't be that hard to support visual mode, yea?
@@ -249,7 +299,7 @@ api.onAction('inventory', async () => {
 const doIntenvory = async () => {
   ui.show()
 
-  const validLayerKeybinds = new Set(inventoryLayers.map(m => m.keybind))
+  const validLayerKeybinds = new Set(inventoryLayers.map((m) => m.keybind))
 
   const reset = (actionFn?: () => void) => {
     restoreInput()
@@ -264,11 +314,13 @@ const doIntenvory = async () => {
   let captureMode = InventoryMode.Main
   let activeLayerActions: InventoryAction[]
 
-  const restoreInput = stealInput(key => {
+  const restoreInput = stealInput((key) => {
     if (key === '<Esc>') return reset()
 
     if (captureMode === InventoryMode.Main && validLayerKeybinds.has(key)) {
-      const activeLayer = inventoryLayers.find(m => m.keybind === key) as InventoryLayer
+      const activeLayer = inventoryLayers.find(
+        (m) => m.keybind === key
+      ) as InventoryLayer
       activeLayerActions = inventoryActions.getActionsForLayer(activeLayer.kind)
       captureMode = InventoryMode.Layer
       ui.setActions(activeLayerActions)
@@ -276,7 +328,7 @@ const doIntenvory = async () => {
     }
 
     if (captureMode === InventoryMode.Layer) {
-      const action = activeLayerActions!.find(m => m.keybind === key)
+      const action = activeLayerActions!.find((m) => m.keybind === key)
       // TODO: what do if we select an invalid key?
       if (!action) return reset()
 

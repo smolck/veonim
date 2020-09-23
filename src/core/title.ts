@@ -39,9 +39,8 @@ if (macos) {
     justifyContent: 'center',
     alignItems: 'center',
   })
-
   ;(title as HTMLElement).innerText = 'veonim'
-  ;(titleBar as HTMLElement).appendChild((title as HTMLElement))
+  ;(titleBar as HTMLElement).appendChild(title as HTMLElement)
   typescriptSucks(document.body, titleBar)
   titleBarVisible = true
 
@@ -59,15 +58,14 @@ if (macos) {
     const path = simplifyPath(file, api.nvim.state.cwd)
     ;(title as HTMLElement).innerText = `${path} - veonim`
   })
-}
-
-else api.nvim.watchState.file((file: string) => {
-  const path = simplifyPath(file, api.nvim.state.cwd)
-  remote.getCurrentWindow().setTitle(`${path} - veonim`)
-})
+} else
+  api.nvim.watchState.file((file: string) => {
+    const path = simplifyPath(file, api.nvim.state.cwd)
+    remote.getCurrentWindow().setTitle(`${path} - veonim`)
+  })
 
 export const specs = {
   get height() {
     return titleBarVisible ? 22 : 0
-  }
+  },
 }

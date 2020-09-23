@@ -1,4 +1,10 @@
-import { getDirFiles, pathRelativeToHome, pathRelativeToCwd, getDirs, $HOME } from '../support/utils'
+import {
+  getDirFiles,
+  pathRelativeToHome,
+  pathRelativeToCwd,
+  getDirs,
+  $HOME,
+} from '../support/utils'
 import { RowNormal, RowImportant } from '../components/row-container'
 import FiletypeIcon, { Folder } from '../components/filetype-icon'
 import { h, app, vimBlur, vimFocus } from '../ui/uikit'
@@ -13,9 +19,9 @@ import { colors } from '../ui/styles'
 import { cvar } from '../ui/css'
 
 interface FileDir {
-  name: string,
-  file: boolean,
-  dir: boolean,
+  name: string
+  file: boolean
+  dir: boolean
 }
 
 const state = {
@@ -31,12 +37,12 @@ const state = {
 }
 
 const sortDirFiles = (filedirs: FileDir[]) => {
-  const dirs = filedirs.filter(f => f.dir)
-  const files = filedirs.filter(f => f.file)
+  const dirs = filedirs.filter((f) => f.dir)
+  const files = filedirs.filter((f) => f.file)
   return [...dirs, ...files]
 }
 
-const absolutePath = (path: string) => path.replace(/^~\//, `${$HOME}/`) 
+const absolutePath = (path: string) => path.replace(/^~\//, `${$HOME}/`)
 
 const pathExplore = async (path: string) => {
   const fullpath = absolutePath(path)
@@ -72,7 +78,9 @@ const actions = {
 
   selectPath: () => (s: S) => {
     if (!s.pathValue) return { pathMode: false, ix: 0 }
-    getDirFiles(s.pathValue).then(paths => ui.updatePaths(sortDirFiles(paths)))
+    getDirFiles(s.pathValue).then((paths) =>
+      ui.updatePaths(sortDirFiles(paths))
+    )
     return { pathMode: false, path: s.pathValue, ix: 0 }
   },
 
@@ -112,12 +120,15 @@ const actions = {
     }
 
     const path = join(s.path, name)
-    getDirFiles(path).then(paths => ui.show({ path, paths: sortDirFiles(paths) }))
+    getDirFiles(path).then((paths) =>
+      ui.show({ path, paths: sortDirFiles(paths) })
+    )
   },
 
-  change: (val: string) => (s: S) => ({ val, ix: 0, paths: val
-    ? sortDirFiles(filter(s.paths, val, { key: 'name' }))
-    : s.cache
+  change: (val: string) => (s: S) => ({
+    val,
+    ix: 0,
+    paths: val ? sortDirFiles(filter(s.paths, val, { key: 'name' })) : s.cache,
   }),
 
   ctrlH: async () => {
@@ -131,17 +142,22 @@ const actions = {
     const next = s.path.split(sep)
     next.pop()
     const path = join(sep, ...next)
-    getDirFiles(path).then(paths => ui.show({ path, paths: sortDirFiles(paths) }))
+    getDirFiles(path).then((paths) =>
+      ui.show({ path, paths: sortDirFiles(paths) })
+    )
   },
 
-  show: ({ paths, path, cwd }: any) => (s: S) => (vimBlur(), {
-    ...resetState,
-    path,
-    paths,
-    vis: true,
-    cache: paths,
-    cwd: cwd || s.cwd,
-  }),
+  show: ({ paths, path, cwd }: any) => (s: S) => (
+    vimBlur(),
+    {
+      ...resetState,
+      path,
+      paths,
+      vis: true,
+      cache: paths,
+      cwd: cwd || s.cwd,
+    }
+  ),
 
   // TODO: be more precise than this? also depends on scaled devices
   down: () => (s: S) => {
@@ -154,8 +170,12 @@ const actions = {
     return { ix: Math.max(s.ix - 17, 0) }
   },
 
-  top: () => { listElRef.scrollTop = 0 },
-  bottom: () => { listElRef.scrollTop = listElRef.scrollHeight },
+  top: () => {
+    listElRef.scrollTop = 0
+  },
+  bottom: () => {
+    listElRef.scrollTop = listElRef.scrollHeight
+  },
   hide: () => (vimFocus(), resetState),
   next: () => (s: S) => ({ ix: s.ix + 1 >= s.paths.length ? 0 : s.ix + 1 }),
   prev: () => (s: S) => ({ ix: s.ix - 1 < 0 ? s.paths.length - 1 : s.ix - 1 }),
@@ -165,62 +185,80 @@ let listElRef: HTMLElement
 
 type A = typeof actions
 
-const view = ($: S, a: A) => Plugin($.vis, [
+const view = ($: S, a: A) =>
+  Plugin($.vis, [
+    ,
+    Input({
+      value: $.val,
+      focus: !$.pathMode,
+      icon: Icon.HardDrive,
+      desc: 'explorer',
+      change: a.change,
+      hide: a.hide,
+      next: a.next,
+      prev: a.prev,
+      select: a.select,
+      jumpPrev: a.jumpPrev,
+      down: a.down,
+      up: a.up,
+      ctrlG: a.ctrlG,
+      ctrlH: a.ctrlH,
+    }),
 
-  ,Input({
-    value: $.val,
-    focus: !$.pathMode,
-    icon: Icon.HardDrive,
-    desc: 'explorer',
-    change: a.change,
-    hide: a.hide,
-    next: a.next,
-    prev: a.prev,
-    select: a.select,
-    jumpPrev: a.jumpPrev,
-    down: a.down,
-    up: a.up,
-    ctrlG: a.ctrlG,
-    ctrlH: a.ctrlH,
-  })
+    !$.pathMode && h(RowImportant, [, h('span', pathRelativeToHome($.path))]),
 
-  ,!$.pathMode && h(RowImportant, [
-    ,h('span', pathRelativeToHome($.path))
+    $.pathMode &&
+      Input({
+        change: a.changePath,
+        hide: a.normalMode,
+        select: a.selectPath,
+        tab: a.completePath,
+        next: a.nextPath,
+        prev: a.prevPath,
+        value: pathRelativeToHome($.pathValue),
+        background: cvar('background-50'),
+        color: colors.important,
+        icon: Icon.Search,
+        desc: 'open path',
+        small: true,
+        focus: true,
+        pathMode: true,
+      }),
+
+    h(
+      'div',
+      {
+        oncreate: (e: HTMLElement) => (listElRef = e),
+        style: {
+          maxHeight: '50vh',
+          overflowY: 'hidden',
+        },
+      },
+      $.paths.map(({ name, dir }, ix) =>
+        h(
+          RowNormal,
+          {
+            key: `${name}-${dir}`,
+            active: ix === $.ix,
+          },
+          [
+            ,
+            dir ? Folder : FiletypeIcon(name),
+
+            h(
+              'span',
+              {
+                style: {
+                  color: dir && ix !== $.ix ? cvar('foreground-50') : undefined,
+                },
+              },
+              name
+            ),
+          ]
+        )
+      )
+    ),
   ])
-
-  ,$.pathMode && Input({
-    change: a.changePath,
-    hide: a.normalMode,
-    select: a.selectPath,
-    tab: a.completePath,
-    next: a.nextPath,
-    prev: a.prevPath,
-    value: pathRelativeToHome($.pathValue),
-    background: cvar('background-50'),
-    color: colors.important,
-    icon: Icon.Search,
-    desc: 'open path',
-    small: true,
-    focus: true,
-    pathMode: true,
-  })
-
-  ,h('div', {
-    oncreate: (e: HTMLElement) => listElRef = e,
-    style: {
-      maxHeight: '50vh',
-      overflowY: 'hidden',
-    }
-  }, $.paths.map(({ name, dir }, ix) => h(RowNormal, {
-    key: `${name}-${dir}`,
-    active: ix === $.ix,
-  }, [
-    ,dir ? Folder : FiletypeIcon(name)
-
-    ,h('span', { style: { color: dir && ix !== $.ix ? cvar('foreground-50') : undefined } }, name)
-  ])))
-
-])
 
 const ui = app({ name: 'explorer', state, actions, view })
 

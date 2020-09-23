@@ -4,9 +4,9 @@ import { EventEmitter } from 'events'
 import { setVar } from '../ui/css'
 
 interface UpdateEditorFontParams {
-  face?: string,
-  size?: number,
-  lineSpace?: number,
+  face?: string
+  size?: number
+  lineSpace?: number
 }
 
 export interface Cell {
@@ -29,7 +29,9 @@ export interface Pad {
 const ee = new EventEmitter()
 const container = document.getElementById('workspace') as HTMLElement
 const sandboxCanvas = document.createElement('canvas')
-const canvas = sandboxCanvas.getContext('2d', { alpha: false }) as CanvasRenderingContext2D
+const canvas = sandboxCanvas.getContext('2d', {
+  alpha: false,
+}) as CanvasRenderingContext2D
 const DEFAULT_FONT = 'Roboto Mono Veonim'
 const DEFAULT_FONT_SIZE = 14
 const DEFAULT_LINESPACE = 14 / 2
@@ -63,7 +65,9 @@ export const size = {
   cols: 0,
   height: 0,
   width: 0,
-  get nameplateHeight() { return cell.height + 4 },
+  get nameplateHeight() {
+    return cell.height + 4
+  },
 }
 
 const getCharWidth = (font: string, size: number): number => {
@@ -87,7 +91,7 @@ const setFont = (face: string, size: number, lineSpace: number) => {
 
   Object.assign(cell, {
     width: getCharWidth(face, size),
-    height: Math.floor(size + lineSpace)
+    height: Math.floor(size + lineSpace),
   })
 
   pad.x = Math.round(cell.width / 2)
@@ -96,18 +100,21 @@ const setFont = (face: string, size: number, lineSpace: number) => {
   cell.padding = Math.floor((cell.height - font.size) / 2)
 }
 
-export const updateEditorFont = ({ size, lineSpace, face }: UpdateEditorFontParams) => {
+export const updateEditorFont = ({
+  size,
+  lineSpace,
+  face,
+}: UpdateEditorFontParams) => {
   const fontFace = face || DEFAULT_FONT
-  const fontSize = !size || isNaN(size)
-    ? face ? font.size : DEFAULT_FONT_SIZE
-    : size
-  const fontLineSpace = !lineSpace || isNaN(lineSpace)
-    ? DEFAULT_LINESPACE
-    : lineSpace
+  const fontSize =
+    !size || isNaN(size) ? (face ? font.size : DEFAULT_FONT_SIZE) : size
+  const fontLineSpace =
+    !lineSpace || isNaN(lineSpace) ? DEFAULT_LINESPACE : lineSpace
 
-  const same = font.face === fontFace
-    && font.size === fontSize
-    && font.lineSpace === fontLineSpace
+  const same =
+    font.face === fontFace &&
+    font.size === fontSize &&
+    font.lineSpace === fontLineSpace
 
   if (same) return false
   setFont(fontFace, fontSize, fontLineSpace)
@@ -131,9 +138,13 @@ export const redoResize = (rows: number, cols: number) => {
   ee.emit('resize', size)
 }
 
-export const onResize = (fn: (size: { rows: number, cols: number }) => void) => ee.on('resize', fn)
+export const onResize = (fn: (size: { rows: number; cols: number }) => void) =>
+  ee.on('resize', fn)
 
 setFont(DEFAULT_FONT, DEFAULT_FONT_SIZE, font.lineSpace)
 setImmediate(() => resize())
 
-window.addEventListener('resize', throttle(() => resize(), 150))
+window.addEventListener(
+  'resize',
+  throttle(() => resize(), 150)
+)

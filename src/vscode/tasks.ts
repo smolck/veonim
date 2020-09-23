@@ -45,27 +45,41 @@ const runTask = (task: vsc.Task): vsc.TaskExecution => {
 }
 
 const tasks: typeof vsc.tasks = {
-  get taskExecutions() { return [...activeTasks] },
+  get taskExecutions() {
+    return [...activeTasks]
+  },
 
-  onDidStartTask: (fn, thisArg) => ({ dispose: watchers.on('didStartTask', fn.bind(thisArg)) }),
-  onDidEndTask: (fn, thisArg) => ({ dispose: watchers.on('didEndTask', fn.bind(thisArg)) }),
-  onDidStartTaskProcess: (fn, thisArg) => ({ dispose: watchers.on('didStartTaskProcess', fn.bind(thisArg)) }),
-  onDidEndTaskProcess: (fn, thisArg) => ({ dispose: watchers.on('didEndTaskProcess', fn.bind(thisArg)) }),
+  onDidStartTask: (fn, thisArg) => ({
+    dispose: watchers.on('didStartTask', fn.bind(thisArg)),
+  }),
+  onDidEndTask: (fn, thisArg) => ({
+    dispose: watchers.on('didEndTask', fn.bind(thisArg)),
+  }),
+  onDidStartTaskProcess: (fn, thisArg) => ({
+    dispose: watchers.on('didStartTaskProcess', fn.bind(thisArg)),
+  }),
+  onDidEndTaskProcess: (fn, thisArg) => ({
+    dispose: watchers.on('didEndTaskProcess', fn.bind(thisArg)),
+  }),
 
   registerTaskProvider: (type, provider) => {
     taskProviders.add(type, provider)
     // TODO: when do we resolve a task?
-    return { dispose: () => console.warn('NYI: remove registered task provider') }
+    return {
+      dispose: () => console.warn('NYI: remove registered task provider'),
+    }
   },
 
   fetchTasks: async (filter = {}) => {
     const filterQuery = filter.type
     // TODO: get tasks from tasks.json (this will be an async op)
     const tasksFromJson: MetaTask[] = []
-    return [...registeredTasks, ...tasksFromJson].filter(mt => mt.type === filterQuery)
+    return [...registeredTasks, ...tasksFromJson].filter(
+      (mt) => mt.type === filterQuery
+    )
   },
 
-  executeTask: async task => runTask(task),
+  executeTask: async (task) => runTask(task),
 }
 
 export default tasks

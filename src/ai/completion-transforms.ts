@@ -3,10 +3,10 @@ import { is } from '../support/utils'
 import { parse } from 'path'
 
 interface CompletionTransformRequest {
-  completionKind: CompletionKind,
-  lineContent: string,
-  column: number,
-  completionOptions: CompletionOption[],
+  completionKind: CompletionKind
+  lineContent: string
+  column: number
+  completionOptions: CompletionOption[]
 }
 
 type Transformer = (request: CompletionTransformRequest) => CompletionOption[]
@@ -21,8 +21,10 @@ export default (filetype: string, request: CompletionTransformRequest) => {
 
 const isModuleImport = (lineContent: string, column: number) => {
   const fragment = lineContent.slice(0, column - 1)
-  return /\b(from|import)\s*["'][^'"]*$/.test(fragment)
-    || /\b(import|require)\(['"][^'"]*$/.test(fragment)
+  return (
+    /\b(from|import)\s*["'][^'"]*$/.test(fragment) ||
+    /\b(import|require)\(['"][^'"]*$/.test(fragment)
+  )
 }
 
 const removeFileExtensionsInImportPaths = ({
@@ -38,7 +40,7 @@ const removeFileExtensionsInImportPaths = ({
   const tryingToCompleteInsideImportPath = isModuleImport(lineContent, column)
   if (!tryingToCompleteInsideImportPath) return completionOptions
 
-  return completionOptions.map(o => ({
+  return completionOptions.map((o) => ({
     ...o,
     insertText: parse(o.text).name,
   }))

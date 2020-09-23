@@ -17,7 +17,7 @@ let needToRegenAtlas = true
 
 const getTableSize = (): number => {
   let totalol = 0
-  unicodeTable.forEach(char => totalol += char.width)
+  unicodeTable.forEach((char) => (totalol += char.width))
   return totalol
 }
 

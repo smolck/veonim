@@ -22,7 +22,10 @@ export enum VarKind {
 }
 
 interface SetupData {
-  setData: (data: ArrayBufferView, drawKind?: typeof WebGLRenderingContext.STATIC_DRAW) => void
+  setData: (
+    data: ArrayBufferView,
+    drawKind?: typeof WebGLRenderingContext.STATIC_DRAW
+  ) => void
 }
 
 type VK = { [index: string]: VarKind }
@@ -32,32 +35,49 @@ type SetupDataFunc = SD1 & SD2
 
 const create = (options?: WebGLContextAttributes) => {
   const canvas = document.createElement('canvas')
-  const gl = canvas.getContext('webgl2', options) as WebGL2RenderingContext
-    || canvas.getContext('webgl', options) as WebGLRenderingContext
-    || canvas.getContext('experimental-webgl', options) as WebGLRenderingContext
+  const gl =
+    (canvas.getContext('webgl2', options) as WebGL2RenderingContext) ||
+    (canvas.getContext('webgl', options) as WebGLRenderingContext) ||
+    (canvas.getContext('experimental-webgl', options) as WebGLRenderingContext)
   const webgl2Mode = !(gl instanceof WebGLRenderingContext)
 
   // webgl1 extensions
   const ext = {
     vao: gl.getExtension('OES_vertex_array_object'),
-    instance: gl.getExtension('ANGLE_instanced_arrays')
+    instance: gl.getExtension('ANGLE_instanced_arrays'),
   }
 
-  const createVertexArray = () => webgl2Mode
-    ? (gl as WebGL2RenderingContext).createVertexArray()
-    : ext.vao!.createVertexArrayOES()
+  const createVertexArray = () =>
+    webgl2Mode
+      ? (gl as WebGL2RenderingContext).createVertexArray()
+      : ext.vao!.createVertexArrayOES()
 
-  const bindVertexArray = (vao: WebGLVertexArrayObjectOES | WebGLVertexArrayObject) => webgl2Mode
-    ? (gl as WebGL2RenderingContext).bindVertexArray(vao)
-    : ext.vao!.bindVertexArrayOES(vao)
+  const bindVertexArray = (
+    vao: WebGLVertexArrayObjectOES | WebGLVertexArrayObject
+  ) =>
+    webgl2Mode
+      ? (gl as WebGL2RenderingContext).bindVertexArray(vao)
+      : ext.vao!.bindVertexArrayOES(vao)
 
-  const vertexAttribDivisor = (pointer: number, divisor: number) => webgl2Mode
-    ? (gl as WebGL2RenderingContext).vertexAttribDivisor(pointer, divisor)
-    : ext.instance!.vertexAttribDivisorANGLE(pointer, divisor)
+  const vertexAttribDivisor = (pointer: number, divisor: number) =>
+    webgl2Mode
+      ? (gl as WebGL2RenderingContext).vertexAttribDivisor(pointer, divisor)
+      : ext.instance!.vertexAttribDivisorANGLE(pointer, divisor)
 
-  const drawArraysInstanced = (mode: number, first: number, count: number, primcount: number) => webgl2Mode
-    ? (gl as WebGL2RenderingContext).drawArraysInstanced(mode, first, count, primcount)
-    : ext.instance!.drawArraysInstancedANGLE(mode, first, count, primcount)
+  const drawArraysInstanced = (
+    mode: number,
+    first: number,
+    count: number,
+    primcount: number
+  ) =>
+    webgl2Mode
+      ? (gl as WebGL2RenderingContext).drawArraysInstanced(
+          mode,
+          first,
+          count,
+          primcount
+        )
+      : ext.instance!.drawArraysInstancedANGLE(mode, first, count, primcount)
 
   const resize = (width: number, height: number) => {
     const w = Math.round(width * window.devicePixelRatio)
@@ -72,9 +92,7 @@ const create = (options?: WebGLContextAttributes) => {
   }
 
   const createShader = (type: number, source: string) => {
-    const shaderSource = webgl2Mode
-      ? '#version 300 es\n' + source
-      : source
+    const shaderSource = webgl2Mode ? '#version 300 es\n' + source : source
     const shader = gl.createShader(type)
     if (!shader) return console.error('failed to create gl shader. oops.')
 
@@ -88,13 +106,19 @@ const create = (options?: WebGLContextAttributes) => {
     gl.deleteShader(shader)
   }
 
-  const createProgramWithShaders = (vertexShader: string, fragmentShader: string) => {
+  const createProgramWithShaders = (
+    vertexShader: string,
+    fragmentShader: string
+  ) => {
     const program = gl.createProgram()
     if (!program) return console.error('failed to create gl program. oops.')
 
     const vshader = createShader(gl.VERTEX_SHADER, vertexShader)
     const fshader = createShader(gl.FRAGMENT_SHADER, fragmentShader)
-    if (!vshader || !fshader) return console.error('failed to create shaders - cant create program. sorry bout that')
+    if (!vshader || !fshader)
+      return console.error(
+        'failed to create shaders - cant create program. sorry bout that'
+      )
 
     gl.attachShader(program, vshader)
     gl.attachShader(program, fshader)
@@ -107,7 +131,10 @@ const create = (options?: WebGLContextAttributes) => {
     gl.deleteProgram(program)
   }
 
-  const loadCanvasTexture = (canvas: HTMLCanvasElement, textureUnit = gl.TEXTURE0) => {
+  const loadCanvasTexture = (
+    canvas: HTMLCanvasElement,
+    textureUnit = gl.TEXTURE0
+  ) => {
     gl.activeTexture(textureUnit)
     gl.bindTexture(gl.TEXTURE_2D, gl.createTexture())
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
@@ -129,7 +156,10 @@ const create = (options?: WebGLContextAttributes) => {
     divisor = 0,
   }: AttribPointer) => {
     gl.enableVertexAttribArray(pointer)
-    if (!type) throw new Error(`need vertex array type. we try to guess the type based on the bufferData type, but this logic is not very smart.`)
+    if (!type)
+      throw new Error(
+        `need vertex array type. we try to guess the type based on the bufferData type, but this logic is not very smart.`
+      )
     gl.vertexAttribPointer(pointer, size, type, normalize, stride, offset)
 
     if (divisor > 0) vertexAttribDivisor(pointer, divisor)
@@ -148,7 +178,7 @@ const create = (options?: WebGLContextAttributes) => {
     })
 
     const vars: VarGet = new Proxy(Object.create(null), {
-      get: (_, key: string) => varLocations.get(key)
+      get: (_, key: string) => varLocations.get(key),
     })
 
     const setVertexShader = (fn: (incomingVars: VarGet) => string) => {
@@ -161,27 +191,32 @@ const create = (options?: WebGLContextAttributes) => {
 
     const create = () => {
       const res = createProgramWithShaders(vertexShader, fragmentShader)
-      if (!res) throw new Error('catastrophic failure of the third kind to create webgl program')
+      if (!res)
+        throw new Error(
+          'catastrophic failure of the third kind to create webgl program'
+        )
       program = res
 
       const createdVao = createVertexArray()
-      if (!createdVao) throw new Error(`failed to create vertex array object... hmmm`)
+      if (!createdVao)
+        throw new Error(`failed to create vertex array object... hmmm`)
       vao = createdVao
 
-      Object
-        .entries(incomingVars)
-        .forEach(([ key, kind ]) => {
-          const location = kind === VarKind.Uniform
+      Object.entries(incomingVars).forEach(([key, kind]) => {
+        const location =
+          kind === VarKind.Uniform
             ? gl.getUniformLocation(program, key)
             : gl.getAttribLocation(program, key)
 
-          if (typeof location === 'number' && location < 0) {
-            const kindText = kind === VarKind.Uniform ? 'uniform' : 'attribute'
-            console.warn(`${kindText} ${key} is not used in any shader. this will cause "index out of range warnings" if you try to use the pointer (like vertexAttribPointer)`)
-          }
+        if (typeof location === 'number' && location < 0) {
+          const kindText = kind === VarKind.Uniform ? 'uniform' : 'attribute'
+          console.warn(
+            `${kindText} ${key} is not used in any shader. this will cause "index out of range warnings" if you try to use the pointer (like vertexAttribPointer)`
+          )
+        }
 
-          varLocations.set(key, location)
-        })
+        varLocations.set(key, location)
+      })
     }
 
     const use = () => {
@@ -195,21 +230,31 @@ const create = (options?: WebGLContextAttributes) => {
       gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
 
       pointers.length
-        ? pointers.forEach((pointer: AttribPointer) => setupVertexArray(pointer))
+        ? pointers.forEach((pointer: AttribPointer) =>
+            setupVertexArray(pointer)
+          )
         : setupVertexArray(pointers)
 
       return {
         setData: (data: any, drawKind = gl.STATIC_DRAW) => {
           gl.bindBuffer(gl.ARRAY_BUFFER, buffer)
           gl.bufferData(gl.ARRAY_BUFFER, data, drawKind)
-        }
+        },
       }
     }
 
     return { create, vars, use, setVertexShader, setFragmentShader, setupData }
   }
 
-  return { canvasElement: canvas, setupProgram, gl, loadCanvasTexture, resize, drawArraysInstanced, webgl2Mode }
+  return {
+    canvasElement: canvas,
+    setupProgram,
+    gl,
+    loadCanvasTexture,
+    resize,
+    drawArraysInstanced,
+    webgl2Mode,
+  }
 }
 
 export type WebGL = ReturnType<typeof create>

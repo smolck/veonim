@@ -56,28 +56,32 @@ Object.assign(cursorChar.style, {
 
 cursorEl.appendChild(cursorChar)
 
-export const getCursorBoundingClientRect = () => cursorline.getBoundingClientRect()
+export const getCursorBoundingClientRect = () =>
+  cursorline.getBoundingClientRect()
 
 export const setCursorShape = (shape: CursorShape, size = 20) => {
   cursor.shape = shape
 
-  if (shape === CursorShape.block) Object.assign(cursorEl.style, {
-    background: cursor.color,
-    height: `${cell.height}px`,
-    width: `${cell.width}px`,
-  })
+  if (shape === CursorShape.block)
+    Object.assign(cursorEl.style, {
+      background: cursor.color,
+      height: `${cell.height}px`,
+      width: `${cell.width}px`,
+    })
 
-  if (shape === CursorShape.line) Object.assign(cursorEl.style, {
-    background: cursor.color,
-    height: `${cell.height}px`,
-    width: `${(cell.width * (size / 100)).toFixed(2)}px`
-  })
+  if (shape === CursorShape.line)
+    Object.assign(cursorEl.style, {
+      background: cursor.color,
+      height: `${cell.height}px`,
+      width: `${(cell.width * (size / 100)).toFixed(2)}px`,
+    })
 
-  if (shape === CursorShape.underline) Object.assign(cursorEl.style, {
-    background: partialFill('horizontal', cursor.color, size),
-    height: `${cell.height}px`,
-    width: `${cell.width}px`,
-  })
+  if (shape === CursorShape.underline)
+    Object.assign(cursorEl.style, {
+      background: partialFill('horizontal', cursor.color, size),
+      height: `${cell.height}px`,
+      width: `${cell.width}px`,
+    })
 }
 
 export const setCursorColor = (color: string) => {
@@ -86,8 +90,8 @@ export const setCursorColor = (color: string) => {
   cursorEl.style.background = color
 }
 
-export const enableCursor = () => cursorEnabled = true
-export const disableCursor = () => cursorEnabled = false
+export const enableCursor = () => (cursorEnabled = true)
+export const disableCursor = () => (cursorEnabled = false)
 
 export const hideCursor = () => {
   if (!cursorEnabled) return
@@ -105,14 +109,16 @@ export const showCursor = () => {
   cursorline.style.display = ''
 }
 
-export const showCursorline = () => cursorline.style.display = ''
+export const showCursorline = () => (cursorline.style.display = '')
 
 export const updateCursorChar = () => {
-  cursorChar.innerText = cursor.shape === CursorShape.block
-    ? windows.getActive().editor.getChar(cursor.row, cursor.col)
-    : ''
+  cursorChar.innerText =
+    cursor.shape === CursorShape.block
+      ? windows.getActive().editor.getChar(cursor.row, cursor.col)
+      : ''
 
-  if (cursor.shape === CursorShape.block && !cursorCharVisible) cursorChar.style.display = ''
+  if (cursor.shape === CursorShape.block && !cursorCharVisible)
+    cursorChar.style.display = ''
 }
 
 const updateCursorCharInternal = (gridId: number, row: number, col: number) => {

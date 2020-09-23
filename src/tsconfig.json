@@ -1,9 +1,5 @@
 {
-  "exclude": [
-    "node_modules",
-    "test",
-    "xdg_config"
-  ],
+  "exclude": ["node_modules", "test", "xdg_config"],
   "compilerOptions": {
     "skipLibCheck": true,
     "target": "esnext",
@@ -14,8 +10,6 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "sourceMap": true,
-    "plugins": [
-      {"transform": "../tools/transform-no-dev.js"}
-    ]
+    "plugins": [{ "transform": "../tools/transform-no-dev.js" }]
   }
 }

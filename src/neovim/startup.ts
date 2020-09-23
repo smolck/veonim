@@ -83,7 +83,7 @@ export type Autocmd = typeof autocmds
 export type Autocmds = keyof Autocmd
 
 const autocmdsText = Object.entries(autocmds)
-  .map(([ cmd, arg ]) => {
+  .map(([cmd, arg]) => {
     const argtext = arg ? `, ${arg}` : ''
 
     // TODO(smolck): Is this accurate? And is it a (good) fix?
@@ -91,7 +91,6 @@ const autocmdsText = Object.entries(autocmds)
     if (cmd === 'OptionSet') {
       return `au VeonimAU ${cmd} * if (&ro != 1) | call rpcnotify(0, 'veonim-autocmd', '${cmd}'${argtext}) | endif`
     }
-
 
     return `au VeonimAU ${cmd} * call rpcnotify(0, 'veonim-autocmd', '${cmd}'${argtext})`
   })
@@ -102,7 +101,9 @@ const autocmdsText = Object.entries(autocmds)
 startup.defineFunc.VeonimRegisterAutocmds`
   aug VeonimAU | au! | aug END
   au VeonimAU CursorMoved,CursorMovedI * call rpcnotify(0, 'veonim-position', VeonimPosition())
-  au VeonimAU ${stateEvents.join(',')} * call rpcnotify(0, 'veonim-state', VeonimState())
+  au VeonimAU ${stateEvents.join(
+    ','
+  )} * call rpcnotify(0, 'veonim-state', VeonimState())
   ${autocmdsText}
 `
 

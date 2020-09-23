@@ -19,7 +19,7 @@ export default (onDataSender?: (...args: any[]) => void) => {
   let buffer: any[] = []
   let connected = false
 
-  const connectTo = ({ id, path }: { id: number, path: string }) => {
+  const connectTo = ({ id, path }: { id: number; path: string }) => {
     connected = false
     const socket = createConnection(path)
 
@@ -45,7 +45,7 @@ export default (onDataSender?: (...args: any[]) => void) => {
     socket.pipe(decoder, { end: false })
 
     if (buffer.length) {
-      buffer.forEach(data => encoder.write(data))
+      buffer.forEach((data) => encoder.write(data))
       buffer = []
     }
 
@@ -58,8 +58,8 @@ export default (onDataSender?: (...args: any[]) => void) => {
     else encoder.write(data)
   }
 
-  const onRecvData = (fn: (...args: any[]) => void) => sendRecvDataFn = fn
-  decoder.on('data', ([type, ...d]: [number, any]) => sendRecvDataFn([ type, d ]))
+  const onRecvData = (fn: (...args: any[]) => void) => (sendRecvDataFn = fn)
+  decoder.on('data', ([type, ...d]: [number, any]) => sendRecvDataFn([type, d]))
 
   return { send, connectTo, switchTo, onRecvData }
 }

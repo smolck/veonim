@@ -1,4 +1,11 @@
-import { asColor, ID, onFnCall, merge, prefixWith, getPipeName } from '../support/utils'
+import {
+  asColor,
+  ID,
+  onFnCall,
+  merge,
+  prefixWith,
+  getPipeName,
+} from '../support/utils'
 import MsgpackStreamDecoder from '../messaging/msgpack-decoder'
 import MsgpackStreamEncoder from '../messaging/msgpack-encoder'
 import { startupFuncs, startupCmds } from '../neovim/startup'
@@ -11,15 +18,15 @@ type RedrawFn = (m: any[]) => void
 type ExitFn = (id: number, code: number) => void
 
 interface VimInstance {
-  id: number,
-  proc: ChildProcess,
-  attached: boolean,
-  pipeName: string,
+  id: number
+  proc: ChildProcess
+  attached: boolean
+  pipeName: string
 }
 
 interface NewVimResponse {
-  id: number,
-  path: string,
+  id: number
+  path: string
 }
 
 const vimOptions = {
@@ -48,13 +55,16 @@ const vimInstances = new Map<number, VimInstance>()
 const msgpackDecoder = new MsgpackStreamDecoder()
 const msgpackEncoder = new MsgpackStreamEncoder()
 
-const spawnVimInstance = (pipeName: string) => spawn('nvim', [
-  '--cmd', `com! -nargs=+ -range -complete=custom,VeonimCmdCompletions Veonim call Veonim(<f-args>)`,
-  '--cmd', `com! -nargs=1 Plug call add(g:_veonim_plugins, <args>)`,
-  '--embed',
-  '--listen',
-  pipeName
-])
+const spawnVimInstance = (pipeName: string) =>
+  spawn('nvim', [
+    '--cmd',
+    `com! -nargs=+ -range -complete=custom,VeonimCmdCompletions Veonim call Veonim(<f-args>)`,
+    '--cmd',
+    `com! -nargs=1 Plug call add(g:_veonim_plugins, <args>)`,
+    '--embed',
+    '--listen',
+    pipeName,
+  ])
 
 const createNewVimInstance = (): number => {
   const pipeName = getPipeName('veonim-instance')
@@ -64,8 +74,12 @@ const createNewVimInstance = (): number => {
   vimInstances.set(id, { id, proc, pipeName, attached: false })
 
   proc.on('error', (e: any) => console.error(`vim ${id} err ${e}`))
-  proc.stdout!.on('error', (e: any) => console.error(`vim ${id} stdout err ${(JSON.stringify(e))}`))
-  proc.stdin!.on('error', (e: any) => console.error(`vim ${id} stdin err ${(JSON.stringify(e))}`))
+  proc.stdout!.on('error', (e: any) =>
+    console.error(`vim ${id} stdout err ${JSON.stringify(e)}`)
+  )
+  proc.stdin!.on('error', (e: any) =>
+    console.error(`vim ${id} stdin err ${JSON.stringify(e)}`)
+  )
   proc.on('exit', (c: any) => onExitFn(id, c))
 
   return id
@@ -90,7 +104,9 @@ export const switchTo = (id: number) => {
   if (attached) api.uiTryResize(clientSize.width, clientSize.height)
 }
 
-export const create = async ({ dir } = {} as { dir?: string }): Promise<NewVimResponse> => {
+export const create = async (
+  { dir } = {} as { dir?: string }
+): Promise<NewVimResponse> => {
   const id = createNewVimInstance()
   switchTo(id)
 
@@ -112,16 +128,25 @@ export const attachTo = (id: number) => {
   vim.attached = true
 }
 
-const { notify, request, onEvent, onData } = SetupRPC(m => msgpackEncoder.write(m))
+const { notify, request, onEvent, onData } = SetupRPC((m) =>
+  msgpackEncoder.write(m)
+)
 msgpackDecoder.on('data', ([type, ...d]: [number, any]) => onData(type, d))
 
-const req: Api = onFnCall((name: string, args: any[] = []) => request(prefix(name), args))
-const api: Api = onFnCall((name: string, args: any[]) => notify(prefix(name), args))
+const req: Api = onFnCall((name: string, args: any[] = []) =>
+  request(prefix(name), args)
+)
+const api: Api = onFnCall((name: string, args: any[]) =>
+  notify(prefix(name), args)
+)
 
-export const onExit = (fn: ExitFn) => { onExitFn = fn }
+export const onExit = (fn: ExitFn) => {
+  onExitFn = fn
+}
 export const onRedraw = (fn: RedrawFn) => onEvent('redraw', fn)
 export const input = (keys: string) => api.input(keys)
-export const getMode = () => req.getMode() as Promise<{ mode: string, blocking: boolean }>
+export const getMode = () =>
+  req.getMode() as Promise<{ mode: string; blocking: boolean }>
 
 export const resize = (width: number, height: number) => {
   merge(clientSize, { width, height })
@@ -129,7 +154,7 @@ export const resize = (width: number, height: number) => {
 }
 
 export const getColor = async (id: number) => {
-  const { foreground, background } = await req.getHlById(id, true) as Color
+  const { foreground, background } = (await req.getHlById(id, true)) as Color
   return {
     fg: asColor(foreground),
     bg: asColor(background),

@@ -23,19 +23,19 @@ const actions = {
   },
 }
 
-const view = ($: S, a: typeof actions) => Plugin($.visible, [
-
-  ,Input({
-    hide: a.hide,
-    select: a.select,
-    change: a.change,
-    value: $.value,
-    focus: true,
-    icon: Icon.FolderPlus,
-    desc: 'create new vim instance',
-  })
-
-])
+const view = ($: S, a: typeof actions) =>
+  Plugin($.visible, [
+    ,
+    Input({
+      hide: a.hide,
+      select: a.select,
+      change: a.change,
+      value: $.value,
+      focus: true,
+      icon: Icon.FolderPlus,
+      desc: 'create new vim instance',
+    }),
+  ])
 
 const ui = app({ name: 'vim-create', state, actions, view })
 api.onAction('vim-create', ui.show)

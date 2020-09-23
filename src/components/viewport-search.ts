@@ -9,14 +9,14 @@ import api from '../core/instance-api'
 import { makel } from '../ui/vanilla'
 
 interface FilterResult {
-  line: string,
+  line: string
   start: {
-    line: number,
-    column: number,
-  },
+    line: number
+    column: number
+  }
   end: {
-    line: number,
-    column: number,
+    line: number
+    column: number
   }
 }
 
@@ -34,10 +34,10 @@ const searchInBuffer = async (results = [] as FilterResult[]) => {
   }
 
   const parts = results
-    .map(m => m.line.slice(m.start.column, m.end.column + 1))
+    .map((m) => m.line.slice(m.start.column, m.end.column + 1))
     .filter((m, ix, arr) => arr.indexOf(m) === ix)
-    .filter(m => m)
-    .map(m => m.replace(/[\*\/\^\$\.\~\&]/g, '\\$&'))
+    .filter((m) => m)
+    .map((m) => m.replace(/[\*\/\^\$\.\~\&]/g, '\\$&'))
 
   pattern = parts.join('\\|')
   if (!pattern) return api.nvim.cmd('nohlsearch')
@@ -73,7 +73,9 @@ const actions = {
     vimFocus()
 
     if (s.value) {
-      const patternCommand = `/\\%>${api.nvim.state.editorTopLine - 1}l\\%<${api.nvim.state.editorBottomLine + 1}l${pattern}`
+      const patternCommand = `/\\%>${api.nvim.state.editorTopLine - 1}l\\%<${
+        api.nvim.state.editorBottomLine + 1
+      }l${pattern}`
       api.nvim.removeHighlightSearch(hlid, patternCommand)
     }
 
@@ -87,37 +89,43 @@ const actions = {
 
 type A = typeof actions
 
-const view = ($: S, a: A) => h('div', {
-  style: {
-    display: 'flex',
-    flex: 1,
-  },
-}, [
+const view = ($: S, a: A) =>
+  h(
+    'div',
+    {
+      style: {
+        display: 'flex',
+        flex: 1,
+      },
+    },
+    [
+      ,
+      h(
+        'div',
+        {
+          style: {
+            ...paddingV(20),
+            display: 'flex',
+            alignItems: 'center',
+            // TODO: figure out a good color from the colorscheme... StatusLine?
+            background: rgba(217, 150, 255, 0.17),
+          },
+        },
+        [, h('span', 'viewport search')]
+      ),
 
-  ,h('div', {
-    style: {
-      ...paddingV(20),
-      display: 'flex',
-      alignItems: 'center',
-      // TODO: figure out a good color from the colorscheme... StatusLine?
-      background: rgba(217, 150, 255, 0.17),
-    }
-  }, [
-    ,h('span', 'viewport search')
-  ])
-
-  ,Input({
-    small: true,
-    focus: $.focus,
-    value: $.value,
-    desc: 'search query',
-    icon: Icon.Search,
-    hide: a.hide,
-    change: a.change,
-    select: a.select,
-  })
-
-])
+      Input({
+        small: true,
+        focus: $.focus,
+        value: $.value,
+        desc: 'search query',
+        icon: Icon.Search,
+        hide: a.hide,
+        change: a.change,
+        select: a.select,
+      }),
+    ]
+  )
 
 const containerEl = makel({
   position: 'absolute',
@@ -126,7 +134,13 @@ const containerEl = makel({
   background: 'var(--background-30)',
 })
 
-const ui = app<S, A>({ name: 'viewport-search', state, actions, view, element: containerEl })
+const ui = app<S, A>({
+  name: 'viewport-search',
+  state,
+  actions,
+  view,
+  element: containerEl,
+})
 
 api.onAction('viewport-search', () => ui.show())
 api.onAction('viewport-search-visual', async () => {

@@ -8,13 +8,9 @@ const config = {
   productName: 'veonim',
   appId: 'com.veonim.veonim',
   directories: {
-    buildResources: 'art'
+    buildResources: 'art',
   },
-  files: [
-    'build/**',
-    '!**/*.map',
-    '!**/.bin',
-  ],
+  files: ['build/**', '!**/*.map', '!**/.bin'],
   mac: {
     target: ['dmg', 'zip'],
   },

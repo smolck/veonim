@@ -23,19 +23,19 @@ const actions = {
   },
 }
 
-const view = ($: S, a: typeof actions) => Plugin($.visible, [
-
-  ,Input({
-    hide: a.hide,
-    select: a.select,
-    change: a.change,
-    value: $.value,
-    focus: true,
-    icon: Icon.Edit,
-    desc: 'rename vim instance',
-  })
-
-])
+const view = ($: S, a: typeof actions) =>
+  Plugin($.visible, [
+    ,
+    Input({
+      hide: a.hide,
+      select: a.select,
+      change: a.change,
+      value: $.value,
+      focus: true,
+      icon: Icon.Edit,
+      desc: 'rename vim instance',
+    }),
+  ])
 
 const ui = app({ name: 'vim-rename', state, actions, view })
 api.onAction('vim-rename', () => ui.show(getCurrentName()))

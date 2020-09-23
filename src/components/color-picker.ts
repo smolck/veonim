@@ -14,10 +14,7 @@ let liveMode = false
 let restoreInput = () => {}
 
 const getPosition = (row: number, col: number) => ({
-  ...windows.pixelPosition(
-    row > 12 ? row : row + 1,
-    col - 1,
-  ),
+  ...windows.pixelPosition(row > 12 ? row : row + 1, col - 1),
   anchorBottom: row > 12,
 })
 
@@ -36,7 +33,10 @@ const possiblyUpdateColorScheme = debounce(() => {
   if (!liveMode) return
   if (!api.nvim.state.file.endsWith('.vim')) return
 
-  const colorschemeBeingEdited = basename(api.nvim.state.file, extname(api.nvim.state.file))
+  const colorschemeBeingEdited = basename(
+    api.nvim.state.file,
+    extname(api.nvim.state.file)
+  )
   const currentActiveColorscheme = api.nvim.state.colorscheme
 
   if (currentActiveColorscheme !== colorschemeBeingEdited) return
@@ -58,20 +58,24 @@ const actions = {
   hide: () => ({ visible: false }),
 }
 
-const view = ($: typeof state, a: typeof actions) => Overlay({
-  x: $.x,
-  y: $.y,
-  zIndex: 900,
-  visible: $.visible,
-  anchorAbove: $.anchorBottom,
-}, [
-
-  ,h('.show-cursor', {
-    onupdate: (e: HTMLElement) => onLoseFocus(e, () => (a.hide(), restoreInput())),
-    oncreate: (e: HTMLElement) => e.appendChild(colorPicker.element),
-  })
-
-])
+const view = ($: typeof state, a: typeof actions) =>
+  Overlay(
+    {
+      x: $.x,
+      y: $.y,
+      zIndex: 900,
+      visible: $.visible,
+      anchorAbove: $.anchorBottom,
+    },
+    [
+      ,
+      h('.show-cursor', {
+        onupdate: (e: HTMLElement) =>
+          onLoseFocus(e, () => (a.hide(), restoreInput())),
+        oncreate: (e: HTMLElement) => e.appendChild(colorPicker.element),
+      }),
+    ]
+  )
 
 const ui = app({ name: 'color-picker', state, actions, view })
 
@@ -84,14 +88,14 @@ const show = (color: string) => {
   // colorPicker.setHSL(h, s, l, a)
   ui.show()
 
-  restoreInput = stealInput(keys => {
+  restoreInput = stealInput((keys) => {
     if (keys !== '<Esc>') return
     restoreInput()
     ui.hide()
   })
 }
 
-colorPicker.onChange(color => {
+colorPicker.onChange((color) => {
   // TODO: will also need to send what kind of color is updated, that way
   // we know which text edit to apply (rgba or hsla, etc.)
   api.nvim.cmd(`exec "normal! ciw${color}"`)

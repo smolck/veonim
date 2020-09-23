@@ -1,9 +1,9 @@
 import Worker from '../messaging/worker'
 
 export interface ColorData {
-  color: string,
-  text: string,
-  highlight?: boolean,
+  color: string
+  text: string
+  highlight?: boolean
 }
 
 const api = Worker('neovim-colorizer')

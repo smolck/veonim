@@ -14,7 +14,7 @@ export default (pipeName: string): RPC => {
   const connect = async () => {
     try {
       socket = await tryNetConnect(pipeName, 250)
-    } catch(e) {
+    } catch (e) {
       console.error('fail to connect to:', pipeName)
     }
 
@@ -24,7 +24,7 @@ export default (pipeName: string): RPC => {
     socket.pipe(decoder)
 
     if (!buffer.length) return
-    buffer.forEach(data => encoder.write(data))
+    buffer.forEach((data) => encoder.write(data))
     buffer = []
   }
 

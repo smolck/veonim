@@ -5,14 +5,14 @@ import nvim from '../neovim/api'
 const tdm = TextDocumentManager(nvim)
 
 interface FilterResult {
-  line: string,
+  line: string
   start: {
-    line: number,
-    column: number,
-  },
+    line: number
+    column: number
+  }
   end: {
-    line: number,
-    column: number,
+    line: number
+    column: number
   }
 }
 
@@ -28,8 +28,12 @@ const getLocations = (str: string, query: string, buffer: string[]) => {
   }
 }
 
-const asFilterResults = (results: string[], lines: string[], query: string): FilterResult[] => [...new Set(results)]
-  .map(m => ({
+const asFilterResults = (
+  results: string[],
+  lines: string[],
+  query: string
+): FilterResult[] =>
+  [...new Set(results)].map((m) => ({
     line: m,
     ...getLocations(m, query, lines),
   }))
@@ -42,7 +46,11 @@ tdm.on.didChange(({ name, textLines, firstLine, lastLine }) => {
   buf.splice(firstLine, affectAmount, ...textLines)
 })
 
-export const fuzzy = async (file: string, query: string, maxResults = 20): Promise<FilterResult[]> => {
+export const fuzzy = async (
+  file: string,
+  query: string,
+  maxResults = 20
+): Promise<FilterResult[]> => {
   const bufferData = buffers.get(file) || []
   const results = fuzzyFilter(bufferData, query, { maxResults })
   return asFilterResults(results, bufferData, query)

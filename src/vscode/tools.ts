@@ -4,8 +4,14 @@ import { EventEmitter } from 'events'
 import * as vsc from 'vscode'
 
 export interface Thenable<T> {
-	then<TResult>(onfulfilled?: (value: T) => TResult | Thenable<TResult>, onrejected?: (reason: any) => TResult | Thenable<TResult>): Thenable<TResult>;
-	then<TResult>(onfulfilled?: (value: T) => TResult | Thenable<TResult>, onrejected?: (reason: any) => void): Thenable<TResult>;
+  then<TResult>(
+    onfulfilled?: (value: T) => TResult | Thenable<TResult>,
+    onrejected?: (reason: any) => TResult | Thenable<TResult>
+  ): Thenable<TResult>
+  then<TResult>(
+    onfulfilled?: (value: T) => TResult | Thenable<TResult>,
+    onrejected?: (reason: any) => void
+  ): Thenable<TResult>
 }
 
 const cancelTokens = new EventEmitter()
@@ -25,7 +31,7 @@ export const makeCancelToken = (id: string): vsc.CancellationTokenSource => {
 
   const cancel = () => {
     token.isCancellationRequested = true
-    onCancelFns.forEach(fn => fn())
+    onCancelFns.forEach((fn) => fn())
     dispose()
   }
 
@@ -48,14 +54,21 @@ const parseDocumentFilter = (filter: vsc.DocumentFilter): string[] => {
   // what kind of usecases there are for such rich document selectors
 }
 
-export const selectorToFiletypes = (selector: vsc.DocumentSelector): string[] => {
-  const selectors = is.array(selector) ? selector : [ selector ]
+export const selectorToFiletypes = (
+  selector: vsc.DocumentSelector
+): string[] => {
+  const selectors = is.array(selector) ? selector : [selector]
 
-  const seltzer = (selectors as Array<vsc.DocumentFilter | string>).reduce((res, sel) => {
-    if (is.string(sel)) return [ ...res, ...vscLanguageToFiletypes(sel as string) ]
-    if (is.object(sel)) return [ ...res, ...parseDocumentFilter(sel as vsc.DocumentFilter) ]
-    return res
-  }, [] as string[])
+  const seltzer = (selectors as Array<vsc.DocumentFilter | string>).reduce(
+    (res, sel) => {
+      if (is.string(sel))
+        return [...res, ...vscLanguageToFiletypes(sel as string)]
+      if (is.object(sel))
+        return [...res, ...parseDocumentFilter(sel as vsc.DocumentFilter)]
+      return res
+    },
+    [] as string[]
+  )
 
   return dedupOn(seltzer, (a, b) => a === b)
 }

@@ -1,4 +1,9 @@
-import { enableCursor, disableCursor, hideCursor, showCursor } from '../core/cursor'
+import {
+  enableCursor,
+  disableCursor,
+  hideCursor,
+  showCursor,
+} from '../core/cursor'
 import { CommandType, CommandUpdate } from '../render/events'
 import { Plugin } from '../components/plugin-container'
 import { RowNormal } from '../components/row-container'
@@ -9,8 +14,8 @@ import { is } from '../support/utils'
 import { h, app } from '../ui/uikit'
 
 const modeSwitch = new Map([
-  [ CommandType.Ex, Icon.Command],
-  [ CommandType.Prompt, Icon.ChevronsRight ],
+  [CommandType.Ex, Icon.Command],
+  [CommandType.Prompt, Icon.ChevronsRight],
 ])
 
 const state = {
@@ -48,65 +53,84 @@ const actions = {
       position,
       visible: true,
       options: cmd ? s.options : [],
-      value: is.string(cmd) && s.value !== cmd
-        ? cmd
-        : s.value
+      value: is.string(cmd) && s.value !== cmd ? cmd : s.value,
     }
   },
 
   selectWildmenu: (ix: number) => ({ ix }),
   updateWildmenu: (options: string[]) => ({
-    options: [...new Set(options)]
+    options: [...new Set(options)],
   }),
 }
 
 type A = typeof actions
 
-const view = ($: S) => Plugin($.visible, {
-  position: 'relative'
-}, [
+const view = ($: S) =>
+  Plugin(
+    $.visible,
+    {
+      position: 'relative',
+    },
+    [
+      ,
+      $.prompt &&
+        h(
+          'div',
+          {
+            style: {
+              position: 'absolute',
+              width: '100%',
+              background: 'var(--background-50)',
+              marginTop: '-40px',
+              height: '40px',
+              display: 'flex',
+              alignItems: 'center',
+            },
+          },
+          [
+            ,
+            h(
+              'div',
+              {
+                style: {
+                  padding: '0 15px',
+                  fontSize: '1.1rem',
+                },
+              },
+              $.prompt
+            ),
+          ]
+        ),
 
-  ,$.prompt && h('div', {
-    style: {
-      position: 'absolute',
-      width: '100%',
-      background: 'var(--background-50)',
-      marginTop: '-40px',
-      height: '40px',
-      display: 'flex',
-      alignItems: 'center',
-    }
-  }, [
-    ,h('div', {
-      style: {
-        padding: '0 15px',
-        fontSize: '1.1rem',
-      }
-    }, $.prompt)
-  ])
+      Input({
+        focus: true,
+        value: $.value,
+        desc: 'command line',
+        position: $.position,
+        icon: modeSwitch.get($.kind) || Icon.Command,
+      }),
 
-  ,Input({
-    focus: true,
-    value: $.value,
-    desc: 'command line',
-    position: $.position,
-    icon: modeSwitch.get($.kind) || Icon.Command,
-  })
-
-  ,h('div', $.options.map((name, ix) => h(RowNormal, {
-    active: ix === $.ix,
-  }, [
-    ,h('div', name)
-  ])))
-
-])
+      h(
+        'div',
+        $.options.map((name, ix) =>
+          h(
+            RowNormal,
+            {
+              active: ix === $.ix,
+            },
+            [, h('div', name)]
+          )
+        )
+      ),
+    ]
+  )
 
 const ui = app<S, A>({ name: 'command-line', state, actions, view })
 
 // TODO: use export cns. this component is a high priority so it should be loaded early
 // because someone might open cmdline early
-sub('wildmenu.show', opts => ui.updateWildmenu(opts))
-sub('wildmenu.select', ix => ui.selectWildmenu(ix))
+sub('wildmenu.show', (opts) => ui.updateWildmenu(opts))
+sub('wildmenu.select', (ix) => ui.selectWildmenu(ix))
 sub('wildmenu.hide', () => ui.updateWildmenu([]))
 
 sub('cmd.hide', ui.hide)

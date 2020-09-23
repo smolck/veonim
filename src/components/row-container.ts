@@ -25,9 +25,9 @@ const activeRow = {
 }
 
 interface Options {
-  key?: any,
-  active: boolean,
-  [key: string]: any,
+  key?: any
+  active: boolean
+  [key: string]: any
 }
 
 const removePropsIntendedForThisComponent = (stuff: Options) => {
@@ -35,62 +35,89 @@ const removePropsIntendedForThisComponent = (stuff: Options) => {
   return rest
 }
 
-export const RowNormal = (o: Options, children: any[]) => h('div', {
-  ...removePropsIntendedForThisComponent(o),
-  style: {
-    ...row,
-    ...(o.active ? activeRow: undefined),
-    ...o.style,
-  }
-}, children)
+export const RowNormal = (o: Options, children: any[]) =>
+  h(
+    'div',
+    {
+      ...removePropsIntendedForThisComponent(o),
+      style: {
+        ...row,
+        ...(o.active ? activeRow : undefined),
+        ...o.style,
+      },
+    },
+    children
+  )
 
-export const RowDesc = (o: Options, children: any[]) => h('div', {
-  ...removePropsIntendedForThisComponent(o),
-  style: {
-    ...(o.active ? activeRow : row),
-    whiteSpace: 'normal',
-    overflow: 'normal',
-    ...o.style,
-  },
-}, children)
+export const RowDesc = (o: Options, children: any[]) =>
+  h(
+    'div',
+    {
+      ...removePropsIntendedForThisComponent(o),
+      style: {
+        ...(o.active ? activeRow : row),
+        whiteSpace: 'normal',
+        overflow: 'normal',
+        ...o.style,
+      },
+    },
+    children
+  )
 
-export const RowComplete = (o: Options, children: any[]) => h('div', {
-  ...removePropsIntendedForThisComponent(o),
-  style: {
-    ...(o.active ? activeRow : row),
-    ...paddingVH(0, 0),
-    paddingRight: '8px',
-    lineHeight: cvar('line-height'),
-    fontFamily: 'var(--font)',
-    fontSize: 'var(--font-size)px',
-    ...o.style,
-  }
-}, children)
+export const RowComplete = (o: Options, children: any[]) =>
+  h(
+    'div',
+    {
+      ...removePropsIntendedForThisComponent(o),
+      style: {
+        ...(o.active ? activeRow : row),
+        ...paddingVH(0, 0),
+        paddingRight: '8px',
+        lineHeight: cvar('line-height'),
+        fontFamily: 'var(--font)',
+        fontSize: 'var(--font-size)px',
+        ...o.style,
+      },
+    },
+    children
+  )
 
-export const RowHeader = (o: Options, children: any[]) => h('div', {
-  ...removePropsIntendedForThisComponent(o),
-  style: {
-    ...(o.active ? activeRow : row),
-    ...paddingH(6),
-    alignItems: 'center',
-    color: colors.hint,
-    background: cvar('background-20'),
-    ...(o.active ? {
-      color: '#fff',
-      fontWeight: 'normal',
-      background: cvar('background-b10'),
-    }: 0),
-    ...o.style,
-  }
-}, children)
+export const RowHeader = (o: Options, children: any[]) =>
+  h(
+    'div',
+    {
+      ...removePropsIntendedForThisComponent(o),
+      style: {
+        ...(o.active ? activeRow : row),
+        ...paddingH(6),
+        alignItems: 'center',
+        color: colors.hint,
+        background: cvar('background-20'),
+        ...(o.active
+          ? {
+              color: '#fff',
+              fontWeight: 'normal',
+              background: cvar('background-b10'),
+            }
+          : 0),
+        ...o.style,
+      },
+    },
+    children
+  )
 
-export const RowImportant = (opts = {} as any, children: any[]) => h('div', {
-  ...removePropsIntendedForThisComponent(opts),
-  style: {
-    ...opts.style,
-    ...row,
-    ...paddingH(8),
-    color: cvar('important'),
-    background: cvar('background-50'),
-  }
-}, children)
+export const RowImportant = (opts = {} as any, children: any[]) =>
+  h(
+    'div',
+    {
+      ...removePropsIntendedForThisComponent(opts),
+      style: {
+        ...opts.style,
+        ...row,
+        ...paddingH(8),
+        color: cvar('important'),
+        background: cvar('background-50'),
+      },
+    },
+    children
+  )

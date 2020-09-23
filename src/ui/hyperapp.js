@@ -16,14 +16,14 @@ function h(name, attributes) {
     }
   }
 
-  return typeof name === "function"
+  return typeof name === 'function'
     ? name(attributes || {}, children)
     : {
-      nodeName: name,
-      attributes: attributes || {},
-      children: children,
-      key: attributes && attributes.key
-    }
+        nodeName: name,
+        attributes: attributes || {},
+        children: children,
+        key: attributes && attributes.key,
+      }
 }
 
 function app(state, actions, view, container) {
@@ -44,20 +44,20 @@ function app(state, actions, view, container) {
     return {
       nodeName: element.nodeName.toLowerCase(),
       attributes: {},
-      children: map.call(element.childNodes, function(element) {
+      children: map.call(element.childNodes, function (element) {
         return element.nodeType === 3 // Node.TEXT_NODE
           ? element.nodeValue
           : recycleElement(element)
-      })
+      }),
     }
   }
 
   function resolveNode(node) {
-    return typeof node === "function"
+    return typeof node === 'function'
       ? resolveNode(node(globalState, wiredActions))
       : node != null
       ? node
-      : ""
+      : ''
   }
 
   function render() {
@@ -95,8 +95,8 @@ function app(state, actions, view, container) {
     if (path.length) {
       target[path[0]] =
         path.length > 1
-        ? setPartialState(path.slice(1), value, source[path[0]])
-        : value
+          ? setPartialState(path.slice(1), value, source[path[0]])
+          : value
       return clone(source, target)
     }
     return value
@@ -112,37 +112,37 @@ function app(state, actions, view, container) {
 
   function wireStateToActions(path, state, actions) {
     for (var key in actions) {
-      typeof actions[key] === "function"
-        ? (function(key, action) {
-          actions[key] = function(data) {
-            var result = action(data)
+      typeof actions[key] === 'function'
+        ? (function (key, action) {
+            actions[key] = function (data) {
+              var result = action(data)
 
-            if (typeof result === "function") {
-              result = result(getPartialState(path, globalState), actions)
+              if (typeof result === 'function') {
+                result = result(getPartialState(path, globalState), actions)
+              }
+
+              if (
+                result &&
+                result !== (state = getPartialState(path, globalState)) &&
+                !result.then // !isPromise
+              ) {
+                scheduleRender(
+                  (globalState = setPartialState(
+                    path,
+                    clone(state, result),
+                    globalState
+                  ))
+                )
+              }
+
+              return result
             }
-
-            if (
-              result &&
-              result !== (state = getPartialState(path, globalState)) &&
-              !result.then // !isPromise
-            ) {
-              scheduleRender(
-                (globalState = setPartialState(
-                  path,
-                  clone(state, result),
-                  globalState
-                ))
-              )
-            }
-
-            return result
-          }
-        })(key, actions[key])
+          })(key, actions[key])
         : wireStateToActions(
-          path.concat(key),
-          (state[key] = clone(state[key])),
-          (actions[key] = clone(actions[key]))
-        )
+            path.concat(key),
+            (state[key] = clone(state[key])),
+            (actions[key] = clone(actions[key]))
+          )
     }
 
     return actions
@@ -157,15 +157,15 @@ function app(state, actions, view, container) {
   }
 
   function updateAttribute(element, name, value, oldValue, isSvg) {
-    if (name === "key") {
-    } else if (name === "style") {
-      if (typeof value === "string") {
+    if (name === 'key') {
+    } else if (name === 'style') {
+      if (typeof value === 'string') {
         element.style.cssText = value
       } else {
-        if (typeof oldValue === "string") oldValue = element.style.cssText = ""
+        if (typeof oldValue === 'string') oldValue = element.style.cssText = ''
         for (var i in clone(oldValue, value)) {
-          var style = value == null || value[i] == null ? "" : value[i]
-          if (i[0] === "-") {
+          var style = value == null || value[i] == null ? '' : value[i]
+          if (i[0] === '-') {
             element.style.setProperty(i, style)
           } else {
             element.style[i] = style
@@ -173,7 +173,7 @@ function app(state, actions, view, container) {
         }
       }
     } else {
-      if (name[0] === "o" && name[1] === "n") {
+      if (name[0] === 'o' && name[1] === 'n') {
         name = name.slice(2)
 
         if (element.events) {
@@ -193,14 +193,14 @@ function app(state, actions, view, container) {
         }
       } else if (
         name in element &&
-        name !== "list" &&
-        name !== "type" &&
-        name !== "draggable" &&
-        name !== "spellcheck" &&
-        name !== "translate" &&
+        name !== 'list' &&
+        name !== 'type' &&
+        name !== 'draggable' &&
+        name !== 'spellcheck' &&
+        name !== 'translate' &&
         !isSvg
       ) {
-        element[name] = value == null ? "" : value
+        element[name] = value == null ? '' : value
       } else if (value != null && value !== false) {
         element.setAttribute(name, value)
       }
@@ -213,19 +213,16 @@ function app(state, actions, view, container) {
 
   function createElement(node, isSvg) {
     var element =
-      typeof node === "string" || typeof node === "number"
-      ? document.createTextNode(node)
-      : (isSvg = isSvg || node.nodeName === "svg")
-      ? document.createElementNS(
-        "http://www.w3.org/2000/svg",
-        node.nodeName
-      )
-      : document.createElement(node.nodeName)
+      typeof node === 'string' || typeof node === 'number'
+        ? document.createTextNode(node)
+        : (isSvg = isSvg || node.nodeName === 'svg')
+        ? document.createElementNS('http://www.w3.org/2000/svg', node.nodeName)
+        : document.createElement(node.nodeName)
 
     var attributes = node.attributes
     if (attributes) {
       if (attributes.oncreate) {
-        lifecycle.push(function() {
+        lifecycle.push(function () {
           attributes.oncreate(element)
         })
       }
@@ -251,7 +248,7 @@ function app(state, actions, view, container) {
     for (var name in clone(oldAttributes, attributes)) {
       if (
         attributes[name] !==
-        (name === "value" || name === "checked"
+        (name === 'value' || name === 'checked'
           ? element[name]
           : oldAttributes[name])
       ) {
@@ -267,7 +264,7 @@ function app(state, actions, view, container) {
 
     var cb = isRecycling ? attributes.oncreate : attributes.onupdate
     if (cb) {
-      lifecycle.push(function() {
+      lifecycle.push(function () {
         cb(element, oldAttributes)
       })
     }
@@ -319,7 +316,7 @@ function app(state, actions, view, container) {
         element,
         oldNode.attributes,
         node.attributes,
-        (isSvg = isSvg || node.nodeName === "svg")
+        (isSvg = isSvg || node.nodeName === 'svg')
       )
 
       var oldKeyed = {}

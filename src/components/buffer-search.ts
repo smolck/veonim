@@ -13,14 +13,14 @@ import { makel } from '../ui/vanilla'
 import { cvar } from '../ui/css'
 
 interface FilterResult {
-  line: string,
+  line: string
   start: {
-    line: number,
-    column: number,
-  },
+    line: number
+    column: number
+  }
   end: {
-    line: number,
-    column: number,
+    line: number
+    column: number
   }
 }
 
@@ -41,21 +41,23 @@ const cursor = (() => {
 
 let elPosTop = 0
 
-const captureOverlayPosition = () => setImmediate(() => {
-  // const { top } = element.getBoundingClientRect()
-  const { top } = containerEl.getBoundingClientRect()
-  elPosTop = top
-})
+const captureOverlayPosition = () =>
+  setImmediate(() => {
+    // const { top } = element.getBoundingClientRect()
+    const { top } = containerEl.getBoundingClientRect()
+    elPosTop = top
+  })
 
-const checkReadjustViewport = () => setTimeout(() => {
-  // not the most performant
-  // i tried using IntersectionObserver but it did not work i think because
-  // both observed elements are absolutely positioned. all examples i've seen
-  // are about detecting elements scrolling in/out of the viewport
-  const { top } = getCursorBoundingClientRect()
-  const hidden = top > elPosTop
-  if (hidden) api.nvim.feedkeys('zz')
-}, 10)
+const checkReadjustViewport = () =>
+  setTimeout(() => {
+    // not the most performant
+    // i tried using IntersectionObserver but it did not work i think because
+    // both observed elements are absolutely positioned. all examples i've seen
+    // are about detecting elements scrolling in/out of the viewport
+    const { top } = getCursorBoundingClientRect()
+    const hidden = top > elPosTop
+    if (hidden) api.nvim.feedkeys('zz')
+  }, 10)
 
 const state = {
   results: [] as ColorizedFilterResult[],
@@ -70,7 +72,11 @@ type S = typeof state
 
 const resetState = { visible: false, query: '', results: [], index: 0 }
 
-const jumpToResult = (state: S, index: number, { readjustViewport = false } = {}) => {
+const jumpToResult = (
+  state: S,
+  index: number,
+  { readjustViewport = false } = {}
+) => {
   const location = state.results[index]
   if (!location) return
   api.nvim.jumpTo(location.start)
@@ -103,19 +109,26 @@ const actions = {
     return resetState
   },
   change: (query: string) => (_: S, a: A) => {
-    api.bufferSearch(api.nvim.state.absoluteFilepath, query).then(async (res: FilterResult[]) => {
-      if (!res.length) return a.updateResults([])
+    api
+      .bufferSearch(api.nvim.state.absoluteFilepath, query)
+      .then(async (res: FilterResult[]) => {
+        if (!res.length) return a.updateResults([])
 
-      const textLines = res.map(m => m.line)
-      const coloredLines: ColorData[][] = await colorizer.request.colorizePerChar(textLines, api.nvim.state.filetype)
+        const textLines = res.map((m) => m.line)
+        const coloredLines: ColorData[][] = await colorizer.request.colorizePerChar(
+          textLines,
+          api.nvim.state.filetype
+        )
 
-      const lines = coloredLines.filter(m => m.length).map((m, ix) => ({
-        colorizedLine: m,
-        ...res[ix],
-      }))
+        const lines = coloredLines
+          .filter((m) => m.length)
+          .map((m, ix) => ({
+            colorizedLine: m,
+            ...res[ix],
+          }))
 
-      a.updateResults(lines)
-    })
+        a.updateResults(lines)
+      })
     return { query }
   },
   updateResults: (results: ColorizedFilterResult[]) => (s: S) => {
@@ -140,43 +153,64 @@ const actions = {
 
 type A = typeof actions
 
-const view = ($: S, a: A) => h('div', {
-  style: {
-    display: $.visible ? 'flex' : 'none',
-    flexFlow: 'column',
-    flex: 1,
-  }
-}, [
+const view = ($: S, a: A) =>
+  h(
+    'div',
+    {
+      style: {
+        display: $.visible ? 'flex' : 'none',
+        flexFlow: 'column',
+        flex: 1,
+      },
+    },
+    [
+      ,
+      Input({
+        hide: a.hide,
+        next: a.next,
+        prev: a.prev,
+        change: a.change,
+        select: a.select,
+        value: $.query,
+        focus: $.visible,
+        small: true,
+        icon: Icon.Search,
+        desc: 'find in buffer',
+      }),
 
-  ,Input({
-    hide: a.hide,
-    next: a.next,
-    prev: a.prev,
-    change: a.change,
-    select: a.select,
-    value: $.query,
-    focus: $.visible,
-    small: true,
-    icon: Icon.Search,
-    desc: 'find in buffer',
-  })
-
-  ,h('div', {
-    style: {
-      overflow: 'hidden',
-    }
-  }, $.results.map((res, pos) => h(RowNormal, {
-    active: pos === $.index,
-  }, res.colorizedLine.map(({ color, text, highlight }) => h('span', {
-    style: {
-      fontSize: 'calc(var(--font-size) * 1px)',
-      fontFamily: 'var(--font)',
-      whiteSpace: 'pre',
-      color: color || cvar('foreground'),
-      background: highlight && 'rgba(255, 255, 255, 0.1)',
-    }
-  }, text)))))
-])
+      h(
+        'div',
+        {
+          style: {
+            overflow: 'hidden',
+          },
+        },
+        $.results.map((res, pos) =>
+          h(
+            RowNormal,
+            {
+              active: pos === $.index,
+            },
+            res.colorizedLine.map(({ color, text, highlight }) =>
+              h(
+                'span',
+                {
+                  style: {
+                    fontSize: 'calc(var(--font-size) * 1px)',
+                    fontFamily: 'var(--font)',
+                    whiteSpace: 'pre',
+                    color: color || cvar('foreground'),
+                    background: highlight && 'rgba(255, 255, 255, 0.1)',
+                  },
+                },
+                text
+              )
+            )
+          )
+        )
+      ),
+    ]
+  )
 
 const containerEl = makel({
   position: 'absolute',
@@ -189,7 +223,13 @@ const containerEl = makel({
   width: '100%',
 })
 
-const ui = app<S, A>({ name: 'buffer-search', state, actions, view, element: containerEl })
+const ui = app<S, A>({
+  name: 'buffer-search',
+  state,
+  actions,
+  view,
+  element: containerEl,
+})
 
 api.onAction('buffer-search', ui.show)
 api.onAction('buffer-search-resume', () => ui.show(previousSearchCache))

@@ -6,7 +6,7 @@ export interface InventoryAction {
   layer: InventoryLayerKind
   /** Key binding to activate this action */
   keybind: string
-  /** Action name. Will be formatted and appended to layer name. Final command value would be :Veonim ${layer}-${command}*/ 
+  /** Action name. Will be formatted and appended to layer name. Final command value would be :Veonim ${layer}-${command}*/
   name: string
   /** User friendly description provided in the UI */
   description: string
@@ -14,7 +14,7 @@ export interface InventoryAction {
   onAction: () => any
   /** Indicate to the user that this action is experimental. Default: FALSE */
   experimental?: boolean
-  /** Hide this action from the inventory menu. Otherwise will show up in the inventory search menu. Default: FALSE */ 
+  /** Hide this action from the inventory menu. Otherwise will show up in the inventory search menu. Default: FALSE */
   hidden?: boolean
 }
 
@@ -25,14 +25,19 @@ const mod = (modulePath: string, func = 'default') => {
     }
     return () => {}
     // return require(`../${modulePath}`)[func]
-  } catch(e) {
-    console.error('trying to call veonim layer action with a bad modulePath. you probably mistyped the module path\n', e)
+  } catch (e) {
+    console.error(
+      'trying to call veonim layer action with a bad modulePath. you probably mistyped the module path\n',
+      e
+    )
     return () => {}
   }
 }
 
-const modc = (modulePath: string, func = 'default') => mod(`components/${modulePath}`, func)
-const moda = (modulePath: string, func = 'default') => mod(`ai/${modulePath}`, func)
+const modc = (modulePath: string, func = 'default') =>
+  mod(`components/${modulePath}`, func)
+const moda = (modulePath: string, func = 'default') =>
+  mod(`ai/${modulePath}`, func)
 
 // TODO: allow actions to be registered as 'hidden'. these will not be displayed
 // in the UI as options, but can be found in the fuzzy search menu. useful for
@@ -255,5 +260,6 @@ const actions: InventoryAction[] = [
 
 export default {
   list: () => actions,
-  getActionsForLayer: (layerKind: InventoryLayerKind) => actions.filter(m => m.layer === layerKind),
+  getActionsForLayer: (layerKind: InventoryLayerKind) =>
+    actions.filter((m) => m.layer === layerKind),
 }

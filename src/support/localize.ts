@@ -3,7 +3,7 @@ import { fromJSON, readFile, exists } from '../support/utils'
 const localize = (lang: any) => (value: string) => {
   // assumes that the entire value is a label. aka % at beginning
   // and end. this is from observations of package.nls.json
-  const [ /*match*/, key = '' ] = value.match(/^%(.*?)%$/) || []
+  const [, /*match*/ key = ''] = value.match(/^%(.*?)%$/) || []
   return Reflect.get(lang, key)
 }
 

@@ -18,7 +18,10 @@ let jumpingBufferStack = false
 // removed, so does the history for it. yeah i like that. lets do that
 
 nvim.onAction('buffer-prev', async () => {
-  if (!bufferStacks.has(activeWindow)) return console.error('no buffer stacks - window does not exist. this should never happen')
+  if (!bufferStacks.has(activeWindow))
+    return console.error(
+      'no buffer stacks - window does not exist. this should never happen'
+    )
 
   const bs = bufferStacks.get(activeWindow)!
 
@@ -32,17 +35,22 @@ nvim.onAction('buffer-prev', async () => {
   const jumpBuffer = bs.stack[endIndex]
 
   const bufferList = await nvim.buffers.list()
-  const buffers = await Promise.all(bufferList.map(async b => ({
-    id: b.id,
-    name: await b.name,
-  })))
+  const buffers = await Promise.all(
+    bufferList.map(async (b) => ({
+      id: b.id,
+      name: await b.name,
+    }))
+  )
 
-  const targetBuffer = buffers.find(b => b.name === jumpBuffer)
-  if (targetBuffer) nvim.cmd(`b ${targetBuffer.id}`) 
+  const targetBuffer = buffers.find((b) => b.name === jumpBuffer)
+  if (targetBuffer) nvim.cmd(`b ${targetBuffer.id}`)
 })
 
 nvim.onAction('buffer-next', async () => {
-  if (!bufferStacks.has(activeWindow)) return console.error('no buffer stacks - window does not exist. this should never happen')
+  if (!bufferStacks.has(activeWindow))
+    return console.error(
+      'no buffer stacks - window does not exist. this should never happen'
+    )
 
   const bs = bufferStacks.get(activeWindow)!
 
@@ -56,23 +64,26 @@ nvim.onAction('buffer-next', async () => {
   const jumpBuffer = bs.stack[endIndex]
 
   const bufferList = await nvim.buffers.list()
-  const buffers = await Promise.all(bufferList.map(async b => ({
-    id: b.id,
-    name: await b.name,
-  })))
+  const buffers = await Promise.all(
+    bufferList.map(async (b) => ({
+      id: b.id,
+      name: await b.name,
+    }))
+  )
 
-  const targetBuffer = buffers.find(b => b.name === jumpBuffer)
-  if (targetBuffer) nvim.cmd(`b ${targetBuffer.id}`) 
+  const targetBuffer = buffers.find((b) => b.name === jumpBuffer)
+  if (targetBuffer) nvim.cmd(`b ${targetBuffer.id}`)
 })
 
-nvim.on.winEnter(async id => {
+nvim.on.winEnter(async (id) => {
   activeWindow = id
   const bufferName = await nvim.current.buffer.name
 
-  if (!bufferStacks.has(id)) return bufferStacks.set(id, {
-    jumpOffset: 0,
-    stack: [ bufferName ],
-  })
+  if (!bufferStacks.has(id))
+    return bufferStacks.set(id, {
+      jumpOffset: 0,
+      stack: [bufferName],
+    })
 
   const { stack, jumpOffset } = bufferStacks.get(id)!
   const lastItem = stack[stack.length - 1]
@@ -85,7 +96,10 @@ nvim.on.winEnter(async id => {
 })
 
 nvim.on.bufLoad(async () => {
-  if (!bufferStacks.has(activeWindow)) return console.error('can not add buffer to stack - no window present. this is not supposed to happen')
+  if (!bufferStacks.has(activeWindow))
+    return console.error(
+      'can not add buffer to stack - no window present. this is not supposed to happen'
+    )
 
   const bufferName = await nvim.current.buffer.name
   const { stack, jumpOffset } = bufferStacks.get(activeWindow)!
@@ -118,6 +132,6 @@ setTimeout(async () => {
 
   bufferStacks.set(activeWindow, {
     jumpOffset: 0,
-    stack: currentBufferName ? [ currentBufferName ] : [],
+    stack: currentBufferName ? [currentBufferName] : [],
   })
 }, 1e3)

@@ -7,7 +7,12 @@ interface Events {
   didDelete: vsc.Event<vsc.Uri>
 }
 
-export default (pattern: vsc.GlobPattern, ignoreCreateEvents = false, ignoreChangeEvents = false, ignoreDeleteEvents = false): vsc.FileSystemWatcher => {
+export default (
+  pattern: vsc.GlobPattern,
+  ignoreCreateEvents = false,
+  ignoreChangeEvents = false,
+  ignoreDeleteEvents = false
+): vsc.FileSystemWatcher => {
   const events = Watcher<Events>()
   const eventreg = (name: keyof Events) => (fn: any, thisArg?: any) => ({
     dispose: events.on(name, fn.bind(thisArg)),
@@ -20,9 +25,9 @@ export default (pattern: vsc.GlobPattern, ignoreCreateEvents = false, ignoreChan
   const onDidChange = eventreg('didChange')
   const onDidDelete = eventreg('didDelete')
   const dispose = () => {
-      events.remove('didCreate')
-      events.remove('didChange')
-      events.remove('didDelete')
+    events.remove('didCreate')
+    events.remove('didChange')
+    events.remove('didDelete')
   }
 
   const api: vsc.FileSystemWatcher = {

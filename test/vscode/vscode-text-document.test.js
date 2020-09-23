@@ -1,7 +1,7 @@
 const vscode = require('vscode')
 const path = require('path')
 
-test('getText', eq => {
+test('getText', (eq) => {
   const start = new vscode.Position(1, 1)
   const end = new vscode.Position(1, 4)
   const range = new vscode.Range(start, end)

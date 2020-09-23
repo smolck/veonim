@@ -59,15 +59,21 @@ const prepareContainerElement = (name: string) => {
 }
 
 interface App<StateT, ActionsT> {
-  name: string,
-  state: StateT,
-  actions: ActionsType<StateT, ActionsT>,
-  view: View<StateT, ActionsT>,
-  element?: HTMLElement,
+  name: string
+  state: StateT
+  actions: ActionsType<StateT, ActionsT>
+  view: View<StateT, ActionsT>
+  element?: HTMLElement
 }
 
 /** create app for cultural learnings of hyperapp for make benefit of glorious application veonim */
-export const app = <StateT, ActionsT>({ state, actions, view, element, name }: App<StateT, ActionsT>): ActionsT => {
+export const app = <StateT, ActionsT>({
+  state,
+  actions,
+  view,
+  element,
+  name,
+}: App<StateT, ActionsT>): ActionsT => {
   const containerElement = element || prepareContainerElement(name)
 
   if (process.env.VEONIM_DEV) {

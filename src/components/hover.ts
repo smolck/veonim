@@ -10,17 +10,14 @@ import { h, app } from '../ui/uikit'
 import { cvar } from '../ui/css'
 
 interface ShowParams {
-  data: ColorData[][],
-  doc?: string,
+  data: ColorData[][]
+  doc?: string
 }
 
-const docs = (data: string) => h('div', { style: docStyle }, [ h('div', data) ])
+const docs = (data: string) => h('div', { style: docStyle }, [h('div', data)])
 
 const getPosition = (row: number, col: number) => ({
-  ...windows.pixelPosition(
-    row > 2 ? row : row + 1,
-    col - 1,
-  ),
+  ...windows.pixelPosition(row > 2 ? row : row + 1, col - 1),
   anchorBottom: cursor.row > 2,
 })
 
@@ -43,45 +40,63 @@ const actions = {
     visible: true,
     ...getPosition(cursor.row, cursor.col),
   }),
-  updatePosition: () => (s: S) => s.visible
-    ? getPosition(cursor.row, cursor.col)
-    : undefined,
+  updatePosition: () => (s: S) =>
+    s.visible ? getPosition(cursor.row, cursor.col) : undefined,
 }
 
 type A = typeof actions
 
-const view = ($: S) => Overlay({
-  x: $.x,
-  y: $.y,
-  maxWidth: 600,
-  visible: $.visible,
-  anchorAbove: $.anchorBottom,
-}, [
+const view = ($: S) =>
+  Overlay(
+    {
+      x: $.x,
+      y: $.y,
+      maxWidth: 600,
+      visible: $.visible,
+      anchorAbove: $.anchorBottom,
+    },
+    [
+      ,
+      $.doc && !$.anchorBottom && docs($.doc),
 
-  ,$.doc && !$.anchorBottom && docs($.doc)
+      h(
+        'div',
+        {
+          style: {
+            background: cvar('background-30'),
+            padding: '8px',
+          },
+        },
+        $.value.map((m) =>
+          h(
+            'div',
+            {
+              style: {
+                display: 'flex',
+                flexFlow: 'row wrap',
+              },
+            },
+            m.map(({ color, text }) =>
+              h(
+                'span',
+                {
+                  style: {
+                    color: color || cvar('foreground'),
+                    whiteSpace: 'pre',
+                    fontFamily: 'var(--font)',
+                    fontSize: 'var(--font-size)px',
+                  },
+                },
+                text
+              )
+            )
+          )
+        )
+      ),
 
-  ,h('div', {
-    style: {
-      background: cvar('background-30'),
-      padding: '8px',
-    }
-  }, $.value.map(m => h('div', {
-    style: {
-      display: 'flex',
-      flexFlow: 'row wrap',
-    }
-  }, m.map(({ color, text }) => h('span', {
-    style: {
-      color: color || cvar('foreground'),
-      whiteSpace: 'pre',
-      fontFamily: 'var(--font)',
-      fontSize: 'var(--font-size)px',
-    }
-  }, text)))))
-
-  ,$.doc && $.anchorBottom && docs($.doc)
-
-])
+      $.doc && $.anchorBottom && docs($.doc),
+    ]
+  )
 
 const ui = app<S, A>({ name: 'hover', state, actions, view })
 
