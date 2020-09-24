@@ -216,8 +216,6 @@ const win_float_pos = (e: any) => {
 
     // Handle floats not relative to editor.
     if (anchor_grid !== 1) {
-      // TODO(smolck): I think the main grid is always id 2 (in Veonim). Could be wrong
-      // though, so maybe verify somehow?
       const gridInfo = windows.get(gridId).getWindowInfo()
 
       // Position relative to anchor window
@@ -293,7 +291,12 @@ const win_float_pos = (e: any) => {
   }
 }
 
-onRedraw((redrawEvents) => {
+const flush = () => {
+  windows.disposeInvalidWindows()
+  windows.layout()
+}
+
+onRedraw(redrawEvents => {
   // because of circular logic/infinite loop. cmdline_show updates UI, UI makes
   // a change in the cmdline, nvim sends redraw again. we cut that stuff out
   // with coding and algorithms
@@ -309,6 +312,8 @@ onRedraw((redrawEvents) => {
 
     // if statements ordered in wrender priority
     if (e === 'grid_line') grid_line(ev)
+
+    else if (e === 'flush') flush()
     else if (e === 'grid_scroll') grid_scroll(ev)
     else if (e === 'grid_cursor_goto') grid_cursor_goto(ev)
     else if (e === 'win_pos') (winUpdates = true), win_pos(ev)
