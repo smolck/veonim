@@ -198,10 +198,13 @@ export default () => {
 
   api.setWindowInfo = (info) => {
     if (info.is_float) {
-      const { x, y } = api.positionToWorkspacePixels(info.row, info.col, {
+      let { x, y } = api.positionToWorkspacePixels(info.row, info.col, {
         within: true,
         padding: false,
       })
+      x = Math.max(0,Math.min(x,windowsGridSize.width))
+      y = Math.max(0,Math.min(y,windowsGridSize.height))
+
       const xPx = `${x}px`
       const yPx = `${y + paddingY}px`
 
