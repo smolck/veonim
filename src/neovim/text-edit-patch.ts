@@ -1,4 +1,4 @@
-import { Position } from 'vscode'
+import { Position } from '../neovim/types'
 
 interface AppendPatch {
   lines: string[]

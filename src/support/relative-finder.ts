@@ -1,4 +1,4 @@
-import { Range } from 'vscode'
+import { Range } from '../neovim/types'
 
 interface Distance<T> {
   reference: T

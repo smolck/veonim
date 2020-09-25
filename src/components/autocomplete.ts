@@ -1,9 +1,7 @@
 import { RowNormal, RowComplete } from '../components/row-container'
 import { CompletionShow, CompletionSource } from '../ai/protocol'
 import { resetMarkdownHTMLStyle } from '../ui/styles'
-import { CompletionItemKind } from '../vscode/types'
 import { CompletionOption } from '../ai/completions'
-import { markdownToHTML } from '../support/markdown'
 import * as windows from '../windows/window-manager'
 import * as dispatch from '../messaging/dispatch'
 import * as workspace from '../core/workspace'
@@ -11,10 +9,37 @@ import { PopupMenu } from '../render/events'
 import { paddingVH, cvar } from '../ui/css'
 import Overlay from '../components/overlay'
 import * as Icon from 'hyperapp-feather'
-import { MarkdownString } from 'vscode'
 import { cursor } from '../core/cursor'
 import api from '../core/instance-api'
 import { h, app } from '../ui/uikit'
+
+enum CompletionItemKind {
+  Text = 0,
+  Method = 1,
+  Function = 2,
+  Constructor = 3,
+  Field = 4,
+  Variable = 5,
+  Class = 6,
+  Interface = 7,
+  Module = 8,
+  Property = 9,
+  Unit = 10,
+  Value = 11,
+  Enum = 12,
+  Keyword = 13,
+  Snippet = 14,
+  Color = 15,
+  File = 16,
+  Reference = 17,
+  Folder = 18,
+  EnumMember = 19,
+  Constant = 20,
+  Struct = 21,
+  Event = 22,
+  Operator = 23,
+  TypeParameter = 24,
+}
 
 const MAX_VISIBLE_OPTIONS = 12
 
@@ -69,10 +94,10 @@ const getCompletionIcon = (kind: CompletionItemKind) =>
 
 // TODO: move to common place. used in other places like signature-hint
 const parseDocs = async (
-  docs?: string | MarkdownString
+  docs?: string
 ): Promise<string | undefined> => {
   if (!docs) return
-  return typeof docs === 'string' ? docs : markdownToHTML(docs.value)
+  return docs
 }
 
 const docs = (data: string) =>
