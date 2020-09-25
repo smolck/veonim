@@ -202,8 +202,8 @@ export default () => {
         within: true,
         padding: false,
       })
-      x = Math.max(0,Math.min(x,windowsGridSize.width))
-      y = Math.max(0,Math.min(y,windowsGridSize.height))
+      x = Math.max(0, Math.min(x, windowsGridSize.width))
+      y = Math.max(0, Math.min(y, windowsGridSize.height))
 
       const xPx = `${x}px`
       const yPx = `${y + paddingY}px`

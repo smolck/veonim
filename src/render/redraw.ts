@@ -296,7 +296,7 @@ const flush = () => {
   windows.layout()
 }
 
-onRedraw(redrawEvents => {
+onRedraw((redrawEvents) => {
   // because of circular logic/infinite loop. cmdline_show updates UI, UI makes
   // a change in the cmdline, nvim sends redraw again. we cut that stuff out
   // with coding and algorithms
@@ -312,7 +312,6 @@ onRedraw(redrawEvents => {
 
     // if statements ordered in wrender priority
     if (e === 'grid_line') grid_line(ev)
-
     else if (e === 'flush') flush()
     else if (e === 'grid_scroll') grid_scroll(ev)
     else if (e === 'grid_cursor_goto') grid_cursor_goto(ev)

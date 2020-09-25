@@ -767,7 +767,6 @@ declare function requestIdleCallback(
   options?: { timeout: number }
 ): number
 declare function cancelIdleCallback(handle: number): void
-
 ;(function () {
   if (
     typeof requestIdleCallback !== 'function' ||
