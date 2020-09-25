@@ -148,6 +148,9 @@ export const input = (keys: string) => api.input(keys)
 export const getMode = () =>
   req.getMode() as Promise<{ mode: string; blocking: boolean }>
 
+export const resizeGrid = (grid: number, width: number, height: number) =>
+  api.uiTryResizeGrid(grid, width, height)
+
 export const resize = (width: number, height: number) => {
   merge(clientSize, { width, height })
   if (ids.activeVim > -1) api.uiTryResize(width, height)

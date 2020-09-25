@@ -15,7 +15,7 @@ import {
 } from '../core/cursor'
 import * as windows from '../windows/window-manager'
 import * as dispatch from '../messaging/dispatch'
-import { onRedraw } from '../core/master-control'
+import { onRedraw, resizeGrid } from '../core/master-control'
 import * as renderEvents from '../render/events'
 
 let dummyData = new Float32Array()
@@ -253,6 +253,14 @@ const win_float_pos = (e: any) => {
         gridInfo.height,
         true,
         anchor
+      )
+
+      const clamp = (x: number, max: number) => Math.max(0, Math.min(x, max))
+      const anchorGridInfo = anchorGrid.getWindowInfo()
+      resizeGrid(
+        gridId,
+        clamp(gridInfo.width, anchorGridInfo.width),
+        clamp(gridInfo.height, anchorGridInfo.height)
       )
 
       windows.calculateGlobalOffset(anchorGrid, windows.get(gridId))
