@@ -1,10 +1,8 @@
-import TextDocumentManager from '../neovim/text-document-manager'
 import { filter as fuzzy } from 'fuzzaldrin-plus'
 import { on } from '../messaging/worker-client'
 import { patchAllTexts } from '../support/diff'
 import nvim from '../neovim/api'
 
-const tdm = TextDocumentManager(nvim)
 const keywords = new Map<string, string[]>()
 const insertChanges = {
   file: '',
@@ -54,10 +52,6 @@ nvim.on.insertLeave(async () => {
   addKeywords(insertChanges.file, words)
   insertChanges.changes = []
 })
-
-tdm.on.didOpen(({ name, textLines }) => harvest(name, textLines))
-tdm.on.didChange(({ name, textLines }) => harvest(name, textLines))
-tdm.on.didClose(({ name }) => keywords.delete(name))
 
 on.query(async (file: string, query: string, maxResults: number = 25) => {
   return fuzzy(keywords.get(file) || [], query, { maxResults })

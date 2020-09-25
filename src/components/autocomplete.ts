@@ -1,6 +1,7 @@
 import { RowNormal, RowComplete } from '../components/row-container'
 import { CompletionShow, CompletionSource } from '../ai/protocol'
 import { resetMarkdownHTMLStyle } from '../ui/styles'
+
 import { CompletionOption } from '../ai/completions'
 import * as windows from '../windows/window-manager'
 import * as dispatch from '../messaging/dispatch'
@@ -13,7 +14,55 @@ import { cursor } from '../core/cursor'
 import api from '../core/instance-api'
 import { h, app } from '../ui/uikit'
 
-enum CompletionItemKind {
+// TODO(smolck): Should this be here or somewhere else?
+export class CompletionItem {
+
+	label: string;
+	kind: CompletionItemKind | undefined;
+  // @ts-ignore
+	detail: string;
+  // @ts-ignore
+	documentation: string | MarkdownString;
+  // @ts-ignore
+	sortText: string;
+  // @ts-ignore
+	filterText: string;
+  // @ts-ignore
+	preselect: boolean;
+  // @ts-ignore
+	insertText: string | SnippetString;
+	keepWhitespace?: boolean;
+  // @ts-ignore
+	range: Range;
+  // @ts-ignore
+	commitCharacters: string[];
+  // @ts-ignore
+	textEdit: TextEdit;
+  // @ts-ignore
+	additionalTextEdits: TextEdit[];
+  // @ts-ignore
+
+	constructor(label: string, kind?: CompletionItemKind) {
+		this.label = label;
+		this.kind = kind;
+	}
+
+	toJSON(): any {
+		return {
+			label: this.label,
+			kind: this.kind && CompletionItemKind[this.kind],
+			detail: this.detail,
+			documentation: this.documentation,
+			sortText: this.sortText,
+			filterText: this.filterText,
+			preselect: this.preselect,
+			insertText: this.insertText,
+			textEdit: this.textEdit
+		};
+	}
+}
+
+export enum CompletionItemKind {
   Text = 0,
   Method = 1,
   Function = 2,

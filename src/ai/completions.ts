@@ -9,16 +9,20 @@ import {
 } from '../support/utils'
 import transformCompletions from '../ai/completion-transforms'
 import { workerData } from '../messaging/worker-client'
-import toVSCodeLanguage from '../vscode/vsc-languages'
-import { CompletionItemKind } from '../vscode/types'
+import { CompletionItemKind, CompletionItem } from '../components/autocomplete'
 import { CompletionSource } from '../ai/protocol'
 import { vscode } from '../core/extensions-api'
 import { filter } from 'fuzzaldrin-plus'
 import Worker from '../messaging/worker'
-import { CompletionItem } from 'vscode'
 import { join, dirname } from 'path'
 import nvim from '../neovim/api'
 import { ui } from '../core/ai'
+
+const toVscodeLanguage = (filetype: string) => {
+  if (filetype === 'javascript.jsx') return 'javascript'
+  else if (filetype === 'typescript.tsx') return 'typescript'
+  else return filetype
+}
 
 interface Cache {
   semanticCompletions: Map<string, CompletionOption[]>
@@ -176,7 +180,7 @@ const showCompletionsRaw = (
   lineContent: string
 ) => (completions: CompletionOption[], completionKind: CompletionKind) => {
   const transformedCompletions = transformCompletions(
-    toVSCodeLanguage(nvim.state.filetype),
+    toVscodeLanguage(nvim.state.filetype),
     {
       completionKind,
       lineContent,

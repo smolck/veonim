@@ -11,7 +11,7 @@ import { onFnCall, pascalCase } from '../support/utils'
 import { colors } from '../render/highlight-attributes'
 import { Functions } from '../neovim/function-types'
 import { WindowMetadata } from '../windows/metadata'
-import { CompletionItem, CodeAction } from 'vscode'
+import { CompletionItem } from '../components/autocomplete'
 import * as dispatch from '../messaging/dispatch'
 import { GitStatus } from '../support/git'
 import NeovimState from '../neovim/state'
@@ -218,10 +218,6 @@ const manualAI = {
     getSymbols: (query: string): Promise<WorkspaceSymbol[]> => {
       return getActiveInstance().request.aiGetWorkspaceSymbols(query)
     },
-  },
-  codeAction: {
-    run: (action: CodeAction) =>
-      getActiveInstance().call.aiRunCodeAction(action),
   },
 }
 
