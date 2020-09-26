@@ -1,8 +1,6 @@
 import { RowNormal, RowComplete } from '../components/row-container'
-import { CompletionShow, CompletionSource } from '../ai/protocol'
 import { resetMarkdownHTMLStyle } from '../ui/styles'
 
-import { CompletionOption } from '../ai/completions'
 import * as windows from '../windows/window-manager'
 import * as dispatch from '../messaging/dispatch'
 import * as workspace from '../core/workspace'
@@ -13,6 +11,30 @@ import * as Icon from 'hyperapp-feather'
 import { cursor } from '../core/cursor'
 import api from '../core/instance-api'
 import { h, app } from '../ui/uikit'
+
+export enum CompletionSource {
+  Neovim,
+  VSCode,
+}
+
+export interface CompletionShow {
+  source: CompletionSource
+  row: number
+  col: number
+  options: CompletionOption[]
+}
+
+
+export interface CompletionOption {
+  /** Display text for the UI */
+  text: string
+  /** Text that will be inserted in the buffer */
+  insertText: string
+  /** An enum used to display a fancy icon and color in the completion menu UI */
+  kind: CompletionItemKind
+  /** The entire CompletionItem object. Is used by the UI to get/show documentation. If this does not exist the program will query a completion item provider from a relevant extensions */
+  raw?: CompletionItem
+}
 
 // TODO(smolck): Should this be here or somewhere else?
 export class CompletionItem {

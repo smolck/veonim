@@ -1,6 +1,6 @@
 import { LocationResult } from '../neovim/get-line-contents'
 import { Providers } from '../extension-host/providers'
-import { CompletionOption } from '../ai/completions'
+import { CompletionOption } from '../components/autocomplete'
 import { ColorData } from '../services/colorizer'
 import { Diagnostic, CodeAction } from 'vscode'
 import { UnPromisify } from '../support/types'
