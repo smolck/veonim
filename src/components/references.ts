@@ -1,13 +1,14 @@
 import { RowNormal, RowHeader } from '../components/row-container'
 import { PluginRight } from '../components/plugin-container'
 import { h, app, vimBlur, vimFocus } from '../ui/uikit'
-import { ReferenceResult } from '../ai/protocol'
 import { simplifyPath } from '../support/utils'
 import { showCursorline } from '../core/cursor'
 import Input from '../components/text-input'
 import { badgeStyle } from '../ui/styles'
 import * as Icon from 'hyperapp-feather'
-import api from '../core/instance-api'
+import { LocationResult } from '../neovim/get-line-contents'
+
+type ReferenceResult = [string, LocationResult[]]
 
 type TextTransformer = (text: string, last?: boolean) => string
 
@@ -264,10 +265,10 @@ const view = ($: S, a: typeof actions) =>
     ),
   ])
 
-const ui = app({ name: 'references', state, actions, view })
+export const ui = app({ name: 'references', state, actions, view })
 
-api.ai.references.onShow(
-  (references: ReferenceResult[], referencedSymbol?: string) => {
-    ui.show({ references, referencedSymbol })
-  }
-)
+// api.ai.references.onShow(
+//   (references: ReferenceResult[], referencedSymbol?: string) => {
+//     ui.show({ references, referencedSymbol })
+//   }
+// )

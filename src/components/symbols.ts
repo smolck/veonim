@@ -169,5 +169,3 @@ const view = ($: S, a: A) =>
   ])
 
 const ui = app({ name: 'symbols', state, actions, view })
-
-api.ai.symbols.onShow(ui.show)

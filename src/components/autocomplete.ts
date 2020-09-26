@@ -9,7 +9,6 @@ import { paddingVH, cvar } from '../ui/css'
 import Overlay from '../components/overlay'
 import * as Icon from 'hyperapp-feather'
 import { cursor } from '../core/cursor'
-import api from '../core/instance-api'
 import { h, app } from '../ui/uikit'
 
 export enum CompletionSource {
@@ -227,14 +226,14 @@ const actions = {
     // TODO: what are we doing with detail and documentation?
     // show both? or one or the other?
 
-    if (!detail || !documentation)
-      (async () => {
-        // TODO: what do with .detail?
-        const details = await api.ai.completions.getDetail(completionItem)
-        if (!details || !details.documentation) return
-        const richFormatDocs = await parseDocs(details.documentation)
-        a.showDocs(richFormatDocs)
-      })()
+    // if (!detail || !documentation)
+    //   (async () => {
+    //     // TODO: what do with .detail?
+    //     const details = await api.ai.completions.getDetail(completionItem)
+    //     if (!details || !details.documentation) return
+    //     const richFormatDocs = await parseDocs(details.documentation)
+    //     a.showDocs(richFormatDocs)
+    //   })()
 
     if (documentation) parseDocs(documentation).then(a.showDocs)
     return { ix, documentation: detail }
@@ -327,9 +326,6 @@ export const show = ({ row, col, options, source }: CompletionShow) => {
     ...windows.pixelPosition(anchorAbove ? row : row + 1, col),
   })
 }
-
-api.ai.completions.onShow(show)
-api.ai.completions.onHide(hide)
 
 dispatch.sub('pmenu.select', (ix) => select(ix))
 dispatch.sub('pmenu.hide', hide)

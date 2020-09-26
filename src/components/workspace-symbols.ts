@@ -173,6 +173,4 @@ const view = ($: S, a: A) =>
     ),
   ])
 
-const ui = app({ name: 'symbols', state, actions, view })
-
-api.ai.workspaceSymbols.onShow(ui.show)
+export const ui = app({ name: 'symbols', state, actions, view })
