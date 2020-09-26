@@ -346,12 +346,30 @@ dispatch.sub('pmenu.show', ({ items, index, row, col }: PopupMenu) => {
   select(index)
 })
 
+// TODO(smolck): Support more kinds.
+// Names and things taken from:
+// https://github.com/vhakulinen/gnvim/blob/1afac027e15623affd3e5435b88e056e0394c2f8/src/nvim_bridge/mod.rs#L276
 const completionKindMappings = new Map([
-  ['v', CompletionItemKind.Variable],
-  ['f', CompletionItemKind.Function],
-  ['m', CompletionItemKind.Property],
-  ['t', CompletionItemKind.TypeParameter],
-  ['d', CompletionItemKind.Interface],
+  ['Variable', CompletionItemKind.Variable],
+  ['variable', CompletionItemKind.Variable],
+  ['V', CompletionItemKind.Variable],
+
+  ['function', CompletionItemKind.Function],
+  ['Function', CompletionItemKind.Function],
+
+  ['property', CompletionItemKind.Property],
+  ['Property', CompletionItemKind.Property],
+  ['method', CompletionItemKind.Property],
+  ['Method', CompletionItemKind.Property],
+  ['f', CompletionItemKind.Property],
+
+  ['type paramter', CompletionItemKind.TypeParameter],
+  ['Type Parameter', CompletionItemKind.TypeParameter],
+  ['T', CompletionItemKind.TypeParameter],
+
+  ['interface', CompletionItemKind.Interface],
+  ['I', CompletionItemKind.Interface],
+  ['Interface', CompletionItemKind.Interface],
 ])
 
 const nvimToVSCodeCompletionKind = (kind: string): CompletionItemKind => {
