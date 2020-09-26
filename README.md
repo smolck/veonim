@@ -2,6 +2,9 @@
 
 Veonim is a simple modal IDE built on Neovim and VSCode extensions. The goal is to create my ideal programming environment
 
+Meovvim is a Neovim GUI based on [Veonim](https://github.org/veonim/veonim) (a fast electron-based IDE built on Neovim and VSCode extensions with WebGL GPU rendering and multithreading, but which is no longer maintained). The goal is to build a feature-rich cross-platform GUI that leverages the latest neovim features (floating windows, builtin LSP, Lua) instead of relying on VSCode extensions.
+
+
 ![](./docs/smart.png)
 
 ## features
