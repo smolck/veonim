@@ -9,6 +9,7 @@ import Overlay from '../components/overlay'
 import * as Icon from 'hyperapp-feather'
 import { cursor } from '../core/cursor'
 import { h, app } from '../ui/uikit'
+import { parse as stringToMarkdown } from 'marked'
 
 export interface CompletionShow {
   row: number
@@ -159,7 +160,7 @@ const parseDocs = async (
   docs?: string
 ): Promise<string | undefined> => {
   if (!docs) return
-  return docs
+  return stringToMarkdown(docs)
 }
 
 const docs = (data: string) =>
@@ -215,7 +216,8 @@ const actions = {
     // show both? or one or the other?
 
     // TODO(smolck): I commented this out but . . . what is the purpose of this
-    // exactly? Should I re-add (a refactored version of) it?
+    // exactly? Should I re-add (a refactored version of) it? Feels
+    // unnecessary now that VSCode completions are no longer a thing.
     // if (!detail || !documentation)
     //   (async () => {
     //     // TODO: what do with .detail?

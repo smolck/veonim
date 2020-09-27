@@ -39,6 +39,7 @@
     "typescript": "3.3.1"
   },
   "dependencies": {
+    "@types/marked": "^1.1.0",
     "diff-match-patch": "^1.0.5",
     "fuzzaldrin-plus": "^0.6.0",
     "hyperapp": "1.2.9",
