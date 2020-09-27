@@ -255,12 +255,17 @@ const win_float_pos = (e: any) => {
         anchor
       )
 
-      const clamp = (x: number, max: number) => Math.max(0, Math.min(x, max))
       const anchorGridInfo = anchorGrid.getWindowInfo()
+
+      const clampedWidth = Math.max(0, Math.min(gridInfo.width, anchorGridInfo.width))
+      const clampedHeight = Math.max(0, Math.min(gridInfo.height, anchorGridInfo.height))
+
+      if (clampedWidth === gridInfo.width && clampedHeight === gridInfo.height) continue
+
       resizeGrid(
         gridId,
-        clamp(gridInfo.width, anchorGridInfo.width),
-        clamp(gridInfo.height, anchorGridInfo.height)
+        clampedWidth,
+        clampedHeight
       )
 
       windows.calculateGlobalOffset(anchorGrid, windows.get(gridId))
