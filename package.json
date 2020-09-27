@@ -2,7 +2,7 @@
   "name": "veonim",
   "author": "veonim",
   "license": "AGPL-3.0-only",
-  "version": "0.23.6",
+  "version": "0.23.7",
   "description": "neovim GUI with 100x more memory usage",
   "main": "build/bootstrap/main.js",
   "scripts": {
