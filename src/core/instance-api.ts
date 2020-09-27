@@ -6,12 +6,10 @@ import {
 } from '../core/instance-manager'
 import { VimMode, BufferInfo, HyperspaceCoordinates } from '../neovim/types'
 import { MessageStatusUpdate, MessageReturn } from '../protocols/veonim'
-// import { AIClient, WorkspaceSymbol } from '../ai/protocol'
 import { onFnCall, pascalCase } from '../support/utils'
 import { colors } from '../render/highlight-attributes'
 import { Functions } from '../neovim/function-types'
 import { WindowMetadata } from '../windows/metadata'
-// import { CompletionItem } from '../components/autocomplete'
 import * as dispatch from '../messaging/dispatch'
 import { GitStatus } from '../support/git'
 import NeovimState from '../neovim/state'
@@ -207,33 +205,6 @@ const nvimRemoveHighlightSearch = async (
 ): Promise<boolean> => {
   return getActiveInstance().request.nvimRemoveHighlightSearch(id, pattern)
 }
-
-// const manualAI = {
-//   completions: {
-//     getDetail: (item: CompletionItem): Promise<CompletionItem> => {
-//       return getActiveInstance().request.aiGetCompletionDetail(item)
-//     },
-//   },
-//   workspaceSymbols: {
-//     getSymbols: (query: string): Promise<WorkspaceSymbol[]> => {
-//       return getActiveInstance().request.aiGetWorkspaceSymbols(query)
-//     },
-//   },
-// }
-//
-// type AIAPI = AIClient & typeof manualAI
-//
-// const ai: AIAPI = new Proxy(Object.create(null), {
-//   get: (_: any, namespace: string) =>
-//     new Proxy(Object.create(null), {
-//       get: (_: any, method: string) => (...args: any[]) => {
-//         const res = Reflect.get(manualAI, namespace)
-//         const manualFn = res && Reflect.get(res, method)
-//         if (manualFn) return manualFn(...args)
-//         ee.on(`ai.${namespace}.${method}`, args[0])
-//       },
-//     }),
-// })
 
 const onConfig = {
   inputRemapModifiersDidChange: (fn: (modifiers: any[]) => void) =>

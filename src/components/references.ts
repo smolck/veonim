@@ -267,9 +267,3 @@ const view = ($: S, a: typeof actions) =>
   ])
 
 export const ui = app({ name: 'references', state, actions, view })
-
-// api.ai.references.onShow(
-//   (references: ReferenceResult[], referencedSymbol?: string) => {
-//     ui.show({ references, referencedSymbol })
-//   }
-// )

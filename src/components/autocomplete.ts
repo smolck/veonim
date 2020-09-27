@@ -226,6 +226,8 @@ const actions = {
     // TODO: what are we doing with detail and documentation?
     // show both? or one or the other?
 
+    // TODO(smolck): I commented this out but . . . what is the purpose of this
+    // exactly? Should I re-add (a refactored version of) it?
     // if (!detail || !documentation)
     //   (async () => {
     //     // TODO: what do with .detail?
