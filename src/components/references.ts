@@ -7,6 +7,7 @@ import Input from '../components/text-input'
 import { badgeStyle } from '../ui/styles'
 import * as Icon from 'hyperapp-feather'
 import { LocationResult } from '../neovim/get-line-contents'
+import api from '../core/instance-api'
 
 type ReferenceResult = [string, LocationResult[]]
 
