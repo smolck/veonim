@@ -1,6 +1,5 @@
 import { RowNormal, RowComplete } from '../components/row-container'
 import { resetMarkdownHTMLStyle } from '../ui/styles'
-
 import * as windows from '../windows/window-manager'
 import * as dispatch from '../messaging/dispatch'
 import * as workspace from '../core/workspace'
@@ -11,18 +10,11 @@ import * as Icon from 'hyperapp-feather'
 import { cursor } from '../core/cursor'
 import { h, app } from '../ui/uikit'
 
-export enum CompletionSource {
-  Neovim,
-  VSCode,
-}
-
 export interface CompletionShow {
-  source: CompletionSource
   row: number
   col: number
   options: CompletionOption[]
 }
-
 
 export interface CompletionOption {
   /** Display text for the UI */
@@ -200,11 +192,7 @@ const actions = {
     x,
     y,
     ix = -1,
-    source,
-  }: any) => (s: S) => {
-    // VSCode/Veonim completions take priority over nvim completions
-    if (source === CompletionSource.Neovim && s.visible) return
-
+  }: any) => {
     return {
       visibleOptions,
       anchorAbove,
@@ -316,12 +304,11 @@ const ui = app<S, typeof actions>({
 
 export const hide = () => ui.hide()
 export const select = (index: number) => ui.select(index)
-export const show = ({ row, col, options, source }: CompletionShow) => {
+export const show = ({ row, col, options }: CompletionShow) => {
   const visibleOptions = Math.min(MAX_VISIBLE_OPTIONS, options.length)
   const anchorAbove = cursor.row + visibleOptions > workspace.size.rows
 
   ui.show({
-    source,
     anchorAbove,
     visibleOptions,
     options: options.slice(0, visibleOptions),
@@ -337,14 +324,14 @@ dispatch.sub('pmenu.show', ({ items, index, row, col }: PopupMenu) => {
       ({
         text: `${m.word} ${m.menu}`,
         insertText: m.word,
-        kind: nvimToVSCodeCompletionKind(m.kind),
+        kind: stringToKind(m.kind),
         raw: {
           documentation: m.info,
         },
       } as CompletionOption)
   )
 
-  show({ row, col, options, source: CompletionSource.Neovim })
+  show({ row, col, options })
   select(index)
 })
 
@@ -374,6 +361,6 @@ const completionKindMappings = new Map([
   ['Interface', CompletionItemKind.Interface],
 ])
 
-const nvimToVSCodeCompletionKind = (kind: string): CompletionItemKind => {
+const stringToKind = (kind: string): CompletionItemKind => {
   return completionKindMappings.get(kind) || CompletionItemKind.Text
 }
