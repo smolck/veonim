@@ -470,8 +470,10 @@ const defaultProtoKeys = Object.keys(
 )
 
 export const threadSafeObject = <T>(obj: T): T => {
-  // @ts-ignore
   if (!is.object(obj))
+    // TODO(smolck): Why the ignore though? There's a type error w/out it,
+    // but maybe just fix it instead of ignoring it?
+    // @ts-ignore
     return Array.isArray(obj) ? obj.map((v) => threadSafeObject(v)) : obj
 
   const proto = Object.getPrototypeOf(obj)

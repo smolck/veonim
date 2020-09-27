@@ -111,8 +111,8 @@ const grid_scroll = ([
 
 const grid_line = (e: any) => {
   const count = e.length
-  const gridRenderIndexes = []
-  const grids = []
+  const gridRenderIndexes: any = []
+  const grids: any = []
   let hlid = 0
   let activeGrid = 0
   let buffer = dummyData
@@ -312,7 +312,7 @@ onRedraw((redrawEvents) => {
   // TODO: but y tho
   if (renderEvents.doNotUpdateCmdlineIfSame(redrawEvents[0])) return
   let winUpdates = false
-  const messageEvents = []
+  const messageEvents: any = []
 
   const eventCount = redrawEvents.length
   for (let ix = 0; ix < eventCount; ix++) {
