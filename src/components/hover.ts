@@ -5,7 +5,6 @@ import { debounce } from '../support/utils'
 import Overlay from '../components/overlay'
 import { docStyle } from '../ui/styles'
 import { cursor } from '../core/cursor'
-import api from '../core/instance-api'
 import { h, app } from '../ui/uikit'
 import { cvar } from '../ui/css'
 
@@ -98,9 +97,6 @@ const view = ($: S) =>
     ]
   )
 
-const ui = app<S, A>({ name: 'hover', state, actions, view })
-
-api.ai.hover.onShow(ui.show)
-api.ai.hover.onHide(ui.hide)
+export const ui = app<S, A>({ name: 'hover', state, actions, view })
 
 sub('redraw', debounce(ui.updatePosition, 50))

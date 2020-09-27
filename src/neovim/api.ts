@@ -39,7 +39,7 @@ import { normalizeVimMode } from '../support/neovim-utils'
 import { Functions } from '../neovim/function-types'
 import { Autocmds } from '../neovim/startup'
 import CreateVimState from '../neovim/state'
-import { Position } from '../vscode/types'
+import { Position } from '../neovim/types'
 import { basename, dirname } from 'path'
 import { EventEmitter } from 'events'
 

@@ -1,2 +1,0 @@
-// test('all')
-// test('getExtension')

@@ -336,7 +336,7 @@ export default () => {
       return line
     },
     getAllLines: () => {
-      const lines = []
+      const lines: any = []
       for (let row = 0; row < wininfo.height; row++) {
         lines.push(api.editor.getLine(row))
       }
@@ -346,7 +346,7 @@ export default () => {
       const highlights = highlightLookup(highlightGroup).map((m) => m.hlid)
       if (!highlights.length) return []
 
-      const results = []
+      const results: any = []
 
       for (let row = 0; row < wininfo.height; row++) {
         for (let col = 0; col < wininfo.width; col++) {

@@ -1,9 +1,5 @@
 import { RowNormal, RowComplete } from '../components/row-container'
-import { CompletionShow, CompletionSource } from '../ai/protocol'
 import { resetMarkdownHTMLStyle } from '../ui/styles'
-import { CompletionItemKind } from '../vscode/types'
-import { CompletionOption } from '../ai/completions'
-import { markdownToHTML } from '../support/markdown'
 import * as windows from '../windows/window-manager'
 import * as dispatch from '../messaging/dispatch'
 import * as workspace from '../core/workspace'
@@ -11,10 +7,102 @@ import { PopupMenu } from '../render/events'
 import { paddingVH, cvar } from '../ui/css'
 import Overlay from '../components/overlay'
 import * as Icon from 'hyperapp-feather'
-import { MarkdownString } from 'vscode'
 import { cursor } from '../core/cursor'
-import api from '../core/instance-api'
 import { h, app } from '../ui/uikit'
+import { parse as stringToMarkdown } from 'marked'
+
+export interface CompletionShow {
+  row: number
+  col: number
+  options: CompletionOption[]
+}
+
+export interface CompletionOption {
+  /** Display text for the UI */
+  text: string
+  /** Text that will be inserted in the buffer */
+  insertText: string
+  /** An enum used to display a fancy icon and color in the completion menu UI */
+  kind: CompletionItemKind
+  /** The entire CompletionItem object. Is used by the UI to get/show documentation. If this does not exist the program will query a completion item provider from a relevant extensions */
+  raw?: CompletionItem
+}
+
+// TODO(smolck): Should this be here or somewhere else?
+export class CompletionItem {
+
+	label: string;
+	kind: CompletionItemKind | undefined;
+  // @ts-ignore
+	detail: string;
+  // @ts-ignore
+	documentation: string | MarkdownString;
+  // @ts-ignore
+	sortText: string;
+  // @ts-ignore
+	filterText: string;
+  // @ts-ignore
+	preselect: boolean;
+  // @ts-ignore
+	insertText: string | SnippetString;
+	keepWhitespace?: boolean;
+  // @ts-ignore
+	range: Range;
+  // @ts-ignore
+	commitCharacters: string[];
+  // @ts-ignore
+	textEdit: TextEdit;
+  // @ts-ignore
+	additionalTextEdits: TextEdit[];
+  // @ts-ignore
+
+	constructor(label: string, kind?: CompletionItemKind) {
+		this.label = label;
+		this.kind = kind;
+	}
+
+	toJSON(): any {
+		return {
+			label: this.label,
+			kind: this.kind && CompletionItemKind[this.kind],
+			detail: this.detail,
+			documentation: this.documentation,
+			sortText: this.sortText,
+			filterText: this.filterText,
+			preselect: this.preselect,
+			insertText: this.insertText,
+			textEdit: this.textEdit
+		};
+	}
+}
+
+export enum CompletionItemKind {
+  Text = 0,
+  Method = 1,
+  Function = 2,
+  Constructor = 3,
+  Field = 4,
+  Variable = 5,
+  Class = 6,
+  Interface = 7,
+  Module = 8,
+  Property = 9,
+  Unit = 10,
+  Value = 11,
+  Enum = 12,
+  Keyword = 13,
+  Snippet = 14,
+  Color = 15,
+  File = 16,
+  Reference = 17,
+  Folder = 18,
+  EnumMember = 19,
+  Constant = 20,
+  Struct = 21,
+  Event = 22,
+  Operator = 23,
+  TypeParameter = 24,
+}
 
 const MAX_VISIBLE_OPTIONS = 12
 
@@ -69,10 +157,10 @@ const getCompletionIcon = (kind: CompletionItemKind) =>
 
 // TODO: move to common place. used in other places like signature-hint
 const parseDocs = async (
-  docs?: string | MarkdownString
+  docs?: string
 ): Promise<string | undefined> => {
   if (!docs) return
-  return typeof docs === 'string' ? docs : markdownToHTML(docs.value)
+  return stringToMarkdown(docs)
 }
 
 const docs = (data: string) =>
@@ -105,11 +193,7 @@ const actions = {
     x,
     y,
     ix = -1,
-    source,
-  }: any) => (s: S) => {
-    // VSCode/Veonim completions take priority over nvim completions
-    if (source === CompletionSource.Neovim && s.visible) return
-
+  }: any) => {
     return {
       visibleOptions,
       anchorAbove,
@@ -131,14 +215,17 @@ const actions = {
     // TODO: what are we doing with detail and documentation?
     // show both? or one or the other?
 
-    if (!detail || !documentation)
-      (async () => {
-        // TODO: what do with .detail?
-        const details = await api.ai.completions.getDetail(completionItem)
-        if (!details || !details.documentation) return
-        const richFormatDocs = await parseDocs(details.documentation)
-        a.showDocs(richFormatDocs)
-      })()
+    // TODO(smolck): I commented this out but . . . what is the purpose of this
+    // exactly? Should I re-add (a refactored version of) it? Feels
+    // unnecessary now that VSCode completions are no longer a thing.
+    // if (!detail || !documentation)
+    //   (async () => {
+    //     // TODO: what do with .detail?
+    //     const details = await api.ai.completions.getDetail(completionItem)
+    //     if (!details || !details.documentation) return
+    //     const richFormatDocs = await parseDocs(details.documentation)
+    //     a.showDocs(richFormatDocs)
+    //   })()
 
     if (documentation) parseDocs(documentation).then(a.showDocs)
     return { ix, documentation: detail }
@@ -219,21 +306,17 @@ const ui = app<S, typeof actions>({
 
 export const hide = () => ui.hide()
 export const select = (index: number) => ui.select(index)
-export const show = ({ row, col, options, source }: CompletionShow) => {
+export const show = ({ row, col, options }: CompletionShow) => {
   const visibleOptions = Math.min(MAX_VISIBLE_OPTIONS, options.length)
   const anchorAbove = cursor.row + visibleOptions > workspace.size.rows
 
   ui.show({
-    source,
     anchorAbove,
     visibleOptions,
     options: options.slice(0, visibleOptions),
     ...windows.pixelPosition(anchorAbove ? row : row + 1, col),
   })
 }
-
-api.ai.completions.onShow(show)
-api.ai.completions.onHide(hide)
 
 dispatch.sub('pmenu.select', (ix) => select(ix))
 dispatch.sub('pmenu.hide', hide)
@@ -243,25 +326,43 @@ dispatch.sub('pmenu.show', ({ items, index, row, col }: PopupMenu) => {
       ({
         text: `${m.word} ${m.menu}`,
         insertText: m.word,
-        kind: nvimToVSCodeCompletionKind(m.kind),
+        kind: stringToKind(m.kind),
         raw: {
           documentation: m.info,
         },
       } as CompletionOption)
   )
 
-  show({ row, col, options, source: CompletionSource.Neovim })
+  show({ row, col, options })
   select(index)
 })
 
+// TODO(smolck): Support more kinds.
+// Names and things taken from:
+// https://github.com/vhakulinen/gnvim/blob/1afac027e15623affd3e5435b88e056e0394c2f8/src/nvim_bridge/mod.rs#L276
 const completionKindMappings = new Map([
-  ['v', CompletionItemKind.Variable],
-  ['f', CompletionItemKind.Function],
-  ['m', CompletionItemKind.Property],
-  ['t', CompletionItemKind.TypeParameter],
-  ['d', CompletionItemKind.Interface],
+  ['Variable', CompletionItemKind.Variable],
+  ['variable', CompletionItemKind.Variable],
+  ['V', CompletionItemKind.Variable],
+
+  ['function', CompletionItemKind.Function],
+  ['Function', CompletionItemKind.Function],
+
+  ['property', CompletionItemKind.Property],
+  ['Property', CompletionItemKind.Property],
+  ['method', CompletionItemKind.Property],
+  ['Method', CompletionItemKind.Property],
+  ['f', CompletionItemKind.Property],
+
+  ['type paramter', CompletionItemKind.TypeParameter],
+  ['Type Parameter', CompletionItemKind.TypeParameter],
+  ['T', CompletionItemKind.TypeParameter],
+
+  ['interface', CompletionItemKind.Interface],
+  ['I', CompletionItemKind.Interface],
+  ['Interface', CompletionItemKind.Interface],
 ])
 
-const nvimToVSCodeCompletionKind = (kind: string): CompletionItemKind => {
+const stringToKind = (kind: string): CompletionItemKind => {
   return completionKindMappings.get(kind) || CompletionItemKind.Text
 }

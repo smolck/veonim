@@ -26,7 +26,6 @@
     "type": "git",
     "url": "git+https://github.com/veonim/veonim.git"
   },
-  "vscode-api-version": "1.31.1",
   "repository-mirrors": [
     "git@github.com:veonim/veonim.git",
     "https://veonim@gitlab.com/veonim/veonim.git",
@@ -40,6 +39,7 @@
     "typescript": "3.3.1"
   },
   "dependencies": {
+    "@types/marked": "^1.1.0",
     "diff-match-patch": "^1.0.5",
     "fuzzaldrin-plus": "^0.6.0",
     "hyperapp": "1.2.9",
@@ -65,8 +65,7 @@
     "spectron": "^12.0.0",
     "ts-unused-exports": "^6.2.4",
     "ttypescript": "^1.5.12",
-    "typescript": "^4.0.3",
-    "vscode-debugprotocol": "^1.42.0"
+    "typescript": "^4.0.3"
   },
   "binaryDependencies": [
     {

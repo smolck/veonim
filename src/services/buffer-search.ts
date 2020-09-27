@@ -1,8 +1,5 @@
-import TextDocumentManager from '../neovim/text-document-manager'
 import { filter as fuzzyFilter, match } from 'fuzzaldrin-plus'
 import nvim from '../neovim/api'
-
-const tdm = TextDocumentManager(nvim)
 
 interface FilterResult {
   line: string
@@ -37,14 +34,6 @@ const asFilterResults = (
     line: m,
     ...getLocations(m, query, lines),
   }))
-
-tdm.on.didOpen(({ name, textLines }) => buffers.set(name, textLines))
-tdm.on.didClose(({ name }) => buffers.delete(name))
-tdm.on.didChange(({ name, textLines, firstLine, lastLine }) => {
-  const buf = buffers.get(name) || []
-  const affectAmount = lastLine - firstLine
-  buf.splice(firstLine, affectAmount, ...textLines)
-})
 
 export const fuzzy = async (
   file: string,

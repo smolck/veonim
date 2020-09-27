@@ -2,7 +2,7 @@ import { LineContents } from '../workers/get-file-lines'
 import { Buffer } from '../neovim/types'
 import Worker from '../messaging/worker'
 import nvim from '../neovim/api'
-import { Range } from 'vscode'
+import { Range } from '../neovim/types'
 
 export interface Location {
   path: string
