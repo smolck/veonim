@@ -226,7 +226,7 @@ const win_float_pos = (e: any) => {
       // Vim lines are zero-indexed, so . . . add 1
       let rowOffset, colOffset
       rowOffset = anchorGrid.row + 1
-      colOffset = anchorGrid.col + 1
+      colOffset = anchorGrid.col
 
       if (anchor === 'NE')
         (row = anchor_row + rowOffset),
@@ -255,20 +255,16 @@ const win_float_pos = (e: any) => {
         anchor
       )
 
+      windows.calculateGlobalOffset(anchorGrid, windows.get(gridId))
+
       const anchorGridInfo = anchorGrid.getWindowInfo()
 
       const clampedWidth = Math.max(0, Math.min(gridInfo.width, anchorGridInfo.width))
       const clampedHeight = Math.max(0, Math.min(gridInfo.height, anchorGridInfo.height))
 
       if (clampedWidth === gridInfo.width && clampedHeight === gridInfo.height) continue
+      else resizeGrid(gridId, clampedWidth, clampedHeight)
 
-      resizeGrid(
-        gridId,
-        clampedWidth,
-        clampedHeight
-      )
-
-      windows.calculateGlobalOffset(anchorGrid, windows.get(gridId))
       continue
     }
 
