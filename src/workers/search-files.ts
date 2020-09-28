@@ -1,6 +1,6 @@
 import { on, call } from '../messaging/worker-client'
 import { NewlineSplitter } from '../support/utils'
-import { Ripgrep } from '../support/binaries'
+import { spawnBinary } from '../support/binaries'
 
 interface Request {
   query: string
@@ -66,7 +66,7 @@ const searchFiles = ({ query, cwd }: Request) => {
   filterQuery = ''
   let alive = true
   const timer = setInterval(() => sendResults(), INTERVAL)
-  const rg = Ripgrep([query, '--vimgrep'], { cwd })
+  const rg = spawnBinary('rg', [query, '--vimgrep'], { cwd })
 
   rg.stdout!.pipe(new NewlineSplitter()).on('data', (m: string) => {
     const [, path = '', line = 0, column = 0, text = ''] =

@@ -1,4 +1,3 @@
-import { getLanguageForExtension } from '../support/language-ids'
 import * as FeatherIcon from 'hyperapp-feather'
 import { pascalCase } from '../support/utils'
 import { basename, extname } from 'path'
@@ -24,11 +23,9 @@ const findIconCustom = (filename: string, extension: string) => {
 const getIcon = (path = '') => {
   const filename = basename(path).toLowerCase()
   const extension = extname(filename).replace(/^\./, '').toLowerCase()
-  const langId = getLanguageForExtension(extension)
 
   return (
     findIconCustom(filename, extension) ||
-    (langId && findIcon(langId)) ||
     findIcon(extension) ||
     findIcon(filename) ||
     findIcon(path.toLowerCase()) ||

@@ -7,7 +7,6 @@ import * as git from '../support/git'
 import nvim from '../neovim/api'
 import '../services/mru-buffers'
 import '../services/watch-reload'
-import '../support/manage-plugins'
 // TODO: not used:
 // require('../services/job-reader')
 
@@ -24,9 +23,6 @@ git.onBranch((onBranch: string) => call.gitBranch(onBranch))
 // TODO: need another way to fix this
 // nvim.onVimrcLoad(sourcedFile => call.vimrcLoaded(sourcedFile))
 
-on.showVSCodeMessage(request.showVSCodeMessage)
-on.updateVSCodeMessageProgress(request.updateVSCodeMessageProgress)
-on.removeVSCodeMessageProgress(request.removeVSCodeMessageProgress)
 on.showNeovimMessage(request.showNeovimMessage)
 on.showStatusBarMessage(call.showStatusBarMessage)
 on.instanceActiveStatus((instanceIsActive: boolean) =>

@@ -1,7 +1,7 @@
 import { on, call } from '../messaging/worker-client'
 import { NewlineSplitter } from '../support/utils'
 import { filter as fuzzy } from 'fuzzaldrin-plus'
-import { Ripgrep } from '../support/binaries'
+import { spawnBinary } from '../support/binaries'
 
 const INTERVAL = 250
 const AMOUNT = 10
@@ -22,7 +22,7 @@ const sendResults = ({ filter = true } = {}) => {
 
 const getFilesWithRipgrep = (cwd: string) => {
   const timer = setInterval(sendResults, INTERVAL)
-  const rg = Ripgrep(
+  const rg = spawnBinary('rg',
     ['--files', '--hidden', '--glob', '!node_modules', '--glob', '!.git'],
     { cwd }
   )

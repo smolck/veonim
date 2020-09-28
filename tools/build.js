@@ -32,17 +32,6 @@ const copy = {
     $`copying runtime files`
     return fs.copy(fromRoot('runtime'), fromRoot('build/runtime'))
   },
-  extensionDependencies: () => {
-    $`copying extension dependencies`
-    return fs.copy(
-      fromRoot('extension_dependencies/node_modules'),
-      fromRoot('build/extdeps')
-    )
-  },
-  binaries: () => {
-    $`copying binaries`
-    return fs.copy(fromRoot('binaries'), fromRoot('build/binaries'))
-  },
   hyperapp: () => {
     $`copying hyperapp`
     return fs.copy(
@@ -83,8 +72,6 @@ const copyAll = () =>
     copy.processExplorer(),
     copy.assets(),
     copy.runtime(),
-    copy.extensionDependencies(),
-    copy.binaries(),
     copy.hyperapp(),
   ])
 
