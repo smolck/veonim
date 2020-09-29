@@ -170,7 +170,7 @@ const callAtomic = (calls: any[]) => req.core.callAtomic(calls)
 const onAction = (event: string, cb: GenericCallback) => {
   watchers.actions.on(event, cb)
   registeredEventActions.add(event)
-  cmd(`let g:uivonim_cmd_completions .= "${event}\\n"`)
+  cmd(`let g:uvn_cmd_completions .= "${event}\\n"`)
 }
 
 const highlightedIds = new Set<number>()
@@ -460,7 +460,7 @@ const registerFiletype = (bufnr: number, filetype: string) => {
 }
 
 const events = [...registeredEventActions.values()].join('\\n')
-cmd(`let g:uivonim_cmd_completions .= "${events}\\n"`)
+cmd(`let g:uvn_cmd_completions .= "${events}\\n"`)
 
 subscribe('uivonim', ([event, args = []]) =>
   watchers.actions.emit(event, ...args)

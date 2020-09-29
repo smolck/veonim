@@ -16,14 +16,14 @@ export const startupCmds = CmdGroup`
   let $PATH .= ':${runtimeDir}/${process.platform}'
   let &runtimepath .= ',${runtimeDir}'
   let g:uivonim = 1
-  let g:uivonim_cmd_completions = ''
-  let g:uivonim_events = {}
-  let g:uivonim_callbacks = {}
-  let g:uivonim_callback_id = 0
-  let g:uivonim_jobs_connected = {}
-  let g:uivonim_completing = 0
-  let g:uivonim_complete_pos = 1
-  let g:uivonim_completions = []
+  let g:uvn_cmd_completions = ''
+  let g:uvn_events = {}
+  let g:uvn_callbacks = {}
+  let g:uvn_callback_id = 0
+  let g:uvn_jobs_connected = {}
+  let g:uvn_completing = 0
+  let g:uvn_complete_pos = 1
+  let g:uvn_completions = []
   colorscheme veonim
   set guicursor=n:block-CursorNormal,i:hor10-CursorInsert,v:block-CursorVisual
   set background=dark
@@ -104,16 +104,16 @@ startup.defineFunc.UivonimRegisterAutocmds`
 `
 
 startup.defineFunc.UivonimComplete`
-  return a:1 ? g:uivonim_complete_pos : g:uivonim_completions
+  return a:1 ? g:uvn_complete_pos : g:uvn_completions
 `
 
 startup.defineFunc.UivonimCompleteScroll`
-  if len(g:uivonim_completions)
-    if g:uivonim_completing
+  if len(g:uvn_completions)
+    if g:uvn_completing
       return a:1 ? "\\<c-n>" : "\\<c-p>"
     endif
 
-    let g:uivonim_completing = 1
+    let g:uvn_completing = 1
     return a:1 ? "\\<c-x>\\<c-u>" : "\\<c-x>\\<c-u>\\<c-p>\\<c-p>"
   endif
 
@@ -154,13 +154,13 @@ startup.defineFunc.UivonimGChange`
 `
 
 startup.defineFunc.UivonimTermReader`
-  if has_key(g:uivonim_jobs_connected, a:1)
+  if has_key(g:uvn_jobs_connected, a:1)
     call rpcnotify(0, 'uivonim', 'job-output', [a:1, a:2])
   endif
 `
 
 startup.defineFunc.UivonimTermExit`
-  call remove(g:uivonim_jobs_connected, a:1)
+  call remove(g:uvn_jobs_connected, a:1)
 `
 
 startup.defineFunc.Uivonim`
@@ -168,41 +168,41 @@ startup.defineFunc.Uivonim`
 `
 
 startup.defineFunc.UivonimCmdCompletions`
-  return g:uivonim_cmd_completions
+  return g:uvn_cmd_completions
 `
 
 // TODO: figure out how to add multiple fn lambdas but dedup'd! (as a Set)
 // index(g:vn_events[a:1], a:2) < 0 does not work
 startup.defineFunc.UivonimRegisterEvent`
-  let g:uivonim_events[a:1] = a:2
+  let g:uvn_events[a:1] = a:2
 `
 
 startup.defineFunc.UivonimCallEvent`
-  if has_key(g:uivonim_events, a:1)
-    let Func = g:uivonim_events[a:1]
+  if has_key(g:uvn_events, a:1)
+    let Func = g:uvn_events[a:1]
     call Func()
   endif
 `
 
 startup.defineFunc.UivonimCallback`
-  if has_key(g:uivonim_callbacks, a:1)
-    let Funky = g:uivonim_callbacks[a:1]
+  if has_key(g:uvn_callbacks, a:1)
+    let Funky = g:uvn_callbacks[a:1]
     call Funky(a:2)
   endif
 `
 
 startup.defineFunc.UivonimRegisterMenuCallback`
-  let g:uivonim_callbacks[a:1] = a:2
+  let g:uvn_callbacks[a:1] = a:2
 `
 
 startup.defineFunc.UivonimMenu`
-  let g:uivonim_callback_id += 1
-  call UivonimRegisterMenuCallback(g:uivonim_callback_id, a:3)
-  call Uivonim('user-menu', g:uivonim_callback_id, a:1, a:2)
+  let g:uvn_callback_id += 1
+  call UivonimRegisterMenuCallback(g:uvn_callback_id, a:3)
+  call Uivonim('user-menu', g:uvn_callback_id, a:1, a:2)
 `
 
 startup.defineFunc.UivonimOverlayMenu`
-  let g:uivonim_callback_id += 1
-  call UivonimRegisterMenuCallback(g:uivonim_callback_id, a:3)
-  call Uivonim('user-overlay-menu', g:uivonim_callback_id, a:1, a:2)
+  let g:uvn_callback_id += 1
+  call UivonimRegisterMenuCallback(g:uvn_callback_id, a:3)
+  call Uivonim('user-overlay-menu', g:uvn_callback_id, a:1, a:2)
 `
