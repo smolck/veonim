@@ -1,6 +1,6 @@
 # Uivonim
 
-Uivonim is a fork of [Veonim@f780b7f](https://github.com/veonim/veonim/commit/f780b7fc8079755ecac65b475eee3c6358857696),
+Uivonim is a fork of [Veonim](https://github.com/veonim/veonim/commit/f780b7fc8079755ecac65b475eee3c6358857696),
 "a simple modal IDE built on Neovim and VSCode extensions" with WebGL GPU
 rendering and multithreading, but which is no longer maintained. The goal of
 Uivonim is to use Veonim as a base for building a feature-rich cross-platform GUI that leverages the latest 
