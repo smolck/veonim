@@ -6,11 +6,6 @@ const pluginDir = join(configPath, 'nvim', 'pack', 'veonim-installed-plugins')
 const runtimeDir = resolve(__dirname, '..', 'runtime')
 const startup = FunctionGroup()
 
-// TODO: DEPRECATED REMOVE
-startup.defineFunc.VK`
-  echo "VK() map keyboard shortcuts is deprecated. please remove VK() calls from your config"
-`
-
 export const startupFuncs = () => startup.getFunctionsAsString()
 
 export const startupCmds = CmdGroup`
@@ -28,16 +23,6 @@ export const startupCmds = CmdGroup`
   let g:veonim_completing = 0
   let g:veonim_complete_pos = 1
   let g:veonim_completions = []
-  colorscheme veonim
-  set guicursor=n:block-CursorNormal,i:hor10-CursorInsert,v:block-CursorVisual
-  set background=dark
-  set nocursorline
-  set noshowmode
-  set noruler
-  set completefunc=VeonimComplete
-  ino <expr> <tab> VeonimCompleteScroll(1)
-  ino <expr> <s-tab> VeonimCompleteScroll(0)
-  map <silent> <c-z> <nop>
   call VeonimRegisterAutocmds()
 `
 
@@ -105,23 +90,6 @@ startup.defineFunc.VeonimRegisterAutocmds`
     ','
   )} * call rpcnotify(0, 'veonim-state', VeonimState())
   ${autocmdsText}
-`
-
-startup.defineFunc.VeonimComplete`
-  return a:1 ? g:veonim_complete_pos : g:veonim_completions
-`
-
-startup.defineFunc.VeonimCompleteScroll`
-  if len(g:veonim_completions)
-    if g:veonim_completing
-      return a:1 ? "\\<c-n>" : "\\<c-p>"
-    endif
-
-    let g:veonim_completing = 1
-    return a:1 ? "\\<c-x>\\<c-u>" : "\\<c-x>\\<c-u>\\<c-p>\\<c-p>"
-  endif
-
-  return a:1 ? "\\<tab>" : "\\<c-w>"
 `
 
 startup.defineFunc.VeonimState`
