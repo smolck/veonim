@@ -25,7 +25,7 @@ const actions = {
     vimFocus()
     if (!s.items.length) return resetState
     const item = s.items[s.index]
-    if (item) api.nvim.call.VeonimCallback(s.id, item)
+    if (item) api.nvim.call.UivonimCallback(s.id, item)
     return resetState
   },
 

@@ -148,11 +148,11 @@ const getOptionCurrentAndFuture = (name: string, fn: (value: any) => void) => {
 
 const getVarCurrentAndFuture = (name: string, fn: (value: any) => void) => {
   Reflect.get(g, name).then(fn)
-  cmd(`call dictwatcheradd(g:, '${name}', 'VeonimGChange')`)
+  cmd(`call dictwatcheradd(g:, '${name}', 'UivonimGChange')`)
   const key = `gvar::${name}`
   watchers.internal.on(key, fn)
   return () => {
-    cmd(`call dictwatcherdel(g:, '${name}', 'VeonimGChange')`)
+    cmd(`call dictwatcherdel(g:, '${name}', 'UivonimGChange')`)
     watchers.internal.removeListener(key, fn)
   }
 }
@@ -170,7 +170,7 @@ const callAtomic = (calls: any[]) => req.core.callAtomic(calls)
 const onAction = (event: string, cb: GenericCallback) => {
   watchers.actions.on(event, cb)
   registeredEventActions.add(event)
-  cmd(`let g:vn_cmd_completions .= "${event}\\n"`)
+  cmd(`let g:uivonim_cmd_completions .= "${event}\\n"`)
 }
 
 const highlightedIds = new Set<number>()
@@ -447,7 +447,7 @@ const untilEvent: UntilEvent = new Proxy(Object.create(null), {
 })
 
 const refreshState = async () => {
-  const nextState = await call.VeonimState()
+  const nextState = await call.UivonimState()
   Object.assign(state, nextState)
 }
 
@@ -460,17 +460,17 @@ const registerFiletype = (bufnr: number, filetype: string) => {
 }
 
 const events = [...registeredEventActions.values()].join('\\n')
-cmd(`let g:vn_cmd_completions .= "${events}\\n"`)
+cmd(`let g:uivonim_cmd_completions .= "${events}\\n"`)
 
-subscribe('veonim', ([event, args = []]) =>
+subscribe('uivonim', ([event, args = []]) =>
   watchers.actions.emit(event, ...args)
 )
-subscribe('veonim-state', ([nextState]) => Object.assign(state, nextState))
-subscribe('veonim-position', ([position]) => Object.assign(state, position))
-subscribe('veonim-g', ([name, change = {}]) =>
+subscribe('uivonim-state', ([nextState]) => Object.assign(state, nextState))
+subscribe('uivonim-position', ([position]) => Object.assign(state, position))
+subscribe('uivonim-g', ([name, change = {}]) =>
   watchers.internal.emit(`gvar::${name}`, change.new)
 )
-subscribe('veonim-autocmd', ([autocmd, ...arg]) => {
+subscribe('uivonim-autocmd', ([autocmd, ...arg]) => {
   // TODO: should really provide a way to scope autocmds to the current vim instance...
   if (autocmd === 'FileType') registerFiletype(arg[0], arg[1])
   watchers.autocmds.emit(autocmd, ...arg)

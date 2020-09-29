@@ -1,7 +1,7 @@
 import { app, BrowserWindow, Menu } from 'electron'
 
 let win: any
-app.setName('veonim')
+app.setName('uivonim')
 
 const comscan = (() => {
   type DispatchFn = (ch: string, message: any) => void

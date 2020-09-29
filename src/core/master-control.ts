@@ -58,9 +58,7 @@ const msgpackEncoder = new MsgpackStreamEncoder()
 const spawnVimInstance = (pipeName: string) =>
   spawn('nvim', [
     '--cmd',
-    `com! -nargs=+ -range -complete=custom,VeonimCmdCompletions Veonim call Veonim(<f-args>)`,
-    '--cmd',
-    `com! -nargs=1 Plug call add(g:_veonim_plugins, <args>)`,
+    `com! -nargs=+ -range -complete=custom,UivonimCmdCompletions Uivonim call Uivonim(<f-args>)`,
     '--embed',
     '--listen',
     pipeName,

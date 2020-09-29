@@ -57,10 +57,10 @@ interface InputOptions {
 }
 
 export interface Functions {
-  VeonimState(): Promise<State>
-  VeonimPosition(): Promise<Position>
-  VeonimCallEvent(event: string): void
-  VeonimCallback(id: number, result: any): void
+  UivonimState(): Promise<State>
+  UivonimPosition(): Promise<Position>
+  UivonimCallEvent(event: string): void
+  UivonimCallback(id: number, result: any): void
   Buffers(): Promise<VimBuffer[]>
   OpenPaths(): Promise<string[]>
   getcwd(): Promise<string>

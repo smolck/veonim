@@ -2,7 +2,6 @@ import { CmdGroup, FunctionGroup } from '../support/neovim-utils'
 import { configPath } from '../support/utils'
 import { resolve, join } from 'path'
 
-const pluginDir = join(configPath, 'nvim', 'pack', 'veonim-installed-plugins')
 const runtimeDir = resolve(__dirname, '..', 'runtime')
 const startup = FunctionGroup()
 
@@ -16,34 +15,31 @@ export const startupFuncs = () => startup.getFunctionsAsString()
 export const startupCmds = CmdGroup`
   let $PATH .= ':${runtimeDir}/${process.platform}'
   let &runtimepath .= ',${runtimeDir}'
-  let &packpath .= ',${pluginDir}'
-  let g:veonim = 1
-  let g:vn_cmd_completions = ''
-  let g:vn_events = {}
-  let g:vn_callbacks = {}
-  let g:vn_callback_id = 0
-  let g:vn_jobs_connected = {}
-  let g:_veonim_plugins = []
-  let g:vscode_extensions = []
-  let g:veonim_completing = 0
-  let g:veonim_complete_pos = 1
-  let g:veonim_completions = []
+  let g:uivonim = 1
+  let g:uivonim_cmd_completions = ''
+  let g:uivonim_events = {}
+  let g:uivonim_callbacks = {}
+  let g:uivonim_callback_id = 0
+  let g:uivonim_jobs_connected = {}
+  let g:uivonim_completing = 0
+  let g:uivonim_complete_pos = 1
+  let g:uivonim_completions = []
   colorscheme veonim
   set guicursor=n:block-CursorNormal,i:hor10-CursorInsert,v:block-CursorVisual
   set background=dark
   set nocursorline
   set noshowmode
   set noruler
-  set completefunc=VeonimComplete
-  ino <expr> <tab> VeonimCompleteScroll(1)
-  ino <expr> <s-tab> VeonimCompleteScroll(0)
+  set completefunc=UivonimComplete
+  ino <expr> <tab> UivonimCompleteScroll(1)
+  ino <expr> <s-tab> UivonimCompleteScroll(0)
   map <silent> <c-z> <nop>
-  call VeonimRegisterAutocmds()
+  call UivonimRegisterAutocmds()
 `
 
 // TODO: should we rename some of these "internal" functions so they
 // don't obviously show up in the command completions when looking
-// for 'Veonim' function name. something sort of prefix "_$VN_RegAutocmds"
+// for 'Uivonim' function name. something sort of prefix "_$VN_RegAutocmds"
 //
 // or maybe we move all these functions to a separate .vim script file?
 // i wonder which functions are required for init.vim
@@ -89,42 +85,42 @@ const autocmdsText = Object.entries(autocmds)
     // TODO(smolck): Is this accurate? And is it a (good) fix?
     // Avoid calling rpcnotify if buffer is readonly to prevent errors.
     if (cmd === 'OptionSet') {
-      return `au VeonimAU ${cmd} * if (&ro != 1) | call rpcnotify(0, 'veonim-autocmd', '${cmd}'${argtext}) | endif`
+      return `au UivonimAU ${cmd} * if (&ro != 1) | call rpcnotify(0, 'uivonim-autocmd', '${cmd}'${argtext}) | endif`
     }
 
-    return `au VeonimAU ${cmd} * call rpcnotify(0, 'veonim-autocmd', '${cmd}'${argtext})`
+    return `au UivonimAU ${cmd} * call rpcnotify(0, 'uivonim-autocmd', '${cmd}'${argtext})`
   })
   .join('\n')
 
 // autocmds in a separate function because chaining autocmds with "|" is bad
 // it makes the next autocmd a continuation of the previous
-startup.defineFunc.VeonimRegisterAutocmds`
-  aug VeonimAU | au! | aug END
-  au VeonimAU CursorMoved,CursorMovedI * call rpcnotify(0, 'veonim-position', VeonimPosition())
-  au VeonimAU ${stateEvents.join(
+startup.defineFunc.UivonimRegisterAutocmds`
+  aug UivonimAU | au! | aug END
+  au UivonimAU CursorMoved,CursorMovedI * call rpcnotify(0, 'uivonim-position', UivonimPosition())
+  au UivonimAU ${stateEvents.join(
     ','
-  )} * call rpcnotify(0, 'veonim-state', VeonimState())
+  )} * call rpcnotify(0, 'uivonim-state', UivonimState())
   ${autocmdsText}
 `
 
-startup.defineFunc.VeonimComplete`
-  return a:1 ? g:veonim_complete_pos : g:veonim_completions
+startup.defineFunc.UivonimComplete`
+  return a:1 ? g:uivonim_complete_pos : g:uivonim_completions
 `
 
-startup.defineFunc.VeonimCompleteScroll`
-  if len(g:veonim_completions)
-    if g:veonim_completing
+startup.defineFunc.UivonimCompleteScroll`
+  if len(g:uivonim_completions)
+    if g:uivonim_completing
       return a:1 ? "\\<c-n>" : "\\<c-p>"
     endif
 
-    let g:veonim_completing = 1
+    let g:uivonim_completing = 1
     return a:1 ? "\\<c-x>\\<c-u>" : "\\<c-x>\\<c-u>\\<c-p>\\<c-p>"
   endif
 
   return a:1 ? "\\<tab>" : "\\<c-w>"
 `
 
-startup.defineFunc.VeonimState`
+startup.defineFunc.UivonimState`
   let m = {}
   let currentBuffer = bufname('%')
   let p = getcurpos()
@@ -143,7 +139,7 @@ startup.defineFunc.VeonimState`
   return m
 `
 
-startup.defineFunc.VeonimPosition`
+startup.defineFunc.UivonimPosition`
   let m = {}
   let p = getcurpos()
   let m.line = p[1]-1
@@ -153,60 +149,60 @@ startup.defineFunc.VeonimPosition`
   return m
 `
 
-startup.defineFunc.VeonimGChange`
-  call rpcnotify(0, 'veonim-g', a:2, a:3)
+startup.defineFunc.UivonimGChange`
+  call rpcnotify(0, 'uivonim-g', a:2, a:3)
 `
 
-startup.defineFunc.VeonimTermReader`
-  if has_key(g:vn_jobs_connected, a:1)
-    call rpcnotify(0, 'veonim', 'job-output', [a:1, a:2])
+startup.defineFunc.UivonimTermReader`
+  if has_key(g:uivonim_jobs_connected, a:1)
+    call rpcnotify(0, 'uivonim', 'job-output', [a:1, a:2])
   endif
 `
 
-startup.defineFunc.VeonimTermExit`
-  call remove(g:vn_jobs_connected, a:1)
+startup.defineFunc.UivonimTermExit`
+  call remove(g:uivonim_jobs_connected, a:1)
 `
 
-startup.defineFunc.Veonim`
-  call rpcnotify(0, 'veonim', a:1, a:000[1:])
+startup.defineFunc.Uivonim`
+  call rpcnotify(0, 'uivonim', a:1, a:000[1:])
 `
 
-startup.defineFunc.VeonimCmdCompletions`
-  return g:vn_cmd_completions
+startup.defineFunc.UivonimCmdCompletions`
+  return g:uivonim_cmd_completions
 `
 
 // TODO: figure out how to add multiple fn lambdas but dedup'd! (as a Set)
 // index(g:vn_events[a:1], a:2) < 0 does not work
-startup.defineFunc.VeonimRegisterEvent`
-  let g:vn_events[a:1] = a:2
+startup.defineFunc.UivonimRegisterEvent`
+  let g:uivonim_events[a:1] = a:2
 `
 
-startup.defineFunc.VeonimCallEvent`
-  if has_key(g:vn_events, a:1)
-    let Func = g:vn_events[a:1]
+startup.defineFunc.UivonimCallEvent`
+  if has_key(g:uivonim_events, a:1)
+    let Func = g:uivonim_events[a:1]
     call Func()
   endif
 `
 
-startup.defineFunc.VeonimCallback`
-  if has_key(g:vn_callbacks, a:1)
-    let Funky = g:vn_callbacks[a:1]
+startup.defineFunc.UivonimCallback`
+  if has_key(g:uivonim_callbacks, a:1)
+    let Funky = g:uivonim_callbacks[a:1]
     call Funky(a:2)
   endif
 `
 
-startup.defineFunc.VeonimRegisterMenuCallback`
-  let g:vn_callbacks[a:1] = a:2
+startup.defineFunc.UivonimRegisterMenuCallback`
+  let g:uivonim_callbacks[a:1] = a:2
 `
 
-startup.defineFunc.VeonimMenu`
-  let g:vn_callback_id += 1
-  call VeonimRegisterMenuCallback(g:vn_callback_id, a:3)
-  call Veonim('user-menu', g:vn_callback_id, a:1, a:2)
+startup.defineFunc.UivonimMenu`
+  let g:uivonim_callback_id += 1
+  call UivonimRegisterMenuCallback(g:uivonim_callback_id, a:3)
+  call Uivonim('user-menu', g:uivonim_callback_id, a:1, a:2)
 `
 
-startup.defineFunc.VeonimOverlayMenu`
-  let g:vn_callback_id += 1
-  call VeonimRegisterMenuCallback(g:vn_callback_id, a:3)
-  call Veonim('user-overlay-menu', g:vn_callback_id, a:1, a:2)
+startup.defineFunc.UivonimOverlayMenu`
+  let g:uivonim_callback_id += 1
+  call UivonimRegisterMenuCallback(g:uivonim_callback_id, a:3)
+  call Uivonim('user-overlay-menu', g:uivonim_callback_id, a:1, a:2)
 `

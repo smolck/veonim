@@ -1,9 +1,9 @@
 {
-  "name": "veonim",
-  "author": "veonim",
+  "name": "uivonim",
+  "author": "smolck",
   "license": "AGPL-3.0-only",
   "version": "0.23.7",
-  "description": "neovim GUI with 100x more memory usage",
+  "description": "Neovim GUI with 100x more memory usage",
   "main": "build/bootstrap/main.js",
   "scripts": {
     "start": "node tools/start.js",

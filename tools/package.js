@@ -5,8 +5,8 @@ const { copy, remove, ensureDir } = require('fs-extra')
 const { build } = require('electron-builder')
 
 const config = {
-  productName: 'veonim',
-  appId: 'com.veonim.veonim',
+  productName: 'uivonim',
+  appId: 'com.uivonim.uivonim',
   directories: {
     buildResources: 'art',
   },
@@ -28,7 +28,7 @@ go(async () => {
   $`cleaning dist (release) folder`
   await remove(fromRoot('dist'))
 
-  $`building veonim binary for operating system: ${process.platform}`
+  $`building uivonim binary for operating system: ${process.platform}`
   await build({ config }).catch(console.error)
 
   $`fin dist pack`
