@@ -188,7 +188,7 @@ const colorizeAsHTML = async (
     .join('')
 }
 
-const wrongDocumentationYouFucktards = (markdown: string): Promise<string> =>
+const wrongDocumentation = (markdown: string): Promise<string> =>
   new Promise((done) =>
     marked(
       markdown,
@@ -207,5 +207,5 @@ on.colorizePerChar((lines: string[], filetype: string) =>
   colorizeTextPerChar(lines, filetype)
 )
 on.colorizeMarkdownToHTML((markdown: string) =>
-  wrongDocumentationYouFucktards(markdown)
+  wrongDocumentation(markdown)
 )
