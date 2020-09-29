@@ -3,9 +3,9 @@
 Uivonim is a fork of [Veonim](https://github.com/veonim/veonim/commit/f780b7fc8079755ecac65b475eee3c6358857696),
 "a simple modal IDE built on Neovim and VSCode extensions" with WebGL GPU
 rendering and multithreading, but which is no longer maintained. The goal of
-Uivonim is to use Veonim as a base for building a feature-rich cross-platform GUI that leverages the latest 
-Neovim features (floating windows, builtin LSP, Lua), without reliance on VSCode
-extensions.
+Uivonim is to use Veonim as a base for building a feature-rich cross-platform GUI,
+written in electron, that leverages the latest Neovim features (floating windows, builtin LSP, Lua)
+without reliance on VSCode extensions.
 
 ![](./docs/smart.png)
 
@@ -17,6 +17,8 @@ extensions.
 - Fully keyboard driven (no mouse support)
 - Fast, building upon the work done by @breja, with things like WebGL GPU
   rendering and multithreading
+- Extensibility via a Lua API providing access to frontend GUI features such as
+  LSP hovers and a fuzzy finder UI
 
 ## Getting Started
 
