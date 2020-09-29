@@ -5,11 +5,6 @@ import { resolve, join } from 'path'
 const runtimeDir = resolve(__dirname, '..', 'runtime')
 const startup = FunctionGroup()
 
-// TODO: DEPRECATED REMOVE
-startup.defineFunc.VK`
-  echo "VK() map keyboard shortcuts is deprecated. please remove VK() calls from your config"
-`
-
 export const startupFuncs = () => startup.getFunctionsAsString()
 
 export const startupCmds = CmdGroup`
@@ -24,16 +19,6 @@ export const startupCmds = CmdGroup`
   let g:uvn_completing = 0
   let g:uvn_complete_pos = 1
   let g:uvn_completions = []
-  colorscheme veonim
-  set guicursor=n:block-CursorNormal,i:hor10-CursorInsert,v:block-CursorVisual
-  set background=dark
-  set nocursorline
-  set noshowmode
-  set noruler
-  set completefunc=UivonimComplete
-  ino <expr> <tab> UivonimCompleteScroll(1)
-  ino <expr> <s-tab> UivonimCompleteScroll(0)
-  map <silent> <c-z> <nop>
   call UivonimRegisterAutocmds()
 `
 
@@ -101,23 +86,6 @@ startup.defineFunc.UivonimRegisterAutocmds`
     ','
   )} * call rpcnotify(0, 'uivonim-state', UivonimState())
   ${autocmdsText}
-`
-
-startup.defineFunc.UivonimComplete`
-  return a:1 ? g:uvn_complete_pos : g:uvn_completions
-`
-
-startup.defineFunc.UivonimCompleteScroll`
-  if len(g:uvn_completions)
-    if g:uvn_completing
-      return a:1 ? "\\<c-n>" : "\\<c-p>"
-    endif
-
-    let g:uvn_completing = 1
-    return a:1 ? "\\<c-x>\\<c-u>" : "\\<c-x>\\<c-u>\\<c-p>\\<c-p>"
-  endif
-
-  return a:1 ? "\\<tab>" : "\\<c-w>"
 `
 
 startup.defineFunc.UivonimState`
