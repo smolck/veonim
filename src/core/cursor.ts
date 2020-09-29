@@ -106,7 +106,7 @@ export const showCursor = () => {
 
   cursorRequestedToBeHidden = false
   cursorEl.style.display = 'flex'
-  cursorline.style.display = ''
+  cursorline.style.display = 'none'
 }
 
 export const showCursorline = () => (cursorline.style.display = '')
