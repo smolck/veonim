@@ -200,5 +200,6 @@ api.onAction('signature-help', (method, result, row, col) => {
     selectedSignature: result.signatures.activeSignature
   }
   ui.show(showParams)
-  console.log(method, result, row, col)
 })
+
+api.onAction('signature-help-close', () => ui.hide())

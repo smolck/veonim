@@ -7,6 +7,10 @@ local function get_cursor_pos()
   return pos[1] - vim.fn.getwininfo(win_id)[1].topline, pos[2]
 end
 
+function uivonim.signature_help_close()
+  vim.fn.Uivonim('signature-help-close')
+end
+
 function uivonim.signature_help(_, method, result)
   if not (result and result.signatures and result.signatures[1]) then
     print('No signature help available')
@@ -23,6 +27,9 @@ function uivonim.signature_help(_, method, result)
 
   local row, col = get_cursor_pos()
   vim.fn.Uivonim('signature-help', method, result, row, col)
+
+  -- Close autocmd
+  vim.api.nvim_command("autocmd CursorMoved <buffer> ++once lua pcall(require'uivonim'.signature_help_close, true)")
 end
 
 uivonim.lsp_callbacks = {
