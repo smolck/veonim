@@ -1,3 +1,5 @@
+> # NOTE: Development for this project has moved to [the uivonim repo](https://github.com/smolck/uivonim); no more development will be done here.
+
 # Uivonim
 
 Uivonim is a fork of [Veonim](https://github.com/veonim/veonim/commit/f780b7fc8079755ecac65b475eee3c6358857696),
